@@ -1,1 +1,0 @@
-# betboy-ai-predictor
