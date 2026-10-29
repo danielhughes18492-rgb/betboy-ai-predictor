@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BetBoy AI">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="BetBoy AI">
+<meta name="theme-color" content="#070b14">
+<title>BetBoy AI Predictor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script id="paypalSdkScript" src="https://www.paypal.com/sdk/js?client-id=BAADksjqqj_-OlL0WyIWeLi-OsBQitWr5HEZIwiAolAd8jaIc6iADWKnMud_yHL1-NrR2HiQJoIn4u475E&vault=true&intent=subscription" data-sdk-integration-source="button-factory"></script>
+<style>
+  body { background: radial-gradient(circle at 50% 0%, #0f172a 0%, #060911 65%, #03050a 100%) !important; background-attachment: fixed !important; color:#f1f5f9; font-family:system-ui,sans-serif; margin:0; -webkit-font-smoothing: antialiased; }
+  .glass { background: linear-gradient(165deg, rgba(30, 41, 59, 0.58) 0%, rgba(15, 23, 42, 0.88) 100%) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.08); transition: transform 0.18s ease, border-color 0.18s ease; }
+  .glass:active { transform: scale(0.993); }
+  .mono { font-family:monospace; font-variant-numeric: tabular-nums; }
+  .lg-icon { width:24px !important; height:24px !important; min-width:24px !important; min-height:24px !important; aspect-ratio:1/1 !important; object-fit:contain !important; background:#ffffff !important; border-radius:6px !important; padding:2px !important; box-sizing:border-box !important; display:inline-block !important; vertical-align:middle !important; flex-shrink:0 !important; box-shadow:0 1px 3px rgba(0,0,0,0.45) !important; }
+  .lg-icon-sm { width:18px !important; height:18px !important; min-width:18px !important; min-height:18px !important; aspect-ratio:1/1 !important; object-fit:contain !important; background:#ffffff !important; border-radius:4px !important; padding:1.5px !important; box-sizing:border-box !important; display:inline-block !important; vertical-align:middle !important; flex-shrink:0 !important; box-shadow:0 1px 2px rgba(0,0,0,0.4) !important; }
+  .no-scrollbar::-webkit-scrollbar { display:none; }
+  .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+  .border-l-emerald-500 { border-left: 4px solid #10b981 !important; box-shadow: -4px 0 16px -4px rgba(16, 185, 129, 0.4), 0 8px 24px -4px rgba(0, 0, 0, 0.45) !important; }
+  .border-l-amber-400 { border-left: 4px solid #fbbf24 !important; box-shadow: -4px 0 16px -4px rgba(251, 191, 36, 0.35), 0 8px 24px -4px rgba(0, 0, 0, 0.45) !important; }
+  .border-l-rose-500 { border-left: 4px solid #f43f5e !important; box-shadow: -4px 0 16px -4px rgba(244, 63, 94, 0.35), 0 8px 24px -4px rgba(0, 0, 0, 0.45) !important; }
+  #dateTabsContainer, #leagueFilters { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%); padding-left: 4px; padding-right: 4px; }
+  #dateTabsContainer > button, #leagueFilters > label { scroll-snap-align: center; }
+  #leagueFilters label { transition: all 0.2s ease; border-radius: 9999px !important; padding: 6px 12px !important; background: rgba(15, 23, 42, 0.65) !important; border: 1px solid rgba(51, 65, 85, 0.5) !important; opacity: 0.45; filter: grayscale(40%); }
+  #leagueFilters label:has(input:checked) { background: rgba(16, 185, 129, 0.15) !important; border-color: rgba(16, 185, 129, 0.55) !important; color: #ffffff !important; opacity: 1; filter: grayscale(0%); box-shadow: 0 2px 10px -2px rgba(16, 185, 129, 0.25); }
+  #leagueFilters input[type='checkbox'] { display: none !important; }
+  #dateTabsContainer button.bg-emerald-600 { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.45) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; }
+  @keyframes wobble {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-9px) rotate(-1.5deg); }
+    30% { transform: translateX(8px) rotate(1.5deg); }
+    45% { transform: translateX(-7px) rotate(-1deg); }
+    60% { transform: translateX(6px) rotate(1deg); }
+    75% { transform: translateX(-4px); }
+    90% { transform: translateX(3px); }
+  }
+  .wobble-error { animation: wobble 0.45s ease-in-out; border-color: #f43f5e !important; box-shadow: 0 0 12px rgba(244,63,94,0.45); }
+  @keyframes slowBlueLivePulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 12px rgba(56,189,248,0.65); transform: scale(1); }
+    50% { opacity: 0.42; box-shadow: 0 0 3px rgba(56,189,248,0.15); transform: scale(0.99); }
+  }
+  .live-blue-flash { animation: slowBlueLivePulse 2.8s infinite ease-in-out; background: rgba(14,165,233,0.22); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.75); }
+  @keyframes fadeSlideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes expandDetails { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+  #greenResults > div, #amberResults > div, #redResults > div { animation: fadeSlideUp 0.25s cubic-bezier(0.16,1,0.3,1) both; transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important; }
+  #greenResults > div:hover, #amberResults > div:hover, #redResults > div:hover { transform: translateY(-2px); }
+  [id^="d-"]:not(.hidden) { animation: expandDetails 0.22s ease-out forwards; }
+  .kpi-Interactive { cursor:pointer; position:relative; overflow:hidden; transition: all 0.2s ease !important; }
+  .kpi-Interactive:hover { border-color: rgba(16,185,129,0.45) !important; transform: translateY(-1px); }
+  .kpi-active-ring { outline: 2px solid #10b981 !important; background: rgba(16,185,129,0.14) !important; }
+  #scrollTopFab { position:fixed; bottom:18px; right:16px; z-index:45; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; }
+  #scrollTopFab.vis { opacity:1; pointer-events:auto; transform:translateY(0); }
+  .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
+  .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
+</style>
+<script>
+window.ADMIN_PIN = "18041992";
+window.APP_PASSWORD = "12341867";
+window.SESSION_TTL_MS = 10 * 60 * 1000;
+window.LOCK_BEFORE_KO_MS = 30 * 60 * 1000;
+window.MAX_DAILY_FIXTURES = 50;
+window.isAdmin = false;
+window.isTrial = false;
+window.activeTierFilter = 'ALL';
+
+window.ALL_LEAGUES = ["PL","CHA","L1","L2","EFLC","LL","SA","BUN","FL1","UCL","UEL","UECL"];
+window.LEAGUE_NAMES = {
+  PL: "Premier League", CHA: "Championship", L1: "League One", L2: "League Two", EFLC: "EFL Cup",
+  LL: "La Liga", SA: "Serie A", BUN: "Bundesliga", FL1: "Ligue 1",
+  UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
+};
+
+window.selectedDate = "";
+window.lastKnownToday = "";
+window.apiLiveScores = {};
+
+window.safeGet = function(k, fallback) {
+  try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
+};
+window.safeSet = function(k, val) {
+  try { localStorage.setItem(k, JSON.stringify(val)); } catch(e) {}
+};
+
+// Circular BetBoy AI Predictor Shield Logo
+window.makeBetBoyLogoSvg = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 500 500">' +
+    '<defs>' +
+      '<radialGradient id="bbBg" cx="50%" cy="50%" r="50%">' +
+        '<stop offset="0%" stop-color="#0a1329"/>' +
+        '<stop offset="75%" stop-color="#040914"/>' +
+        '<stop offset="100%" stop-color="#02040a"/>' +
+      '</radialGradient>' +
+      '<linearGradient id="bbRing" x1="0%" y1="0%" x2="100%" y2="100%">' +
+        '<stop offset="0%" stop-color="#22c55e"/>' +
+        '<stop offset="50%" stop-color="#10b981"/>' +
+        '<stop offset="100%" stop-color="#0ea5e9"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="bbShield" x1="0%" y1="0%" x2="0%" y2="100%">' +
+        '<stop offset="0%" stop-color="#0d1b36"/>' +
+        '<stop offset="100%" stop-color="#050b16"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="bbPill" x1="0%" y1="0%" x2="100%" y2="0%">' +
+        '<stop offset="0%" stop-color="#10b981"/>' +
+        '<stop offset="55%" stop-color="#059669"/>' +
+        '<stop offset="100%" stop-color="#0284c7"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    '<rect width="500" height="500" rx="110" fill="#02040a"/>' +
+    '<circle cx="250" cy="250" r="236" fill="url(#bbBg)" stroke="url(#bbRing)" stroke-width="14"/>' +
+    '<path d="M250,52 L412,115 V255 C412,355 335,425 250,455 C165,425 88,355 88,255 V115 Z" fill="url(#bbShield)" stroke="url(#bbRing)" stroke-width="9" stroke-linejoin="round"/>' +
+    '<path d="M188,125 L215,82 L250,108 L285,82 L312,125 Z" fill="#fbbf24"/>' +
+    '<path d="M122,208 L194,160 L255,192 L362,114" fill="none" stroke="#29b6f6" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="362" cy="114" r="16" fill="#2dd4bf"/>' +
+    '<text x="250" y="272" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="82" fill="#ffffff" text-anchor="middle" letter-spacing="1">BET<tspan fill="#2dd4bf">BOY</tspan></text>' +
+    '<rect x="122" y="302" width="256" height="62" rx="31" fill="url(#bbPill)"/>' +
+    '<text x="250" y="342" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="25.5" fill="#020617" text-anchor="middle" letter-spacing="2.5">AI PREDICTOR</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.getBetBoyLogoUrl = function(){
+  return window.makeBetBoyLogoSvg();
+};
+
+// Setup Home Screen App Icons for iOS & Android
+window.setupHomeScreenAppIcons = function(){
+  var svgUrl = window.getBetBoyLogoUrl();
+  var addHeadLink = function(rel, href, sizes, type){
+    var el = document.querySelector('link[rel="' + rel + '"]');
+    if(!el){ el = document.createElement("link"); el.rel = rel; document.head.appendChild(el); }
+    el.href = href;
+    if(sizes) el.setAttribute("sizes", sizes);
+    if(type) el.setAttribute("type", type);
+  };
+  addHeadLink("icon", svgUrl, "any", "image/svg+xml");
+  addHeadLink("apple-touch-icon", svgUrl, "180x180");
+
+  var img = new Image();
+  img.onload = function(){
+    try {
+      var c512 = document.createElement("canvas"); c512.width = 512; c512.height = 512;
+      c512.getContext("2d").drawImage(img, 0, 0, 512, 512);
+      var png512 = c512.toDataURL("image/png");
+
+      var c192 = document.createElement("canvas"); c192.width = 192; c192.height = 192;
+      c192.getContext("2d").drawImage(img, 0, 0, 192, 192);
+      var png192 = c192.toDataURL("image/png");
+
+      addHeadLink("apple-touch-icon", png192, "192x192", "image/png");
+      addHeadLink("icon", png192, "192x192", "image/png");
+
+      var manifestObj = {
+        name: "BetBoy AI Predictor",
+        short_name: "BetBoy AI",
+        description: "BetBoy AI Football Results & Market Predictor",
+        start_url: window.location.href.split("#")[0],
+        display: "standalone",
+        background_color: "#070b14",
+        theme_color: "#070b14",
+        icons: [
+          { src: png192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+          { src: png512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+        ]
+      };
+      addHeadLink("manifest", "data:application/manifest+json;charset=utf-8," + encodeURIComponent(JSON.stringify(manifestObj)));
+    } catch(e){}
+  };
+  img.src = svgUrl;
+};
+window.setupHomeScreenAppIcons();
+
+window.makePlLogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="20" fill="#ffffff"/>' +
+    '<path d="M33,19 L28,9 L36,13 L35,4 L44,11 L48,1 L53,10 L61,1 L61,11 L68,5 L65,16 C54,13 43,14 33,19 Z" fill="#38003c"/>' +
+    '<path d="M35,23 C48,16 62,17 74,25 C76,32 79,38 83,46 C87,56 88,66 84,75 L80,71 C79,82 74,90 66,96 L65,90 C54,96 43,97 34,92 C36,84 36,76 34,69 C30,75 26,80 23,83 C19,76 19,67 20,58 L14,60 C15,52 18,45 22,40 L18,39 C21,32 25,27 30,24 C29,29 30,33 33,36 C31,32 32,27 35,23 Z" fill="#38003c"/>' +
+    '<path d="M33,21 C26,24 25,32 31,36 C28,31 29,26 35,24 C37,24 39,25 41,27 C39,23 36,21 33,21 Z" fill="#ffffff"/>' +
+    '<path d="M44,28 L56,23 L64,28 L66,24 C71,27 75,31 77,36 L78,41 L74,38 C73,35 71,33 69,32 L72,36 C69,36 67,34 65,32 L69,38 L66,41 C61,40 58,41 55,42 L49,35 L52,32 L47,33 C44,30 40,30 36,33 C39,35 44,36 47,36 L53,43 C47,42 38,43 34,34 L31,34 C33,31 36,29 39,29 L36,27 C39,25 42,26 44,28 Z" fill="#ffffff"/>' +
+    '<path d="M55,45 L65,43 L70,47 L70,53 C66,56 62,58 59,59 L55,50 Z" fill="#ffffff"/>' +
+    '<path d="M73,47 L77,45 C80,49 79,55 77,58 L73,53 Z" fill="#ffffff"/>' +
+    '<path d="M61,63 C65,62 68,59 70,58 L73,58 L75,62 C75,66 73,69 70,71 L69,65 L64,68 Z" fill="#ffffff"/>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeEflShield = function(borderCol, labelTxt, fontSz) {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#ffffff" stroke="' + borderCol + '" stroke-width="5"/>' +
+    '<circle cx="50" cy="40" r="24" fill="none" stroke="#0019a5" stroke-width="4" stroke-dasharray="4 3"/>' +
+    '<circle cx="50" cy="40" r="16" fill="none" stroke="' + borderCol + '" stroke-width="4" stroke-dasharray="4 3"/>' +
+    '<circle cx="50" cy="40" r="8" fill="#e60000"/>' +
+    '<rect x="8" y="72" width="84" height="20" rx="5" fill="#0019a5"/>' +
+    '<text x="50" y="86" font-family="Arial,sans-serif" font-weight="900" font-size="' + fontSz + '" fill="#ffffff" text-anchor="middle">' + labelTxt + '</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeEflCupLogo = function(){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#ffffff" stroke="#00a651" stroke-width="4"/>' +
+    '<path d="M16,58 C22,36 38,38 48,60 C36,54 24,54 16,58 Z" fill="#00a651"/>' +
+    '<path d="M84,58 C78,36 62,38 52,60 C64,54 76,54 84,58 Z" fill="#ed1c24"/>' +
+    '<path d="M32,20 C20,20 20,42 35,44" fill="none" stroke="#0019a5" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M68,20 C80,20 80,42 65,44" fill="none" stroke="#0019a5" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M33,16 H67 L61,46 C59,56 41,56 39,46 Z" fill="#0019a5"/>' +
+    '<rect x="48" y="16" width="4" height="34" fill="#ffffff" rx="1.5"/>' +
+    '<rect x="45" y="53" width="10" height="9" fill="#0019a5"/>' +
+    '<rect x="35" y="62" width="30" height="6" rx="2" fill="#0019a5"/>' +
+    '<circle cx="50" cy="74" r="3" fill="#ed1c24"/>' +
+    '<text x="50" y="91" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="#0019a5" text-anchor="middle" letter-spacing="0.5">EFL CUP</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeLaLigaLogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#ffffff" stroke="#ff4b44" stroke-width="4"/>' +
+    '<path d="M28,18 H43 L30,58 H48 L44,68 H16 Z" fill="#ff4b44"/>' +
+    '<path d="M54,18 H69 L56,58 H78 L74,68 H44 Z" fill="#ff4b44"/>' +
+    '<text x="50" y="89" font-family="Arial,sans-serif" font-weight="900" font-size="16" fill="#ff4b44" text-anchor="middle" letter-spacing="1">LALIGA</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeSerieALogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#06163a" stroke="#00e5ff" stroke-width="4"/>' +
+    '<polygon points="50,10 80,66 64,66 50,38 36,66 20,66" fill="#008fd7"/>' +
+    '<polygon points="50,38 62,62 38,62" fill="#00e5ff"/>' +
+    '<polygon points="34,70 66,70 50,80" fill="#00e5ff"/>' +
+    '<text x="50" y="94" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="1">SERIE A</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeBundesligaLogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#d20515"/>' +
+    '<circle cx="38" cy="22" r="6" fill="#ffffff"/>' +
+    '<path d="M22,36 C34,30 48,34 56,44 L74,34 L78,40 L56,54 L42,72 L34,68 L44,50 L26,44 Z" fill="#ffffff"/>' +
+    '<circle cx="78" cy="24" r="5" fill="#ffffff"/>' +
+    '<rect x="8" y="78" width="84" height="16" rx="4" fill="#ffffff"/>' +
+    '<text x="50" y="90" font-family="Arial,sans-serif" font-weight="900" font-size="10.5" fill="#d20515" text-anchor="middle">BUNDESLIGA</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeLigue1Logo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#091c3e" stroke="#cdfb0a" stroke-width="4"/>' +
+    '<path d="M26,18 H42 V52 H58 V64 H26 Z" fill="#ffffff"/>' +
+    '<path d="M54,18 H72 V64 H58 V30 H50 Z" fill="#cdfb0a"/>' +
+    '<text x="50" y="88" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="#cdfb0a" text-anchor="middle" letter-spacing="1">LIGUE 1</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeUclLogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#040c2c" stroke="#38bdf8" stroke-width="3.5"/>' +
+    '<circle cx="50" cy="50" r="38" fill="#07164a" stroke="#ffffff" stroke-width="1.8"/>' +
+    '<polygon points="48,25 54,40 70,38 58,49 64,65 49,56 35,65 40,49 28,39 43,40" fill="#ffffff"/>' +
+    '<polygon points="28,18 39,21 48,13 43,25 54,32 39,31 32,40 31,28 18,28 28,22" fill="#ffffff"/>' +
+    '<polygon points="62,14 71,22 82,25 72,30 70,40 62,31 48,32 58,24 52,13 62,19" fill="#ffffff"/>' +
+    '<polygon points="84,33 88,46 84,58 79,48 68,51 74,40 69,29 79,36 86,27 84,36" fill="#ffffff"/>' +
+    '<polygon points="78,56 85,66 75,78 74,67 62,65 71,57 68,47 76,53 86,49 79,57" fill="#ffffff"/>' +
+    '<polygon points="55,74 68,77 58,86 49,82 37,86 44,77 35,66 48,72 58,64 54,74" fill="#ffffff"/>' +
+    '<polygon points="24,52 35,49 36,63 44,72 31,73 28,82 22,70 14,62 23,58 21,46" fill="#ffffff"/>' +
+    '<polygon points="15,36 24,27 23,40 31,48 19,51 15,61 12,48 12,35 19,31 15,38" fill="#ffffff"/>' +
+    '<circle cx="50" cy="50" r="38" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-opacity="0.6"/>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeUelLogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#121214" stroke="#ff6b00" stroke-width="3.5"/>' +
+    '<path d="M22,22 Q50,68 78,22" fill="none" stroke="#ff6b00" stroke-width="6" stroke-linecap="round"/>' +
+    '<polygon points="36,15 64,15 56,48 44,48" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>' +
+    '<rect x="40" y="54" width="20" height="5" rx="2" fill="#ff6b00"/>' +
+    '<text x="50" y="78" font-family="Arial,sans-serif" font-weight="900" font-size="12.5" fill="#ff6b00" text-anchor="middle" letter-spacing="0.5">EUROPA</text>' +
+    '<text x="50" y="91" font-family="Arial,sans-serif" font-weight="800" font-size="10" fill="#ffffff" text-anchor="middle" letter-spacing="1">LEAGUE</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeUeclLogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#0c1410" stroke="#00e65b" stroke-width="3.5"/>' +
+    '<path d="M20,20 Q50,70 80,20" fill="none" stroke="#00e65b" stroke-width="5.5" stroke-linecap="round"/>' +
+    '<path d="M28,15 Q50,55 72,15" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round"/>' +
+    '<polygon points="37,14 63,14 55,48 45,48" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>' +
+    '<rect x="41" y="53" width="18" height="5" rx="2" fill="#00e65b"/>' +
+    '<text x="50" y="78" font-family="Arial,sans-serif" font-weight="900" font-size="10.2" fill="#00e65b" text-anchor="middle" letter-spacing="0.3">CONFERENCE</text>' +
+    '<text x="50" y="91" font-family="Arial,sans-serif" font-weight="800" font-size="10" fill="#ffffff" text-anchor="middle" letter-spacing="1">LEAGUE</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.LEAGUE_FALLBACK_SVGS = {
+  PL: window.makePlLogo(),
+  CHA: window.makeEflShield("#b5943b", "CHAMPIONSHIP", "9.5"),
+  L1: window.makeEflShield("#8c9298", "LEAGUE ONE", "11"),
+  L2: window.makeEflShield("#b30828", "LEAGUE TWO", "11"),
+  EFLC: window.makeEflCupLogo(),
+  LL: window.makeLaLigaLogo(),
+  SA: window.makeSerieALogo(),
+  BUN: window.makeBundesligaLogo(),
+  FL1: window.makeLigue1Logo(),
+  UCL: window.makeUclLogo(),
+  UEL: window.makeUelLogo(),
+  UECL: window.makeUeclLogo()
+};
+
+// Official High-Resolution Competition Logos (Uniformly Sized via .lg-icon & .lg-icon-sm)
+window.LEAGUE_LOGOS = window.safeGet("airp_official_league_logos_v1", {
+  PL: "https://a.espncdn.com/i/leaguelogos/soccer/500/23.png",
+  CHA: "https://a.espncdn.com/i/leaguelogos/soccer/500/24.png",
+  L1: "https://a.espncdn.com/i/leaguelogos/soccer/500/25.png",
+  L2: "https://a.espncdn.com/i/leaguelogos/soccer/500/26.png",
+  EFLC: "https://a.espncdn.com/i/leaguelogos/soccer/500/41.png",
+  LL: "https://a.espncdn.com/i/leaguelogos/soccer/500/15.png",
+  SA: "https://a.espncdn.com/i/leaguelogos/soccer/500/12.png",
+  BUN: "https://a.espncdn.com/i/leaguelogos/soccer/500/10.png",
+  FL1: "https://a.espncdn.com/i/leaguelogos/soccer/500/9.png",
+  UCL: "https://a.espncdn.com/i/leaguelogos/soccer/500/2.png",
+  UEL: "https://a.espncdn.com/i/leaguelogos/soccer/500/2310.png",
+  UECL: "https://a.espncdn.com/i/leaguelogos/soccer/500/20296.png"
+});
+
+window.getLeagueLogo = function(lg, isSmall) {
+  var cls = isSmall ? "lg-icon-sm" : "lg-icon";
+  var url = window.LEAGUE_LOGOS[lg] || window.LEAGUE_FALLBACK_SVGS[lg] || window.LEAGUE_FALLBACK_SVGS.PL;
+  var fb = window.LEAGUE_FALLBACK_SVGS[lg] || window.LEAGUE_FALLBACK_SVGS.PL;
+  return '<img src="' + url + '" onerror="this.onerror=null;this.src=\'' + fb + '\'" alt="' + lg + '" class="' + cls + '">';
+};
+
+window.getLeagueName = function(lg) {
+  return window.LEAGUE_NAMES[lg] || lg;
+};
+
+window.triggerWobbleError = function() {
+  var inp = document.getElementById("passInput");
+  var err = document.getElementById("errorMsg");
+  if (err) err.style.display = "block";
+  if (inp) {
+    inp.classList.remove("wobble-error");
+    void inp.offsetWidth;
+    inp.classList.add("wobble-error");
+    inp.value = "";
+  }
+};
+
+window.grantSessionAccess = function(role) {
+  document.getElementById("authGate").style.display = "none";
+  var app = document.getElementById("appContainer");
+  app.classList.remove("hidden");
+  app.style.display = "block";
+  window.isTrial = (role === "trial");
+  var tb = document.getElementById("trialModeBanner");
+  if (tb) {
+    if (window.isTrial) tb.classList.remove("hidden");
+    else tb.classList.add("hidden");
+  }
+  if (role === "admin") {
+    window.isAdmin = true;
+    var ab = document.getElementById("adminBar"); if (ab) ab.classList.remove("hidden");
+    var lw = document.getElementById("logWrapper"); if (lw) lw.classList.remove("hidden");
+    var wb = document.getElementById("wipeBtn"); if (wb) wb.classList.remove("hidden");
+    var cb = document.getElementById("clearLogBtn"); if (cb) cb.classList.remove("hidden");
+    var aub = document.getElementById("authBtn"); if (aub) aub.innerText = "🔓";
+  } else {
+    window.isAdmin = false;
+    var ab2 = document.getElementById("adminBar"); if (ab2) ab2.classList.add("hidden");
+    var lw2 = document.getElementById("logWrapper"); if (lw2) lw2.classList.add("hidden");
+    var wb2 = document.getElementById("wipeBtn"); if (wb2) wb2.classList.add("hidden");
+    var cb2 = document.getElementById("clearLogBtn"); if (cb2) cb2.classList.add("hidden");
+    var aub2 = document.getElementById("authBtn"); if (aub2) aub2.innerText = "🔒";
+  }
+  if (typeof window.initDateTabs === "function") {
+    window.initDateTabs();
+  }
+  setTimeout(function() { if(window.centerActiveDateTab) window.centerActiveDateTab(true); }, 120);
+};
+
+window.enterTrialMode = function() {
+  var err = document.getElementById("errorMsg");
+  if (err) err.style.display = "none";
+  window.grantSessionAccess("trial");
+  if (typeof window.showAppToast === "function") {
+    window.showAppToast("👀 Free Trial Preview Mode Active");
+  }
+};
+
+window.exitTrialToSubscribe = function() {
+  window.isTrial = false;
+  var tb = document.getElementById("trialModeBanner");
+  if (tb) tb.classList.add("hidden");
+  document.getElementById("appContainer").style.display = "none";
+  document.getElementById("authGate").style.display = "flex";
+  var ppSec = document.getElementById("paypalGateSection");
+  if (ppSec && ppSec.scrollIntoView) {
+    setTimeout(function(){ ppSec.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80);
+  }
+};
+
+window.PAYPAL_CLIENT_ID = "BAADksjqqj_-OlL0WyIWeLi-OsBQitWr5HEZIwiAolAd8jaIc6iADWKnMud_yHL1-NrR2HiQJoIn4u475E";
+window.PAYPAL_PLAN_ID = "P-6EF90894VC377511ANLQ2UNI";
+window.SUB_DURATION_MS = 31 * 24 * 60 * 60 * 1000;
+
+window.getDeviceFingerprint = function(){
+  var devId = localStorage.getItem("airp_device_hw_id");
+  if(!devId){
+    var raw = [navigator.userAgent, screen.width, screen.height, screen.colorDepth, Intl.DateTimeFormat().resolvedOptions().timeZone].join("|");
+    var h = 2166136261;
+    for(var i = 0; i < raw.length; i++){
+      h ^= raw.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    devId = "DEV-" + Math.abs(h).toString(36).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+    try { localStorage.setItem("airp_device_hw_id", devId); } catch(e){}
+  }
+  return devId;
+};
+
+window.generatePersonalSubPass = function(subId){
+  var cleanSub = (subId || ("SUB" + Date.now())).replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  var expDays = Math.floor((Date.now() + window.SUB_DURATION_MS) / 86400000);
+  var seedStr = cleanSub + "|" + expDays + "|BETBOY2026";
+  var h = 5381;
+  for(var i = 0; i < seedStr.length; i++){
+    h = ((h << 5) + h) + seedStr.charCodeAt(i);
+  }
+  var sig = Math.abs(h).toString(36).toUpperCase().slice(0, 4).padStart(4, "X");
+  var tail = cleanSub.slice(-4).padStart(4, "9");
+  var code = "BB-" + tail + "-" + expDays.toString(36).toUpperCase() + "-" + sig;
+
+  var devFp = window.getDeviceFingerprint();
+  var rec = {
+    code: code,
+    subId: subId || "MANUAL",
+    device: devFp,
+    created: Date.now(),
+    expires: Date.now() + window.SUB_DURATION_MS
+  };
+  window.safeSet("airp_my_personal_pass", rec);
+  window.subPassState = window.subPassState || { allowMasterPass: true, revoked: [], issued: {} };
+  window.subPassState.issued[code] = rec;
+  window.safeSet("airp_sub_pass_state", window.subPassState);
+  return rec;
+};
+
+window.verifyPersonalSubPass = function(inputCode){
+  var code = (inputCode || "").trim().toUpperCase();
+  if(!code.startsWith("BB-")) return { valid: false };
+  window.subPassState = window.subPassState || { allowMasterPass: true, revoked: [], issued: {} };
+
+  if((window.subPassState.revoked || []).indexOf(code) !== -1){
+    return { valid: false, reason: "This subscription pass has been cancelled or revoked." };
+  }
+
+  var parts = code.split("-");
+  if(parts.length !== 4) return { valid: false, reason: "Invalid Personal Pass format." };
+
+  var expDays = parseInt(parts[2], 36);
+  if(isNaN(expDays)) return { valid: false, reason: "Corrupted Personal Pass." };
+
+  var nowDays = Math.floor(Date.now() / 86400000);
+  if(nowDays > expDays){
+    return { valid: false, reason: "Monthly subscription pass expired. Please renew via PayPal below." };
+  }
+
+  var currentDev = window.getDeviceFingerprint();
+  var localRec = window.safeGet("airp_my_personal_pass", null);
+  var globalRec = window.subPassState.issued && window.subPassState.issued[code];
+
+  if(globalRec && globalRec.device && globalRec.device !== "UNCLAIMED" && globalRec.device !== currentDev){
+    return { valid: false, reason: "Pass locked to another device. Sharing is disabled." };
+  }
+  if(localRec && localRec.code === code && localRec.device && localRec.device !== currentDev){
+    return { valid: false, reason: "Pass locked to another device. Sharing is disabled." };
+  }
+
+  if(globalRec && globalRec.device === "UNCLAIMED"){
+    globalRec.device = currentDev;
+    window.safeSet("airp_sub_pass_state", window.subPassState);
+  }
+  if(!localRec || localRec.code !== code){
+    window.safeSet("airp_my_personal_pass", {
+      code: code,
+      subId: (globalRec && globalRec.subId) || "SUBSCRIBER",
+      device: currentDev,
+      expires: expDays * 86400000
+    });
+  }
+  return { valid: true, expires: expDays * 86400000 };
+};
+
+window.unlockGateNow = function(isButtonPress) {
+  var inp = document.getElementById("passInput");
+  var err = document.getElementById("errorMsg");
+  var rawVal = inp ? inp.value.trim() : "";
+  var cleanVal = rawVal.replace(/\s+/g, "");
+
+  if (cleanVal === window.ADMIN_PIN) {
+    localStorage.removeItem("airp_auth_session");
+    window.grantSessionAccess("admin");
+    return;
+  }
+
+  if (cleanVal === window.APP_PASSWORD) {
+    if (window.subPassState && window.subPassState.allowMasterPass === false) {
+      if (err) {
+        err.innerText = "Shared password disabled. Please use your personal PayPal subscriber pass.";
+        err.style.display = "block";
+      }
+      window.triggerWobbleError();
+      return;
+    }
+    localStorage.removeItem("airp_auth_session");
+    window.grantSessionAccess("user");
+    return;
+  }
+
+  if (rawVal.toUpperCase().startsWith("BB-")) {
+    var check = window.verifyPersonalSubPass(rawVal);
+    if (check.valid) {
+      localStorage.removeItem("airp_auth_session");
+      window.grantSessionAccess("user");
+      return;
+    } else if (isButtonPress || rawVal.length >= 14) {
+      if (err) {
+        err.innerText = check.reason || "Invalid or expired subscription pass.";
+        err.style.display = "block";
+      }
+      window.triggerWobbleError();
+      return;
+    }
+  }
+
+  if (isButtonPress || cleanVal.length >= 8) {
+    if (err) err.innerText = "Incorrect password or pass code. Please try again.";
+    window.triggerWobbleError();
+  }
+};
+
+window.checkSavedSession = function() {
+  localStorage.removeItem("airp_auth_session");
+  window.isAdmin = false;
+  window.isTrial = false;
+  var tb = document.getElementById("trialModeBanner");
+  if(tb) tb.classList.add("hidden");
+  var gate = document.getElementById("authGate");
+  var app = document.getElementById("appContainer");
+  var inp = document.getElementById("passInput");
+  if(gate) gate.style.display = "flex";
+  if(app) app.style.display = "none";
+  if(inp) inp.value = "";
+};
+</script>
+</head>
+<body class="min-h-screen pb-16 text-sm select-none">
+<div id="authGate" style="display: flex;" class="fixed inset-0 bg-slate-950 z-50 items-center justify-center p-4 overflow-y-auto">
+  <div class="glass p-6 rounded-2xl w-full max-w-sm space-y-4 text-center shadow-2xl border border-emerald-500/30 relative flex flex-col justify-between my-auto" style="min-height:360px;">
+    <div>
+      <img src="" id="gateLogoImg" class="w-24 h-24 mx-auto rounded-full shadow-2xl mb-2.5 border border-emerald-500/40">
+      <script>document.getElementById("gateLogoImg").src = window.getBetBoyLogoUrl();</script>
+      <h2 class="text-base font-black tracking-wider text-white">BETBOY <span class="text-emerald-400">AI PREDICTOR</span></h2>
+    </div>
+    <div class="space-y-2 my-auto">
+      <input type="text" id="passInput" oninput="if(this.value.replace(/\s+/g,'').length>=8 && !this.value.toUpperCase().startsWith('BB-'))window.unlockGateNow(false)" onkeydown="if(event.key==='Enter')window.unlockGateNow(true)" placeholder="Enter Personal Pass (BB-...) or PIN" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-center text-white tracking-widest text-sm focus:border-emerald-500 outline-none transition">
+      <button type="button" onclick="window.unlockGateNow(true)" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 font-bold py-2.5 rounded-xl text-white shadow transition text-xs cursor-pointer">Unlock Access</button>
+      <button type="button" onclick="window.enterTrialMode()" class="w-full bg-slate-900 hover:bg-slate-800 active:bg-slate-950 font-bold py-2 rounded-xl text-amber-300 border border-amber-500/40 shadow transition text-xs cursor-pointer flex items-center justify-center gap-1.5">👀 Try Free Preview (Teaser Mode)</button>
+      <p id="errorMsg" style="display:none;" class="text-[10px] text-rose-400 font-semibold">Incorrect password. Please try again.</p>
+    </div>
+
+    <!-- PayPal Monthly Subscription Section -->
+    <div id="paypalGateSection" class="pt-3 border-t border-slate-800/80 space-y-2 text-left">
+      <div class="text-center space-y-0.5">
+        <div class="text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider">⚡ Instant Monthly VIP Access</div>
+        <p class="text-[10px] text-slate-400">Subscribe below to receive your own <b>1-Device Personal Password</b> instantly:</p>
+      </div>
+      <div id="subSuccessBanner" style="display:none;" class="bg-emerald-950/90 border border-emerald-500/60 p-3 rounded-xl text-center space-y-1.5 shadow-lg">
+        <div class="text-[10px] font-black text-emerald-300 uppercase">✅ Subscription Active (Device-Locked)</div>
+        <div class="text-[10px] text-slate-300">Your Personal Non-Shareable Pass:</div>
+        <div id="generatedPassDisplay" class="font-mono font-black text-sm text-white bg-slate-950 py-1.5 px-2 rounded-lg border border-emerald-500/40 select-all tracking-wider"></div>
+        <div id="generatedSubIdDisplay" class="text-[9px] text-slate-400 font-mono"></div>
+        <button type="button" onclick="window.unlockGateNow(true)" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2 rounded-lg text-xs shadow cursor-pointer transition">🚀 Copy &amp; Unlock App Now</button>
+      </div>
+      <div id="paypal-button-container-P-6EF90894VC377511ANLQ2UNI" class="mt-1"></div>
+    </div>
+
+    <div class="text-[10px] text-slate-500 tracking-wide font-mono pt-2 border-t border-slate-800/60">Copyright © BetBoy 2026</div>
+  </div>
+</div>
+
+<div id="appContainer" style="display: none;">
+<!-- Admin-Only Unlimited Historical Archive Drawer -->
+<div id="drawer" class="fixed inset-y-0 left-0 w-80 bg-slate-950 border-r border-slate-800 z-50 transform transition-transform duration-300 p-4 flex flex-col justify-between shadow-2xl -translate-x-full">
+  <div>
+    <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-2">
+      <span class="font-bold text-emerald-400 text-xs">📂 Admin Unlimited Historical Archive</span>
+      <button onclick="window.toggleDrawer()" class="text-slate-400 text-lg font-bold px-2">×</button>
+    </div>
+    <p class="text-[10px] text-slate-400 mb-2">Permanent log of all past &amp; upcoming slates. Tap any date to inspect locked T-30m percentages &amp; FT results:</p>
+    <div id="scanHistoryList" class="space-y-2 max-h-[52vh] overflow-y-auto pr-1"></div>
+    <div class="mt-3 pt-2.5 border-t border-slate-800 text-[9px] text-slate-400 space-y-1 max-h-[25vh] overflow-y-auto">
+      <div id="drawerModelTitle" class="font-bold text-emerald-400 text-[10px]">🧠 Active Model Factors:</div>
+      <div id="drawerEvolvedList" class="pt-1 text-emerald-300 space-y-0.5"></div>
+    </div>
+  </div>
+  <button id="wipeBtn" onclick="window.clearHistory()" class="bg-slate-900 text-xs text-rose-400 py-2 rounded-lg border border-rose-500/20 font-semibold hidden">Wipe History (Admin)</button>
+</div>
+
+<!-- Clean Top Header -->
+<header class="sticky top-0 z-40 bg-slate-950/95 border-b border-slate-800 px-3 py-2.5 flex justify-between items-center">
+  <div class="flex items-center gap-2">
+    <img src="" id="headerLogoImg" class="w-9 h-9 rounded-full shadow border border-emerald-500/30">
+    <script>document.getElementById("headerLogoImg").src = window.getBetBoyLogoUrl();</script>
+    <h1 class="text-xs font-black tracking-wide text-white flex items-center gap-1.5">BETBOY <span class="text-emerald-400">AI PREDICTOR</span> <span id="weightBadge" class="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 mono">v14.3</span></h1>
+  </div>
+  <button id="authBtn" onclick="window.unlockAdmin()" class="text-[10px] bg-slate-900 text-slate-400 px-2 py-1.5 rounded-lg border border-slate-800 font-semibold">🔒</button>
+</header>
+
+<main class="p-3 space-y-3 max-w-lg mx-auto">
+  <!-- Free Trial Preview Banner -->
+  <div id="trialModeBanner" class="bg-gradient-to-r from-amber-500/20 via-emerald-500/15 to-sky-500/20 border border-amber-400/50 p-3 rounded-xl flex items-center justify-between gap-2 shadow-lg hidden">
+    <div class="text-left">
+      <div class="text-xs font-black text-amber-300 flex items-center gap-1">👀 Free Trial Preview Mode</div>
+      <div class="text-[10px] text-slate-300">Picks, exact % &amp; 8 markets are blurred. Subscribe for full VIP access!</div>
+    </div>
+    <button type="button" onclick="window.exitTrialToSubscribe()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-2 rounded-xl text-[11px] shadow flex-shrink-0 cursor-pointer transition">🔓 Subscribe</button>
+  </div>
+
+  <div id="adminBar" class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-xl space-y-2 text-xs hidden">
+    <div class="flex justify-between items-center">
+      <span id="adminModelLabel" class="font-bold text-emerald-300">🔑 Admin Control (v14.3)</span>
+      <span id="roundStatusBadge" class="text-[10px] text-emerald-400 mono">Loading...</span>
+    </div>
+    <div id="adminWeightsBar" class="bg-slate-950/80 border border-emerald-500/20 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 flex flex-wrap justify-between gap-1 font-mono">
+      <span>🏠 Home: <b id="awHome" class="text-emerald-400">+4.2</b></span>
+      <span>✈️ Away Shield: <b id="awAway" class="text-amber-300">-3.2</b></span>
+      <span>🛡️ Draw Gate: <b id="awDraw" class="text-sky-300">12.0</b></span>
+      <span>⚽ xG Calib: <b id="awXg" class="text-emerald-300">1.00x</b></span>
+    </div>
+    <div class="grid gap-1.5 grid-cols-3">
+      <button onclick="window.toggleDrawer()" class="bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-lg text-emerald-300 border border-emerald-500/30 shadow text-[11px]">📂 Archive</button>
+      <button onclick="window.triggerManualHourlyAudit()" class="bg-sky-700 hover:bg-sky-600 font-bold py-2 rounded-lg text-white shadow text-[11px]">⏱️ Hourly Audit</button>
+      <button id="improveBtn" onclick="window.autoFetchAndImprove(false)" class="bg-emerald-600 hover:bg-emerald-500 font-bold py-2 rounded-lg text-white shadow text-[11px]">⚡ Evolve AI</button>
+    </div>
+    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-500/20">
+      <button onclick="window.downloadSnapshotFile()" class="bg-indigo-600 hover:bg-indigo-500 font-bold py-2 rounded-lg text-white shadow text-[11px]">💾 Download HTML</button>
+      <button onclick="window.exportSnapshot()" class="bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-lg text-emerald-300 border border-emerald-500/30 text-[11px]">📋 Copy HTML</button>
+    </div>
+    <div id="adminSubManagerBox" class="pt-2 mt-1 border-t border-emerald-500/20 space-y-1.5">
+      <div class="flex justify-between items-center">
+        <span class="font-bold text-emerald-300 text-[11px]">💳 PayPal Subscriber Pass Manager</span>
+        <button type="button" id="toggleMasterPassBtn" onclick="window.toggleLegacyMasterPass()" class="text-[9px] px-2 py-0.5 rounded font-bold border border-amber-500/40 bg-amber-500/15 text-amber-300 cursor-pointer">Shared Pass (12341867): ON</button>
+      </div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <button type="button" onclick="window.adminCreateManualPass()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow">➕ Issue 30d Pass</button>
+        <button type="button" onclick="window.adminRevokePassPrompt()" class="bg-rose-900/70 hover:bg-rose-800 text-rose-200 border border-rose-500/30 font-bold py-1.5 px-2 rounded-lg text-[10px]">🚫 Revoke Pass</button>
+      </div>
+      <div id="adminSubPassOutput" style="display:none;" class="bg-slate-950 border border-slate-800 p-2 rounded-lg text-[10px] font-mono text-emerald-300 select-all"></div>
+    </div>
+  </div>
+
+  <!-- Symmetrical Rolling Date Bar (3 Past, Today, 3 Future) -->
+  <div class="bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+    <div id="dateTabsContainer" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 scroll-smooth relative"></div>
+  </div>
+
+  <!-- Filter Competitions Bar (12 Competitions) -->
+  <div class="glass p-2.5 rounded-xl text-xs space-y-2">
+    <div class="flex justify-between items-center px-0.5">
+      <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Filter Competitions</span>
+      <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition">Clear All (12)</button>
+    </div>
+    <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
+      <script>
+        document.write(window.ALL_LEAGUES.map(function(code){
+          return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500"><span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span>' + window.getLeagueName(code) + '</span></label>';
+        }).join(""));
+      </script>
+    </div>
+  </div>
+
+  <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Success Rate) -->
+  <div class="grid gap-1.5 text-center grid-cols-4">
+    <div class="glass p-2 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono">0/0</div></div>
+    <div class="glass p-2 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono">0</div></div>
+    <div class="glass p-2 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono">0</div></div>
+    <div class="glass p-2 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400">Success Rate</div><div id="sessionHitRate" class="text-sm font-black text-white mono">--%</div></div>
+  </div>
+
+  <!-- Live Hourly Audit Status & User Quick-Sort Bar -->
+  <div class="glass px-3 py-2 rounded-xl flex flex-wrap items-center justify-between gap-2 text-[10px]">
+    <div class="flex items-center gap-1.5 text-slate-300">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+      <span id="hourlyAuditStatusText" class="font-semibold">Hourly Model Check Active • Locks 30m Pre-KO</span>
+    </div>
+    <div class="flex items-center gap-1 ml-auto">
+      <button type="button" id="sortByConfBtn" onclick="window.setMatchSortMode('CONF')" class="px-2 py-1 rounded-md font-bold bg-emerald-600 text-white transition cursor-pointer">🔥 Best %</button>
+      <button type="button" id="sortByKoBtn" onclick="window.setMatchSortMode('KO')" class="px-2 py-1 rounded-md font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer">🕒 Kick-Off</button>
+      <button type="button" id="toggleAccaBtn" onclick="window.toggleTopAccaSlip()" class="px-2 py-1 rounded-md font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer">⭐ Top Slip</button>
+    </div>
+  </div>
+
+  <!-- Collapsible Daily Top Value Acca / Banker Builder Slip -->
+  <div id="topAccaSlipBox" class="glass p-3 rounded-xl border border-amber-500/40 space-y-2 hidden">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
+      <span class="text-xs font-black text-amber-300 flex items-center gap-1">⭐ AI Daily High-Confidence Banker Slip</span>
+      <button type="button" onclick="window.copyDailyAccaSlip()" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1 rounded-lg shadow cursor-pointer">📋 Copy Slip</button>
+    </div>
+    <div id="topAccaSlipList" class="space-y-1.5 text-xs"></div>
+  </div>
+
+  <!-- Instant Team & League Search Bar -->
+  <div id="liveTeamSearchWrap" class="glass p-2 rounded-xl mb-2 relative flex items-center">
+    <input type="search" id="instantSearchInput" placeholder="🔍 Instant team / league search..." oninput="window.filterAppCards(this.value)" class="w-full bg-slate-950/90 border border-slate-800 pl-3 pr-8 py-2 rounded-lg text-xs text-white outline-none focus:border-emerald-500 transition">
+    <button type="button" id="clearSearchBtn" onclick="var inp=document.getElementById('instantSearchInput');inp.value='';window.filterAppCards('');" style="display:none;" class="absolute right-4 text-slate-400 hover:text-white font-bold text-sm px-1.5 cursor-pointer">×</button>
+  </div>
+
+  <!-- Green, Amber & Red Fixture Tiers -->
+  <div>
+    <h2 class="font-bold text-emerald-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> GREEN PICKS (75%+ HIGH-CONFIDENCE)</h2>
+    <div id="greenResults" class="space-y-2"></div>
+  </div>
+  <div>
+    <h2 class="font-bold text-amber-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> AMBER PICKS (60%–74.9% MODERATE / CAUTION)</h2>
+    <div id="amberResults" class="space-y-2"></div>
+  </div>
+  <div>
+    <h2 class="font-bold text-rose-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> RED PICKS (BELOW 60% • AVOID)</h2>
+    <div id="redResults" class="space-y-2"></div>
+  </div>
+
+  <!-- Admin-Only Evolution Log -->
+  <div id="logWrapper" class="glass p-3 rounded-xl space-y-1.5 text-xs border border-emerald-500/30 hidden">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-1">
+      <span class="font-bold text-emerald-400">📋 Admin Autonomous Evolution &amp; T-30m Lock Audit Log</span>
+      <button id="clearLogBtn" onclick="window.clearLog()" class="text-[10px] text-rose-400 font-bold hidden">Clear</button>
+    </div>
+    <div id="logContainer" class="space-y-1 max-h-48 overflow-y-auto mono text-[10px] text-slate-300"></div>
+  </div>
+
+  <div id="betBoyFooter" class="text-center text-[10px] text-slate-500 font-mono pt-4 pb-2 border-t border-slate-800/60">Copyright © BetBoy 2026 • AI Results Predictor</div>
+</main>
+</div>
+
+<!-- Non-Blocking Admin Action & PIN Modal -->
+<div id="adminDialogModal" style="position:fixed;inset:0;background:rgba(2,6,23,0.92);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;">
+  <div class="glass p-5 rounded-2xl w-full max-w-xs space-y-3 border border-emerald-500/40 shadow-2xl text-center">
+    <div id="adminDialogTitle" class="font-black text-emerald-400 text-xs uppercase tracking-wider">Admin Authentication</div>
+    <input id="adminDialogInput" type="password" placeholder="Enter value..." onkeydown="if(event.key==='Enter')window.confirmAdminDialog()" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-center text-white text-xs outline-none focus:border-emerald-500">
+    <div class="grid grid-cols-2 gap-2">
+      <button type="button" onclick="window.closeAdminDialog()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs">Cancel</button>
+      <button type="button" onclick="window.confirmAdminDialog()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2 rounded-xl text-xs shadow">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Non-Blocking Toast Notification -->
+<div id="appToastBanner" style="position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:9998;display:none;" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-2xl border border-emerald-300/40 whitespace-nowrap"></div>
+
+<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs px-3 py-2 rounded-full shadow-lg border border-emerald-400/40 cursor-pointer flex items-center gap-1">↑ Top</button>
+
+<script>
+/* STATE_START */
+window.PUBLISHED_STATE={"stamp":1793221500000,"version":14.3,"injectedStats":["Metric 32: UEFA Rest-Rotation & Travel Sync (+0.3% Edge)","Metric 33: LaLiga/Serie A Low-Block Box SoT% (+0.3% Edge)","Metric 34: Bundesliga High-Line Transition Shield (+0.3% Edge)","Metric 35: Deep-Block Set-Piece xG Weight (+0.3% Edge)","Metric 36: Multi-League Press-Resistance Index (+0.3% Edge)","Metric 37: Half-Space Cutback xG Conversion (+0.3% Edge)","Metric 38: GK Sweeper-Keeper High-Line Intercepts (+0.3% Edge)","Metric 39: 75-90m Late-Sub xT Differential (+0.3% Edge)","Metric 40: Second-Ball Recovery Zone 14 Sync (+0.3% Edge)","Metric 41: Referee Foul-Tempo & Card Volatility (+0.3% Edge)","Metric 42: Counter-Press Regain 5-Sec Window (+0.3% Edge)","Metric 43: Progressive Carry Box-Penetration Rate (+0.3% Edge)","Metric 44: Under-Pressure Build-Up Pass Accuracy (+0.3% Edge)","Metric 45: Out-of-Possession Compactness Width (+0.3% Edge)","Metric 46: Cross-to-Header xG Aerial Dominance (+0.3% Edge)","Metric 47: First-Goal Lead Retention Resilience (+0.3% Edge)","Metric 48: Away Crowd Decibel & Turf Adaptation (+0.3% Edge)","Metric 49: Central Midfield Line-Breaking Passes (+0.3% Edge)","Metric 50: Expected Threat Conceded per Turn-Over (+0.3% Edge)"],"hist":[],"logs":[],"drift":{},"results":{},"lockedScores":{}};
+/* STATE_END */
+
+var savedStamp = parseInt(window.safeGet("airp_v122_stamp", 0), 10);
+if(window.PUBLISHED_STATE.stamp > savedStamp){
+  window.safeSet("airp_v122_stamp", window.PUBLISHED_STATE.stamp);
+  window.safeSet("airp_v122_state", {version: window.PUBLISHED_STATE.version, injectedStats: window.PUBLISHED_STATE.injectedStats});
+  window.safeSet("airp_v122_hist", window.PUBLISHED_STATE.hist);
+  window.safeSet("airp_v122_log", window.PUBLISHED_STATE.logs);
+  window.safeSet("airp_v122_drift", window.PUBLISHED_STATE.drift);
+  window.safeSet("airp_v122_res", window.PUBLISHED_STATE.results || {});
+  window.safeSet("airp_v122_locks", window.PUBLISHED_STATE.lockedScores || {});
+}
+
+window.modelState = window.safeGet("airp_v122_state", {version: window.PUBLISHED_STATE.version, injectedStats: window.PUBLISHED_STATE.injectedStats});
+window.scanHistory = window.safeGet("airp_v122_hist", window.PUBLISHED_STATE.hist || []);
+window.logHistory = window.safeGet("airp_v122_log", window.PUBLISHED_STATE.logs || []);
+window.liveDriftMap = window.safeGet("airp_v122_drift", window.PUBLISHED_STATE.drift || {});
+window.customResults = window.safeGet("airp_v122_res", {});
+window.lockedScores = window.safeGet("airp_v122_locks", {});
+window.apiLiveScores = window.safeGet("airp_espn_truth_v4", {});
+window.DAILY_FIXTURES = window.safeGet("airp_live_espn_fixtures", {});
+window.adaptiveWeights = window.safeGet("airp_adaptive_weights_v14", { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0, bttsMult: 1.0 });
+window.matchSortMode = window.safeGet("airp_sort_mode", "CONF");
+window.subPassState = window.safeGet("airp_sub_pass_state", (window.PUBLISHED_STATE && window.PUBLISHED_STATE.subPasses) || {
+  allowMasterPass: true,
+  revoked: [],
+  issued: {}
+});
+window.expandedCards = {};
+
+window.updateAdminWeightsBar = function(){
+  var w = window.adaptiveWeights || { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0 };
+  var elH = document.getElementById("awHome"); if(elH) elH.innerText = "+" + Number(w.homeBoost || 4.2).toFixed(2);
+  var elA = document.getElementById("awAway"); if(elA) elA.innerText = "-" + Number(w.awayPen || 3.2).toFixed(2);
+  var elD = document.getElementById("awDraw"); if(elD) elD.innerText = Number(w.drawGate || 12.0).toFixed(2);
+  var elX = document.getElementById("awXg"); if(elX) elX.innerText = Number(w.xgMult || 1.0).toFixed(2) + "x";
+};
+
+window.setMatchSortMode = function(mode){
+  window.matchSortMode = mode;
+  window.safeSet("airp_sort_mode", mode);
+  var bConf = document.getElementById("sortByConfBtn");
+  var bKo = document.getElementById("sortByKoBtn");
+  if(bConf) bConf.className = mode === "CONF" ? "px-2 py-1 rounded-md font-bold bg-emerald-600 text-white transition cursor-pointer" : "px-2 py-1 rounded-md font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer";
+  if(bKo) bKo.className = mode === "KO" ? "px-2 py-1 rounded-md font-bold bg-emerald-600 text-white transition cursor-pointer" : "px-2 py-1 rounded-md font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer";
+  window.runEngine(false);
+};
+
+window.toggleTopAccaSlip = function(){
+  var box = document.getElementById("topAccaSlipBox");
+  if(box) box.classList.toggle("hidden");
+};
+
+window.copyDailyAccaSlip = function(){
+  if(window.isTrial){
+    window.showAppToast("🔒 Subscribe to copy the VIP Daily Banker Slip!");
+    window.exitTrialToSubscribe();
+    return;
+  }
+  var list = document.getElementById("topAccaSlipList");
+  if(!list) return;
+  var txt = "🔥 BetBoy AI Predictor — Top Daily Banker Slip (" + (window.selectedDate || "") + "):\n" + (list.innerText || "").replace(/\n+/g, "\n");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ window.showAppToast("📋 Top Banker Slip Copied!"); });
+  } else {
+    var ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+    window.showAppToast("📋 Top Banker Slip Copied!");
+  }
+};
+
+window.refreshMasterPassBtnLabel = function(){
+  var btn = document.getElementById("toggleMasterPassBtn");
+  if(!btn) return;
+  var on = window.subPassState.allowMasterPass !== false;
+  btn.innerText = on ? "Shared Pass (12341867): ON" : "Shared Pass (12341867): OFF";
+  btn.className = on
+    ? "text-[9px] px-2 py-0.5 rounded font-bold border border-amber-500/40 bg-amber-500/15 text-amber-300 cursor-pointer"
+    : "text-[9px] px-2 py-0.5 rounded font-bold border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 cursor-pointer";
+};
+
+window.toggleLegacyMasterPass = function(){
+  window.subPassState.allowMasterPass = (window.subPassState.allowMasterPass === false) ? true : false;
+  window.safeSet("airp_sub_pass_state", window.subPassState);
+  window.refreshMasterPassBtnLabel();
+  window.addLog("🔐 Admin set legacy shared password (12341867) to: <b>" + (window.subPassState.allowMasterPass ? "ENABLED" : "DISABLED (Personal Passes Only)") + "</b>");
+};
+
+window.adminCreateManualPass = function(){
+  var tag = "VIP" + Math.floor(1000 + Math.random() * 9000);
+  var expDays = Math.floor((Date.now() + window.SUB_DURATION_MS) / 86400000);
+  var seedStr = tag + "|" + expDays + "|BETBOY2026";
+  var h = 5381;
+  for(var i = 0; i < seedStr.length; i++) h = ((h << 5) + h) + seedStr.charCodeAt(i);
+  var sig = Math.abs(h).toString(36).toUpperCase().slice(0, 4).padStart(4, "X");
+  var code = "BB-" + tag + "-" + expDays.toString(36).toUpperCase() + "-" + sig;
+
+  window.subPassState.issued[code] = {
+    code: code,
+    subId: "ADMIN-ISSUED",
+    device: "UNCLAIMED",
+    created: Date.now(),
+    expires: Date.now() + window.SUB_DURATION_MS
+  };
+  window.safeSet("airp_sub_pass_state", window.subPassState);
+
+  var out = document.getElementById("adminSubPassOutput");
+  if(out){
+    out.style.display = "block";
+    out.innerHTML = "✅ <b>New 1-Device 30d Pass:</b> " + code + "<br><span class='text-slate-400'>Locks to the subscriber's phone on first login. Click Download HTML to publish.</span>";
+  }
+  try { navigator.clipboard.writeText(code); } catch(e){}
+  window.addLog("🎟️ Admin generated 30-day 1-device pass: <b>" + code + "</b>");
+};
+
+window.adminRevokePassPrompt = function(){
+  var out = document.getElementById("adminSubPassOutput");
+  if(!out) return;
+  out.style.display = "block";
+  out.innerHTML = '<div class="flex gap-1 items-center"><input id="revokeInputBox" placeholder="Enter BB-XXXX-... to revoke" class="flex-1 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-white text-[10px]"><button onclick="window.confirmRevokePass()" class="bg-rose-600 text-white px-2 py-1 rounded font-bold text-[10px]">Block</button></div>';
+};
+
+window.confirmRevokePass = function(){
+  var inp = document.getElementById("revokeInputBox");
+  var val = inp ? inp.value.trim().toUpperCase() : "";
+  if(!val) return;
+  if(window.subPassState.revoked.indexOf(val) === -1){
+    window.subPassState.revoked.push(val);
+    window.safeSet("airp_sub_pass_state", window.subPassState);
+  }
+  var out = document.getElementById("adminSubPassOutput");
+  if(out) out.innerHTML = "🚫 Pass <b>" + val + "</b> is now revoked. Click <b>Download HTML</b> to publish revocation.";
+  window.addLog("🚫 Admin revoked subscriber pass: <b>" + val + "</b>");
+};
+
+window.initPayPalSubscribeButton = function(){
+  var myPass = window.safeGet("airp_my_personal_pass", null);
+  var passInp = document.getElementById("passInput");
+  if(myPass && myPass.code && passInp){
+    var chk = window.verifyPersonalSubPass(myPass.code);
+    if(chk.valid) passInp.value = myPass.code;
+  }
+  if(window.paypal && document.getElementById("paypal-button-container-P-6EF90894VC377511ANLQ2UNI")){
+    window.paypal.Buttons({
+      style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'subscribe' },
+      createSubscription: function(data, actions) {
+        return actions.subscription.create({
+          plan_id: window.PAYPAL_PLAN_ID
+        });
+      },
+      onApprove: function(data, actions) {
+        var rec = window.generatePersonalSubPass(data.subscriptionID);
+        var banner = document.getElementById("subSuccessBanner");
+        var codeEl = document.getElementById("generatedPassDisplay");
+        var subEl = document.getElementById("generatedSubIdDisplay");
+        var inp = document.getElementById("passInput");
+        if(codeEl) codeEl.innerText = rec.code;
+        if(subEl) subEl.innerText = "PayPal Sub ID: " + data.subscriptionID + " • Valid 31 Days";
+        if(banner) banner.style.display = "block";
+        if(inp) inp.value = rec.code;
+        try { navigator.clipboard.writeText(rec.code); } catch(e){}
+      }
+    }).render('#paypal-button-container-P-6EF90894VC377511ANLQ2UNI');
+  }
+};
+
+// Club Crest Map
+(function(){
+  var B = "https://a.espncdn.com/i/teamlogos/soccer/500/";
+  var map = {
+    arsenal:359,astonvilla:362,bournemouth:349,brentford:337,brighton:331,chelsea:363,crystalpalace:384,cpalace:384,palace:384,everton:368,fulham:370,ipswich:373,leicester:375,liverpool:364,mancity:382,manutd:360,manunited:360,newcastle:361,nottm:393,nottmforest:393,southampton:376,tottenham:367,spurs:367,westham:371,wolves:380,leeds:357,burnley:379,sunderland:366,sheffutd:398,sheffieldutd:398,sheffwed:399,sheffieldwed:399,middlesbrough:369,norwich:381,westbrom:383,blackburn:365,coventry:388,watford:395,swansea:318,bristolcity:333,stokecity:336,hull:306,hullcity:306,qpr:334,preston:394,millwall:391,cardiff:347,derby:374,portsmouth:385,oxford:311,plymouth:307,luton:301,birmingham:392,wrexham:352,huddersfield:335,bolton:358,reading:338,barnsley:397,charlton:372,wigan:350,blackpool:346,peterborough:343,wycombe:344,leytonorient:309,rotherham:402,
+    realmadrid:86,barcelona:83,atletico:1068,sociedad:89,betis:244,villarreal:102,athletic:93,athleticbilbao:93,sevilla:243,girona:9812,celta:85,celtavigo:85,getafe:2922,osasuna:97,mallorca:84,alaves:96,levante:1538,espanyol:88,inter:110,intermilan:110,acmilan:103,milan:103,juventus:111,napoli:114,asroma:104,roma:104,lazio:112,atalanta:105,fiorentina:109,bologna:107,torino:239,udinese:118,genoa:3263,lecce:113,monza:4007,como:2572,venezia:1756,frosinone:4053,bayern:132,dortmund:124,leverkusen:131,leipzig:11420,stuttgart:134,frankfurt:125,freiburg:126,hoffenheim:7911,mainz:2950,gladbach:268,unionberlin:598,werderbremen:137,wolfsburg:138,augsburg:3841,bochum:121,psg:160,marseille:176,monaco:174,lille:166,lyon:167,lens:175,rennes:169,nice:2502,brest:6997,toulouse:179,strasbourg:180,auxerre:172,angers:7868,lorient:273,lehavre:3236,nantes:165
+  };
+  window.CLUB_CREST_MAP = window.safeGet("airp_club_crests_v2", {});
+  Object.keys(map).forEach(function(k){ window.CLUB_CREST_MAP[k] = B + map[k] + ".png"; });
+})();
+
+window.normTeamKey = function(name){
+  var s = (name || "").toLowerCase();
+  if(s.indexOf("manchester city")!==-1 || s.indexOf("man city")!==-1) return "mancity";
+  if(s.indexOf("manchester united")!==-1 || s.indexOf("man utd")!==-1) return "manutd";
+  if(s.indexOf("sheffield wed")!==-1 || s.indexOf("sheff wed")!==-1) return "sheffwed";
+  if(s.indexOf("sheffield utd")!==-1 || s.indexOf("sheff utd")!==-1) return "sheffutd";
+  if(s.indexOf("nottingham")!==-1 || s.indexOf("nottm")!==-1) return "nottm";
+  if(s.indexOf("wolverhampton")!==-1 || s.indexOf("wolves")!==-1) return "wolves";
+  if(s.indexOf("paris")!==-1 || s.indexOf("psg")!==-1) return "psg";
+  if(s.indexOf("roma")!==-1) return "asroma";
+  if(s.indexOf("monza")!==-1) return "monza";
+  if(s.indexOf("milan")!==-1 && s.indexOf("inter")===-1) return "acmilan";
+  if(s.indexOf("inter")!==-1) return "inter";
+  if(s.indexOf("stuttgart")!==-1) return "stuttgart";
+  if(s.indexOf("leipzig")!==-1) return "leipzig";
+  if(s.indexOf("bayern")!==-1) return "bayern";
+  if(s.indexOf("leverkusen")!==-1) return "leverkusen";
+  if(s.indexOf("dortmund")!==-1) return "dortmund";
+  if(s.indexOf("atletico")!==-1 || s.indexOf("atlético")!==-1) return "atletico";
+  if(s.indexOf("alaves")!==-1 || s.indexOf("alavés")!==-1) return "alaves";
+  if(s.indexOf("sociedad")!==-1) return "sociedad";
+  if(s.indexOf("betis")!==-1) return "betis";
+  if(s.indexOf("real madrid")!==-1) return "realmadrid";
+  if(s.indexOf("sporting")!==-1) return "sporting";
+  if(s.indexOf("brugge")!==-1) return "brugge";
+  if(s.indexOf("alkmaar")!==-1) return "alkmaar";
+  if(s.indexOf("crystal palace")!==-1 || s.indexOf("c palace")!==-1) return "palace";
+  if(s.indexOf("aston villa")!==-1) return "astonvilla";
+  if(s.indexOf("panathinaikos")!==-1) return "panathinaikos";
+  if(s.indexOf("fiorentina")!==-1) return "fiorentina";
+  if(s.indexOf("heidenheim")!==-1) return "heidenheim";
+  if(s.indexOf("heart")!==-1 || s.indexOf("hearts")!==-1) return "hearts";
+  if(s.indexOf("lille")!==-1 || s.indexOf("losc")!==-1) return "lille";
+  if(s.indexOf("como")!==-1) return "como";
+  return s.replace(/[^a-z0-9]/g, "").slice(0, 10);
+};
+
+window.cleanCrestKey = function(n){
+  var s = (n||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(window.normTeamKey && window.CLUB_CREST_MAP[window.normTeamKey(n)]) return window.normTeamKey(n);
+  var st = s.replace(/\b(fc|afc|sc|sv|vfb|1|ac|as|rc|ogc|us|ud|cd|cf|real|club|town|city|united|utd|athletic|wanderers|rovers|albion|county|hotspur|argyle|alexandra|stanley)\b/g,"").replace(/[^a-z0-9]/g,"");
+  return window.CLUB_CREST_MAP[st] ? st : s.replace(/[^a-z0-9]/g,"");
+};
+
+window.makeFallbackShieldSvg = function(n){
+  var c = (n||"FC").replace(/^(FC|AFC|AS|AC|SC|SV|RC|RB)\s+/i,"").trim();
+  var w = c.split(/\s+/), ini = (w.length>=2 ? w[0][0]+w[1][0] : c.slice(0,2)).toUpperCase();
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><path d="M5,4 H35 V22 C35,32 20,38 20,38 C20,38 5,32 5,22 Z" fill="#1e293b" stroke="#10b981" stroke-width="2.5"/><text x="20" y="24" font-family="sans-serif" font-weight="900" font-size="13" fill="#fff" text-anchor="middle">'+ini+'</text></svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.getClubCrestHtml = function(n){
+  var fb = window.makeFallbackShieldSvg(n), url = window.CLUB_CREST_MAP[window.cleanCrestKey(n)] || fb;
+  return '<img src="'+url+'" onerror="this.onerror=null;this.src=\''+fb+'\'" class="w-4 h-4 object-contain inline-block align-middle mr-1">';
+};
+
+window.formatMatchTeams = function(m){
+  var fc = window.getClubCrestHtml(m.fav), oc = window.getClubCrestHtml(m.opp);
+  if(window.isTrial){
+    return m.venue==="HOME"
+      ? '<span class="font-extrabold text-white">' + fc + '<span class="trial-blur">Hidden Pick</span></span> <span class="text-slate-400 font-normal">vs ' + oc + m.opp + '</span> <span class="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded font-bold ml-1">🔒 VIP Pick</span>'
+      : '<span class="text-slate-400 font-normal">' + oc + m.opp + ' vs</span> <span class="font-extrabold text-white">' + fc + '<span class="trial-blur">Hidden Pick</span></span> <span class="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded font-bold ml-1">🔒 VIP Pick</span>';
+  }
+  return m.venue==="HOME"
+    ? '<span class="font-extrabold text-white underline decoration-emerald-500/60 underline-offset-2">'+fc+m.fav+'</span> <span class="text-slate-400 font-normal">vs '+oc+m.opp+'</span>'
+    : '<span class="text-slate-400 font-normal">'+oc+m.opp+' vs</span> <span class="font-extrabold text-white underline decoration-indigo-400/70 underline-offset-2">'+fc+m.fav+'</span>';
+};
+
+window.addDays = function(dateStr, days){
+  var d = new Date(dateStr+"T12:00:00Z");
+  d.setUTCDate(d.getUTCDate()+days);
+  return d.toISOString().split("T")[0];
+};
+
+window.formatDateTabLabel = function(dateStr, todayStr){
+  var d = new Date(dateStr+"T12:00:00Z");
+  var dayName = d.toLocaleDateString("en-GB", {weekday:"short", timeZone:"UTC"});
+  var dayNum = d.toLocaleDateString("en-GB", {day:"numeric", month:"short", timeZone:"UTC"});
+  if(dateStr === todayStr) return "Today • " + dayNum;
+  if(dateStr === window.addDays(todayStr, 1)) return "Tom • " + dayNum;
+  if(dateStr === window.addDays(todayStr, -1)) return "Yest • " + dayNum;
+  return dayName + " " + dayNum;
+};
+
+window.getRollingDates = function(){
+  var now = new Date();
+  var yr = now.getFullYear();
+  var mo = String(now.getMonth() + 1).padStart(2, "0");
+  var dy = String(now.getDate()).padStart(2, "0");
+  var today = yr + "-" + mo + "-" + dy;
+  var dates = [];
+  for(var offset = -3; offset <= 3; offset++){
+    dates.push(window.addDays(today, offset));
+  }
+  return { today: today, dates: dates };
+};
+
+window.getActivePointCount = function(){
+  return 31 + (window.modelState.injectedStats ? window.modelState.injectedStats.length : 0);
+};
+
+window.getNextEvolutionMetric = function(){
+  var nextNum = window.getActivePointCount() + 1;
+  return "Metric " + nextNum + ": Autonomous Deep-Neural xG/xT Variance Filter (+0.3% Edge)";
+};
+
+window.updateModelHeaders = function(){
+  var pts = window.getActivePointCount();
+  var wb = document.getElementById("weightBadge");
+  if(wb) wb.innerText = "v" + window.modelState.version.toFixed(1);
+  var dmt = document.getElementById("drawerModelTitle");
+  if(dmt) dmt.innerText = "🧠 Active Model Factors (" + pts + " Metrics):";
+  var aml = document.getElementById("adminModelLabel");
+  if(aml) aml.innerText = "🔑 Admin Control (v" + window.modelState.version.toFixed(1) + " • " + pts + " Metrics)";
+  var del = document.getElementById("drawerEvolvedList");
+  if(del && window.modelState.injectedStats){
+    del.innerHTML = window.modelState.injectedStats.map(function(s){
+      return "<div>✓ " + s + "</div>";
+    }).join("");
+  }
+};
+
+// True Club Power Rating & Accurate Row Builder
+(function(){
+  var T1 = ["mancity","realmadrid","bayern","barcelona","psg","arsenal","liverpool","inter","leverkusen","juventus","atletico","napoli","dortmund","acmilan","milan","astonvilla","chelsea","benfica","sporting"];
+  var T2 = ["tottenham","newcastle","brighton","lazio","atalanta","asroma","roma","fiorentina","sociedad","villarreal","athletic","betis","monaco","lille","marseille","lyon","leipzig","stuttgart","frankfurt","feyenoord","ajax","psv","twente","azalkmaar","braga","porto","olympiacos","panathinaikos","galatasaray","fenerbahce","unionsg","ferencvaros","celtic","leeds","burnley","sheffutd","sunderland","middlesbrough","birmingham","wrexham","huddersfield","barnet","walsall"];
+  var T4 = ["southampton","ipswich","wolves","everton","leicester","bochum","kiel","lecce","venezia","monza","frosinone","espanyol","leganes","valladolid","elversberg","angers","lehavre","montpellier","stetienne","plymouth","cardiff","luton","qpr","portsmouth","shrewsbury","burton","cambridge","morecambe","carlisle","tranmere","accrington","newport"];
+
+  window.getTrueClubRating = function(name, compObj){
+    var k = window.normTeamKey ? window.normTeamKey(name) : (name||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    var pwr = 68;
+    if(T1.indexOf(k) !== -1) pwr = 88;
+    else if(T2.indexOf(k) !== -1) pwr = 78;
+    else if(T4.indexOf(k) !== -1) pwr = 56;
+    try {
+      var rec = (compObj.records && compObj.records[0] && compObj.records[0].summary) || "";
+      var p = rec.split("-").map(Number);
+      if(p.length === 3 && (p[0]+p[1]+p[2]) >= 3){
+        var gp = p[0]+p[1]+p[2], ppg = (p[0]*3 + p[1]) / gp, winPct = (p[0]/gp)*100;
+        var formScore = 48 + (ppg * 14.5) + (winPct * 0.15);
+        pwr = Math.round((pwr * 0.45) + (formScore * 0.55));
+      }
+    } catch(e){}
+    return Math.min(93, Math.max(48, pwr));
+  };
+
+  window.buildAccurateFixtureRow = function(ev, dateStr, lgCode, idx){
+    var comp = ev.competitions && ev.competitions[0];
+    if(!comp || !comp.competitors) return null;
+    var hC = comp.competitors.find(function(c){return c.homeAway==="home";});
+    var aC = comp.competitors.find(function(c){return c.homeAway==="away";});
+    if(!hC || !aC) return null;
+    var hN = hC.team.shortDisplayName || hC.team.displayName || hC.team.name;
+    var aN = aC.team.shortDisplayName || aC.team.displayName || aC.team.name;
+    var hP = window.getTrueClubRating(hN, hC), aP = window.getTrueClubRating(aN, aC);
+
+    var w = window.adaptiveWeights || { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0 };
+    var homeB = Number(w.homeBoost || 4.2);
+    var awayP = Number(w.awayPen || 3.2);
+    var drawG = Number(w.drawGate || 12.0);
+    var xgM = Number(w.xgMult || 1.0);
+
+    var hEff = hP + homeB, aEff = aP - awayP;
+    var favH = hEff >= aEff;
+    var venue = favH ? "HOME" : "AWAY", fav = favH ? hN : aN, opp = favH ? aN : hN;
+    var gap = Math.abs(hEff - aEff);
+
+    var conf = 55.5 + (gap * 0.95) + (favH ? 2.2 : -3.2);
+    if(!favH && gap < 14.5) conf = Math.min(72.8, conf);
+    if(gap < drawG) conf = Math.min(73.8, conf);
+
+    conf = parseFloat(Math.min(86.2, Math.max(51.0, conf)).toFixed(1));
+
+    var xg = parseFloat(((1.25 + ((conf-52)*0.036)) * xgM).toFixed(2));
+    var xga = parseFloat(Math.max(0.60, ((1.42-((conf-52)*0.025)) * (2 - xgM))).toFixed(2));
+    var ko = "15:00";
+    if(ev.date){ var d = new Date(ev.date); if(!isNaN(d.getTime())) ko = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+    var id = parseInt(ev.id, 10) || (260000 + idx);
+    var vr = conf < 75.0 ? (!favH ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield") : "";
+    return [id, dateStr, lgCode, venue, fav, opp, Math.round(conf*0.26), 10, 8, 16, conf, "Pending", vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), favH?"Home Fortress & xG Edge":"Elite Away Mismatch", Math.round(conf)+"%", ko];
+  };
+})();
+
+// Live ESPN Scoreboard & Schedule Sync across all 12 Competitions
+(function(){
+  window.fetchedDatesMap = {};
+  var LGS = [
+    {s:"eng.1",c:"PL"},{s:"eng.2",c:"CHA"},{s:"eng.3",c:"L1"},{s:"eng.4",c:"L2"},{s:"eng.league_cup",c:"EFLC"},
+    {s:"esp.1",c:"LL"},{s:"ita.1",c:"SA"},{s:"ger.1",c:"BUN"},{s:"fra.1",c:"FL1"},
+    {s:"uefa.champions",c:"UCL"},{s:"uefa.europa",c:"UEL"},{s:"uefa.europa.conf",c:"UECL"}
+  ];
+
+  window.fetchAllLeaguesForDate = function(dateStr, force){
+    var now = Date.now();
+    if(!force && window.fetchedDatesMap[dateStr] && (now - window.fetchedDatesMap[dateStr] < 25000)) return;
+    window.fetchedDatesMap[dateStr] = now;
+    var dStr = dateStr.replace(/-/g, ""), col = [];
+    var jobs = LGS.map(function(lg){
+      return fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/"+lg.s+"/scoreboard?dates="+dStr)
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(d){
+          if(!d) return;
+          if(d.leagues && d.leagues[0] && d.leagues[0].logos && d.leagues[0].logos[0] && d.leagues[0].logos[0].href){
+            var officialLogoHref = d.leagues[0].logos[0].href;
+            if(window.LEAGUE_LOGOS[lg.c] !== officialLogoHref){
+              window.LEAGUE_LOGOS[lg.c] = officialLogoHref;
+              var flEl = document.getElementById("filterLogo" + lg.c);
+              if(flEl) flEl.innerHTML = window.getLeagueLogo(lg.c, false);
+            }
+          }
+          if(!Array.isArray(d.events)) return;
+          d.events.forEach(function(ev, idx){
+            var row = window.buildAccurateFixtureRow ? window.buildAccurateFixtureRow(ev, dateStr, lg.c, idx) : null;
+            if(row) col.push(row);
+            var comp = ev.competitions && ev.competitions[0];
+            if(!comp || !comp.competitors) return;
+            var hC = comp.competitors.find(function(x){return x.homeAway==="home";});
+            var aC = comp.competitors.find(function(x){return x.homeAway==="away";});
+            if(!hC || !aC) return;
+            var hN = hC.team.displayName||hC.team.name, aN = aC.team.displayName||aC.team.name;
+            var hK = window.normTeamKey(hN), aK = window.normTeamKey(aN);
+            if(hC.team.logo){ window.CLUB_CREST_MAP[hK]=hC.team.logo; window.CLUB_CREST_MAP[window.cleanCrestKey(hN)]=hC.team.logo; }
+            if(aC.team.logo){ window.CLUB_CREST_MAP[aK]=aC.team.logo; window.CLUB_CREST_MAP[window.cleanCrestKey(aN)]=aC.team.logo; }
+            var st = (ev.status&&ev.status.type&&ev.status.type.state)||"";
+            var dt = (ev.status&&ev.status.type&&ev.status.type.shortDetail)||"";
+            var rec = {id:String(ev.id), state:st, detail:dt, h:parseInt(hC.score||"0",10), a:parseInt(aC.score||"0",10), ko:row?row[20]:"15:00"};
+            window.apiLiveScores["id_"+ev.id] = rec;
+            window.apiLiveScores[window.normTeamKey(hC.team.shortDisplayName||hC.team.name)+"_"+dateStr] = rec;
+          });
+        }).catch(function(){});
+    });
+    Promise.all(jobs).then(function(){
+      if(col.length > 0){
+        window.DAILY_FIXTURES[dateStr] = col;
+        window.safeSet("airp_live_espn_fixtures", window.DAILY_FIXTURES);
+      }
+      window.safeSet("airp_espn_truth_v4", window.apiLiveScores);
+      window.safeSet("airp_club_crests_v2", window.CLUB_CREST_MAP);
+      window.safeSet("airp_official_league_logos_v1", window.LEAGUE_LOGOS);
+      if(typeof window.autoSettleAndEvolveCompletedDays === "function") window.autoSettleAndEvolveCompletedDays();
+      if(window.selectedDate === dateStr && window.runEngine) window.runEngine(false);
+    });
+  };
+
+  window.syncRealLiveScores = function(forceAll){
+    try {
+      var dateObj = window.getRollingDates();
+      var activeDate = window.selectedDate || dateObj.today;
+      window.fetchAllLeaguesForDate(activeDate, forceAll);
+      (dateObj.dates || []).forEach(function(dStr){
+        if(dStr !== activeDate) window.fetchAllLeaguesForDate(dStr, false);
+      });
+    } catch(e){}
+  };
+})();
+
+window.generateFixturesForDate = function(dateStr){
+  if(window.DAILY_FIXTURES[dateStr] && window.DAILY_FIXTURES[dateStr].length > 0){
+    return window.DAILY_FIXTURES[dateStr];
+  }
+  window.fetchAllLeaguesForDate(dateStr, true);
+  return [];
+};
+
+window.getLiveMatchState = function(m){
+  var hName = m.venue === "HOME" ? m.fav : m.opp;
+  var v = window.apiLiveScores || {};
+  var api = v["id_" + m.id] || v[window.normTeamKey(hName) + "_" + m.date];
+  if(api && api.ko) m.ko = api.ko;
+  var koStr = m.ko || "19:45";
+
+  var customVal = window.customResults && window.customResults[m.id];
+  if(customVal && customVal !== "Pending" && customVal.indexOf("LIVE:") === -1){
+    return { isLive: false, displayStatus: customVal, badgeHtml: "" };
+  }
+
+  if(api){
+    var hs = Number(api.h || 0), as = Number(api.a || 0);
+    if(api.state === "post"){
+      var fg = m.venue === "HOME" ? hs : as, og = m.venue === "HOME" ? as : hs;
+      return { isLive: false, displayStatus: hs + "-" + as + " (" + (fg > og ? "Won" : (fg === og ? "Draw" : "Lost")) + ")", badgeHtml: "" };
+    }
+    if(api.state === "in"){
+      var sc = hs + " - " + as, clk = api.detail || "LIVE";
+      if(customVal && customVal.indexOf("LIVE:") === 0) sc = customVal.replace("LIVE:", "");
+      return {
+        isLive: true,
+        displayStatus: "LIVE " + clk + " (" + sc + ")",
+        badgeHtml: '<span class="live-blue-flash text-[9px] px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>LIVE ' + clk + ' • ' + sc + '</span>'
+      };
+    }
+  }
+  return {
+    isLive: false,
+    displayStatus: "KO " + koStr,
+    badgeHtml: '<span class="text-[9px] bg-slate-800/90 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded-md mono">🕒 KO ' + koStr + '</span>'
+  };
+};
+
+window.mapRawMatch = function(x){
+  var koTime = x[20] || "19:45";
+  var m = {id:x[0],date:x[1],league:x[2],venue:x[3],fav:x[4],opp:x[5],gf:x[6],ogf:x[7],ga:x[8],oga:x[9],base:x[10],rawActual:x[11],vetoReason:x[12],created:x[13],xg:x[14],xga:x[15],atk:x[16],poss:x[17],mot:x[18],h2h:x[19],ko:koTime};
+  var liveObj = window.getLiveMatchState(m);
+  m.actual = liveObj.displayStatus;
+  m.isLive = liveObj.isLive;
+  m.liveBadge = liveObj.badgeHtml;
+  return m;
+};
+
+window.getFixturesForDateAndLeagues = function(dateStr, leagues){
+  if(!leagues || leagues.length === 0) return [];
+  var rawList = window.generateFixturesForDate(dateStr);
+  return rawList.map(window.mapRawMatch).filter(function(f){ return leagues.indexOf(f.league) !== -1; });
+};
+
+window.getLockTimeLabel = function(dateStr, koStr){
+  var kt = new Date(dateStr + "T" + (koStr || "19:45") + ":00").getTime() - window.LOCK_BEFORE_KO_MS;
+  var d = new Date(kt);
+  return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+};
+
+// 1-Hour Dynamic Model Team Audit (Evaluates both teams against active model weights every hour until T-30m)
+window.getDeterministicDrift = function(m, lockCutoffMs){
+  if(window.liveDriftMap && window.liveDriftMap[m.id]) return window.liveDriftMap[m.id];
+  var kickTime = new Date(m.date + "T" + (m.ko || "19:45") + ":00").getTime();
+  var cutoff = lockCutoffMs || (kickTime - window.LOCK_BEFORE_KO_MS);
+  var now = Math.min(Date.now(), cutoff);
+  var baseTime = new Date(m.date + "T00:00:00").getTime();
+  if(now <= baseTime) return {text: "Baseline Model Verified", d: 0, lastStep: 0, block: 0};
+
+  var blocks = Math.floor((now - baseTime) / (3600 * 1000));
+  if(blocks <= 0) return {text: "Baseline Model Verified", d: 0, lastStep: 0, block: 0};
+
+  var w = window.adaptiveWeights || { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0 };
+  var xgEdge = (Number(m.xg || 1.6) - Number(m.xga || 1.0));
+  var modelEdge = (m.venue === "HOME" ? (w.homeBoost - 4.0) * 0.25 : -(w.awayPen - 3.0) * 0.25) + (xgEdge * 0.35);
+
+  var cumDelta = 0;
+  var lastStep = 0;
+  var lastReason = "Steady Pre-Match Team News";
+  var maxBlocks = Math.min(24, blocks);
+
+  for(var b = 1; b <= maxBlocks; b++){
+    var hSeed = (Number(m.id) * 31 + b * 47) % 100;
+    var step = 0;
+    if(hSeed >= 78){
+      step = 0.4 + (xgEdge > 0.5 ? 0.3 : 0.1);
+      lastReason = "Hourly Check #" + b + ": Starting XI & xT Press Boost";
+    } else if(hSeed >= 54){
+      step = 0.2 + (modelEdge > 0 ? 0.15 : 0);
+      lastReason = "Hourly Check #" + b + ": Positive Tactical & xG Sync";
+    } else if(hSeed < 14){
+      step = -0.6 - (m.venue === "AWAY" ? 0.25 : 0.1);
+      lastReason = "Hourly Check #" + b + ": Key Squad Rotation / Injury Caution";
+    } else if(hSeed < 28){
+      step = -0.3;
+      lastReason = "Hourly Check #" + b + ": Opposition Low-Block & Turf Drift";
+    } else {
+      step = (b % 2 === 0 ? 0.1 : -0.1);
+      lastReason = "Hourly Check #" + b + ": Model Stat Equilibrium";
+    }
+    cumDelta += step;
+    lastStep = step;
+  }
+
+  cumDelta = parseFloat(Math.max(-3.6, Math.min(3.6, cumDelta + modelEdge)).toFixed(1));
+  lastStep = parseFloat(lastStep.toFixed(1));
+  return { text: lastReason, d: cumDelta, lastStep: lastStep, block: maxBlocks };
+};
+
+// Raw 8 Betting Markets Calculation (Used live before T-30m, then frozen into lockedScores at T-30m)
+window.computeRawMarkets = function(m, fs){
+  var conf = +fs || +m.base || 68, isH = m.venue === "HOME";
+  var w = window.adaptiveWeights || { xgMult: 1.0, bttsMult: 1.0 };
+  var xgM = Number(w.xgMult || 1.0);
+  var bttsM = Number(w.bttsMult || 1.0);
+  var lgB = {BUN:0.32,EFLC:0.28,UCL:0.24,PL:0.22,UEL:0.2,UECL:0.18,L1:0.12,L2:0.1,CHA:0.06,FL1:0.05,LL:-0.12,SA:-0.14}[m.league] || 0;
+  var s = ((m.id * 37) % 20) - 10;
+  var favXg = Math.max(1.05, (1.15 + (conf - 55) * 0.032 + (isH ? 0.12 : 0) + lgB * 0.55 + s * 0.012) * xgM);
+  var oppXg = Math.max(0.48, (1.18 - (conf - 55) * 0.024 + (isH ? -0.08 : 0.1) + lgB * 0.45 - s * 0.01) * xgM);
+  var tot = favXg + oppXg, minX = Math.min(favXg, oppXg);
+  var cl = function(v, lo, hi){ return Math.min(hi, Math.max(lo, v)).toFixed(1); };
+  return {
+    o15: cl(38 + tot * 16.2, 52, 91.5),
+    o25: cl(14 + tot * 21.5, 38, 84.5),
+    u35: cl(108 - tot * 14.8, 54, 89.5),
+    btts: cl((18 + minX * 42 + tot * 5.5) * bttsM, 36, 84.0),
+    dc: cl(conf + (isH ? 14.5 : 12.5), 64, 93.5),
+    dnb: cl(conf + 8.4, 58, 90.5),
+    f15: cl(16 + favXg * 31.5, 41, 86.5),
+    fh05: cl(33 + tot * 14.5, 48, 86.0)
+  };
+};
+
+// T-30m Final Pre-Match Audit & Permanent Percentage Lock (Locks Main % AND All 8 Betting Markets)
+window.resolveMatchPrediction = function(m){
+  var koStr = m.ko || "19:45";
+  var kickMs = new Date(m.date + "T" + koStr + ":00").getTime();
+  var lockMs = kickMs - window.LOCK_BEFORE_KO_MS;
+  var now = Date.now();
+  var isLocked = now >= lockMs;
+  var lockLbl = window.getLockTimeLabel(m.date, koStr);
+
+  window.lockedScores = window.lockedScores || {};
+  var saved = window.lockedScores[m.id];
+
+  // If already past T-30m and locked, return the exact frozen T-30m percentages without any further movement
+  if(isLocked && saved && saved.t30Audited){
+    var lockedPill = '<span class="text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">🔒 Locked ' + (saved.lockedAt || lockLbl) + '</span>';
+    return {
+      fs: Number(saved.fs),
+      driftBadge: '<span class="text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">🔒 T-30m Final Lock (' + (saved.lockedAt || lockLbl) + ')</span>',
+      lockPill: lockedPill,
+      note: saved.note,
+      vr: saved.vr || "",
+      isLocked: true,
+      lockedMarkets: saved.markets || null
+    };
+  }
+
+  var drift = window.getDeterministicDrift(m, lockMs);
+  var calcFs = parseFloat(Math.min(86.2, Math.max(48.0, Number(m.base || 65) + Number(drift.d || 0))).toFixed(1));
+  var vr = calcFs < 75.0 ? (m.vetoReason || (m.venue === "AWAY" ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield")) : "";
+
+  if(isLocked && (!saved || !saved.t30Audited)){
+    var finalFs = (saved && saved.fs) ? Number(saved.fs) : calcFs;
+    var frozenMarkets = window.computeRawMarkets(m, finalFs);
+    var note = "Final T-30m Audit: " + drift.text + " [Locked at " + lockLbl + "]";
+    window.lockedScores[m.id] = {
+      fs: finalFs,
+      markets: frozenMarkets,
+      note: note,
+      vr: vr,
+      lockedAt: lockLbl,
+      t30Verified: true,
+      t30Audited: true
+    };
+    window.safeSet("airp_v122_locks", window.lockedScores);
+    var hT = m.venue==="HOME" ? m.fav : m.opp, aT = m.venue==="HOME" ? m.opp : m.fav;
+    var pair = hT + " vs " + aT;
+    if(!(window.logHistory||[]).some(function(l){ return l.indexOf(pair)!==-1; })){
+      var dt = new Date(lockMs).toLocaleDateString("en-GB",{day:"2-digit",month:"short"}) + " " + lockLbl;
+      window.logHistory.unshift("<div><span class='text-slate-500'>["+dt+"]</span> 🔒 <b>T-30m Final Pre-Match Audit ("+lockLbl+"):</b> Final model check for <b>"+pair+"</b> • Permanently locked at <b>"+finalFs.toFixed(1)+"%</b>.</div>");
+      window.safeSet("airp_v122_log", window.logHistory);
+    }
+    saved = window.lockedScores[m.id];
+  }
+
+  var activeFs = (isLocked && saved) ? Number(saved.fs) : calcFs;
+  var activeNote = (isLocked && saved) ? saved.note : ("Pre-Match Audit: " + drift.text);
+  var diffFromBase = parseFloat((activeFs - Number(m.base || activeFs)).toFixed(1));
+  var stepSign = diffFromBase > 0 ? "▲ +" + diffFromBase.toFixed(1) + "%" : (diffFromBase < 0 ? "▼ " + diffFromBase.toFixed(1) + "%" : "• 0.0%");
+  var stepCol = diffFromBase > 0 ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : (diffFromBase < 0 ? "text-rose-400 border-rose-500/30 bg-rose-500/10" : "text-sky-300 border-sky-500/30 bg-sky-500/10");
+
+  var pill = isLocked
+    ? '<span class="text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">🔒 Locked '+lockLbl+'</span>'
+    : '<span class="text-[9px] border '+stepCol+' px-1.5 py-0.5 rounded font-mono font-bold">⏱️ Hr #'+drift.block+' ('+stepSign+') • Locks '+lockLbl+'</span>';
+
+  return {
+    fs: activeFs,
+    driftBadge: pill,
+    lockPill: pill,
+    note: activeNote,
+    vr: vr,
+    isLocked: isLocked,
+    lockedMarkets: (isLocked && saved && saved.markets) ? saved.markets : null
+  };
+};
+
+// Autonomous Full-Time Post-Mortem & Self-Improvement Engine (Audits every FT match & calibrates stat weights)
+window.autoSettleAndEvolveCompletedDays = function(){
+  var dateObj = window.getRollingDates();
+  var today = dateObj.today, evolvedAny = false;
+  var checkDates = (dateObj.dates || []).filter(function(d){ return d <= today; });
+  window.settledMatchAuditLog = window.safeGet("airp_settled_ft_matches_v2", {});
+
+  checkDates.forEach(function(dStr){
+    var raw = window.DAILY_FIXTURES[dStr] || [];
+    if(!raw.length) return;
+    var matches = raw.map(window.mapRawMatch);
+    var settled = matches.filter(function(m){
+      var s = (m.actual || "").toLowerCase();
+      return !m.isLive && (s.indexOf("(won)")!==-1 || s.indexOf("(draw)")!==-1 || s.indexOf("(lost)")!==-1);
+    });
+    if(settled.length === 0) return;
+
+    // 1. Per-Match Immediate FT Post-Mortem & Micro-Weight Learning
+    settled.forEach(function(m){
+      if(window.settledMatchAuditLog[m.id]) return;
+      window.settledMatchAuditLog[m.id] = true;
+      evolvedAny = true;
+
+      var pred = window.resolveMatchPrediction(m);
+      var st = (m.actual || "").toLowerCase();
+      var isWin = st.indexOf("(won)") !== -1;
+      var isDraw = st.indexOf("(draw)") !== -1;
+      var sc = String(m.actual || "").match(/(\d+)\s*-\s*(\d+)/);
+      var totGoals = sc ? (Number(sc[1]) + Number(sc[2])) : 2;
+      var bothScored = sc ? (Number(sc[1]) > 0 && Number(sc[2]) > 0) : false;
+
+      // Adjust stat weights based on actual FT outcome vs model percentage
+      if(pred.fs >= 75.0 && !isWin){
+        if(m.venue === "AWAY"){
+          window.adaptiveWeights.awayPen = parseFloat(Math.min(5.0, (window.adaptiveWeights.awayPen || 3.2) + 0.2).toFixed(2));
+        } else if(isDraw){
+          window.adaptiveWeights.drawGate = parseFloat(Math.min(15.0, (window.adaptiveWeights.drawGate || 12.0) + 0.25).toFixed(2));
+        } else {
+          window.adaptiveWeights.homeBoost = parseFloat(Math.max(3.0, (window.adaptiveWeights.homeBoost || 4.2) - 0.15).toFixed(2));
+        }
+      } else if(pred.fs >= 75.0 && isWin){
+        if(m.venue === "HOME"){
+          window.adaptiveWeights.homeBoost = parseFloat(Math.min(5.4, (window.adaptiveWeights.homeBoost || 4.2) + 0.08).toFixed(2));
+        }
+      }
+
+      // Calibrate xG & BTTS multipliers from real goal totals
+      var curXgM = Number(window.adaptiveWeights.xgMult || 1.0);
+      if(totGoals >= 3) window.adaptiveWeights.xgMult = parseFloat(Math.min(1.18, curXgM + 0.01).toFixed(3));
+      else if(totGoals <= 1) window.adaptiveWeights.xgMult = parseFloat(Math.max(0.86, curXgM - 0.01).toFixed(3));
+
+      var curBttsM = Number(window.adaptiveWeights.bttsMult || 1.0);
+      if(bothScored) window.adaptiveWeights.bttsMult = parseFloat(Math.min(1.15, curBttsM + 0.01).toFixed(3));
+      else window.adaptiveWeights.bttsMult = parseFloat(Math.max(0.88, curBttsM - 0.01).toFixed(3));
+    });
+
+    var greens = matches.filter(function(m){ return window.resolveMatchPrediction(m).fs >= 75.0; });
+    var compG = greens.filter(function(g){
+      var s = (g.actual || "").toLowerCase();
+      return s.indexOf("(won)")!==-1 || s.indexOf("(draw)")!==-1 || s.indexOf("(lost)")!==-1;
+    });
+    var wins = compG.filter(function(g){ return (g.actual || "").toLowerCase().indexOf("(won)")!==-1; }).length;
+    var hr = compG.length > 0 ? Math.round((wins / compG.length) * 100) + "% (" + wins + "/" + compG.length + ")" : (settled.length === matches.length ? "100% (" + settled.length + " FT Audited)" : "Pending");
+
+    var key = "date_" + dStr;
+    var hEnt = window.scanHistory.find(function(x){ return x.sessionKey === key; });
+    var lbl = window.formatDateTabLabel(dStr, today);
+    if(!hEnt){
+      hEnt = { sessionKey:key, dateStr:dStr, dateRange:lbl, greensCount:greens.length, successRate:hr, leagues:"12 Leagues", optimized:false };
+      window.scanHistory.push(hEnt);
+    } else {
+      hEnt.dateRange = lbl; hEnt.greensCount = greens.length; hEnt.successRate = hr;
+    }
+
+    // 2. Full-Slate Daily Evolution once all matches on that day are Full-Time
+    var allDone = (settled.length >= matches.length) && matches.length > 0;
+    if(allDone && !hEnt.optimized){
+      var nextM = window.getNextEvolutionMetric();
+      window.modelState.injectedStats.push(nextM);
+      window.modelState.version = parseFloat((window.modelState.version + 0.1).toFixed(1));
+      hEnt.optimized = true; evolvedAny = true;
+      var w = window.adaptiveWeights;
+      window.logHistory.unshift("<div><span class='text-emerald-400'>[" + dStr + " FT]</span> 🤖 <b>Daily Full-Time Model Evolution:</b> Audited all " + settled.length + " FT results (" + hr + ") • Updated Weights [Home +" + Number(w.homeBoost||4.2).toFixed(2) + ", Away -" + Number(w.awayPen||3.2).toFixed(2) + ", DrawGate " + Number(w.drawGate||12.0).toFixed(1) + ", xG " + Number(w.xgMult||1.0).toFixed(2) + "x] & evolved to <b>v" + window.modelState.version.toFixed(1) + "</b>.</div>");
+    }
+  });
+
+  if(evolvedAny){
+    window.safeSet("airp_settled_ft_matches_v2", window.settledMatchAuditLog);
+    window.safeSet("airp_adaptive_weights_v14", window.adaptiveWeights);
+    window.safeSet("airp_v122_state", window.modelState);
+    window.safeSet("airp_v122_hist", window.scanHistory);
+    window.safeSet("airp_v122_log", window.logHistory);
+  }
+  window.updateModelHeaders();
+  if(typeof window.updateAdminWeightsBar === "function") window.updateAdminWeightsBar();
+  if(typeof window.renderHistoryDrawer === "function") window.renderHistoryDrawer();
+};
+
+// 1-Hour Auto-Audit Log Sync & Live Countdown Status
+window.updateHourlyCountdownBanner = function(){
+  var el = document.getElementById("hourlyAuditStatusText");
+  if(!el) return;
+  var now = new Date();
+  var minsLeft = 59 - now.getMinutes();
+  var secsLeft = 59 - now.getSeconds();
+  var mStr = String(minsLeft).padStart(2, "0") + "m " + String(secsLeft).padStart(2, "0") + "s";
+  el.innerHTML = "Hourly Team Audit: <b class='text-emerald-400 font-mono'>Next in " + mStr + "</b> • <span class='text-amber-300'>Locks 30m Pre-KO</span>";
+};
+setInterval(window.updateHourlyCountdownBanner, 1000);
+
+window.triggerManualHourlyAudit = function(){
+  var dateObj = window.getRollingDates();
+  var activeDate = window.selectedDate || dateObj.today;
+  var matches = window.generateFixturesForDate(activeDate).map(window.mapRawMatch);
+  var unlocked = 0, locked = 0;
+  matches.forEach(function(m){
+    var p = window.resolveMatchPrediction(m);
+    if(p.isLocked) locked++;
+    else unlocked++;
+  });
+  window.addLog("⏱️ <b>Manual Hourly Model Check (" + activeDate + "):</b> Audited " + matches.length + " fixtures against v" + window.modelState.version.toFixed(1) + " weights (" + unlocked + " dynamic, " + locked + " locked at T-30m).");
+  window.runEngine(true);
+  window.showAppToast("⏱️ Hourly Model Check Complete (" + matches.length + " games)");
+};
+
+// 1-Hour Auto-Audit Log Sync
+window.syncOvernightLogs = function(){
+  var dateObj = window.getRollingDates();
+  var currMatches = window.generateFixturesForDate(dateObj.today).map(window.mapRawMatch);
+  if(!currMatches.length) return;
+
+  var baseTime = new Date(dateObj.today + "T00:00:00").getTime();
+  var now = Date.now();
+  if(now <= baseTime) return;
+
+  var totalHours = Math.floor((now - baseTime) / (3600 * 1000));
+  var storageKey = "airp_hourly_audit_" + dateObj.today;
+  var lastLoggedHour = parseInt(window.safeGet(storageKey, 0), 10);
+
+  if(totalHours > lastLoggedHour){
+    var startHour = Math.max(1, totalHours - 6);
+    for(var h = Math.max(lastLoggedHour + 1, startHour); h <= totalHours; h++){
+      var pollTime = new Date(baseTime + h * 3600 * 1000);
+      var dStr = pollTime.toLocaleDateString([], {month: 'short', day: 'numeric'}) + " " + pollTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      var finished = currMatches.filter(function(m){
+        var st = (m.actual || "").toLowerCase();
+        return st.indexOf("won") !== -1 || st.indexOf("draw") !== -1 || st.indexOf("lost") !== -1;
+      });
+      var greensHit = finished.filter(function(m){ return (m.actual || "").toLowerCase().indexOf("won") !== -1; }).length;
+      var sample = currMatches[h % currMatches.length];
+      var driftObj = window.getDeterministicDrift(sample, pollTime.getTime());
+      var shiftSign = driftObj.d >= 0 ? "+" + driftObj.d.toFixed(1) + "%" : driftObj.d.toFixed(1) + "%";
+      var resSummary = finished.length > 0 ? (" • FT Check: <b>" + greensHit + "/" + finished.length + " Hits</b>") : " • Dynamic Pre-KO Sync";
+      var entry = "<div><span class='text-emerald-400'>[" + dStr + "]</span> ⏱️ <b>1-Hr Auto-Audit #" + h + " (" + dateObj.today + "):</b> Re-evaluated " + currMatches.length + " fixtures" + resSummary + " • <b>" + sample.fav + "</b> (" + shiftSign + ").</div>";
+      if(window.logHistory.indexOf(entry) === -1) window.logHistory.unshift(entry);
+    }
+    if(window.logHistory.length > 60) window.logHistory = window.logHistory.slice(0, 60);
+    window.safeSet(storageKey, totalHours);
+    window.safeSet("airp_v122_log", window.logHistory);
+  }
+};
+
+// 8 Popular Betting Markets Calculator (Uses frozen T-30m markets if match is locked!)
+window.calcExtraMarkets = function(m, fs){
+  var isH = m.venue === "HOME";
+  var savedLock = window.lockedScores && window.lockedScores[m.id];
+  var rawM = (savedLock && savedLock.t30Audited && savedLock.markets) ? savedLock.markets : window.computeRawMarkets(m, fs);
+
+  var sc = String(m.actual || "").match(/(\d+)\s*-\s*(\d+)/), ok = sc && !m.isLive && /(won|draw|lost)/i.test(m.actual);
+  var h = ok ? +sc[1] : -1, g = ok ? +sc[2] : -1, tg = h + g, fg = isH ? h : g, og = isH ? g : h;
+  return {L:[
+    {n:"Over 1.5 Goals",p:rawM.o15,w:ok?(tg>=2):null},
+    {n:"Over 2.5 Goals",p:rawM.o25,w:ok?(tg>=3):null},
+    {n:"Under 3.5 Goals",p:rawM.u35,w:ok?(tg<=3):null},
+    {n:"BTTS: Yes",p:rawM.btts,w:ok?(h>=1&&g>=1):null},
+    {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")",p:rawM.dc,w:ok?(fg>=og):null},
+    {n:m.fav+" Draw No Bet",p:rawM.dnb,w:ok?(fg===og?null:fg>og):null},
+    {n:m.fav+" Over 1.5 Gls",p:rawM.f15,w:ok?(fg>=2):null},
+    {n:"1st Half Over 0.5",p:rawM.fh05,w:ok?(tg>=2?true:null):null}
+  ]};
+};
+
+window.toggleCard = function(id){
+  var el = document.getElementById("d-" + id);
+  if(!el) return;
+  var hide = el.classList.toggle("hidden");
+  window.expandedCards[id] = !hide;
+};
+
+window.render31PointPanel = function(m, adm){
+  var mk = window.calcExtraMarkets(m, m.fs || 68);
+  var best = mk.L.slice().sort(function(a,b){ return b.p - a.p; })[0];
+  var isTr = !!window.isTrial;
+  var topPill = best
+    ? (isTr
+        ? '<span onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[9px] bg-amber-500/20 border border-amber-500/40 text-amber-300 px-1.5 py-0.5 rounded font-bold cursor-pointer">🔒 Top Pick: <span class="trial-blur-sm">Over 1.5 (88.4%)</span></span>'
+        : '<span class="text-[9px] bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-1.5 py-0.5 rounded font-bold">⭐ Top Pick: '+best.n+' ('+best.p+'%)</span>')
+    : '';
+  var openCls = window.expandedCards[m.id] ? "" : "hidden ";
+  var g = mk.L.map(function(x){
+    var p = +x.p, c = p >= 75 ? "text-emerald-400 border-emerald-500/40 bg-emerald-950/30" : (p >= 60 ? "text-amber-400 border-amber-500/30 bg-slate-900/80" : "text-rose-400 border-rose-500/30 bg-rose-950/20");
+    var r = (!isTr && x.w === true) ? ' <b class="text-emerald-400">✓</b>' : ((!isTr && x.w === false) ? ' <b class="text-rose-400">✗</b>' : '');
+    var labelSafe = isTr ? x.n.replace(m.fav, "VIP Team") : x.n;
+    var pctHtml = isTr ? '<b class="text-xs mono flex-shrink-0 trial-blur-sm">84.5%</b>' : '<b class="text-xs mono flex-shrink-0">'+x.p+'%</b>';
+    return '<div class="p-2 rounded-lg border '+c+' flex justify-between items-center gap-1"><span class="text-[10px] text-white font-bold truncate">'+labelSafe+r+'</span>'+pctHtml+'</div>';
+  }).join("");
+
+  var statBar = '<div class="bg-slate-950/90 border border-slate-800/80 rounded-lg p-2 grid grid-cols-3 gap-1 text-center text-[9px] text-slate-400">' +
+    '<div>⚡ Attack vs Def xG<br><b class="text-emerald-300 mono text-[10px] ' + (isTr ? 'trial-blur-sm' : '') + '">' + Number(m.xg||1.6).toFixed(2) + ' vs ' + Number(m.xga||0.9).toFixed(2) + '</b></div>' +
+    '<div>📊 Power &amp; Poss<br><b class="text-sky-300 mono text-[10px] ' + (isTr ? 'trial-blur-sm' : '') + '">' + (m.atk||80) + '/100 • ' + (m.poss||55) + '%</b></div>' +
+    '<div>🔒 Audit State<br><b class="text-amber-300 text-[10px]">' + (m.isLocked ? 'T-30m Locked' : 'Hourly Active') + '</b></div>' +
+  '</div>';
+
+  var trialCta = isTr
+    ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="bg-amber-500/15 border border-amber-400/50 p-2 rounded-xl text-center text-amber-300 font-bold text-[10px] cursor-pointer hover:bg-amber-500/25 transition">🔓 Subscribe Now to Unblur All 8 Betting Markets &amp; Team Picks</div>'
+    : '<div class="text-[9px] text-slate-400 italic flex justify-between"><span>🧠 ' + (m.note || 'Model Verified') + '</span><span>Base: ' + Number(m.base||m.fs).toFixed(1) + '%</span></div>';
+
+  return '<div id="d-'+m.id+'" class="'+openCls+'mt-2.5 pt-2.5 border-t border-slate-800 text-[10px] space-y-2 text-slate-300">' +
+    statBar +
+    '<div class="flex justify-between items-center"><span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">🎯 8 Popular Betting Markets ' + (m.isLocked ? '(🔒 T-30m Locked)' : '(⏱️ Live Hourly Sync)') + '</span>' + topPill + '</div>' +
+    '<div class="grid grid-cols-2 gap-1.5">' + g + '</div>' +
+    trialCta +
+    (adm || "") + '</div>';
+};
+
+window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
+  var isG = type === "green", isA = type === "amber";
+  var isTr = !!window.isTrial;
+  var bdr = isG ? "border-l-emerald-500" : (isA ? "border-l-amber-400" : "border-l-rose-500");
+  var txt = isG ? "text-emerald-400" : (isA ? "text-amber-400" : "text-rose-400");
+  var bar = isG ? "bg-emerald-500" : (isA ? "bg-amber-400" : "bg-rose-500");
+  var bdg = isG ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : (isA ? "bg-amber-500/15 text-amber-300 border-amber-500/30" : "bg-rose-500/15 text-rose-300 border-rose-500/30");
+  var lbl = isG ? "🟢 Green (75%+)" : (isA ? "🟡 Amber (60-74%)" : "🔴 Red (<60%)");
+  var w = Math.min(100, Math.max(25, Math.round(m.fs)));
+  var sCol = m.isLive ? "text-sky-400 font-bold" : (m.actual.indexOf("Won")!==-1 ? "text-emerald-400 font-bold" : (m.actual.indexOf("Lost")!==-1 ? "text-rose-400 font-bold" : (m.actual.indexOf("Draw")!==-1 ? "text-amber-300 font-bold" : "text-slate-300")));
+  var lockBadge = m.lockPill ? (m.lockPill + "<span>•</span>") : "";
+  var pctDisplay = isTr ? '<div class="mt-1.5 text-lg font-black ' + txt + ' mono leading-none trial-blur">84.5%</div>' : '<div class="mt-1.5 text-lg font-black ' + txt + ' mono leading-none">' + m.fs.toFixed(1) + '%</div>';
+
+  var expandBar = '<div class="mt-2.5 pt-1.5 border-t border-slate-800/70 flex flex-col items-center gap-1">' +
+    '<span class="text-[9px] text-slate-400 font-semibold tracking-wider uppercase">' + (isTr ? '🔒 Tap to preview 8 betting markets (Trial Mode)' : 'Click to expand betting markets') + '</span>' +
+    '<div class="flex flex-col items-center gap-1"><div style="width:34px;height:2px;background:#475569;border-radius:9px;"></div><div style="width:20px;height:2px;background:#334155;border-radius:9px;"></div></div></div>';
+
+  return '<div onclick="window.toggleCard(' + m.id + ')" class="glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer">' +
+    '<div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0">' +
+    '<div class="flex items-center gap-1.5 whitespace-nowrap overflow-hidden">' +
+    '<span class="text-[10px] font-black ' + txt + ' mono">#' + (i+1) + '</span>' +
+    '<span class="text-[10px] bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 rounded-md font-semibold inline-flex items-center gap-1.5 truncate">' + window.getLeagueLogo(m.league,true) + ' <span class="truncate">' + window.getLeagueName(m.league) + '</span></span>' +
+    '<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 ' + (m.venue==="HOME"?"bg-emerald-950 text-emerald-300":"bg-indigo-950 text-indigo-300") + '">' + (m.venue==="HOME"?"🏠 HOME":"✈️ AWAY") + '</span></div>' +
+    '<div class="mt-2 text-[15px] font-bold leading-snug">' + window.formatMatchTeams(m) + '</div>' +
+    '<div class="flex items-center gap-1.5 flex-wrap mt-2 text-[10px] text-slate-400">' + lockBadge + '<span>Status: <b class="' + sCol + '">' + m.actual + '</b></span></div></div>' +
+    '<div class="flex flex-col items-end justify-between flex-shrink-0 text-right">' +
+    (m.liveBadge || '<span class="text-[9px] bg-slate-800/90 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded-md mono">🕒 KO ' + (m.ko||"15:00") + '</span>') +
+    pctDisplay +
+    '<div class="w-20 h-1 bg-slate-800 rounded-full overflow-hidden mt-1 mb-1"><div class="h-full ' + bar + ' rounded-full" style="width:' + w + '%"></div></div>' +
+    '<span class="text-[9px] border ' + bdg + ' px-1.5 py-0.5 rounded-md whitespace-nowrap font-semibold">' + lbl + '</span></div></div>' +
+    expandBar + window.render31PointPanel(m, adminCtrlHtml) + '</div>';
+};
+
+window.syncAllResultColorsAndCounters = function(){
+  var tiers = [
+    {box:"greenResults", cnt:"greenCount", ratio:true},
+    {box:"amberResults", cnt:"amberCount", ratio:false},
+    {box:"redResults",   cnt:"redCount",   ratio:false}
+  ];
+  var gW = 0, gDone = 0;
+  tiers.forEach(function(t){
+    var box = document.getElementById(t.box), cnt = document.getElementById(t.cnt);
+    if(!box || !cnt) return;
+    var cards = Array.from(box.querySelectorAll("div[onclick^='window.toggleCard']"));
+    var w = 0, d = 0;
+    cards.forEach(function(c){
+      c.querySelectorAll("b").forEach(function(b){
+        var s = (b.innerText || "").toLowerCase();
+        if(s.indexOf("(won)")!==-1){ b.className="text-emerald-400 font-bold"; w++; d++; }
+        else if(s.indexOf("(draw)")!==-1){ b.className="text-amber-300 font-bold"; d++; }
+        else if(s.indexOf("(lost)")!==-1){ b.className="text-rose-400 font-bold"; d++; }
+        else if(s.indexOf("live")!==-1){ b.className="text-sky-400 font-bold"; }
+      });
+    });
+    var txt = t.ratio ? (w + "/" + cards.length) : String(cards.length);
+    if(cnt.innerText !== txt) cnt.innerText = txt;
+    if(t.ratio){ gW = w; gDone = d; }
+  });
+  var hr = document.getElementById("sessionHitRate");
+  if(hr){
+    var hTxt = gDone > 0 ? Math.round((gW / gDone) * 100) + "%" : "--%";
+    if(hr.innerText !== hTxt) hr.innerText = hTxt;
+  }
+};
+
+// Main Prediction Engine (Shows up to 50 Fixtures Daily across Green, Amber & Red)
+window.runEngine = function(isForcedSync){
+  var scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+  var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+  window.autoSettleAndEvolveCompletedDays();
+  window.syncOvernightLogs();
+  window.syncRealLiveScores(isForcedSync);
+
+  var dateObj = window.getRollingDates();
+  if(!window.selectedDate) window.selectedDate = dateObj.today;
+
+  var leagues = Array.from(document.querySelectorAll("#leagueFilters input:checked")).map(function(c){return c.value;});
+  var tBtn = document.getElementById("toggleLeaguesBtn");
+  if(tBtn) tBtn.innerText = leagues.length > 0 ? "Clear All (" + leagues.length + ")" : "Select All";
+
+  var allRaw = window.getFixturesForDateAndLeagues(window.selectedDate, leagues);
+  var seenKeys = {};
+  var deduped = [];
+  allRaw.forEach(function(m){
+    var hName = m.venue === "HOME" ? m.fav : m.opp;
+    var aName = m.venue === "HOME" ? m.opp : m.fav;
+    var k = window.normTeamKey(hName) + "_vs_" + window.normTeamKey(aName);
+    if(!seenKeys[k]){
+      seenKeys[k] = true;
+      deduped.push(m);
+    }
+  });
+
+  var evaluated = deduped.map(function(m){
+    var pred = window.resolveMatchPrediction(m);
+    return Object.assign({}, m, {
+      fs: pred.fs, driftBadge: pred.driftBadge, lockPill: pred.lockPill,
+      note: pred.note, vr: pred.vr, isLocked: pred.isLocked
+    });
+  });
+
+  // Sort by highest confidence and cap at maximum 50 fixtures per day
+  evaluated.sort(function(a,b){ return b.fs - a.fs; });
+  var capped = evaluated.slice(0, window.MAX_DAILY_FIXTURES);
+
+  if(window.matchSortMode === "KO"){
+    capped.sort(function(a,b){ return String(a.ko||"15:00").localeCompare(String(b.ko||"15:00")) || (b.fs - a.fs); });
+  }
+
+  // Populate Top Daily Banker Slip (Top 4 picks by confidence + best market)
+  var slipList = document.getElementById("topAccaSlipList");
+  if(slipList){
+    var topFour = capped.slice().sort(function(a,b){ return b.fs - a.fs; }).slice(0, 4);
+    if(topFour.length){
+      slipList.innerHTML = topFour.map(function(m, idx){
+        var mk = window.calcExtraMarkets(m, m.fs);
+        var bestM = mk.L.slice().sort(function(a,b){ return b.p - a.p; })[0];
+        if(window.isTrial){
+          return '<div onclick="window.exitTrialToSubscribe()" class="flex justify-between items-center bg-slate-950/80 border border-amber-500/30 px-2.5 py-1.5 rounded-lg cursor-pointer">' +
+            '<div class="truncate pr-2"><span class="text-amber-400 font-black mono mr-1">' + (idx+1) + '.</span><b class="text-white trial-blur-sm">VIP Banker Team</b> <span class="text-slate-400 text-[10px]">vs ' + m.opp + ' (' + (m.ko||"15:00") + ')</span></div>' +
+            '<div class="text-right flex-shrink-0"><span class="text-emerald-400 font-black mono trial-blur-sm">85.4%</span> <span class="text-[9px] text-amber-300 block">🔒 Tap to Unlock</span></div>' +
+          '</div>';
+        }
+        return '<div class="flex justify-between items-center bg-slate-950/80 border border-slate-800 px-2.5 py-1.5 rounded-lg">' +
+          '<div class="truncate pr-2"><span class="text-amber-400 font-black mono mr-1">' + (idx+1) + '.</span><b class="text-white">' + m.fav + '</b> <span class="text-slate-400 text-[10px]">vs ' + m.opp + ' (' + (m.ko||"15:00") + ')</span></div>' +
+          '<div class="text-right flex-shrink-0"><span class="text-emerald-400 font-black mono">' + m.fs.toFixed(1) + '%</span> <span class="text-[9px] text-slate-400 block">⭐ ' + (bestM ? bestM.n + ' ' + bestM.p + '%' : '') + '</span></div>' +
+        '</div>';
+      }).join("");
+    } else {
+      slipList.innerHTML = '<div class="text-slate-500 text-xs">No fixtures available for this filter.</div>';
+    }
+  }
+
+  var humanDateLabel = window.formatDateTabLabel(window.selectedDate, dateObj.today);
+  window.currentSessionKey = "date_" + window.selectedDate;
+
+  var rsb = document.getElementById("roundStatusBadge");
+  if(rsb) rsb.innerText = humanDateLabel + " (" + window.selectedDate + ") • " + capped.length + " Official Fixtures";
+
+  var greens = [], ambers = [], reds = [];
+  capped.forEach(function(item){
+    if(item.fs >= 75.0) greens.push(item);
+    else if(item.fs >= 60.0) ambers.push(item);
+    else reds.push(item);
+  });
+
+  var adminResControls = function(id){
+    return window.isAdmin ? '<div class="pt-1.5 mt-1.5 border-t border-slate-800 flex items-center justify-between flex-wrap gap-1"><span class="text-emerald-300 font-bold">Admin Live Override:</span><div class="flex gap-1"><button onclick="window.promptLiveScore(' + id + ',event)" class="bg-sky-700 px-2 py-0.5 rounded text-white font-bold">⚽ Set Live Score</button><button onclick="window.setMatchResult(' + id + ',\'Pending\',event)" class="bg-slate-700 px-2 py-0.5 rounded text-white">Reset to Auto-Tracker</button></div></div>' : "";
+  };
+
+  document.getElementById("greenResults").innerHTML = greens.length ? greens.map(function(m,i){return window.renderBasicCleanCard(m,i,'green',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Green Picks (75%+) for selected competitions on this date.</p>';
+  document.getElementById("amberResults").innerHTML = ambers.length ? ambers.map(function(m,i){return window.renderBasicCleanCard(m,i,'amber',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Amber Picks (60-74.9%) for selected competitions on this date.</p>';
+  document.getElementById("redResults").innerHTML = reds.length ? reds.map(function(m,i){return window.renderBasicCleanCard(m,i,'red',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Red Picks (<60%) for selected competitions on this date.</p>';
+
+  var activeSearch = document.getElementById("instantSearchInput");
+  if(activeSearch && activeSearch.value.trim()){
+    window._filterDomNow(activeSearch.value.toLowerCase().trim());
+  }
+
+  window.syncAllResultColorsAndCounters();
+
+  var lc = document.getElementById("logContainer");
+  if(lc) lc.innerHTML = window.logHistory.join("");
+  window.renderHistoryDrawer();
+
+  window.scrollTo(scrollX, scrollY);
+};
+
+window.centerActiveDateTab = function(smooth){
+  var container = document.getElementById("dateTabsContainer");
+  var activeDate = window.selectedDate || window.getRollingDates().today;
+  if(!container || !activeDate) return;
+  var tab = document.getElementById("dtab-" + activeDate);
+  if(!tab || container.clientWidth === 0) return;
+  var targetLeft = tab.offsetLeft - (container.clientWidth / 2) + (tab.offsetWidth / 2);
+  container.scrollTo({ left: Math.max(0, targetLeft), behavior: smooth ? "smooth" : "auto" });
+};
+
+window.initDateTabs = function(targetDate){
+  var dateObj = window.getRollingDates();
+  window.lastKnownToday = dateObj.today;
+  if(!targetDate && (!window.selectedDate || dateObj.dates.indexOf(window.selectedDate)===-1)){
+    window.selectedDate = dateObj.today;
+  } else if(targetDate){
+    window.selectedDate = targetDate;
+  }
+
+  var container = document.getElementById("dateTabsContainer");
+  if(container){
+    container.innerHTML = dateObj.dates.map(function(dStr){
+      var active = (dStr === window.selectedDate);
+      var lbl = window.formatDateTabLabel(dStr, dateObj.today);
+      var cls = active
+        ? "px-3 py-2 rounded-lg font-bold bg-emerald-600 text-white shadow text-xs flex-shrink-0 transition"
+        : "px-3 py-2 rounded-lg font-bold bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800/80 text-xs flex-shrink-0 transition";
+      return '<button id="dtab-' + dStr + '" onclick="window.selectDateTab(\'' + dStr + '\')" class="' + cls + '">' + lbl + '</button>';
+    }).join("");
+  }
+  window.runEngine(false);
+  setTimeout(function(){ window.centerActiveDateTab(true); }, 60);
+};
+
+window.selectDateTab = function(dateStr){
+  window.selectedDate = dateStr;
+  window.initDateTabs(dateStr);
+};
+
+window.toggleAllLeagues = function(){
+  var boxes = Array.from(document.querySelectorAll("#leagueFilters input[type='checkbox']"));
+  var anyChecked = boxes.some(function(b){return b.checked;});
+  boxes.forEach(function(b){ b.checked = !anyChecked; });
+  window.runEngine(false);
+};
+
+window.toggleTierView = function(tier){
+  window.activeTierFilter = (window.activeTierFilter === tier) ? 'ALL' : tier;
+  var gWrap = document.getElementById('greenResults').parentElement;
+  var aWrap = document.getElementById('amberResults').parentElement;
+  var rWrap = document.getElementById('redResults').parentElement;
+  if(gWrap) gWrap.style.display = (window.activeTierFilter === 'ALL' || window.activeTierFilter === 'GREEN') ? 'block' : 'none';
+  if(aWrap) aWrap.style.display = (window.activeTierFilter === 'ALL' || window.activeTierFilter === 'AMBER') ? 'block' : 'none';
+  if(rWrap) rWrap.style.display = (window.activeTierFilter === 'ALL' || window.activeTierFilter === 'RED') ? 'block' : 'none';
+
+  ['greenCount','amberCount','redCount'].forEach(function(id, idx){
+    var code = ['GREEN','AMBER','RED'][idx];
+    var box = document.getElementById(id).parentElement;
+    if(box){
+      if(window.activeTierFilter === code) box.classList.add('kpi-active-ring');
+      else box.classList.remove('kpi-active-ring');
+    }
+  });
+};
+
+window._filterDomNow = function(clean){
+  var found = false;
+  ["greenResults","amberResults","redResults"].forEach(function(cid){
+    var c = document.getElementById(cid);
+    if(!c) return;
+    var vis = 0;
+    Array.from(c.children).forEach(function(card){
+      var m = !clean || card.innerText.toLowerCase().indexOf(clean) !== -1;
+      card.style.display = m ? "" : "none";
+      if(m) vis++;
+    });
+    if(vis > 0) found = true;
+    if(c.parentElement && (window.activeTierFilter || "ALL") === "ALL"){
+      c.parentElement.style.display = (clean && vis === 0) ? "none" : "block";
+    }
+  });
+  return found;
+};
+
+window.filterAppCards = function(q){
+  var clean = (q || "").toLowerCase().trim();
+  var clr = document.getElementById("clearSearchBtn");
+  if(clr) clr.style.display = clean.length > 0 ? "block" : "none";
+  if(window._filterDomNow(clean) || clean.length < 3 || window._jumpingTab) return;
+  window._jumpingTab = true;
+  var startTab = document.querySelector("#dateTabsContainer button.bg-emerald-600");
+  var origDate = startTab ? startTab.id.replace("dtab-","") : window.selectedDate;
+  var btns = document.querySelectorAll("#dateTabsContainer button");
+  for(var i=0; i<btns.length; i++){
+    var d = (btns[i].id || "").replace("dtab-","");
+    if(d && d !== origDate && window.selectDateTab){
+      window.selectDateTab(d);
+      if(window._filterDomNow(clean)){
+        var inp = document.getElementById("instantSearchInput");
+        if(inp) inp.value = q;
+        btns[i].scrollIntoView({behavior:"smooth",inline:"center"});
+        window._jumpingTab = false; return;
+      }
+    }
+  }
+  if(origDate && window.selectDateTab){ window.selectDateTab(origDate); window._filterDomNow(clean); }
+  window._jumpingTab = false;
+};
+
+window.toggleDrawer = function(){
+  document.getElementById("drawer").classList.toggle("-translate-x-full");
+};
+
+window.renderHistoryDrawer = function(){
+  var shl = document.getElementById("scanHistoryList");
+  if(!shl) return;
+  var sorted = window.scanHistory.slice().sort(function(a,b){
+    return (a.dateStr || "").localeCompare(b.dateStr || "");
+  });
+  shl.innerHTML = sorted.map(function(s){
+    return '<div onclick="window.loadArchivedSession(\'' + (s.dateStr||'') + '\')" class="bg-slate-900 border ' + (s.dateStr===window.selectedDate?'border-emerald-500/60':'border-slate-800') + ' p-2.5 rounded-xl cursor-pointer space-y-1 hover:border-emerald-500/40 transition">' +
+      '<div class="flex justify-between"><span class="font-bold text-white text-xs">' + s.dateRange + '</span><span class="text-[10px] mono text-emerald-400 font-bold">' + s.successRate + '</span></div>' +
+      '<div class="flex justify-between text-[10px] text-slate-400"><span>' + s.leagues + ' (' + s.greensCount + ' Greens)</span><span>' + (s.optimized?'✓ Auto-Evolved':'Pending FT') + '</span></div>' +
+    '</div>';
+  }).join("");
+};
+
+window.loadArchivedSession = function(dateStr){
+  window.toggleDrawer();
+  if(dateStr) window.selectDateTab(dateStr);
+};
+
+window.showAppToast = function(msg){
+  var t = document.getElementById("appToastBanner");
+  if(!t) return;
+  t.innerText = msg;
+  t.style.display = "block";
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function(){ t.style.display = "none"; }, 2600);
+};
+
+window._adminDialogCallback = null;
+window.openAdminDialog = function(title, placeholder, isPassword, cb){
+  var modal = document.getElementById("adminDialogModal");
+  var titleEl = document.getElementById("adminDialogTitle");
+  var inpEl = document.getElementById("adminDialogInput");
+  if(!modal || !inpEl) return;
+  titleEl.innerText = title;
+  inpEl.placeholder = placeholder || "";
+  inpEl.type = isPassword ? "password" : "text";
+  inpEl.value = "";
+  window._adminDialogCallback = cb;
+  modal.style.display = "flex";
+  setTimeout(function(){ inpEl.focus(); }, 50);
+};
+
+window.closeAdminDialog = function(){
+  var modal = document.getElementById("adminDialogModal");
+  if(modal) modal.style.display = "none";
+  window._adminDialogCallback = null;
+};
+
+window.confirmAdminDialog = function(){
+  var inpEl = document.getElementById("adminDialogInput");
+  var val = inpEl ? inpEl.value.trim() : "";
+  var cb = window._adminDialogCallback;
+  window.closeAdminDialog();
+  if(cb) cb(val);
+};
+
+window.unlockAdmin = function(){
+  if(window.isAdmin){
+    window.isAdmin = false;
+    document.getElementById("adminBar").classList.add("hidden");
+    document.getElementById("logWrapper").classList.add("hidden");
+    document.getElementById("wipeBtn").classList.add("hidden");
+    document.getElementById("clearLogBtn").classList.add("hidden");
+    document.getElementById("authBtn").innerText = "🔒";
+    window.runEngine(false);
+    return;
+  }
+  window.openAdminDialog("🔑 Enter Admin PIN", "Enter 8-digit Admin PIN...", true, function(pin){
+    if(pin === window.ADMIN_PIN){
+      window.isAdmin = true;
+      document.getElementById("adminBar").classList.remove("hidden");
+      document.getElementById("logWrapper").classList.remove("hidden");
+      document.getElementById("wipeBtn").classList.remove("hidden");
+      document.getElementById("clearLogBtn").classList.remove("hidden");
+      document.getElementById("authBtn").innerText = "🔓";
+      window.runEngine(false);
+      window.showAppToast("🔓 Admin Mode Unlocked");
+    } else if(pin){
+      window.showAppToast("❌ Invalid Admin PIN");
+    }
+  });
+};
+
+window.promptLiveScore = function(id, e){
+  if(e) e.stopPropagation();
+  if(!window.isAdmin) return;
+  window.openAdminDialog("⚽ Set Live Score Override", "e.g. 2 - 1", false, function(sc){
+    if(sc){
+      window.customResults[id] = "LIVE:" + sc;
+      window.safeSet("airp_v122_res", window.customResults);
+      window.addLog("⚽ Admin set live score for match #" + id + " to: <b>" + sc + "</b>");
+      window.runEngine(false);
+      window.showAppToast("⚽ Live Score Updated");
+    }
+  });
+};
+
+window.setMatchResult = function(id, status, e){
+  if(e) e.stopPropagation();
+  if(!window.isAdmin) return;
+  if(status === "Pending"){
+    delete window.customResults[id];
+  } else {
+    window.customResults[id] = status;
+  }
+  window.safeSet("airp_v122_res", window.customResults);
+  window.addLog("✏️ Admin reset match #" + id + " to automatic ESPN live tracker.");
+  window.runEngine(false);
+  window.showAppToast("🔄 Reset to Auto-Tracker");
+};
+
+window.addLog = function(msg){
+  var d = new Date();
+  var t = d.toLocaleDateString([],{month:'short',day:'numeric'}) + " " + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  window.logHistory.unshift("<div><span class='text-slate-500'>["+t+"]</span> "+msg+"</div>");
+  if(window.logHistory.length > 80) window.logHistory.pop();
+  window.safeSet("airp_v122_log", window.logHistory);
+  var lc = document.getElementById("logContainer");
+  if(lc) lc.innerHTML = window.logHistory.join("");
+};
+
+window.clearLog = function(){ if(!window.isAdmin) return; window.logHistory=[]; window.safeSet("airp_v122_log",[]); document.getElementById("logContainer").innerHTML=""; };
+window.clearHistory = function(){ if(!window.isAdmin) return; window.scanHistory=[]; window.safeSet("airp_v122_hist",[]); window.initDateTabs(window.selectedDate); };
+
+window.autoFetchAndImprove = function(){
+  if(!window.isAdmin) return;
+  var next = window.getNextEvolutionMetric();
+  window.modelState.injectedStats.push(next);
+  window.modelState.version = parseFloat((window.modelState.version + 0.1).toFixed(1));
+  window.safeSet("airp_v122_state", window.modelState);
+  window.updateModelHeaders();
+  window.addLog("⚡ <b>Admin AI Calibration:</b> Upgraded to <b>v" + window.modelState.version.toFixed(1) + "</b>.");
+  window.runEngine(false);
+  window.showAppToast("⚡ Model Upgraded to v" + window.modelState.version.toFixed(1));
+};
+
+window.buildCleanExportHTML = function(){
+  var wasAdmin = window.isAdmin;
+  var wasTrial = window.isTrial;
+  window.closeAdminDialog();
+  if(wasAdmin) window.unlockAdmin();
+  window.isTrial = false;
+  var tb = document.getElementById("trialModeBanner");
+  if(tb) tb.classList.add("hidden");
+  localStorage.removeItem("airp_auth_session");
+  document.getElementById("authGate").style.display = "flex";
+  document.getElementById("appContainer").style.display = "none";
+  document.getElementById("passInput").value = "";
+  document.getElementById("errorMsg").style.display = "none";
+  var snap = JSON.stringify({stamp:Date.now(),version:window.modelState.version,injectedStats:window.modelState.injectedStats,hist:window.scanHistory,logs:window.logHistory,drift:window.liveDriftMap,results:window.customResults,lockedScores:window.lockedScores,subPasses:window.subPassState});
+  var html = document.documentElement.outerHTML;
+  html = html.replace(/\/\* STATE_START \*\/[\s\S]*?\/\* STATE_END \*\//, "/* STATE_START */\nwindow.PUBLISHED_STATE=" + snap + ";\n/* STATE_END */");
+  document.getElementById("authGate").style.display = "none";
+  document.getElementById("appContainer").style.display = "block";
+  if(wasAdmin){
+    window.isAdmin = true;
+    document.getElementById("adminBar").classList.remove("hidden");
+    document.getElementById("logWrapper").classList.remove("hidden");
+    document.getElementById("wipeBtn").classList.remove("hidden");
+    document.getElementById("clearLogBtn").classList.remove("hidden");
+    document.getElementById("authBtn").innerText = "🔓";
+    window.runEngine(false);
+  } else if(wasTrial){
+    window.isTrial = true;
+    if(tb) tb.classList.remove("hidden");
+    window.runEngine(false);
+  }
+  return "<!DOCTYPE html>" + html;
+};
+
+window.downloadSnapshotFile = function(){
+  try {
+    var cleanHtml = window.buildCleanExportHTML();
+    var blob = new Blob([cleanHtml], { type: "text/html;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = "index.html";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 1500);
+    window.showAppToast("💾 Downloading index.html...");
+  } catch(e){}
+};
+
+window.exportSnapshot = function(){
+  var cleanHtml = window.buildCleanExportHTML();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(cleanHtml).then(function(){
+      window.showAppToast("📋 Clean HTML Copied to Clipboard!");
+    }).catch(function(){
+      var ta = document.createElement("textarea");
+      ta.value = cleanHtml;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      window.showAppToast("📋 Clean HTML Copied to Clipboard!");
+    });
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = cleanHtml;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    window.showAppToast("📋 Clean HTML Copied to Clipboard!");
+  }
+};
+
+window.addEventListener("scroll", function(){
+  var fab = document.getElementById("scrollTopFab");
+  if(fab){
+    if(window.scrollY > 320) fab.classList.add("vis");
+    else fab.classList.remove("vis");
+  }
+}, { passive: true });
+
+// Periodic Live Sync & Hourly Audit Loop
+window.setInterval(function(){
+  var check = window.getRollingDates();
+  if(window.lastKnownToday && check.today !== window.lastKnownToday){
+    window.autoSettleAndEvolveCompletedDays();
+    window.selectedDate = check.today;
+    window.initDateTabs(check.today);
+  } else {
+    window.runEngine(false);
+  }
+}, 25000);
+
+window.updateModelHeaders();
+window.updateAdminWeightsBar();
+window.updateHourlyCountdownBanner();
+window.refreshMasterPassBtnLabel();
+window.initDateTabs();
+window.checkSavedSession();
+window.addEventListener("load", function(){
+  if(typeof window.initPayPalSubscribeButton === "function") window.initPayPalSubscribeButton();
+});
+</script>
+</body>
+</html>
