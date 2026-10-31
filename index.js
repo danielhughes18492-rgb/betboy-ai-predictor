@@ -18,7 +18,11 @@ const captions = [
 
 async function runAutomation() {
   try {
-    const browser = await puppeteer.launch({ headless: 'new' });
+    // Added sandbox bypass arguments here
+    const browser = await puppeteer.launch({ 
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+    });
     const page = await browser.newPage();
     await page.setViewport({ width: 390, height: 844 });
     
@@ -58,6 +62,7 @@ async function runAutomation() {
     console.log('Automated tweet posted successfully.');
   } catch (error) {
     console.error('Error:', error);
+    process.exit(1); 
   }
 }
 runAutomation();
