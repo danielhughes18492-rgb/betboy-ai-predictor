@@ -25,15 +25,19 @@ async function runAutomation() {
     const page = await browser.newPage();
     await page.setViewport({ width: 390, height: 844 });
     
-    // Bypasses network idle checks and proceeds when core page is loaded
     await page.goto('https://www.betboyai.co.uk', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
-    // Explicitly waits for the Acca slip to load before doing anything else
-    const matchBox = await page.waitForSelector('#topAccaSlipBox', { timeout: 60000 }); 
+    // 1. Wait for the element to exist in the HTML
+    await page.waitForSelector('#topAccaSlipBox', { timeout: 60000 }); 
     
+    // 2. Force the element to be visually visible and extract teams
     const scrapedTeams = await page.evaluate(() => {
       const slip = document.getElementById('topAccaSlipBox');
-      if (slip) slip.classList.remove('hidden');
+      if (slip) {
+        slip.classList.remove('hidden');
+        slip.style.display = 'block'; 
+        slip.style.visibility = 'visible'; 
+      }
       
       const teamNodes = document.querySelectorAll('#topAccaSlipList b.text-white');
       return Array.from(teamNodes)
@@ -41,6 +45,8 @@ async function runAutomation() {
         .slice(0, 4);
     });
     
+    // 3. Take the screenshot NOW that it is completely unhidden
+    const matchBox = await page.$('#topAccaSlipBox'); 
     await matchBox.screenshot({ path: 'betboy-slip.png' });
     await browser.close();
 
