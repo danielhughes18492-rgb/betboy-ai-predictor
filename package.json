@@ -1,0 +1,8 @@
+{
+  "name": "betboy-automator",
+  "version": "1.0.0",
+  "dependencies": {
+    "puppeteer": "^20.0.0",
+    "twitter-api-v2": "^1.14.2"
+  }
+}
