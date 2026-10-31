@@ -24,19 +24,53 @@ async function runAutomation() {
     });
     const page = await browser.newPage();
     await page.setViewport({ width: 390, height: 844 });
+
+    // Handle browser prompt if the password uses a popup dialog
+    page.on('dialog', async dialog => {
+      await dialog.accept('12341867');
+    });
     
     await page.goto('https://www.betboyai.co.uk', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // 1. Automatically find the password input, enter 12341867, and submit
+    const passwordInput = await page.$('input[type="password"], input[id*="pass" i], input[placeholder*="pass" i], input[placeholder*="code" i], input');
+    if (passwordInput) {
+      await passwordInput.click();
+      await passwordInput.type('12341867', { delay: 50 });
+      await page.keyboard.press('Enter');
+
+      // Also click the login/enter button on the lock screen if Enter doesn't submit it
+      await page.evaluate(() => {
+        const inputEl = document.querySelector('input[type="password"], input[id*="pass" i], input');
+        if (inputEl) {
+          const container = inputEl.closest('form, div') || document.body;
+          const btn = container.querySelector('button, input[type="submit"], a.btn');
+          if (btn) btn.click();
+        }
+      });
+      console.log('Password submitted successfully.');
+    }
+
+    // 2. Wait 10 seconds for the site to unlock and load today's fixtures
+    await new Promise(resolve => setTimeout(resolve, 10000));
     
-    // 1. Wait for the element to exist in the HTML
-    await page.waitForSelector('#topAccaSlipBox', { timeout: 60000 }); 
-    
-    // 2. Force the element to be visually visible and extract teams
+    // 3. Unhide the Acca slip and scrape team names for hashtags
     const scrapedTeams = await page.evaluate(() => {
       const slip = document.getElementById('topAccaSlipBox');
       if (slip) {
-        slip.classList.remove('hidden');
-        slip.style.display = 'block'; 
-        slip.style.visibility = 'visible'; 
+        let el = slip;
+        while (el && el !== document.body) {
+          el.classList.remove('hidden');
+          if (window.getComputedStyle(el).display === 'none') {
+            el.style.setProperty('display', 'block', 'important');
+          }
+          if (window.getComputedStyle(el).visibility === 'hidden') {
+            el.style.setProperty('visibility', 'visible', 'important');
+          }
+          el = el.parentElement;
+        }
+        slip.scrollIntoView();
       }
       
       const teamNodes = document.querySelectorAll('#topAccaSlipList b.text-white');
@@ -44,17 +78,28 @@ async function runAutomation() {
         .map(node => node.innerText.replace(/[^a-zA-Z0-9]/g, ''))
         .slice(0, 4);
     });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // 3. Take the screenshot NOW that it is completely unhidden
-    const matchBox = await page.$('#topAccaSlipBox'); 
-    await matchBox.screenshot({ path: 'betboy-slip.png' });
+    // 4. Capture the slip screenshot
+    const matchBox = await page.$('#topAccaSlipBox');
+    const boxSize = matchBox ? await matchBox.boundingBox() : null;
+    
+    if (boxSize && boxSize.width > 0 && boxSize.height > 0) {
+      await matchBox.screenshot({ path: 'betboy-slip.png' });
+    } else {
+      console.log('Capturing visible screen fallback.');
+      await page.screenshot({ path: 'betboy-slip.png' });
+    }
+    
     await browser.close();
 
+    // 5. Build 5 hashtags and post to X
     const fillerTags = ['#EFL', '#FootballTips', '#BetBoyAI', '#ValueBets', '#AIPredictor'];
     let hashtagsArray = scrapedTeams.map(team => '#' + team);
     
     while (hashtagsArray.length < 5) {
-        hashtagsArray.push(fillerTags[hashtagsArray.length]);
+      hashtagsArray.push(fillerTags[hashtagsArray.length]);
     }
     const finalHashtags = hashtagsArray.slice(0, 5).join(' ');
 
