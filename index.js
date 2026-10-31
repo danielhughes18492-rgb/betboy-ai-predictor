@@ -25,8 +25,11 @@ async function runAutomation() {
     const page = await browser.newPage();
     await page.setViewport({ width: 390, height: 844 });
     
-    // Increased timeout to 60s and relaxed networkidle
-    await page.goto('https://www.betboyai.co.uk', { waitUntil: 'networkidle2', timeout: 60000 });
+    // Bypasses network idle checks and proceeds when core page is loaded
+    await page.goto('https://www.betboyai.co.uk', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    
+    // Explicitly waits for the Acca slip to load before doing anything else
+    const matchBox = await page.waitForSelector('#topAccaSlipBox', { timeout: 60000 }); 
     
     const scrapedTeams = await page.evaluate(() => {
       const slip = document.getElementById('topAccaSlipBox');
@@ -38,7 +41,6 @@ async function runAutomation() {
         .slice(0, 4);
     });
     
-    const matchBox = await page.waitForSelector('#topAccaSlipBox'); 
     await matchBox.screenshot({ path: 'betboy-slip.png' });
     await browser.close();
 
