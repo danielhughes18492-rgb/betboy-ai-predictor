@@ -14,27 +14,56 @@ async function runAutomation() {
     console.log('1. Launching browser...');
     browser = await puppeteer.launch({
       headless: 'new',
+      protocolTimeout: 120000,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu'
+        '--disable-software-rasterizer'
       ]
     });
 
     const page = await browser.newPage();
     page.setDefaultTimeout(30000);
-    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    await page.emulateTimezone('Europe/London');
 
-    // Prevent any browser alert/prompt from freezing the script
+    // Block PayPal SDK and trackers from freezing the lock screen
+    await page.setRequestInterception(true);
+    page.on('request', req => {
+      const url = req.url().toLowerCase();
+      if (url.includes('paypal.com') || url.includes('google-analytics') || url.includes('googletagmanager')) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
     page.on('dialog', async dialog => {
-      console.log('Auto-dismissing dialog:', dialog.message());
+      console.log('Auto-accepting dialog:', dialog.message());
       await dialog.accept('12341867');
     });
 
+    // Strip heavy GPU blur effects and cap long fixture lists so the CPU never freezes
     await page.evaluateOnNewDocument(() => {
       window.alert = msg => console.log('Alert:', msg);
       window.confirm = () => true;
+
+      const style = document.createElement('style');
+      style.innerHTML = `
+        *, *::before, *::after {
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          animation: none !important;
+          transition: none !important;
+        }
+        div > div:nth-child(n+8) {
+          content-visibility: auto;
+        }
+      `;
+      document.addEventListener('DOMContentLoaded', () => {
+        document.head.appendChild(style);
+      });
     });
 
     console.log('2. Loading betboyai.co.uk...');
@@ -42,72 +71,90 @@ async function runAutomation() {
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     console.log('3. Entering password and clicking Unlock Access...');
-    await page.evaluate(() => {
+    const loginResult = await page.evaluate(() => {
       const inputs = Array.from(document.querySelectorAll('input'));
-      const passInput = inputs.find(i => i.offsetParent !== null) || inputs[0];
-      if (passInput) {
-        passInput.focus();
-        passInput.value = '12341867';
-        passInput.dispatchEvent(new Event('input', { bubbles: true }));
-        passInput.dispatchEvent(new Event('change', { bubbles: true }));
+      let filled = 0;
+      for (const inp of inputs) {
+        const ph = (inp.placeholder || '').toLowerCase();
+        if (!ph.includes('search')) {
+          inp.focus();
+          inp.value = '12341867';
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+          filled++;
+        }
       }
 
-      const clickable = Array.from(document.querySelectorAll('button, a, div, span'));
-      const unlockBtn = clickable.reverse().find(
+      const elements = Array.from(document.querySelectorAll('button, a, div, span'));
+      const unlockBtn = elements.reverse().find(
         el => el.textContent && el.textContent.trim() === 'Unlock Access'
       );
       if (unlockBtn) unlockBtn.click();
+
+      return { filledInputs: filled, clickedUnlock: !!unlockBtn };
     });
+    console.log('Login step:', JSON.stringify(loginResult));
 
     console.log('4. Waiting for Green Picks to load...');
-    let marketCount = 0;
-    for (let attempt = 1; attempt <= 10; attempt++) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      marketCount = await page.evaluate(() => {
-        const nodes = document.querySelectorAll('div, span, button, p');
-        let count = 0;
-        for (const el of nodes) {
-          const txt = el.textContent;
-          if (txt && txt.length < 45 && txt.toUpperCase().includes('TAP FOR 8 RANKED MARKETS')) {
-            count++;
-            if (count >= 3) break;
-          }
+    let foundFixtures = false;
+    for (let attempt = 1; attempt <= 8; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      const status = await page.evaluate(() => {
+        const bodyText = document.body ? document.body.innerText : '';
+        const hasMarkets = bodyText.toUpperCase().includes('TAP FOR 8 RANKED MARKETS');
+        const stillLocked = bodyText.includes('Unlock Access');
+
+        // If still on lock screen after 3 checks, also try clicking Teaser/Preview or Enter
+        if (stillLocked && !hasMarkets) {
+          const els = Array.from(document.querySelectorAll('button, a, div'));
+          const previewBtn = els.reverse().find(
+            e => e.textContent && e.textContent.includes('Try Free Preview')
+          );
+          if (previewBtn && window._triedPreview) previewBtn.click();
+          window._triedPreview = true;
         }
-        return count;
+
+        return {
+          hasMarkets,
+          stillLocked,
+          snippet: bodyText.replace(/\s+/g, ' ').slice(0, 120)
+        };
       });
-      console.log(`Check ${attempt}: found ${marketCount} top fixtures...`);
-      if (marketCount > 0) break;
+
+      console.log(`Check ${attempt}: markets=${status.hasMarkets}, locked=${status.stillLocked} | "${status.snippet}"`);
+      if (status.hasMarkets) {
+        foundFixtures = true;
+        break;
+      }
     }
 
     console.log('5. Expanding a top Green Pick card and reading stats...');
     const scrapedInfo = await page.evaluate(() => {
-      const nodes = document.querySelectorAll('div, span, button, p');
-      const toggles = [];
-      for (const el of nodes) {
-        const txt = el.textContent;
-        if (txt && txt.length < 45 && txt.toUpperCase().includes('TAP FOR 8 RANKED MARKETS')) {
-          // Ensure we only grab the innermost toggle element
-          const hasChildMatch = Array.from(el.children).some(
-            c => c.textContent && c.textContent.toUpperCase().includes('TAP FOR 8 RANKED MARKETS')
-          );
-          if (!hasChildMatch) {
-            toggles.push(el);
-            if (toggles.length >= 3) break;
-          }
-        }
+      // Remove excess fixture cards further down the page to keep rendering instant
+      const allCards = Array.from(document.querySelectorAll('div')).filter(
+        el => el.textContent && el.textContent.includes('TAP FOR 8 RANKED MARKETS') && el.clientHeight > 80 && el.clientHeight < 350
+      );
+      if (allCards.length > 5) {
+        allCards.slice(5).forEach(c => c.remove());
       }
+
+      const nodes = Array.from(document.querySelectorAll('div, span, button, p'));
+      const toggles = nodes.filter(el => {
+        const txt = el.textContent ? el.textContent.trim().toUpperCase() : '';
+        return txt.includes('TAP FOR 8 RANKED MARKETS') && el.children.length <= 1;
+      });
 
       let card = null;
       if (toggles.length > 0) {
-        const chosenToggle = toggles[Math.floor(Math.random() * toggles.length)];
+        const pickIndex = Math.floor(Math.random() * Math.min(3, toggles.length));
+        const chosenToggle = toggles[pickIndex];
         chosenToggle.click();
 
-        // Walk up a few parent levels to grab just this single match card
         let el = chosenToggle.parentElement;
         for (let i = 0; i < 6 && el && el !== document.body; i++) {
           if (el.textContent && el.textContent.includes(' vs ')) {
             card = el;
-            if (el.clientHeight > 250) break;
+            if (el.clientHeight > 200) break;
           }
           el = el.parentElement;
         }
@@ -117,7 +164,7 @@ async function runAutomation() {
         card.scrollIntoView({ behavior: 'instant', block: 'center' });
       }
 
-      const rawText = card ? card.innerText : '';
+      const rawText = card ? card.innerText : (document.body ? document.body.innerText : '');
       const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
 
       let teamA = 'Football';
@@ -146,7 +193,6 @@ async function runAutomation() {
       return { teamA, teamB, matchTitle, cleanTopPick, confLine };
     });
 
-    // Wait 1.5s for the expanded 8-market grid to finish rendering
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     console.log(`6. Taking screenshot for ${scrapedInfo.matchTitle}...`);
