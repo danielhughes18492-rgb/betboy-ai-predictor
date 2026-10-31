@@ -23,7 +23,19 @@ async function runAutomation() {
     });
 
     const page = await browser.newPage();
+    page.setDefaultTimeout(30000);
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+
+    // Prevent any browser alert/prompt from freezing the script
+    page.on('dialog', async dialog => {
+      console.log('Auto-dismissing dialog:', dialog.message());
+      await dialog.accept('12341867');
+    });
+
+    await page.evaluateOnNewDocument(() => {
+      window.alert = msg => console.log('Alert:', msg);
+      window.confirm = () => true;
+    });
 
     console.log('2. Loading betboyai.co.uk...');
     await page.goto('https://www.betboyai.co.uk', { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -34,69 +46,80 @@ async function runAutomation() {
       const inputs = Array.from(document.querySelectorAll('input'));
       const passInput = inputs.find(i => i.offsetParent !== null) || inputs[0];
       if (passInput) {
-        passInput.value = '';
         passInput.focus();
+        passInput.value = '12341867';
+        passInput.dispatchEvent(new Event('input', { bubbles: true }));
+        passInput.dispatchEvent(new Event('change', { bubbles: true }));
       }
-    });
 
-    await page.keyboard.type('12341867', { delay: 50 });
-
-    await page.evaluate(() => {
-      const buttons = Array.from(document.querySelectorAll('button, div, a, span'));
-      const unlockBtn = buttons.find(
-        el => el.innerText && el.innerText.trim() === 'Unlock Access'
+      const clickable = Array.from(document.querySelectorAll('button, a, div, span'));
+      const unlockBtn = clickable.reverse().find(
+        el => el.textContent && el.textContent.trim() === 'Unlock Access'
       );
       if (unlockBtn) unlockBtn.click();
     });
 
     console.log('4. Waiting for Green Picks to load...');
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    let marketCount = 0;
+    for (let attempt = 1; attempt <= 10; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      marketCount = await page.evaluate(() => {
+        const nodes = document.querySelectorAll('div, span, button, p');
+        let count = 0;
+        for (const el of nodes) {
+          const txt = el.textContent;
+          if (txt && txt.length < 45 && txt.toUpperCase().includes('TAP FOR 8 RANKED MARKETS')) {
+            count++;
+            if (count >= 3) break;
+          }
+        }
+        return count;
+      });
+      console.log(`Check ${attempt}: found ${marketCount} top fixtures...`);
+      if (marketCount > 0) break;
+    }
 
     console.log('5. Expanding a top Green Pick card and reading stats...');
-    const matchData = await page.evaluate(() => {
-      // Find all "TAP FOR 8 RANKED MARKETS" toggles
-      const allElements = Array.from(document.querySelectorAll('*'));
-      const marketToggles = allElements.filter(
-        el =>
-          el.children.length === 0 &&
-          el.innerText &&
-          el.innerText.toUpperCase().includes('TAP FOR 8 RANKED MARKETS')
-      );
-
-      // Pick one of the top 3 fixtures randomly so your 3 daily tweets vary
-      let chosenToggle = null;
-      if (marketToggles.length > 0) {
-        const pickIndex = Math.floor(Math.random() * Math.min(3, marketToggles.length));
-        chosenToggle = marketToggles[pickIndex];
-        chosenToggle.click();
-      }
-
-      return { toggled: !!chosenToggle, count: marketToggles.length };
-    });
-
-    console.log(`Found ${matchData.count} fixtures. Waiting for markets to expand...`);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Extract the text from the expanded card and scroll it into view
     const scrapedInfo = await page.evaluate(() => {
-      const allElements = Array.from(document.querySelectorAll('div, section, article'));
-      const expandedCard = allElements.find(
-        el =>
-          el.innerText &&
-          el.innerText.includes('8 BETTING MARKETS') &&
-          el.innerText.includes('Top Pick:') &&
-          el.clientHeight > 250 &&
-          el.clientHeight < 800
-      );
-
-      if (expandedCard) {
-        expandedCard.scrollIntoView({ behavior: 'instant', block: 'center' });
+      const nodes = document.querySelectorAll('div, span, button, p');
+      const toggles = [];
+      for (const el of nodes) {
+        const txt = el.textContent;
+        if (txt && txt.length < 45 && txt.toUpperCase().includes('TAP FOR 8 RANKED MARKETS')) {
+          // Ensure we only grab the innermost toggle element
+          const hasChildMatch = Array.from(el.children).some(
+            c => c.textContent && c.textContent.toUpperCase().includes('TAP FOR 8 RANKED MARKETS')
+          );
+          if (!hasChildMatch) {
+            toggles.push(el);
+            if (toggles.length >= 3) break;
+          }
+        }
       }
 
-      const text = expandedCard ? expandedCard.innerText : document.body.innerText;
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      let card = null;
+      if (toggles.length > 0) {
+        const chosenToggle = toggles[Math.floor(Math.random() * toggles.length)];
+        chosenToggle.click();
 
-      // Find teams line (e.g., "Chelsea vs Man Utd")
+        // Walk up a few parent levels to grab just this single match card
+        let el = chosenToggle.parentElement;
+        for (let i = 0; i < 6 && el && el !== document.body; i++) {
+          if (el.textContent && el.textContent.includes(' vs ')) {
+            card = el;
+            if (el.clientHeight > 250) break;
+          }
+          el = el.parentElement;
+        }
+      }
+
+      if (card) {
+        card.scrollIntoView({ behavior: 'instant', block: 'center' });
+      }
+
+      const rawText = card ? card.innerText : '';
+      const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+
       let teamA = 'Football';
       let teamB = 'EFL';
       let matchTitle = "Today's Featured Fixture";
@@ -116,28 +139,24 @@ async function runAutomation() {
         }
       }
 
-      // Find Top Pick line
       const topPickLine = lines.find(l => l.includes('Top Pick:')) || 'Top Pick: High-Confidence AI Selection';
       const cleanTopPick = topPickLine.replace('★', '').trim();
-
-      // Find overall confidence percentage
       const confLine = lines.find(l => /^\d{2}\.\d%$/.test(l)) || '85.0%';
 
       return { teamA, teamB, matchTitle, cleanTopPick, confLine };
     });
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Wait 1.5s for the expanded 8-market grid to finish rendering
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    console.log('6. Taking screenshot...');
+    console.log(`6. Taking screenshot for ${scrapedInfo.matchTitle}...`);
     await page.screenshot({ path: 'betboy-slip.png' });
     await browser.close();
 
-    // Build dynamic hashtags from the two teams in the screenshot
     const cleanTagA = '#' + scrapedInfo.teamA.replace(/[^a-zA-Z0-9]/g, '');
     const cleanTagB = '#' + scrapedInfo.teamB.replace(/[^a-zA-Z0-9]/g, '');
     const hashtags = `${cleanTagA} ${cleanTagB} #BetBoyAI #FootballTips #AIPredictor`;
 
-    // Rotate between 3 high-energy templates using the exact stats from the screenshot
     const dynamicCaptions = [
       `🚨 GREEN PICK LOCKED: ${scrapedInfo.matchTitle} (${scrapedInfo.confLine} AI Confidence)!\n\n⭐ ${scrapedInfo.cleanTopPick}\n\nHigh-probability markets like Over 1.5 Goals and 1st Half Over 0.5 are primed to CASH. The AI is reading this game perfectly! ✅\n\nFree trial link in bio 👇\n\n${hashtags}`,
       
