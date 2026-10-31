@@ -18,7 +18,6 @@ const captions = [
 
 async function runAutomation() {
   try {
-    // Added sandbox bypass arguments here
     const browser = await puppeteer.launch({ 
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'] 
@@ -26,9 +25,9 @@ async function runAutomation() {
     const page = await browser.newPage();
     await page.setViewport({ width: 390, height: 844 });
     
-    await page.goto('https://www.betboyai.co.uk', { waitUntil: 'networkidle0' });
+    // Increased timeout to 60s and relaxed networkidle
+    await page.goto('https://www.betboyai.co.uk', { waitUntil: 'networkidle2', timeout: 60000 });
     
-    // Unhide slip and extract team names for hashtags
     const scrapedTeams = await page.evaluate(() => {
       const slip = document.getElementById('topAccaSlipBox');
       if (slip) slip.classList.remove('hidden');
@@ -43,7 +42,6 @@ async function runAutomation() {
     await matchBox.screenshot({ path: 'betboy-slip.png' });
     await browser.close();
 
-    // Build exactly 5 hashtags based on the scraped teams
     const fillerTags = ['#EFL', '#FootballTips', '#BetBoyAI', '#ValueBets', '#AIPredictor'];
     let hashtagsArray = scrapedTeams.map(team => '#' + team);
     
