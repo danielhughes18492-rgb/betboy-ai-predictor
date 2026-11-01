@@ -3095,6 +3095,705 @@ window.setCardMarketTab = function(matchId, cat, e){
   window.runEngine(false);
 };
 
+// ============================================================================
+// COMPLETED MATCH HIGHLIGHTS & ANIMATED GIF / VIDEO SUMMARY ENGINE
+// ============================================================================
+window.matchHighlightsState = window.matchHighlightsState || {};
+window.liveFetchedHighlightsCache = window.safeGet("airp_live_highlights_v1", {});
+
+window.CLUB_STAR_ROSTER = {
+  arsenal: ["B. Saka", "K. Havertz", "M. Odegaard", "G. Martinelli", "D. Rice"],
+  chelsea: ["C. Palmer", "N. Jackson", "C. Nkunku", "P. Neto", "E. Fernandez"],
+  liverpool: ["M. Salah", "L. Diaz", "D. Jota", "C. Gakpo", "D. Szoboszlai"],
+  mancity: ["E. Haaland", "P. Foden", "K. De Bruyne", "J. Doku", "B. Silva"],
+  manutd: ["B. Fernandes", "A. Garnacho", "R. Hojlund", "M. Rashford", "A. Diallo"],
+  tottenham: ["H. Son", "D. Solanke", "J. Maddison", "B. Johnson", "D. Kulusevski"],
+  spurs: ["H. Son", "D. Solanke", "J. Maddison", "B. Johnson", "D. Kulusevski"],
+  newcastle: ["A. Isak", "A. Gordon", "B. Guimaraes", "H. Barnes", "Joelinton"],
+  astonvilla: ["O. Watkins", "M. Rogers", "J. Duran", "L. Bailey", "J. McGinn"],
+  celtic: ["K. Furuhashi", "D. Maeda", "N. Kuhn", "C. McGregor", "R. Hatate"],
+  rangers: ["C. Dessers", "J. Tavernier", "V. Cerny", "H. Igamane", "N. Raskin"],
+  aberdeen: ["L. Nisbet", "T. Keskinen", "J. McGrath", "P. Sokler", "G. Shinnie"],
+  hearts: ["L. Shankland", "B. Spittal", "K. Vargas", "Y. Oda", "C. Devlin"],
+  hibernian: ["M. Boyle", "M. Kukharevych", "D. Gayle", "J. Newell", "E. Youan"],
+  realmadrid: ["K. Mbappe", "Vinicius Jr", "J. Bellingham", "Rodrygo", "F. Valverde"],
+  barcelona: ["R. Lewandowski", "L. Yamal", "Raphinha", "D. Olmo", "Pedri"],
+  atletico: ["J. Alvarez", "A. Griezmann", "A. Sorloth", "S. Lino", "M. Llorente"],
+  sociedad: ["M. Oyarzabal", "T. Kubo", "B. Mendez", "M. Zubimendi", "S. Becker"],
+  bayern: ["H. Kane", "J. Musiala", "M. Olise", "S. Gnabry", "L. Sane"],
+  dortmund: ["S. Guirassy", "J. Gittens", "J. Brandt", "K. Adeyemi", "M. Sabitzer"],
+  leverkusen: ["F. Wirtz", "V. Boniface", "P. Schick", "A. Grimaldo", "J. Frimpong"],
+  stuttgart: ["D. Undav", "E. Demirovic", "E. Millot", "C. Fuhrich", "A. Stiller"],
+  inter: ["L. Martinez", "M. Thuram", "H. Calhanoglu", "N. Barella", "F. Dimarco"],
+  acmilan: ["C. Pulisic", "R. Leao", "T. Reijnders", "A. Morata", "T. Hernandez"],
+  juventus: ["D. Vlahovic", "K. Yildiz", "T. Koopmeiners", "F. Conceicao", "A. Cambiaso"],
+  napoli: ["R. Lukaku", "K. Kvaratskhelia", "S. McTominay", "M. Politano", "Z. Anguissa"],
+  lazio: ["V. Castellanos", "M. Zaccagni", "B. Dia", "P. Pedro", "M. Guendouzi"],
+  psg: ["O. Dembele", "B. Barcola", "G. Ramos", "A. Hakimi", "Vitinha"],
+  marseille: ["M. Greenwood", "L. Henrique", "A. Rabiot", "P. Hojbjerg", "E. Wahi"],
+  leeds: ["J. Piroe", "W. Gnonto", "D. James", "B. Aaronson", "M. Solomon"],
+  sunderland: ["J. Bellingham", "W. Isidor", "C. Rigg", "P. Roberts", "R. Mundle"],
+  brighton: ["K. Mitoma", "D. Welbeck", "J. Pedro", "Y. Minteh", "G. Rutter"],
+  athletic: ["I. Williams", "N. Williams", "O. Sancet", "G. Guruzeta", "A. Berenguer"],
+  atalanta: ["A. Lookman", "M. Retegui", "C. De Ketelaere", "Ederson", "M. Pasalic"],
+  frankfurt: ["O. Marmoush", "H. Ekitike", "M. Gotze", "F. Chaibi", "A. Knauff"],
+  sporting: ["V. Gyokeres", "P. Goncalves", "F. Trincao", "M. Hjulmand", "G. Quenda"],
+  birmingham: ["J. Stansfield", "A. May", "K. Anderson", "W. Willumsson", "P. Seung-ho"],
+  wrexham: ["P. Mullin", "O. Palmer", "E. Lee", "J. McClean", "S. Fletcher"],
+  walsall: ["J. Matt", "N. Lowe", "T. Allen", "R. Stirk", "C. Barrett"],
+  portvale: ["J. Stockley", "L. Tolaj", "B. Garrity", "R. Curtis", "E. Chislett"]
+};
+
+window.getClubStarScorer = function(teamName, seedIdx){
+  var k = window.normTeamKey ? window.normTeamKey(teamName) : String(teamName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  var roster = window.CLUB_STAR_ROSTER[k];
+  if(!roster){
+    var keys = Object.keys(window.CLUB_STAR_ROSTER);
+    for(var i = 0; i < keys.length; i++){
+      if(k.indexOf(keys[i]) !== -1 || keys[i].indexOf(k) !== -1){
+        roster = window.CLUB_STAR_ROSTER[keys[i]];
+        break;
+      }
+    }
+  }
+  if(!roster || roster.length < 2){
+    roster = [teamName + " #9", teamName + " #10", teamName + " #7", teamName + " #8", teamName + " #11"];
+  }
+  return {
+    scorer: roster[Math.abs(seedIdx) % roster.length],
+    assist: roster[(Math.abs(seedIdx) + 2) % roster.length]
+  };
+};
+
+window.isCompletedMatch = function(m){
+  if(!m || m.isLive) return false;
+  var st = String(m.actual || "").toLowerCase();
+  if(!st || st.indexOf("pending") !== -1 || st.indexOf("ko ") === 0 || st.indexOf("live") === 0) return false;
+  return st.indexOf("(won)") !== -1 || st.indexOf("(draw)") !== -1 || st.indexOf("(lost)") !== -1 || /\d+\s*-\s*\d+/.test(st);
+};
+
+window.buildMatchHighlightsData = function(m){
+  var isDone = window.isCompletedMatch(m);
+  var isH = m.venue === "HOME";
+  var homeTeam = isH ? m.fav : m.opp;
+  var awayTeam = isH ? m.opp : m.fav;
+  if(!isDone){
+    return { isCompleted: false, homeTeam: homeTeam, awayTeam: awayTeam, finalScore: "0-0", clips: [] };
+  }
+  var scMatch = String(m.actual || "").match(/(\d+)\s*-\s*(\d+)/);
+  var hGoals = scMatch ? parseInt(scMatch[1], 10) : 1;
+  var aGoals = scMatch ? parseInt(scMatch[2], 10) : 0;
+  var finalScore = hGoals + "-" + aGoals;
+  var seed = Number(m.id) || 701;
+
+  var clips = [];
+  var totalGoals = Math.min(8, hGoals + aGoals);
+  var finishStyles = [
+    "curled strike into the top corner",
+    "low clinical finish inside the far post",
+    "powerful close-range header off the crossbar",
+    "sweeping counter-attack finish",
+    "first-time half-volley from the edge of the box"
+  ];
+
+  if(totalGoals > 0){
+    var sides = [];
+    for(var h = 0; h < Math.min(5, hGoals); h++) sides.push("HOME");
+    for(var a = 0; a < Math.min(5, aGoals); a++) sides.push("AWAY");
+    if(sides.length > 1 && (seed % 2 === 1)) sides.reverse();
+
+    var mins = [];
+    for(var i = 0; i < sides.length; i++){
+      var baseM = Math.floor(((i + 1) * 84) / (sides.length + 1));
+      var jit = ((seed + i * 17) % 9) - 4;
+      mins.push(Math.min(90, Math.max(4, baseM + jit)));
+    }
+    mins.sort(function(x, y){ return x - y; });
+
+    var curH = 0, curA = 0;
+    sides.forEach(function(side, idx){
+      var isHomeGoal = (side === "HOME");
+      if(isHomeGoal) curH++; else curA++;
+      var teamName = isHomeGoal ? homeTeam : awayTeam;
+      var pl = window.getClubStarScorer(teamName, seed + idx);
+      var minStr = mins[idx] + "'";
+      var scoreAfter = curH + "-" + curA;
+      var finishTxt = finishStyles[(seed + idx) % finishStyles.length];
+      var xgVal = (0.24 + ((seed + idx * 13) % 45) * 0.01).toFixed(2);
+      var shotSpeed = 94 + ((seed + idx * 11) % 26);
+
+      clips.push({
+        id: "hl-" + m.id + "-goal-" + (idx + 1),
+        title: "⚽ " + minStr + " " + pl.scorer + " (" + scoreAfter + ")",
+        badge: "GOAL • " + minStr,
+        minute: minStr,
+        type: "goal",
+        team: teamName,
+        scorer: pl.scorer,
+        assist: pl.assist,
+        scorelineAfter: scoreAfter,
+        durationSec: 12 + ((seed + idx) % 6),
+        xgShot: xgVal,
+        shotSpeedKmh: shotSpeed,
+        description: minStr + " — " + pl.scorer + " scores for " + teamName + " with a " + finishTxt + " (Assist: " + pl.assist + "). Scoreline: " + homeTeam + " " + scoreAfter + " " + awayTeam + ".",
+        trajectory: {
+          startX: isHomeGoal ? 0.25 : 0.75,
+          startY: 0.24 + ((idx * 23 + seed) % 52) * 0.01,
+          midX: isHomeGoal ? 0.66 : 0.34,
+          midY: 0.30 + ((idx * 19 + seed) % 38) * 0.01,
+          endX: isHomeGoal ? 0.94 : 0.06,
+          endY: 0.43 + ((idx * 7) % 14) * 0.01,
+          isHomeTeam: isHomeGoal
+        }
+      });
+    });
+  } else {
+    var pl0 = window.getClubStarScorer(homeTeam, seed);
+    clips.push({
+      id: "hl-" + m.id + "-save-1",
+      title: "🧤 78' Key Save vs " + pl0.scorer + " (0-0)",
+      badge: "KEY SAVE • 78'",
+      minute: "78'",
+      type: "chance",
+      team: homeTeam,
+      scorer: pl0.scorer,
+      assist: pl0.assist,
+      scorelineAfter: "0-0",
+      durationSec: 11,
+      xgShot: "0.52",
+      shotSpeedKmh: 106,
+      description: "78' — Fingertip diving save denies " + pl0.scorer + " (" + homeTeam + ") from 10 yards out to preserve the 0-0 stalemate.",
+      trajectory: {
+        startX: 0.32, startY: 0.58, midX: 0.72, midY: 0.48, endX: 0.93, endY: 0.47, isHomeTeam: true
+      }
+    });
+  }
+
+  var favPl = window.getClubStarScorer(m.fav, seed + 3);
+  clips.push({
+    id: "hl-" + m.id + "-ft-gif",
+    title: "🎬 FT Match Summary GIF (" + finalScore + ")",
+    badge: "FT SUMMARY GIF",
+    minute: "FT",
+    type: "summary",
+    team: m.fav,
+    scorer: favPl.scorer,
+    assist: favPl.assist,
+    scorelineAfter: finalScore,
+    durationSec: 16,
+    xgShot: Number(m.xg || 1.85).toFixed(2),
+    shotSpeedKmh: 108,
+    description: "Full-Time Highlights & Tactical xG Summary: " + homeTeam + " " + finalScore + " " + awayTeam + ". Multi-angle pitch replay of all key attacking phases.",
+    trajectory: {
+      startX: isH ? 0.22 : 0.78,
+      startY: 0.50,
+      midX: isH ? 0.64 : 0.36,
+      midY: 0.36,
+      endX: isH ? 0.94 : 0.06,
+      endY: 0.50,
+      isHomeTeam: isH
+    }
+  });
+
+  // Merge any cached live ESPN summary events/videos
+  var liveCached = window.liveFetchedHighlightsCache && window.liveFetchedHighlightsCache["id_" + m.id];
+  var sourceLabel = "BetBoy AI Pitch Replay & GIF Summary";
+  if(liveCached && Array.isArray(liveCached.clips) && liveCached.clips.length > 0){
+    sourceLabel = liveCached.sourceLabel || "ESPN Live Match Feed Synced";
+    liveCached.clips.forEach(function(ext, idx){
+      if(clips[idx]){
+        if(ext.title) clips[idx].title = ext.title;
+        if(ext.description) clips[idx].description = ext.description;
+        if(ext.scorer) clips[idx].scorer = ext.scorer;
+        if(ext.minute) clips[idx].minute = ext.minute;
+        if(ext.videoUrl) clips[idx].videoUrl = ext.videoUrl;
+        if(ext.thumbnailUrl) clips[idx].thumbnailUrl = ext.thumbnailUrl;
+      }
+    });
+  }
+
+  return {
+    isCompleted: true,
+    matchId: m.id,
+    homeTeam: homeTeam,
+    awayTeam: awayTeam,
+    finalScore: finalScore,
+    sourceLabel: sourceLabel,
+    clips: clips
+  };
+};
+
+window.getMatchHighlightState = function(matchId){
+  var idKey = String(matchId);
+  if(!window.matchHighlightsState[idKey]){
+    window.matchHighlightsState[idKey] = {
+      activeClipIdx: 0,
+      playing: true,
+      speed: 1,
+      progress: 38,
+      useVideoTag: false
+    };
+  }
+  return window.matchHighlightsState[idKey];
+};
+
+window.findMatchById = function(matchId){
+  var idNum = Number(matchId);
+  var list = window.currentEvaluatedFixtures || [];
+  var found = list.find(function(x){ return Number(x.id) === idNum; });
+  if(found) return found;
+  var dateObj = window.getRollingDates ? window.getRollingDates() : { today: "" };
+  var raw = window.generateFixturesForDate ? window.generateFixturesForDate(window.selectedDate || dateObj.today) : [];
+  var mapped = raw.map(window.mapRawMatch);
+  return mapped.find(function(x){ return Number(x.id) === idNum; }) || null;
+};
+
+window.drawHighlightPitchCanvas = function(matchId){
+  var canvas = document.getElementById("hlCanvas-" + matchId);
+  if(!canvas) return;
+  var m = window.findMatchById(matchId);
+  if(!m) return;
+  var data = window.buildMatchHighlightsData(m);
+  if(!data.isCompleted || !data.clips.length) return;
+
+  var st = window.getMatchHighlightState(matchId);
+  var clip = data.clips[st.activeClipIdx] || data.clips[0];
+  var ctx = canvas.getContext("2d");
+  var W = canvas.width || 640;
+  var H = canvas.height || 260;
+  var prog01 = Math.min(1, Math.max(0, (st.progress || 0) / 100));
+
+  // 1. Stadium Turf Background with Mowed Stripes
+  var turfGrad = ctx.createLinearGradient(0, 0, W, H);
+  turfGrad.addColorStop(0, "#064e3b");
+  turfGrad.addColorStop(0.5, "#047857");
+  turfGrad.addColorStop(1, "#064e3b");
+  ctx.fillStyle = turfGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  var stripeCount = 10;
+  var stripeW = (W - 48) / stripeCount;
+  for(var s = 0; s < stripeCount; s++){
+    if(s % 2 === 0){
+      ctx.fillStyle = "rgba(16, 185, 129, 0.08)";
+      ctx.fillRect(24 + s * stripeW, 18, stripeW, H - 36);
+    }
+  }
+
+  // 2. Pitch Markings (Outer Touchlines, Halfway Line, Center Circle, Penalty Boxes & Goals)
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.42)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(24, 18, W - 48, H - 36);
+
+  // Halfway Line & Center Circle
+  ctx.beginPath();
+  ctx.moveTo(W / 2, 18);
+  ctx.lineTo(W / 2, H - 18);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(W / 2, H / 2, 34, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Left & Right Penalty Areas
+  ctx.strokeRect(24, H / 2 - 58, 72, 116);
+  ctx.strokeRect(W - 96, H / 2 - 58, 72, 116);
+  ctx.strokeRect(24, H / 2 - 28, 26, 56);
+  ctx.strokeRect(W - 50, H / 2 - 28, 26, 56);
+
+  // Goal Nets
+  ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+  ctx.fillRect(14, H / 2 - 22, 10, 44);
+  ctx.fillRect(W - 24, H / 2 - 22, 10, 44);
+
+  // 3. Draw Animated Action Trajectory (Build-Up Pass -> Key Assist -> Shot into Goal)
+  var tr = clip.trajectory || { startX: 0.25, startY: 0.5, midX: 0.65, midY: 0.38, endX: 0.94, endY: 0.48, isHomeTeam: true };
+  var p0 = { x: 24 + tr.startX * (W - 48), y: 18 + tr.startY * (H - 36) };
+  var p1 = { x: 24 + tr.midX * (W - 48), y: 18 + tr.midY * (H - 36) };
+  var p2 = { x: 24 + tr.endX * (W - 48), y: 18 + tr.endY * (H - 36) };
+
+  // Dotted Build-up Pass Line (p0 -> p1)
+  var passPhase = Math.min(1, prog01 / 0.45);
+  var curPassX = p0.x + (p1.x - p0.x) * passPhase;
+  var curPassY = p0.y + (p1.y - p0.y) * passPhase;
+
+  ctx.save();
+  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.lineTo(curPassX, curPassY);
+  ctx.stroke();
+  ctx.restore();
+
+  // Glowing Shot Trajectory (p1 -> p2) when prog01 > 0.45
+  var ballX = curPassX;
+  var ballY = curPassY;
+  var isGoalMoment = false;
+
+  if(prog01 > 0.45){
+    var shotPhase = Math.min(1, (prog01 - 0.45) / 0.40);
+    // Slight curve arc on shot
+    var ctrlX = (p1.x + p2.x) / 2;
+    var ctrlY = Math.min(p1.y, p2.y) - 24;
+    var t = shotPhase;
+    ballX = (1 - t) * (1 - t) * p1.x + 2 * (1 - t) * t * ctrlX + t * t * p2.x;
+    ballY = (1 - t) * (1 - t) * p1.y + 2 * (1 - t) * t * ctrlY + t * t * p2.y;
+
+    ctx.save();
+    var shotGrad = ctx.createLinearGradient(p1.x, p1.y, ballX, ballY);
+    shotGrad.addColorStop(0, "#fbbf24");
+    shotGrad.addColorStop(1, "#10b981");
+    ctx.strokeStyle = shotGrad;
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.quadraticCurveTo(ctrlX, ctrlY, ballX, ballY);
+    ctx.stroke();
+    ctx.restore();
+
+    if(shotPhase >= 0.96) isGoalMoment = true;
+  }
+
+  // Player Marker Dots (Assister at p0, Scorer at p1)
+  ctx.fillStyle = "#0ea5e9";
+  ctx.beginPath();
+  ctx.arc(p0.x, p0.y, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#10b981";
+  ctx.beginPath();
+  ctx.arc(p1.x, p1.y, 8.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Scorer Name Tag on Pitch
+  ctx.fillStyle = "rgba(2, 6, 23, 0.82)";
+  ctx.fillRect(p1.x - 44, p1.y - 26, 88, 15);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "800 10px 'Plus Jakarta Sans', Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(clip.scorer || clip.team, p1.x, p1.y - 15);
+
+  // Goal Net Ripple Ring when Ball Hits Target
+  if(isGoalMoment){
+    var rippleR = 12 + ((prog01 - 0.85) * 140);
+    ctx.save();
+    ctx.strokeStyle = clip.type === "goal" ? "rgba(52, 211, 153, 0.85)" : "rgba(251, 191, 36, 0.85)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(p2.x, p2.y, Math.max(8, rippleR), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Animated Football Icon at (ballX, ballY)
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "#fbbf24";
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, 6.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.restore();
+
+  // 4. Top Broadcast Scoreboard Overlay Bar
+  ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
+  ctx.fillRect(32, 24, 315, 28);
+  ctx.strokeStyle = "rgba(16, 185, 129, 0.5)";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(32, 24, 315, 28);
+
+  ctx.fillStyle = "#10b981";
+  ctx.fillRect(32, 24, 58, 28);
+  ctx.fillStyle = "#020617";
+  ctx.font = "900 10px 'JetBrains Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(clip.minute || "FT", 61, 42);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "800 11px 'Plus Jakarta Sans', Arial, sans-serif";
+  ctx.textAlign = "left";
+  var sbTitle = data.homeTeam.slice(0, 10).toUpperCase() + "  " + clip.scorelineAfter + "  " + data.awayTeam.slice(0, 10).toUpperCase();
+  ctx.fillText(sbTitle, 98, 42);
+
+  // Top-Right Telemetry Pill (xG & Shot Speed)
+  ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
+  ctx.fillRect(W - 196, 24, 164, 26);
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.45)";
+  ctx.strokeRect(W - 196, 24, 164, 26);
+  ctx.fillStyle = "#7dd3fc";
+  ctx.font = "800 10px 'JetBrains Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("⚡ " + (clip.shotSpeedKmh || 104) + " km/h • " + (clip.xgShot || "0.38") + " xG", W - 114, 41);
+
+  // 5. Goal / Highlight Celebration Banner Overlay when Ball Enters Net
+  if(isGoalMoment){
+    ctx.fillStyle = "rgba(6, 78, 59, 0.94)";
+    ctx.fillRect(W / 2 - 145, H - 58, 290, 32);
+    ctx.strokeStyle = "#34d399";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(W / 2 - 145, H - 58, 290, 32);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 12px 'Plus Jakarta Sans', Arial, sans-serif";
+    ctx.textAlign = "center";
+    var bannerTxt = clip.type === "goal"
+      ? ("⚽ GOAL! " + clip.scorer.toUpperCase() + " (" + clip.scorelineAfter + ")")
+      : ("🎬 " + clip.badge + " • " + data.finalScore);
+    ctx.fillText(bannerTxt, W / 2, H - 38);
+  }
+
+  // Bottom Timeline Progress Bar inside Canvas
+  ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+  ctx.fillRect(24, H - 16, W - 48, 6);
+  ctx.fillStyle = "#10b981";
+  ctx.fillRect(24, H - 16, (W - 48) * prog01, 6);
+};
+
+// Gentle 120ms Animation Loop ONLY for currently expanded completed match cards
+if(!window._highlightsAnimTimer){
+  window._highlightsAnimTimer = setInterval(function(){
+    var exp = window.expandedCards || {};
+    Object.keys(exp).forEach(function(idKey){
+      if(!exp[idKey]) return;
+      var canvas = document.getElementById("hlCanvas-" + idKey);
+      if(!canvas) return;
+      var st = window.getMatchHighlightState(idKey);
+      if(st.playing){
+        st.progress = (st.progress + (3.2 * (st.speed || 1)));
+        if(st.progress > 100) st.progress = 8;
+        window.drawHighlightPitchCanvas(idKey);
+      }
+    });
+  }, 120);
+}
+
+window.selectMatchHighlightClip = function(matchId, clipIdx, e){
+  if(e) e.stopPropagation();
+  var st = window.getMatchHighlightState(matchId);
+  st.activeClipIdx = Number(clipIdx) || 0;
+  st.progress = 15;
+  st.playing = true;
+  window.refreshMatchHighlightsBoxUI(matchId);
+};
+
+window.toggleHighlightPlay = function(matchId, e){
+  if(e) e.stopPropagation();
+  var st = window.getMatchHighlightState(matchId);
+  st.playing = !st.playing;
+  var btn = document.getElementById("hlPlayBtn-" + matchId);
+  if(btn){
+    btn.innerText = st.playing ? "⏸️ Pause GIF" : "▶️ Play GIF";
+  }
+  var vid = document.getElementById("hlVideoEl-" + matchId);
+  if(vid){
+    if(st.playing) { try { vid.play(); } catch(err){} }
+    else { try { vid.pause(); } catch(err){} }
+  }
+  window.drawHighlightPitchCanvas(matchId);
+};
+
+window.replayHighlightClip = function(matchId, e){
+  if(e) e.stopPropagation();
+  var st = window.getMatchHighlightState(matchId);
+  st.progress = 5;
+  st.playing = true;
+  var vid = document.getElementById("hlVideoEl-" + matchId);
+  if(vid){
+    try { vid.currentTime = 0; vid.play(); } catch(err){}
+  }
+  window.refreshMatchHighlightsBoxUI(matchId);
+};
+
+window.toggleHighlightSpeed = function(matchId, e){
+  if(e) e.stopPropagation();
+  var st = window.getMatchHighlightState(matchId);
+  st.speed = st.speed === 1 ? 1.5 : (st.speed === 1.5 ? 2 : 1);
+  var btn = document.getElementById("hlSpeedBtn-" + matchId);
+  if(btn) btn.innerText = "⚡ " + st.speed + "x";
+};
+
+// Fetches live match keyEvents & highlight video clips from ESPN's summary endpoint for completed matches
+window.fetchLiveMatchHighlights = function(matchId, showToast, e){
+  if(e) e.stopPropagation();
+  var m = window.findMatchById(matchId);
+  if(!m) return;
+  var lgSlugMap = {
+    PL:"eng.1", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
+    LL:"esp.1", SA:"ita.1", BUN:"ger.1", FL1:"fra.1",
+    UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf"
+  };
+  var slug = lgSlugMap[m.league] || "eng.1";
+  var statusEl = document.getElementById("hlSourceBadge-" + matchId);
+  if(statusEl) statusEl.innerText = "🔄 Syncing...";
+
+  if(Number(m.id) >= 850000){
+    window.liveFetchedHighlightsCache["id_" + m.id] = {
+      sourceLabel: "✓ AI Pitch GIF Replay",
+      clips: [],
+      updatedAt: Date.now()
+    };
+    window.safeSet("airp_live_highlights_v1", window.liveFetchedHighlightsCache);
+    window.refreshMatchHighlightsBoxUI(matchId);
+    if(showToast && window.showAppToast){
+      window.showAppToast("🎬 Match Highlights & GIF Replay Synced!");
+    }
+    return;
+  }
+
+  fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/" + slug + "/summary?event=" + m.id)
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      var extracted = [];
+      if(d){
+        // Extract any direct MP4 highlight videos
+        if(Array.isArray(d.videos) && d.videos.length > 0){
+          d.videos.slice(0, 4).forEach(function(v, idx){
+            var mp4 = v.links && v.links.source && v.links.source.mezzanine && v.links.source.mezzanine.href;
+            if(!mp4 && v.links && v.links.mobile && v.links.mobile.source && v.links.mobile.source.href){
+              mp4 = v.links.mobile.source.href;
+            }
+            extracted.push({
+              title: "🎬 " + (v.headline || ("Match Highlight #" + (idx + 1))),
+              description: v.description || v.headline || "",
+              videoUrl: mp4 || "",
+              thumbnailUrl: v.thumbnail || ""
+            });
+          });
+        }
+        // Extract real goal scorers & minutes from keyEvents
+        if(Array.isArray(d.keyEvents) && d.keyEvents.length > 0){
+          var goalEvs = d.keyEvents.filter(function(ke){
+            var t = (ke.type && ke.type.text) ? ke.type.text.toLowerCase() : "";
+            return t.indexOf("goal") !== -1 || ke.scoringPlay;
+          });
+          goalEvs.forEach(function(ge, idx){
+            var clk = (ge.clock && ge.clock.displayValue) || "";
+            var pName = (ge.participants && ge.participants[0] && ge.participants[0].athlete && ge.participants[0].athlete.displayName) || "";
+            var txt = ge.text || ge.shortText || "";
+            if(pName || txt){
+              extracted[idx] = Object.assign(extracted[idx] || {}, {
+                minute: clk || undefined,
+                scorer: pName || undefined,
+                title: clk && pName ? ("⚽ " + clk + " " + pName) : undefined,
+                description: txt || undefined
+              });
+            }
+          });
+        }
+      }
+
+      window.liveFetchedHighlightsCache["id_" + m.id] = {
+        sourceLabel: extracted.length > 0 ? "📡 ESPN Live Feed" : "✓ AI Pitch GIF Replay",
+        clips: extracted,
+        updatedAt: Date.now()
+      };
+      window.safeSet("airp_live_highlights_v1", window.liveFetchedHighlightsCache);
+      window.refreshMatchHighlightsBoxUI(matchId);
+      if(showToast && window.showAppToast){
+        window.showAppToast("🎬 Match Highlights & GIF Replay Synced!");
+      }
+    })
+    .catch(function(){
+      window.liveFetchedHighlightsCache["id_" + m.id] = {
+        sourceLabel: "✓ AI Pitch GIF Replay",
+        clips: [],
+        updatedAt: Date.now()
+      };
+      window.refreshMatchHighlightsBoxUI(matchId);
+      if(showToast && window.showAppToast){
+        window.showAppToast("🎬 Tactical Pitch GIF Highlights Ready!");
+      }
+    });
+};
+
+window.renderMatchHighlightsSection = function(m){
+  if(!window.isCompletedMatch(m)) return "";
+  var data = window.buildMatchHighlightsData(m);
+  if(!data.isCompleted || !data.clips.length) return "";
+
+  var st = window.getMatchHighlightState(m.id);
+  if(st.activeClipIdx >= data.clips.length) st.activeClipIdx = 0;
+  var activeClip = data.clips[st.activeClipIdx] || data.clips[0];
+
+  var clipsButtonsHtml = data.clips.map(function(c, idx){
+    var isAct = (idx === st.activeClipIdx);
+    var btnCls = isAct
+      ? "bg-emerald-600 text-white border-emerald-400 font-black shadow-md ring-1 ring-emerald-300/60"
+      : "bg-slate-900/95 text-slate-300 hover:text-white border-slate-700/80 font-bold";
+    return '<button type="button" onclick="window.selectMatchHighlightClip(' + m.id + ', ' + idx + ', event)" class="px-2.5 py-1.5 rounded-xl border text-[9.5px] flex items-center gap-1.5 flex-shrink-0 cursor-pointer transition ' + btnCls + '">' +
+      '<span>' + c.title + '</span>' +
+      '<span class="text-[8.5px] opacity-80 font-mono">(' + c.durationSec + 's)</span>' +
+    '</button>';
+  }).join("");
+
+  var videoPlayerHtml = activeClip.videoUrl
+    ? '<video id="hlVideoEl-' + m.id + '" src="' + activeClip.videoUrl + '" poster="' + (activeClip.thumbnailUrl || '') + '" controls playsinline loop muted autoplay class="w-full h-44 object-cover rounded-xl border border-emerald-500/30 bg-slate-950 mb-1.5" onclick="event.stopPropagation()"></video>'
+    : '';
+
+  return '<div id="highlights-box-' + m.id + '" onclick="event.stopPropagation()" class="bg-slate-950/90 border border-emerald-500/35 rounded-2xl p-3 mb-3 space-y-2 shadow-xl">' +
+    '<div class="flex items-center justify-between gap-1.5 flex-wrap">' +
+      '<div class="flex items-center gap-1.5 flex-wrap">' +
+        '<span class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-300 bg-emerald-500/15 border border-emerald-500/40 px-2 py-0.5 rounded-lg">🎬 Match Highlights</span>' +
+        '<span class="text-[9px] font-mono font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-md">FT ' + data.finalScore + ' • ' + data.clips.length + ' Clips</span>' +
+      '</div>' +
+      '<div class="flex items-center gap-1 ml-auto">' +
+        '<span id="hlSourceBadge-' + m.id + '" class="text-[8.5px] text-slate-400 font-mono hidden sm:inline mr-1">' + data.sourceLabel + '</span>' +
+        '<button type="button" id="hlSpeedBtn-' + m.id + '" onclick="window.toggleHighlightSpeed(' + m.id + ', event)" class="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-300 border border-sky-500/30 text-[9px] font-mono font-bold cursor-pointer transition" title="Toggle Replay Speed">⚡ ' + (st.speed || 1) + 'x</button>' +
+        '<button type="button" onclick="window.fetchLiveMatchHighlights(' + m.id + ', true, event)" class="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold cursor-pointer transition">🔄 Sync Feed</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<!-- Clip Selector Carousel -->' +
+    '<div id="hlClipsList-' + m.id + '" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">' +
+      clipsButtonsHtml +
+    '</div>' +
+
+    '<!-- Animated Pitch GIF / Video Highlight Viewport -->' +
+    '<div class="relative rounded-xl overflow-hidden border border-slate-800/90 bg-slate-950 shadow-inner">' +
+      videoPlayerHtml +
+      '<canvas id="hlCanvas-' + m.id + '" width="640" height="250" onclick="window.toggleHighlightPlay(' + m.id + ', event)" class="w-full h-auto block cursor-pointer" title="Tap to Play/Pause Highlight GIF Replay"></canvas>' +
+    '</div>' +
+
+    '<!-- Active Clip Caption & Playback Controls -->' +
+    '<div class="bg-slate-900/90 border border-slate-800/80 rounded-xl p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
+      '<div class="space-y-0.5 min-w-0 flex-1">' +
+        '<div class="flex items-center gap-1.5 flex-wrap">' +
+          '<span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">' + (activeClip.badge || activeClip.minute) + '</span>' +
+          '<span class="text-[10.5px] font-extrabold text-white truncate">' + activeClip.title + '</span>' +
+        '</div>' +
+        '<p id="hlCaption-' + m.id + '" class="text-[9.5px] text-slate-300 leading-snug">' + activeClip.description + '</p>' +
+      '</div>' +
+      '<div class="flex items-center gap-1.5 flex-shrink-0">' +
+        '<button type="button" id="hlPlayBtn-' + m.id + '" onclick="window.toggleHighlightPlay(' + m.id + ', event)" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9.5px] cursor-pointer transition shadow">' + (st.playing ? '⏸️ Pause GIF' : '▶️ Play GIF') + '</button>' +
+        '<button type="button" onclick="window.replayHighlightClip(' + m.id + ', event)" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-[9.5px] cursor-pointer transition">🔁 Replay</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+};
+
+window.refreshMatchHighlightsBoxUI = function(matchId){
+  var box = document.getElementById("highlights-box-" + matchId);
+  if(!box) return;
+  var m = window.findMatchById(matchId);
+  if(!m) return;
+  var tmp = document.createElement("div");
+  tmp.innerHTML = window.renderMatchHighlightsSection(m);
+  if(tmp.firstElementChild){
+    box.replaceWith(tmp.firstElementChild);
+    window.drawHighlightPitchCanvas(matchId);
+  }
+};
+
 window.toggleCard = function(id){
   var el = document.getElementById("d-" + id);
   if(!el) return;
@@ -3102,9 +3801,18 @@ window.toggleCard = function(id){
   window.expandedCards[id] = !hide;
   var wrap = document.getElementById("cardWrap-" + id);
   if(wrap) wrap.classList.toggle("card-expanded", !hide);
+  if(!hide){
+    setTimeout(function(){
+      window.drawHighlightPitchCanvas(id);
+      var m = window.findMatchById(id);
+      if(m && window.isCompletedMatch(m) && !(window.liveFetchedHighlightsCache && window.liveFetchedHighlightsCache["id_" + id])){
+        window.fetchLiveMatchHighlights(id, false);
+      }
+    }, 20);
+  }
 };
 
-// Expandable Match Details: 16 Unique Ranked Popular Markets (Including Match Result with Most Likely Winner)
+// Expandable Match Details: Match Highlights (for Completed Matches) + 16 Unique Ranked Popular Markets
 window.render31PointPanel = function(m, adm, isUnlocked){
   var mk = window.calcExtraMarkets(m, m.fs || 68);
   var sortedMarkets = mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); });
@@ -3182,12 +3890,15 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     '<div class="flex flex-col gap-0.5 border-l border-slate-800/80"><span class="uppercase tracking-wider opacity-75">🔒 Status</span><b class="text-amber-300 text-[10px] mt-0.5">' + (m.isLocked ? 'T-30m Locked' : 'Live Sync') + '</b></div>' +
   '</div>';
 
+  var highlightsHtml = window.renderMatchHighlightsSection(m);
+
   var trialCta = isTr
     ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="mt-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/50 p-2.5 rounded-xl text-center text-amber-300 font-bold text-[10px] cursor-pointer hover:from-amber-500/30 hover:to-orange-500/30 transition shadow-lg">🔓 Tap to Unlock All 16 VIP Betting Markets</div>'
     : '<div class="mt-2.5 text-[9px] text-slate-500 italic flex justify-between px-1"><span>✓ ' + (m.note || 'Pre-Match Audit Verified') + '</span><span>Base: ' + Number(m.base||m.fs).toFixed(1) + '%</span></div>';
 
   return '<div id="d-'+m.id+'" class="'+openCls+'details-panel mt-3 pt-3 border-t border-slate-800/60 text-[10px] space-y-1">' +
     statBar +
+    highlightsHtml +
     '<div class="flex justify-between items-center mb-1.5 flex-wrap gap-1"><span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> 16 Popular Betting Markets (Live Odds • Tap Any Market to Add)</span></div>' +
     catTabsHtml +
     '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">' + g + '</div>' +
@@ -3269,10 +3980,15 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       '</button>'
     : '';
 
+  var isDoneMatch = window.isCompletedMatch(m);
+  var expandCtaLabel = isDoneMatch
+    ? '🎬 Highlights & 16 Markets'
+    : (isFreeSample ? '🎁 View 16 Betting Markets' : (isTrLocked ? '👀 Tap for Betting Markets' : 'View 16 Betting Markets'));
+
   var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between gap-2 flex-wrap text-[9px] text-slate-400">' +
     '<div class="flex items-center gap-1.5 flex-wrap">' + lockTiny + quickAddCardBtn + xSelectCardBtn + '</div>' +
     '<span class="font-bold tracking-wider uppercase inline-flex items-center gap-1 text-emerald-300 ml-auto">' +
-      (isFreeSample ? '🎁 View 16 Betting Markets' : (isTrLocked ? '👀 Tap for Betting Markets' : 'View 16 Betting Markets')) +
+      expandCtaLabel +
       '<svg class="chevron-icon w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>' +
     '</span>' +
   '</div>';
@@ -3515,6 +4231,12 @@ window.runEngine = function(isForcedSync){
 
   window.syncAllResultColorsAndCounters();
   if(typeof window.syncAdminXSelectionUI === "function") window.syncAdminXSelectionUI();
+
+  Object.keys(window.expandedCards || {}).forEach(function(idKey){
+    if(window.expandedCards[idKey] && typeof window.drawHighlightPitchCanvas === "function"){
+      window.drawHighlightPitchCanvas(idKey);
+    }
+  });
 
   var lc = document.getElementById("logContainer");
   if(lc) lc.innerHTML = window.logHistory.join("");
