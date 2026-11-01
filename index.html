@@ -80,11 +80,17 @@ window.isAdmin = false;
 window.isTrial = false;
 window.activeTierFilter = 'ALL';
 
-window.ALL_LEAGUES = ["PL","SPL","CHA","L1","L2","EFLC","LL","SA","BUN","FL1","UCL","UEL","UECL"];
+// Ordered by Country: England -> Spain -> Germany -> France -> Italy -> Scotland -> Cup & European Competitions
+window.ALL_LEAGUES = ["PL","CHA","L1","L2","LL","BUN","FL1","SA","SPL","EFLC","UCL","UEL","UECL"];
 window.LEAGUE_NAMES = {
-  PL: "Premier League", SPL: "Scottish Premiership", CHA: "Championship", L1: "League One", L2: "League Two", EFLC: "EFL Cup",
-  LL: "La Liga", SA: "Serie A", BUN: "Bundesliga", FL1: "Ligue 1",
-  UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
+  PL: "Premier League", CHA: "Championship", L1: "League One", L2: "League Two",
+  LL: "La Liga", BUN: "Bundesliga", FL1: "Ligue 1", SA: "Serie A", SPL: "Scottish Premiership",
+  EFLC: "EFL Cup", UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
+};
+window.LEAGUE_COUNTRY_TAGS = {
+  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  LL: "🇪🇸", BUN: "🇩🇪", FL1: "🇫🇷", SA: "🇮🇹", SPL: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  EFLC: "🏆", UCL: "🏆", UEL: "🏆", UECL: "🏆"
 };
 
 window.selectedDate = "";
@@ -138,6 +144,9 @@ window.makeBetBoyLogoSvg = function() {
 window.getBetBoyLogoUrl = function(){
   return window.makeBetBoyLogoSvg();
 };
+
+window._betBoyLogoCanvasImg = new Image();
+window._betBoyLogoCanvasImg.src = window.getBetBoyLogoUrl();
 
 // Setup Home Screen App Icons for iOS & Android
 window.setupHomeScreenAppIcons = function(){
@@ -800,16 +809,17 @@ window.checkSavedSession = function() {
     <div id="dateTabsContainer" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 scroll-smooth relative"></div>
   </div>
 
-  <!-- Filter Competitions Bar (13 Competitions including Scottish Premiership) -->
+  <!-- Filter Competitions Bar (Ordered by Country: England, Spain, Germany, France, Italy, Scotland, then Cup Competitions) -->
   <div class="glass p-2.5 rounded-xl text-xs space-y-2">
     <div class="flex justify-between items-center px-0.5">
-      <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Filter Competitions</span>
+      <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Filter Competitions (By Country &amp; Cups)</span>
       <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition">Clear All (13)</button>
     </div>
     <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
       <script>
         document.write(window.ALL_LEAGUES.map(function(code){
-          return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500"><span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span>' + window.getLeagueName(code) + '</span></label>';
+          var cTag = (window.LEAGUE_COUNTRY_TAGS && window.LEAGUE_COUNTRY_TAGS[code]) ? '<span class="text-[10px] opacity-85">' + window.LEAGUE_COUNTRY_TAGS[code] + '</span>' : '';
+          return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500">' + cTag + '<span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span>' + window.getLeagueName(code) + '</span></label>';
         }).join(""));
       </script>
     </div>
@@ -928,7 +938,7 @@ window.checkSavedSession = function() {
     <div class="bg-slate-900/90 border border-slate-700/70 rounded-xl px-3 py-2 flex items-start gap-2 text-[10px] text-slate-300 leading-relaxed">
       <span class="text-emerald-400 text-sm leading-none mt-0.5">💡</span>
       <div>
-        <b class="text-white">Personal Betting Guide (Live Odds):</b> Locked live market odds &amp; potential returns calculator. Enter your stake below to see your exact return before placing the bet on your platform of choice.
+        <b class="text-white">Personal Betting Guide (Live Odds):</b> Locked live market odds &amp; potential returns calculator. Enter or slide your stake below to see your exact return before placing the bet on your platform of choice.
       </div>
     </div>
 
@@ -951,21 +961,27 @@ window.checkSavedSession = function() {
         <button type="button" id="slipModeSinglesBtn" onclick="window.setSlipBetMode('singles')" class="py-1.5 rounded-lg text-[11px] font-bold transition cursor-pointer text-slate-400 hover:text-white">🎯 Singles (Each Bet)</button>
       </div>
 
-      <!-- Stake Input & Quick Preset Buttons -->
+      <!-- Stake Input, £1–£500 Range Slider & Quick Preset Buttons -->
       <div class="space-y-2">
-        <div class="flex items-center justify-between gap-2">
-          <label for="slipStakeInput" class="text-[11px] font-bold text-slate-300 uppercase tracking-wide">Your Stake (£):</label>
-          <div class="relative flex items-center w-36">
-            <span class="absolute left-3 text-emerald-400 font-black text-sm mono">£</span>
-            <input id="slipStakeInput" type="number" min="0.5" step="0.5" value="10" oninput="window.onSlipStakeInput(this.value)" class="w-full bg-slate-900 border border-emerald-500/50 focus:border-emerald-400 rounded-xl pl-7 pr-3 py-1.5 text-right text-white font-black text-sm mono outline-none transition shadow-inner">
+        <div class="flex items-center justify-between gap-2.5">
+          <label for="slipStakeInput" class="text-[11px] font-bold text-slate-300 uppercase tracking-wide flex-shrink-0">Your Stake (£):</label>
+          <div class="flex-1 flex items-center gap-1.5 px-1">
+            <span class="text-[9px] font-mono text-slate-400 font-bold">£1</span>
+            <input id="slipStakeSlider" type="range" min="1" max="500" step="1" value="10" aria-label="Slide Stake between £1 and £500" oninput="window.onSlipStakeInput(this.value)" class="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
+            <span class="text-[9px] font-mono text-slate-400 font-bold">£500</span>
+          </div>
+          <div class="relative flex items-center w-28 flex-shrink-0">
+            <span class="absolute left-2.5 text-emerald-400 font-black text-sm mono">£</span>
+            <input id="slipStakeInput" type="number" min="1" max="500" step="1" value="10" oninput="window.onSlipStakeInput(this.value)" class="w-full bg-slate-900 border border-emerald-500/50 focus:border-emerald-400 rounded-xl pl-6 pr-2.5 py-1.5 text-right text-white font-black text-sm mono outline-none transition shadow-inner">
           </div>
         </div>
-        <div class="grid grid-cols-5 gap-1.5">
+        <div class="grid grid-cols-6 gap-1.5">
           <button type="button" onclick="window.setQuickStake(5)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-bold py-1 rounded-lg text-[10px] mono cursor-pointer transition">£5</button>
           <button type="button" onclick="window.setQuickStake(10)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-bold py-1 rounded-lg text-[10px] mono cursor-pointer transition">£10</button>
           <button type="button" onclick="window.setQuickStake(20)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-bold py-1 rounded-lg text-[10px] mono cursor-pointer transition">£20</button>
           <button type="button" onclick="window.setQuickStake(50)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-bold py-1 rounded-lg text-[10px] mono cursor-pointer transition">£50</button>
           <button type="button" onclick="window.setQuickStake(100)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-bold py-1 rounded-lg text-[10px] mono cursor-pointer transition">£100</button>
+          <button type="button" onclick="window.setQuickStake(250)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-bold py-1 rounded-lg text-[10px] mono cursor-pointer transition">£250</button>
         </div>
       </div>
 
@@ -1020,19 +1036,19 @@ window.checkSavedSession = function() {
         <span id="adminXBarCountLabel">0 Matches Selected</span>
         <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-bold">≤280 Chars</span>
       </div>
-      <div class="text-[10px] text-slate-400 truncate">Auto-saves HD screenshot &amp; generates X post</div>
+      <div class="text-[10px] text-slate-400 truncate">Ready for X Post &amp; BetBoy HD Card</div>
     </div>
   </div>
   <div class="flex items-center gap-1.5 flex-shrink-0">
     <button type="button" onclick="window.clearXPostSelections()" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer transition">Clear</button>
     <button type="button" onclick="window.openXPostStudio(true)" class="bg-white hover:bg-slate-100 text-black font-black px-3 py-2 rounded-xl text-[11px] shadow-md flex items-center gap-1.5 cursor-pointer transition btn-press">
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-      <span>Build Post &amp; Save PNG</span>
+      <span>Open X Studio</span>
     </button>
   </div>
 </div>
 
-<!-- Admin X Post Studio & Auto-Screenshot Modal -->
+<!-- Admin X Post Studio & Screenshot Modal -->
 <div id="xPostStudioModal" onclick="if(event.target===this)window.closeXPostStudio()" style="position:fixed;inset:0;background:rgba(2,6,23,0.90);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:10px;">
   <div class="glass w-full max-w-lg rounded-3xl p-4 sm:p-5 border border-white/25 shadow-[0_12px_48px_rgba(0,0,0,0.85)] max-h-[94vh] overflow-y-auto space-y-3.5" id="xPostStudioSheet">
     <!-- Modal Header -->
@@ -1046,7 +1062,7 @@ window.checkSavedSession = function() {
             <span>Admin X Post &amp; Screenshot Studio</span>
             <span id="xStudioSelectedCountBadge" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold">0 Picks</span>
           </div>
-          <div class="text-[10px] text-slate-400">Select 1 or several matches • Auto-saves HD graphic &amp; stays ≤280 chars for Free X</div>
+          <div class="text-[10px] text-slate-400">Select matches freely • Downloads PNG when you press Copy X Post &amp; Save Screenshot</div>
         </div>
       </div>
       <button type="button" onclick="window.closeXPostStudio()" aria-label="Close X Post Studio" class="text-slate-400 hover:text-white text-2xl font-bold px-2 py-0.5 leading-none cursor-pointer">&times;</button>
@@ -1056,10 +1072,7 @@ window.checkSavedSession = function() {
     <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2.5">
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">1. Select Match or Matches for X Card</span>
-        <label class="flex items-center gap-1.5 text-[10px] text-slate-300 cursor-pointer font-semibold">
-          <input type="checkbox" id="xAutoSaveCheckbox" checked onchange="window.toggleXAutoSave(this.checked)" class="accent-emerald-500">
-          <span>📸 Auto-Save Screenshot on Selection</span>
-        </label>
+        <span class="text-[9.5px] text-slate-400 font-semibold">✨ Live Preview Updates Instantly</span>
       </div>
       <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
         <button type="button" onclick="window.applyXPresetSelections('top4')" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">⭐ Top 4 Bankers</button>
@@ -1073,11 +1086,11 @@ window.checkSavedSession = function() {
       <div id="xStudioMatchSelectorList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
     </div>
 
-    <!-- Step 2: Live HD Social Screenshot Card Preview (Auto-Saves to Camera Roll / Device) -->
+    <!-- Step 2: Live HD Social Screenshot Card Preview (BetBoy Logo + Both Club Crests) -->
     <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">
       <div class="flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-[10px] font-black text-sky-300 uppercase tracking-wider">2. HD Selections Screenshot (Camera Roll Ready)</span>
-        <span id="xScreenshotSaveStatus" class="text-[9.5px] font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">📸 Ready to Auto-Save</span>
+        <span class="text-[10px] font-black text-sky-300 uppercase tracking-wider">2. BetBoy HD Selection Card (With Club Crests)</span>
+        <span id="xScreenshotSaveStatus" class="text-[9.5px] font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">📸 Saves on Copy &amp; Save</span>
       </div>
       <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner flex justify-center">
         <canvas id="xPostGraphicCanvas" width="1080" height="680" class="w-full h-auto block"></canvas>
@@ -1515,6 +1528,15 @@ window.calculateSlipReturnsSummary = function() {
   };
 };
 
+window.marketSelectionRegistry = window.marketSelectionRegistry || {};
+
+window.toggleBetSlipByEl = function(elId, e) {
+  if (e) e.stopPropagation();
+  var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[elId];
+  if (!reg) return;
+  window.toggleBetSlip(reg.team, reg.market, elId, e, reg);
+};
+
 window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
   if (e) e.stopPropagation();
   var betId = team + " " + market;
@@ -1525,6 +1547,12 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
     window.betSlip.splice(idx, 1);
     delete window.betSlipData[betId];
     if (el) el.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
+    document.querySelectorAll("[id^='m-'], [id^='bestm-'], [id^='slip-']").forEach(function(node) {
+      var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[node.id];
+      if (reg && (reg.team + " " + reg.market) === betId) {
+        node.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
+      }
+    });
     if (window.showAppToast) window.showAppToast("Removed from Slip: " + team + " (" + market + ")");
   } else {
     window.betSlip.push(betId);
@@ -1548,6 +1576,12 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
       addedAt: Date.now()
     };
     if (el) el.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
+    document.querySelectorAll("[id^='m-'], [id^='bestm-'], [id^='slip-']").forEach(function(node) {
+      var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[node.id];
+      if (reg && (reg.team + " " + reg.market) === betId) {
+        node.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
+      }
+    });
     if (window.showAppToast) window.showAppToast("➕ Added: " + team + " • " + market + " (@ " + window.formatOdds(odds, false) + ")");
   }
   window.updateMiniSlip(true);
@@ -1576,6 +1610,12 @@ window.onSlipStakeInput = function(val) {
   var num = parseFloat(val);
   window.slipStake = (Number.isFinite(num) && num >= 0) ? num : 0;
   window.safeSet("airp_slip_stake", window.slipStake);
+  var inp = document.getElementById("slipStakeInput");
+  if (inp && document.activeElement !== inp) inp.value = String(window.slipStake);
+  var slider = document.getElementById("slipStakeSlider");
+  if (slider && document.activeElement !== slider) {
+    slider.value = String(Math.min(500, Math.max(1, Math.round(window.slipStake || 1))));
+  }
   window.updateSlipCalculatorUI();
   window.updateMiniSlip();
 };
@@ -1585,6 +1625,8 @@ window.setQuickStake = function(amount) {
   window.safeSet("airp_slip_stake", window.slipStake);
   var inp = document.getElementById("slipStakeInput");
   if (inp) inp.value = String(window.slipStake);
+  var slider = document.getElementById("slipStakeSlider");
+  if (slider) slider.value = String(Math.min(500, Math.max(1, Math.round(window.slipStake))));
   window.updateSlipCalculatorUI();
   window.updateMiniSlip();
 };
@@ -1606,6 +1648,11 @@ window.updateSlipCalculatorUI = function() {
   if (retVal) retVal.innerText = "£" + calc.potentialReturn.toFixed(2);
 };
 
+window.removeBetFromSlipByIndex = function(idx) {
+  var betId = window.betSlip[idx];
+  if (betId !== undefined) window.removeBetFromSlip(betId);
+};
+
 window.removeBetFromSlip = function(betId) {
   var idx = window.betSlip.indexOf(betId);
   if (idx > -1) {
@@ -1619,7 +1666,8 @@ window.removeBetFromSlip = function(betId) {
   delete window.betSlipData[betId];
 
   document.querySelectorAll("[id^='m-'], [id^='bestm-'], [id^='slip-'], [id^='outright-'], [id^='mr-']").forEach(function(node) {
-    if (node.onclick && node.onclick.toString().indexOf(betId) !== -1) {
+    var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[node.id];
+    if ((reg && (reg.team + " " + reg.market) === betId) || (node.onclick && node.onclick.toString().indexOf(betId) !== -1)) {
       node.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
     }
   });
@@ -1659,6 +1707,11 @@ window.updateMiniSlip = function(animatePulse) {
   var oddsBadge = document.getElementById('miniSlipOddsBadge');
   if (!bar || !cnt) return;
 
+  if (window._miniSlipHideTimer) {
+    clearTimeout(window._miniSlipHideTimer);
+    window._miniSlipHideTimer = null;
+  }
+
   var total = window.betSlip.length;
   if (total > 0) {
     var calc = window.calculateSlipReturnsSummary();
@@ -1675,17 +1728,17 @@ window.updateMiniSlip = function(animatePulse) {
       prev.title = summaryList.join('\n');
     }
     bar.style.display = 'flex';
-    setTimeout(function() {
-      bar.classList.remove('translate-y-[150%]');
-      if (animatePulse) {
-        bar.classList.remove('slip-bounce');
-        void bar.offsetWidth;
-        bar.classList.add('slip-bounce');
-      }
-    }, 10);
+    bar.classList.remove('translate-y-[150%]');
+    if (animatePulse) {
+      bar.classList.remove('slip-bounce');
+      void bar.offsetWidth;
+      bar.classList.add('slip-bounce');
+    }
   } else {
     bar.classList.add('translate-y-[150%]');
-    setTimeout(function() { bar.style.display = 'none'; }, 300);
+    window._miniSlipHideTimer = setTimeout(function() {
+      if (window.betSlip.length === 0) bar.style.display = 'none';
+    }, 300);
   }
 };
 
@@ -1703,6 +1756,10 @@ window.renderSlipSelections = function() {
   if (inp && document.activeElement !== inp) {
     inp.value = String(window.slipStake || 10);
   }
+  var slider = document.getElementById("slipStakeSlider");
+  if (slider && document.activeElement !== slider) {
+    slider.value = String(Math.min(500, Math.max(1, Math.round(window.slipStake || 10))));
+  }
 
   var sSel = document.getElementById("slipOddsFormatSelect");
   if (sSel && sSel.value !== window.oddsFormat) sSel.value = window.oddsFormat;
@@ -1716,7 +1773,6 @@ window.renderSlipSelections = function() {
   container.innerHTML = window.betSlip.map(function(id, idx) {
     var d = window.betSlipData[id] || window.parseBetSelection(id);
     window.betSlipData[id] = d;
-    var safeId = (id || '').replace(/'/g, "\\'");
     var teamCrest = window.getClubCrestHtml ? window.getClubCrestHtml(d.team) : '';
     var oppCrest = (d.opp && window.getClubCrestHtml) ? window.getClubCrestHtml(d.opp) : '';
     var vsOpp = d.opp ? ' <span class="text-slate-400 font-normal text-[10px] inline-flex items-center gap-1 ml-1">vs ' + oppCrest + '<span>' + d.opp + '</span></span>' : '';
@@ -1740,7 +1796,7 @@ window.renderSlipSelections = function() {
           '<span class="text-[9px] text-slate-400 block leading-none uppercase font-bold">Live Odds</span>' +
           '<span class="text-amber-300 font-black text-xs mono leading-tight">@ ' + formattedOdds + '</span>' +
         '</div>' +
-        '<button type="button" onclick="window.removeBetFromSlip(\'' + safeId + '\')" aria-label="Remove selection" class="text-slate-400 hover:text-rose-400 text-base font-black px-1.5 py-0.5 hover:bg-rose-500/10 rounded-lg transition cursor-pointer" title="Remove selection">&times;</button>' +
+        '<button type="button" onclick="window.removeBetFromSlipByIndex(' + idx + ')" aria-label="Remove selection" class="text-slate-400 hover:text-rose-400 text-base font-black px-1.5 py-0.5 hover:bg-rose-500/10 rounded-lg transition cursor-pointer" title="Remove selection">&times;</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -1749,6 +1805,10 @@ window.renderSlipSelections = function() {
 };
 
 window.openSlipModal = function() {
+  if (window._bookieModalHideTimer) {
+    clearTimeout(window._bookieModalHideTimer);
+    window._bookieModalHideTimer = null;
+  }
   window.setSlipBetMode(window.slipBetMode || 'acca');
   window.renderSlipSelections();
 
@@ -1756,16 +1816,23 @@ window.openSlipModal = function() {
   var sheet = document.getElementById('bookieSheet');
   if (m && sheet) {
     m.style.display = 'flex';
-    setTimeout(function() { sheet.classList.remove('translate-y-full'); }, 10);
+    sheet.classList.remove('translate-y-full');
   }
 };
+window.openBookmakerModal = window.openSlipModal;
 
 window.closeBookmakerModal = function() {
   var sheet = document.getElementById('bookieSheet');
   var m = document.getElementById('bookmakerModal');
   if (sheet) sheet.classList.add('translate-y-full');
-  if (m) setTimeout(function() { m.style.display = 'none'; }, 300);
+  if (window._bookieModalHideTimer) clearTimeout(window._bookieModalHideTimer);
+  window._bookieModalHideTimer = setTimeout(function() {
+    if (m && sheet && sheet.classList.contains('translate-y-full')) {
+      m.style.display = 'none';
+    }
+  }, 300);
 };
+window.closeSlipModal = window.closeBookmakerModal;
 
 window.copyCurrentBetSlip = function() {
   if (window.betSlip.length === 0) {
@@ -2977,15 +3044,25 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     var labelSafe = lockThisMarket ? String(x.n).replace(m.fav, "🔒 VIP Pick") : displayTitle;
     
     var elId = 'm-' + m.id + '-' + activeCat + '-' + mIdx;
-    var safeMarket = (x.n || "").replace(/'/g, "\\'");
     var betId = m.fav + " " + x.n;
     var isSel = window.betSlip.indexOf(betId) !== -1;
     var selClass = isSel ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '';
-    var metaJson = "{opp:\\'" + safeOpp + "\\',league:\\'" + m.league + "\\',pct:\\'" + x.p + "%\\',odds:" + x.odds + ",ko:\\'" + (m.ko||"15:00") + "\\',seed:" + m.id + "}";
+    window.marketSelectionRegistry = window.marketSelectionRegistry || {};
+    window.marketSelectionRegistry[elId] = {
+      team: m.fav,
+      opp: m.opp,
+      market: x.n,
+      pct: x.p + '%',
+      odds: x.odds,
+      league: m.league,
+      ko: m.ko || '15:00',
+      elId: elId,
+      seed: m.id
+    };
 
     var clickHandler = lockThisMarket 
         ? 'onclick="event.stopPropagation();window.exitTrialToSubscribe()"'
-        : 'onclick="event.stopPropagation();window.toggleBetSlip(\'' + safeFav + '\', \'' + safeMarket + '\', \'' + elId + '\', event, ' + metaJson + ')"';
+        : 'onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + elId + '\', event)"';
 
     var hoverClass = lockThisMarket ? 'cursor-pointer' : 'cursor-pointer hover:border-emerald-400 transition';
 
@@ -3063,8 +3140,34 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-lg font-black ' + txt + ' mono leading-none trial-blur cursor-pointer" title="Subscribe to unblur">84.5%</div>'
     : '<div class="text-lg font-black ' + txt + ' mono leading-none">' + m.fs.toFixed(1) + '%</div>';
 
+  var mkCard = window.calcExtraMarkets(m, m.fs || 68);
+  var topCardMkt = mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0];
+  var bestElId = 'bestm-' + m.id;
+  var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
+  var isBestInSlip = window.betSlip.indexOf(bestBetId) !== -1;
+  if(topCardMkt){
+    window.marketSelectionRegistry = window.marketSelectionRegistry || {};
+    window.marketSelectionRegistry[bestElId] = {
+      team: m.fav,
+      opp: m.opp,
+      market: topCardMkt.n,
+      pct: topCardMkt.p + '%',
+      odds: topCardMkt.odds,
+      league: m.league,
+      ko: m.ko || '15:00',
+      elId: bestElId,
+      seed: m.id
+    };
+  }
+  var quickAddCardBtn = (!isTrLocked && topCardMkt)
+    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9.5px] font-bold border border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300 transition cursor-pointer ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add top AI pick to Betting Slip">' +
+        '<span>➕ ' + topCardMkt.n.replace(/^Match Result:\s*/i, '') + '</span>' +
+        '<b class="text-amber-300 mono">@' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
+      '</button>'
+    : '';
+
   var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between gap-2 flex-wrap text-[9px] text-slate-400">' +
-    '<div class="flex items-center gap-1.5 flex-wrap">' + lockTiny + xSelectCardBtn + '</div>' +
+    '<div class="flex items-center gap-1.5 flex-wrap">' + lockTiny + quickAddCardBtn + xSelectCardBtn + '</div>' +
     '<span class="font-bold tracking-wider uppercase inline-flex items-center gap-1 text-emerald-300 ml-auto">' +
       (isFreeSample ? '🎁 View 16 Betting Markets' : (isTrLocked ? '👀 Tap for Betting Markets' : 'View 16 Betting Markets')) +
       '<svg class="chevron-icon w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>' +
@@ -3179,15 +3282,13 @@ window.runEngine = function(isForcedSync){
         var stLow = (m.actual || "").toLowerCase();
         var isFT = !m.isLive && (stLow.indexOf("(won)")!==-1 || stLow.indexOf("(draw)")!==-1 || stLow.indexOf("(lost)")!==-1);
         var isMatchWon = stLow.indexOf("(won)") !== -1;
-        var safeFav = (m.fav || "").replace(/'/g, "\\'");
-        var safeOpp = (m.opp || "").replace(/'/g, "\\'");
         var elId = 'slip-' + m.id;
         var favCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.fav) : '';
         var oppCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.opp) : '';
 
         if(bestM){
           topCombOdds = topCombOdds * (Number(bestM.odds) || 1.5);
-          window.currentTopAccaSelections.push({
+          var selObj = {
             team: m.fav,
             opp: m.opp,
             market: bestM.n,
@@ -3197,7 +3298,10 @@ window.runEngine = function(isForcedSync){
             ko: m.ko || '15:00',
             elId: elId,
             seed: m.id
-          });
+          };
+          window.currentTopAccaSelections.push(selObj);
+          window.marketSelectionRegistry = window.marketSelectionRegistry || {};
+          window.marketSelectionRegistry[elId] = selObj;
         }
 
         var lockStateBadge = isFT
@@ -3221,13 +3325,10 @@ window.runEngine = function(isForcedSync){
           '</div>';
         }
         
-        var safeMkt = bestM ? (bestM.n || '').replace(/'/g, "\\'") : '';
         var betId = m.fav + " " + (bestM ? bestM.n : '');
         var isSel = window.betSlip.indexOf(betId) !== -1;
         var selClass = isSel ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '';
-        var metaJson = bestM ? "{opp:\\'" + safeOpp + "\\',league:\\'" + m.league + "\\',pct:\\'" + bestM.p + "%\\',odds:" + bestM.odds + ",ko:\\'" + (m.ko||"15:00") + "\\',seed:" + m.id + "}" : "{}";
-        
-        var clickHandler = 'onclick="window.toggleBetSlip(\'' + safeFav + '\', \'' + safeMkt + '\', \'' + elId + '\', event, ' + metaJson + ')"';
+        var clickHandler = 'onclick="window.toggleBetSlipByEl(\'' + elId + '\', event)"';
 
         return '<div id="' + elId + '" ' + clickHandler + ' class="flex justify-between items-center bg-slate-950/85 border ' + (isFT && isMatchWon ? 'border-emerald-500/40' : 'border-slate-800 hover:border-emerald-400/50') + ' px-3 py-2.5 rounded-xl shadow-sm cursor-pointer transition gap-2 ' + selClass + '">' +
           '<div class="min-w-0 pr-1 flex items-center flex-wrap gap-1.5">' +
@@ -3574,12 +3675,88 @@ window.getResolvedXSelections = function(){
   return result;
 };
 
+window.LEAGUE_HASHTAG_MAP = {
+  PL: "#PremierLeague",
+  CHA: "#EFLChampionship",
+  L1: "#EFL",
+  L2: "#EFL",
+  LL: "#LaLiga",
+  BUN: "#Bundesliga",
+  FL1: "#Ligue1",
+  SA: "#SerieA",
+  SPL: "#ScottishPrem",
+  EFLC: "#CarabaoCup",
+  UCL: "#UCL",
+  UEL: "#UEL",
+  UECL: "#UECL"
+};
+
+window.teamToHashtag = function(team){
+  var s = String(team || "").toLowerCase();
+  if(s.indexOf("celtic") !== -1) return "#CelticFC";
+  if(s.indexOf("rangers") !== -1) return "#RangersFC";
+  if(s.indexOf("aberdeen") !== -1) return "#AberdeenFC";
+  if(s.indexOf("heart") !== -1) return "#HMFC";
+  if(s.indexOf("hibernian") !== -1 || s.indexOf("hibs") !== -1) return "#Hibs";
+  if(s.indexOf("arsenal") !== -1) return "#Arsenal";
+  if(s.indexOf("chelsea") !== -1) return "#CFC";
+  if(s.indexOf("liverpool") !== -1) return "#LFC";
+  if(s.indexOf("manchester city") !== -1 || s.indexOf("man city") !== -1) return "#MCFC";
+  if(s.indexOf("manchester united") !== -1 || s.indexOf("man utd") !== -1) return "#MUFC";
+  if(s.indexOf("tottenham") !== -1 || s.indexOf("spurs") !== -1) return "#THFC";
+  if(s.indexOf("newcastle") !== -1) return "#NUFC";
+  if(s.indexOf("aston villa") !== -1) return "#AVFC";
+  if(s.indexOf("real madrid") !== -1) return "#RealMadrid";
+  if(s.indexOf("barcelona") !== -1) return "#FCBarcelona";
+  if(s.indexOf("atletico") !== -1) return "#Atleti";
+  if(s.indexOf("sociedad") !== -1) return "#RealSociedad";
+  if(s.indexOf("bayern") !== -1) return "#FCBayern";
+  if(s.indexOf("dortmund") !== -1) return "#BVB";
+  if(s.indexOf("leverkusen") !== -1) return "#Bayer04";
+  if(s.indexOf("psg") !== -1 || s.indexOf("paris") !== -1) return "#PSG";
+  if(s.indexOf("marseille") !== -1) return "#TeamOM";
+  if(s.indexOf("inter") !== -1) return "#Inter";
+  if(s.indexOf("milan") !== -1) return "#ACMilan";
+  if(s.indexOf("juventus") !== -1) return "#Juventus";
+  if(s.indexOf("napoli") !== -1) return "#Napoli";
+  var clean = String(team || "").replace(/[^a-zA-Z0-9]/g, "");
+  return clean ? ("#" + clean) : "";
+};
+
+window.buildContextualXHashtags = function(selections, maxTags){
+  var cap = maxTags || 4;
+  var tags = [];
+  var addTag = function(t){ if(t && tags.indexOf(t) === -1) tags.push(t); };
+
+  if(selections && selections.length === 1){
+    addTag(window.teamToHashtag(selections[0].fav));
+    addTag(window.teamToHashtag(selections[0].opp));
+  } else if(selections && selections.length > 1){
+    selections.slice(0, 2).forEach(function(s){ addTag(window.teamToHashtag(s.fav)); });
+  }
+
+  (selections || []).forEach(function(s){
+    if(s.league && window.LEAGUE_HASHTAG_MAP[s.league]){
+      addTag(window.LEAGUE_HASHTAG_MAP[s.league]);
+    }
+  });
+
+  var hasBtts = (selections || []).some(function(s){ return /btts/i.test(s.market || ""); });
+  var hasGoals = (selections || []).some(function(s){ return /over\s+\d/i.test(s.market || ""); });
+  if(hasBtts) addTag("#BTTS");
+  else if(hasGoals) addTag("#GoalsTips");
+
+  addTag((selections && selections.length > 1) ? "#AccaTips" : "#FootballTips");
+  addTag("#GamblingX");
+  return tags.slice(0, cap).join(" ");
+};
+
 window.generateXPostData = function(selections, style, oddsFmt){
   var fmt = oddsFmt || window.oddsFormat || "frac";
   var st = style || window.xPostStyle || "hype";
   var limit = window.FREE_X_CHAR_LIMIT;
   if(!selections || selections.length === 0){
-    var emptyTxt = "🤖 BetBoy AI Predictor — Select 1 or more fixtures to generate your dynamic X post! #FootballTips #BettingPicks";
+    var emptyTxt = "🤖 BetBoy AI Predictor — Select 1 or more fixtures to generate your dynamic X post! #FootballTips #GamblingX";
     return { text: emptyTxt, charCount: emptyTxt.length, withinLimit: true, combinedOddsDisplay: fmt === "frac" ? "1/1" : "1.00x" };
   }
 
@@ -3587,6 +3764,10 @@ window.generateXPostData = function(selections, style, oddsFmt){
   var combDec = selections.reduce(function(acc, s){ return acc * (Number(s.odds) || 1.5); }, 1);
   var combStr = window.formatOdds(combDec, true);
   var avgPct = (selections.reduce(function(acc, s){ return acc + (parseFloat(String(s.pct).replace("%","")) || 75); }, 0) / count).toFixed(1);
+
+  var richTags = window.buildContextualXHashtags(selections, 4);
+  var medTags = window.buildContextualXHashtags(selections, 3);
+  var shortTags = window.buildContextualXHashtags(selections, 2);
 
   var buildCandidate = function(compactLevel){
     var lines = selections.map(function(s){
@@ -3609,40 +3790,42 @@ window.generateXPostData = function(selections, style, oddsFmt){
     });
 
     var header = "", footer = "";
+    var activeTags = compactLevel === 0 ? richTags : (compactLevel === 1 ? medTags : shortTags);
+
     if(count === 1){
       var s0 = selections[0];
       var mTitle = compactLevel === 0 ? (s0.fav + " vs " + s0.opp) : (window.shortenTeamForX(s0.fav) + " v " + window.shortenTeamForX(s0.opp));
       if(st === "data"){
         header = "🧠 AI Data Spotlight: " + mTitle;
-        footer = "📊 " + avgPct + "% Model Confidence | 📸 Slip attached\n#FootballTips #AIPredictions";
+        footer = "📊 " + avgPct + "% Model Confidence | 📸 Slip below\n" + activeTags;
       } else if(st === "results"){
         header = "✅ AI Spotlight Check: " + mTitle;
-        footer = "🔥 " + avgPct + "% AI Edge (@" + combStr + ")\n#FootballTips #BettingPicks";
+        footer = "🔥 " + avgPct + "% AI Edge (@" + combStr + ")\n" + activeTags;
       } else if(st === "compact"){
         header = "⚡ BetBoy AI Pick: " + mTitle;
-        footer = "#FootballTips #Acca";
+        footer = activeTags;
       } else {
         header = "🔥 BetBoy AI Banker: " + mTitle;
-        footer = "💷 Live Odds @" + combStr + " | 📸 Full card below\n#FootballTips #BettingPicks";
+        footer = "💷 Live Odds @" + combStr + " | 📸 Card below\n" + activeTags;
       }
     } else {
       if(st === "data"){
         header = "🧠 BetBoy AI " + count + "-Fold Data Slip (" + avgPct + "% Avg)";
-        footer = "📊 Combined @ " + combStr + "\n#FootballTips #AIPredictions";
+        footer = "📊 Combined @ " + combStr + "\n" + activeTags;
       } else if(st === "results"){
         header = "✅ BetBoy AI " + count + "-Fold Card (@ " + combStr + ")";
-        footer = "🔥 Model Precision | 📸 Card attached\n#FootballTips #Acca";
+        footer = "🔥 Model Precision | 📸 Card attached\n" + activeTags;
       } else if(st === "compact"){
         header = "⚡ AI " + count + "-Fold (@ " + combStr + ")";
-        footer = "#FootballTips #Acca";
+        footer = activeTags;
       } else {
         header = "🔥 BetBoy AI " + count + "-Fold Acca (@ " + combStr + ")";
-        footer = "🤖 " + avgPct + "% Avg AI Confidence | 📸 Card below\n#FootballTips #Acca";
+        footer = "🤖 " + avgPct + "% Avg AI Confidence | 📸 Card below\n" + activeTags;
       }
     }
 
     if(compactLevel === 2){
-      footer = count > 1 ? ("Combined: @" + combStr + " 🔥 #FootballTips") : "#FootballTips #Acca";
+      footer = count > 1 ? ("Combined: @" + combStr + " 🔥\n" + shortTags) : shortTags;
     }
     return header + "\n\n" + lines.join("\n") + "\n\n" + footer;
   };
@@ -3654,7 +3837,7 @@ window.generateXPostData = function(selections, style, oddsFmt){
   if(finalPost.length > limit){
     var shown = [];
     var hdr = "🔥 AI " + count + "-Fold (@" + combStr + ")";
-    var ftr = "#FootballTips #Acca";
+    var ftr = shortTags;
     for(var i = 0; i < selections.length; i++){
       var s = selections[i];
       var ln = "• " + window.shortenMarketForX(s.market, s.fav) + " @" + window.formatOdds(s.odds || 1.5, false);
@@ -3702,9 +3885,10 @@ window.toggleXFeedSelectionMode = function(){
     window.xPostSelectedIds = [Number(window.currentEvaluatedFixtures[0].id)];
   }
   window.runEngine(false);
-  window.showAppToast("𝕏 Tap 'Select for X' on any match card to build your X post & screenshot!");
+  window.showAppToast("𝕏 Tap 'Select for X' on any match card to build your X post!");
 };
 
+// Selecting or deselecting a match updates the preview ONLY — never auto-downloads until user clicks Copy & Save
 window.toggleMatchForXPost = function(matchId, fromCard){
   var idNum = Number(matchId);
   var idx = window.xPostSelectedIds.indexOf(idNum);
@@ -3717,19 +3901,16 @@ window.toggleMatchForXPost = function(matchId, fromCard){
   if(fromCard){
     window.runEngine(false);
     var count = window.xPostSelectedIds.length;
-    if(count > 0 && window.xAutoSaveEnabled){
-      window.renderXPostCanvasCard();
-      window.saveXCardImage(false, true);
-    }
-    window.showAppToast(idx === -1 ? ("𝕏 Added to X Post (" + count + " selected • Screenshot updated)") : ("𝕏 Removed from X Post (" + count + " selected)"));
+    window.renderXPostCanvasCard();
+    window.showAppToast(idx === -1 ? ("𝕏 Added to X Post (" + count + " selected)") : ("𝕏 Removed from X Post (" + count + " selected)"));
   } else {
-    window.refreshXPostStudioUI(window.xAutoSaveEnabled);
+    window.refreshXPostStudioUI(false);
   }
 };
 
 window.setXMatchMarketOverride = function(matchId, marketName){
   window.xPostMarketOverrides[matchId] = marketName;
-  window.refreshXPostStudioUI(window.xAutoSaveEnabled);
+  window.refreshXPostStudioUI(false);
 };
 
 window.clearXPostSelections = function(){
@@ -3772,20 +3953,15 @@ window.applyXPresetSelections = function(preset){
     });
     window.xPostSelectedIds = slipIds.length > 0 ? slipIds : fixtures.slice(0, 4).map(function(m){ return Number(m.id); });
   } else {
-    // Default 'top4'
     window.xPostSelectedIds = fixtures.slice(0, 4).map(function(m){ return Number(m.id); });
   }
   window.syncAdminXSelectionUI();
   window.runEngine(false);
-  window.refreshXPostStudioUI(window.xAutoSaveEnabled);
+  window.refreshXPostStudioUI(false);
 };
 
 window.toggleXAutoSave = function(checked){
   window.xAutoSaveEnabled = !!checked;
-  var stEl = document.getElementById("xScreenshotSaveStatus");
-  if(stEl){
-    stEl.innerText = window.xAutoSaveEnabled ? "📸 Auto-Save Active" : "📸 Manual Save Mode";
-  }
 };
 
 window.setXPostStyle = function(style){
@@ -3801,7 +3977,255 @@ window.setXPostStyle = function(style){
   window.regenerateXPostText(false);
 };
 
-// High-Resolution HTML5 Canvas Social Card Renderer (1080px Retina Broadcast Card)
+// Untainted Club Crest Image Cache + Authentic Club Shield Vector Renderer for Canvas
+window._canvasSafeCrestCache = window._canvasSafeCrestCache || {};
+
+window.ensureCanvasCrestLoaded = function(teamName){
+  var key = window.cleanCrestKey ? window.cleanCrestKey(teamName) : String(teamName || "").toLowerCase();
+  if(!key) return null;
+  if(window._canvasSafeCrestCache[key] && window._canvasSafeCrestCache[key].status === "ready"){
+    return window._canvasSafeCrestCache[key].img;
+  }
+  if(window._canvasSafeCrestCache[key]) return null;
+
+  var url = window.CLUB_CREST_MAP && window.CLUB_CREST_MAP[key];
+  if(!url) return null;
+
+  window._canvasSafeCrestCache[key] = { status: "loading", img: null };
+  var img = new Image();
+  if(url.indexOf("data:") !== 0){
+    img.crossOrigin = "anonymous";
+  }
+  img.onload = function(){
+    try {
+      var tc = document.createElement("canvas");
+      tc.width = 8; tc.height = 8;
+      var tctx = tc.getContext("2d");
+      tctx.drawImage(img, 0, 0, 8, 8);
+      tc.toDataURL("image/png");
+      window._canvasSafeCrestCache[key] = { status: "ready", img: img };
+      var modal = document.getElementById("xPostStudioModal");
+      if(modal && modal.style.display === "flex"){
+        window.renderXPostCanvasCard();
+      }
+    } catch(err){
+      window._canvasSafeCrestCache[key] = { status: "cors_blocked", img: null };
+    }
+  };
+  img.onerror = function(){
+    window._canvasSafeCrestCache[key] = { status: "error", img: null };
+  };
+  img.src = url;
+  return null;
+};
+
+window.getClubCrestVisualStyle = function(teamName){
+  var k = window.normTeamKey ? window.normTeamKey(teamName) : String(teamName || "").toLowerCase();
+  var styles = {
+    celtic:      { p: "#018749", s: "#ffffff", b: "#fbbf24", t: "#ffffff", pat: "hoops", star: true },
+    rangers:     { p: "#003399", s: "#dc2626", b: "#ffffff", t: "#ffffff", pat: "ring", star: true },
+    aberdeen:    { p: "#dc2626", s: "#ffffff", b: "#fbbf24", t: "#ffffff", pat: "solid", star: true },
+    hearts:      { p: "#800020", s: "#ffffff", b: "#fbbf24", t: "#ffffff", pat: "halves" },
+    hibernian:   { p: "#00703c", s: "#ffffff", b: "#ffffff", t: "#ffffff", pat: "sleeves" },
+    kilmarnock:  { p: "#003399", s: "#ffffff", b: "#fbbf24", t: "#ffffff", pat: "stripes" },
+    motherwell:  { p: "#f59e0b", s: "#7f1d1d", b: "#fbbf24", t: "#ffffff", pat: "hoops" },
+    stmirren:    { p: "#111827", s: "#ffffff", b: "#dc2626", t: "#ffffff", pat: "stripes" },
+    dundeeutd:   { p: "#ea580c", s: "#111827", b: "#ffffff", t: "#ffffff", pat: "halves" },
+    dundee:      { p: "#1e3a8a", s: "#ffffff", b: "#dc2626", t: "#ffffff", pat: "solid" },
+    arsenal:     { p: "#ef0107", s: "#ffffff", b: "#db9c26", t: "#ffffff", pat: "sleeves", star: false },
+    chelsea:     { p: "#034694", s: "#ffffff", b: "#dba111", t: "#ffffff", pat: "ring", star: true },
+    liverpool:   { p: "#c8102e", s: "#c8102e", b: "#f6eb61", t: "#ffffff", pat: "solid", star: true },
+    mancity:     { p: "#6cabdd", s: "#1c2c5b", b: "#ffc659", t: "#ffffff", pat: "ring" },
+    manutd:      { p: "#da291c", s: "#fbe122", b: "#fbe122", t: "#ffffff", pat: "halves", star: true },
+    tottenham:   { p: "#ffffff", s: "#132257", b: "#132257", t: "#132257", pat: "ring" },
+    spurs:       { p: "#ffffff", s: "#132257", b: "#132257", t: "#132257", pat: "ring" },
+    newcastle:   { p: "#111827", s: "#ffffff", b: "#d4af37", t: "#fbbf24", pat: "stripes" },
+    astonvilla:  { p: "#670e36", s: "#95bfe5", b: "#fbbf24", t: "#ffffff", pat: "sleeves", star: true },
+    westham:     { p: "#7a263a", s: "#1bb1e7", b: "#f3d459", t: "#ffffff", pat: "sleeves" },
+    realmadrid:  { p: "#ffffff", s: "#00529f", b: "#feae11", t: "#00529f", pat: "sash", star: true },
+    barcelona:   { p: "#a50044", s: "#004d98", b: "#edbb00", t: "#ffffff", pat: "stripes", star: true },
+    atletico:    { p: "#cb3524", s: "#ffffff", b: "#272e61", t: "#ffffff", pat: "stripes" },
+    sociedad:    { p: "#0067b1", s: "#ffffff", b: "#fbbf24", t: "#ffffff", pat: "stripes", star: true },
+    betis:       { p: "#0bb363", s: "#ffffff", b: "#fbbf24", t: "#ffffff", pat: "stripes" },
+    bayern:      { p: "#dc052d", s: "#0066b2", b: "#ffffff", t: "#ffffff", pat: "ring", star: true },
+    dortmund:    { p: "#fde100", s: "#111827", b: "#111827", t: "#111827", pat: "ring", star: true },
+    leverkusen:  { p: "#e32221", s: "#111827", b: "#fbbf24", t: "#ffffff", pat: "halves" },
+    leipzig:     { p: "#ffffff", s: "#dd0741", b: "#dd0741", t: "#dd0741", pat: "halves" },
+    stuttgart:   { p: "#ffffff", s: "#e32219", b: "#fbbf24", t: "#111827", pat: "hoops" },
+    psg:         { p: "#004170", s: "#da291c", b: "#ffffff", t: "#ffffff", pat: "stripes", star: true },
+    marseille:   { p: "#ffffff", s: "#2faee0", b: "#d4af37", t: "#0284c7", pat: "ring", star: true },
+    monaco:      { p: "#e51b24", s: "#ffffff", b: "#d4af37", t: "#ffffff", pat: "sash" },
+    lille:       { p: "#e01e13", s: "#1d2545", b: "#ffffff", t: "#ffffff", pat: "halves" },
+    inter:       { p: "#010e80", s: "#111827", b: "#c5a365", t: "#ffffff", pat: "stripes", star: true },
+    acmilan:     { p: "#fb090b", s: "#111827", b: "#fbbf24", t: "#ffffff", pat: "stripes", star: true },
+    juventus:    { p: "#111827", s: "#ffffff", b: "#d4af37", t: "#fbbf24", pat: "stripes", star: true },
+    napoli:      { p: "#12a0d7", s: "#003c82", b: "#ffffff", t: "#ffffff", pat: "ring" },
+    asroma:      { p: "#8e1f2f", s: "#f0bc42", b: "#f0bc42", t: "#ffffff", pat: "halves" }
+  };
+  if(styles[k]) return styles[k];
+  var h = 0;
+  for(var i = 0; i < k.length; i++) h = ((h << 5) - h) + k.charCodeAt(i);
+  var palettes = [
+    { p: "#1d4ed8", s: "#ffffff", b: "#38bdf8", t: "#ffffff", pat: "stripes" },
+    { p: "#dc2626", s: "#ffffff", b: "#fbbf24", t: "#ffffff", pat: "sleeves" },
+    { p: "#047857", s: "#ffffff", b: "#34d399", t: "#ffffff", pat: "hoops" },
+    { p: "#7c3aed", s: "#ffffff", b: "#c084fc", t: "#ffffff", pat: "halves" },
+    { p: "#b45309", s: "#111827", b: "#fbbf24", t: "#ffffff", pat: "stripes" }
+  ];
+  return palettes[Math.abs(h) % palettes.length];
+};
+
+window.drawClubCrestOnCanvas = function(ctx, teamName, x, y, size){
+  var loadedImg = window.ensureCanvasCrestLoaded(teamName);
+  var cx = x + size / 2;
+  var cy = y + size / 2;
+  var r = size / 2;
+
+  ctx.save();
+  // Shield / Roundel Clip Path
+  ctx.beginPath();
+  ctx.moveTo(cx, y + 2);
+  ctx.lineTo(x + size - 3, y + size * 0.22);
+  ctx.lineTo(x + size - 3, y + size * 0.58);
+  ctx.quadraticCurveTo(x + size - 3, y + size * 0.88, cx, y + size - 2);
+  ctx.quadraticCurveTo(x + 3, y + size * 0.88, x + 3, y + size * 0.58);
+  ctx.lineTo(x + 3, y + size * 0.22);
+  ctx.closePath();
+
+  if(loadedImg){
+    ctx.fillStyle = "#0f172a";
+    ctx.fill();
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = "rgba(255,255,255,0.45)";
+    ctx.stroke();
+    ctx.drawImage(loadedImg, x + 3, y + 3, size - 6, size - 6);
+    ctx.restore();
+    return;
+  }
+
+  var st = window.getClubCrestVisualStyle(teamName);
+  ctx.clip();
+
+  // Base Primary Color
+  ctx.fillStyle = st.p;
+  ctx.fillRect(x, y, size, size);
+
+  // Authentic Club Pattern (Stripes, Hoops, Halves, Sleeves, Sash, Ring)
+  ctx.fillStyle = st.s;
+  if(st.pat === "stripes"){
+    var sw = size / 5;
+    ctx.fillRect(x + sw, y, sw, size);
+    ctx.fillRect(x + sw * 3, y, sw, size);
+  } else if(st.pat === "hoops"){
+    var hh = size / 5;
+    ctx.fillRect(x, y + hh, size, hh);
+    ctx.fillRect(x, y + hh * 3, size, hh);
+  } else if(st.pat === "halves"){
+    ctx.fillRect(cx, y, r, size);
+  } else if(st.pat === "sleeves"){
+    ctx.fillRect(x, y, size * 0.23, size * 0.65);
+    ctx.fillRect(x + size * 0.77, y, size * 0.23, size * 0.65);
+  } else if(st.pat === "sash"){
+    ctx.beginPath();
+    ctx.moveTo(x, y + size * 0.75);
+    ctx.lineTo(x + size * 0.75, y);
+    ctx.lineTo(x + size, y + size * 0.22);
+    ctx.lineTo(x + size * 0.22, y + size);
+    ctx.closePath();
+    ctx.fill();
+  } else if(st.pat === "ring"){
+    ctx.beginPath();
+    ctx.arc(cx, cy + 1, r * 0.64, 0, Math.PI * 2);
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = st.s;
+    ctx.stroke();
+  }
+
+  // Subtle Glossy Crest Overlay
+  var gloss = ctx.createLinearGradient(x, y, x, y + size);
+  gloss.addColorStop(0, "rgba(255,255,255,0.24)");
+  gloss.addColorStop(0.5, "rgba(255,255,255,0.0)");
+  gloss.addColorStop(1, "rgba(0,0,0,0.35)");
+  ctx.fillStyle = gloss;
+  ctx.fillRect(x, y, size, size);
+
+  // Center Ribbon Pill for Club Initials
+  var cleanClub = String(teamName || "FC").replace(/^(FC|AFC|AS|AC|SC|SV|RC|RB)\s+/i, "").trim();
+  var words = cleanClub.split(/\s+/);
+  var ini = (words.length >= 2 ? (words[0][0] + words[1][0]) : cleanClub.slice(0, 3)).toUpperCase();
+
+  ctx.fillStyle = "rgba(2, 6, 23, 0.76)";
+  ctx.fillRect(x + 2, cy - 8, size - 4, 17);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 " + (ini.length > 2 ? "11px" : "13px") + " 'Plus Jakarta Sans', Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(ini, cx, cy + 5);
+
+  if(st.star){
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "900 10px Arial, sans-serif";
+    ctx.fillText("★", cx, y + 14);
+  }
+  ctx.restore();
+
+  // Outer Shield Metallic Border
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx, y + 2);
+  ctx.lineTo(x + size - 3, y + size * 0.22);
+  ctx.lineTo(x + size - 3, y + size * 0.58);
+  ctx.quadraticCurveTo(x + size - 3, y + size * 0.88, cx, y + size - 2);
+  ctx.quadraticCurveTo(x + 3, y + size * 0.88, x + 3, y + size * 0.58);
+  ctx.lineTo(x + 3, y + size * 0.22);
+  ctx.closePath();
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = st.b || "#10b981";
+  ctx.stroke();
+  ctx.restore();
+};
+
+window.drawBetBoyLogoOnCanvas = function(ctx, x, y, size){
+  if(window._betBoyLogoCanvasImg && window._betBoyLogoCanvasImg.complete && window._betBoyLogoCanvasImg.naturalWidth > 0){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(window._betBoyLogoCanvasImg, x, y, size, size);
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = "#10b981";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  // Vector fallback for BetBoy shield logo
+  var cx = x + size / 2, cy = y + size / 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+  ctx.fillStyle = "#040914";
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#10b981";
+  ctx.stroke();
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "900 11px Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("♛", cx, y + 18);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 13px 'Plus Jakarta Sans', Arial, sans-serif";
+  ctx.fillText("BETBOY", cx, cy + 5);
+  ctx.fillStyle = "#2dd4bf";
+  ctx.font = "900 8px 'JetBrains Mono', monospace";
+  ctx.fillText("AI PREDICTOR", cx, y + size - 11);
+  ctx.restore();
+};
+
+// High-Resolution HTML5 Canvas Social Card Renderer (1080px Retina Broadcast Card with BetBoy Logo & Both Team Crests)
 window.renderXPostCanvasCard = function(){
   var canvas = document.getElementById("xPostGraphicCanvas");
   if(!canvas) return null;
@@ -3857,28 +4281,19 @@ window.renderXPostCanvasCard = function(){
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Official X Logo Badge in Header
-  ctx.fillStyle = "#000000";
-  roundRect(64, 58, 60, 60, 14);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.35)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 32px 'Plus Jakarta Sans', Arial, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("𝕏", 94, 99);
+  // Official BetBoy AI Predictor Circular Shield Logo in Header (Instead of X Logo)
+  window.drawBetBoyLogoOnCanvas(ctx, 62, 54, 68);
 
   // Title & Subtitle
   ctx.textAlign = "left";
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 32px 'Plus Jakarta Sans', Arial, sans-serif";
-  ctx.fillText("BETBOY AI PREDICTOR", 142, 85);
+  ctx.fillText("BETBOY AI PREDICTOR", 146, 85);
 
   var dateStr = window.selectedDate || window.getRollingDates().today;
   ctx.fillStyle = "#34d399";
   ctx.font = "700 18px 'JetBrains Mono', monospace";
-  ctx.fillText((count === 1 ? "AI SINGLE SPOTLIGHT" : ("AI " + count + "-FOLD BANKER SLIP")) + " • " + dateStr, 142, 114);
+  ctx.fillText((count === 1 ? "AI SINGLE SPOTLIGHT" : ("AI " + count + "-FOLD BANKER SLIP")) + " • " + dateStr, 146, 114);
 
   // Right Header Pill (Live Odds Format)
   ctx.fillStyle = "rgba(16, 185, 129, 0.16)";
@@ -3895,11 +4310,11 @@ window.renderXPostCanvasCard = function(){
     ctx.fillStyle = "#94a3b8";
     ctx.font = "700 24px 'Plus Jakarta Sans', Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Select 1 or more fixtures above to generate your HD X Screenshot", W / 2, H / 2);
+    ctx.fillText("Select 1 or more fixtures above to preview your BetBoy HD Card", W / 2, H / 2);
     return canvas;
   }
 
-  // Draw Each Selected Match Row
+  // Draw Each Selected Match Row with BOTH Team Crests
   var startY = 156;
   var combOddsDec = 1;
   var sumPct = 0;
@@ -3923,45 +4338,38 @@ window.renderXPostCanvasCard = function(){
     roundRect(42, y, 10, 96, 6);
     ctx.fill();
 
-    // Club Initials Crest Box
-    var cleanClub = String(s.fav || "FC").replace(/^(FC|AFC|AS|AC|SC|SV|RC|RB)\s+/i, "").trim();
-    var words = cleanClub.split(/\s+/);
-    var ini = (words.length >= 2 ? (words[0][0] + words[1][0]) : cleanClub.slice(0, 2)).toUpperCase();
-    ctx.fillStyle = "#1e293b";
-    roundRect(68, y + 18, 60, 60, 14);
-    ctx.fill();
-    ctx.strokeStyle = "#10b981";
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "900 22px 'Plus Jakarta Sans', Arial, sans-serif";
+    // Draw BOTH Team Crests (Favourite/Home Crest + Opponent/Away Crest)
+    window.drawClubCrestOnCanvas(ctx, s.fav, 64, y + 20, 56);
+    ctx.fillStyle = "#64748b";
+    ctx.font = "900 13px 'Plus Jakarta Sans', Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(ini, 98, y + 56);
+    ctx.fillText("v", 131, y + 54);
+    window.drawClubCrestOnCanvas(ctx, s.opp, 142, y + 20, 56);
 
     // Fixture Teams & League/KO Info
     ctx.textAlign = "left";
     ctx.fillStyle = "#ffffff";
-    ctx.font = "800 24px 'Plus Jakarta Sans', Arial, sans-serif";
+    ctx.font = "800 23px 'Plus Jakarta Sans', Arial, sans-serif";
     var fixtureTitle = s.fav + " vs " + s.opp;
-    if(fixtureTitle.length > 34) fixtureTitle = fixtureTitle.slice(0, 32) + "…";
-    ctx.fillText(fixtureTitle, 146, y + 42);
+    if(fixtureTitle.length > 30) fixtureTitle = fixtureTitle.slice(0, 28) + "…";
+    ctx.fillText(fixtureTitle, 212, y + 42);
 
     var lgName = window.getLeagueName ? window.getLeagueName(s.league) : (s.league || "");
     ctx.fillStyle = "#94a3b8";
-    ctx.font = "600 16px 'JetBrains Mono', monospace";
-    ctx.fillText(lgName + " • KO " + (s.ko || "15:00"), 146, y + 72);
+    ctx.font = "600 15px 'JetBrains Mono', monospace";
+    ctx.fillText(lgName + " • KO " + (s.ko || "15:00"), 212, y + 72);
 
     // Selected Market Pill & Live Odds on the Right
     var mktLabel = "⭐ " + s.market;
-    if(mktLabel.length > 30) mktLabel = mktLabel.slice(0, 28) + "…";
+    if(mktLabel.length > 29) mktLabel = mktLabel.slice(0, 27) + "…";
     ctx.textAlign = "right";
     ctx.fillStyle = "#34d399";
-    ctx.font = "800 20px 'Plus Jakarta Sans', Arial, sans-serif";
-    ctx.fillText(mktLabel, W - 230, y + 44);
+    ctx.font = "800 19px 'Plus Jakarta Sans', Arial, sans-serif";
+    ctx.fillText(mktLabel, W - 226, y + 44);
 
     ctx.fillStyle = "#cbd5e1";
-    ctx.font = "700 16px 'JetBrains Mono', monospace";
-    ctx.fillText("AI Confidence: " + pctNum.toFixed(1) + "%", W - 230, y + 72);
+    ctx.font = "700 15px 'JetBrains Mono', monospace";
+    ctx.fillText("AI Confidence: " + pctNum.toFixed(1) + "%", W - 226, y + 72);
 
     // Odds Box on Far Right
     ctx.fillStyle = "#020617";
@@ -4015,8 +4423,8 @@ window.renderXPostCanvasCard = function(){
   return canvas;
 };
 
-// Auto-Save HD Screenshot to Camera Roll / Device Downloads
-window.saveXCardImage = function(showToastMsg, isAutoSave){
+// Save HD Screenshot to Camera Roll / Device Downloads (ONLY when explicitly requested by user)
+window.saveXCardImage = function(showToastMsg){
   var canvas = window.renderXPostCanvasCard();
   if(!canvas) return;
   try {
@@ -4036,7 +4444,7 @@ window.saveXCardImage = function(showToastMsg, isAutoSave){
 
     var statusEl = document.getElementById("xScreenshotSaveStatus");
     if(statusEl){
-      statusEl.innerText = isAutoSave ? ("✓ Auto-Saved: " + fileName) : ("✓ Saved: " + fileName);
+      statusEl.innerText = "✓ Saved: " + fileName;
     }
     if(showToastMsg && window.showAppToast){
       window.showAppToast("📸 HD Screenshot Saved (" + fileName + ")");
@@ -4055,7 +4463,7 @@ window.shareXCardToCameraRoll = function(){
 
   if(canvas.toBlob && navigator.canShare){
     canvas.toBlob(function(blob){
-      if(!blob){ window.saveXCardImage(true, false); return; }
+      if(!blob){ window.saveXCardImage(true); return; }
       try {
         var file = new File([blob], fileName, { type: "image/png" });
         if(navigator.canShare({ files: [file] })){
@@ -4066,15 +4474,15 @@ window.shareXCardToCameraRoll = function(){
           }).then(function(){
             window.showAppToast("📲 Shared / Saved to Camera Roll!");
           }).catch(function(){
-            window.saveXCardImage(true, false);
+            window.saveXCardImage(true);
           });
           return;
         }
       } catch(err){}
-      window.saveXCardImage(true, false);
+      window.saveXCardImage(true);
     }, "image/png");
   } else {
-    window.saveXCardImage(true, false);
+    window.saveXCardImage(true);
   }
 };
 
@@ -4114,19 +4522,17 @@ window.onXPostManualEdit = function(val){
   window.updateXCharCounterUI(val);
 };
 
-window.regenerateXPostText = function(triggerAutoSave){
+// Regenerates post text and updates canvas preview WITHOUT triggering a file download
+window.regenerateXPostText = function(){
   var selections = window.getResolvedXSelections();
   var gen = window.generateXPostData(selections, window.xPostStyle, window.oddsFormat);
   var ta = document.getElementById("xPostTextarea");
   if(ta) ta.value = gen.text;
   window.updateXCharCounterUI(gen.text);
   window.renderXPostCanvasCard();
-  if(triggerAutoSave && window.xAutoSaveEnabled && selections.length > 0){
-    window.saveXCardImage(false, true);
-  }
 };
 
-window.refreshXPostStudioUI = function(triggerAutoSave){
+window.refreshXPostStudioUI = function(){
   var listEl = document.getElementById("xStudioMatchSelectorList");
   var fixtures = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; });
   window.syncAdminXSelectionUI();
@@ -4138,6 +4544,7 @@ window.refreshXPostStudioUI = function(triggerAutoSave){
       var sortedM = mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); });
       var activeMkt = window.xPostMarketOverrides[m.id] || (sortedM[0] ? sortedM[0].n : "");
       var favCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.fav) : "";
+      var oppCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.opp) : "";
 
       var optionsHtml = sortedM.map(function(item){
         var selAttr = (item.n === activeMkt) ? " selected" : "";
@@ -4146,23 +4553,25 @@ window.refreshXPostStudioUI = function(triggerAutoSave){
       }).join("");
 
       return '<div class="flex items-center justify-between gap-2 p-2 rounded-xl border transition ' + (isSel ? 'bg-emerald-950/40 border-emerald-500/50' : 'bg-slate-900/70 border-slate-800/80') + '">' +
-        '<label class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">' +
+        '<label class="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer">' +
           '<input type="checkbox" ' + (isSel ? 'checked' : '') + ' onchange="window.toggleMatchForXPost(' + m.id + ', false)" class="accent-emerald-500 w-3.5 h-3.5 flex-shrink-0">' +
           '<span class="text-[10px] font-black mono text-emerald-400">#' + (idx+1) + '</span>' +
           favCrest +
-          '<span class="text-[11px] font-bold text-white truncate">' + m.fav + ' <span class="text-slate-400 font-normal">vs ' + m.opp + '</span></span>' +
+          '<span class="text-[11px] font-bold text-white truncate">' + m.fav + ' <span class="text-slate-400 font-normal">v</span></span>' +
+          oppCrest +
+          '<span class="text-[11px] font-semibold text-slate-300 truncate">' + m.opp + '</span>' +
         '</label>' +
-        '<select aria-label="Market for ' + m.fav + '" onchange="window.setXMatchMarketOverride(' + m.id + ', this.value)" class="bg-slate-950 border border-slate-700 text-amber-300 rounded-lg px-2 py-1 text-[9.5px] font-bold mono outline-none max-w-[175px] truncate cursor-pointer">' +
+        '<select aria-label="Market for ' + m.fav + '" onchange="window.setXMatchMarketOverride(' + m.id + ', this.value)" class="bg-slate-950 border border-slate-700 text-amber-300 rounded-lg px-2 py-1 text-[9.5px] font-bold mono outline-none max-w-[165px] truncate cursor-pointer">' +
           optionsHtml +
         '</select>' +
       '</div>';
     }).join("");
   }
 
-  window.regenerateXPostText(triggerAutoSave);
+  window.regenerateXPostText();
 };
 
-window.openXPostStudio = function(fromFloatingBar){
+window.openXPostStudio = function(){
   if((!window.currentEvaluatedFixtures || !window.currentEvaluatedFixtures.length) && typeof window.runEngine === "function"){
     window.runEngine(false);
   }
@@ -4174,10 +4583,7 @@ window.openXPostStudio = function(fromFloatingBar){
   var modal = document.getElementById("xPostStudioModal");
   if(modal){
     modal.style.display = "flex";
-    window.refreshXPostStudioUI(true);
-    if(fromFloatingBar && window.showAppToast){
-      window.showAppToast("𝕏 X Post Studio Ready — Screenshot Auto-Saved!");
-    }
+    window.refreshXPostStudioUI();
   }
 };
 
@@ -4203,20 +4609,21 @@ window.copyXPostTextOnly = function(){
   }
 };
 
+// ONLY downloads the screenshot when the user presses "Copy X Post & Save Screenshot"
 window.copyXPostAndSaveScreenshot = function(){
-  window.saveXCardImage(false, false);
+  window.saveXCardImage(false);
   var ta = document.getElementById("xPostTextarea");
   var txt = ta ? (ta.value || "").slice(0, window.FREE_X_CHAR_LIMIT) : "";
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(function(){
-      window.showAppToast("𝕏 Post Copied (" + txt.length + "/280 chars) & HD Screenshot Saved!");
+      window.showAppToast("𝕏 Post Copied (" + txt.length + "/280 chars) & BetBoy Screenshot Saved!");
     }).catch(function(){
       if(ta){ ta.select(); document.execCommand("copy"); }
-      window.showAppToast("𝕏 Post Copied (" + txt.length + "/280 chars) & HD Screenshot Saved!");
+      window.showAppToast("𝕏 Post Copied (" + txt.length + "/280 chars) & BetBoy Screenshot Saved!");
     });
   } else {
     if(ta){ ta.select(); document.execCommand("copy"); }
-    window.showAppToast("𝕏 Post Copied (" + txt.length + "/280 chars) & HD Screenshot Saved!");
+    window.showAppToast("𝕏 Post Copied (" + txt.length + "/280 chars) & BetBoy Screenshot Saved!");
   }
 };
 
