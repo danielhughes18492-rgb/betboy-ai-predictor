@@ -2332,13 +2332,38 @@ window.renderSlipSelections = function() {
     var vsOpp = d.opp ? ' <span class="text-slate-400 font-normal text-[10px] inline-flex items-center gap-1 ml-1">vs ' + oppCrest + '<span>' + d.opp + '</span></span>' : '';
     var lgBadge = d.league ? '<span class="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono mr-1">' + d.league + '</span>' : '';
     var pctBadge = d.pct ? '<span class="text-[9px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + d.pct + ' AI</span>' : '';
-    var statPill = d.statBadge ? '<span class="text-[9px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + d.statBadge + '</span>' : '';
-    var wonPill = d.won === true
-      ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-black">✓ WON</span>'
-      : (d.won === false ? '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-1.5 py-0.5 rounded font-mono font-black">✗ LOST</span>' : '');
+
+    // Live settlement detection for in-play / half-time bets
+    var liveWon = d.won;
+    var liveStatBadge = d.statBadge || '';
+    if (liveWon === undefined && window.currentEvaluatedFixtures && window.currentEvaluatedFixtures.length) {
+      var foundM = window.currentEvaluatedFixtures.find(function(f){
+        return f.fav === d.team || f.opp === d.team || f.fav === d.opp || f.opp === d.opp;
+      });
+      if (foundM && window.calcExtraMarkets) {
+        var mk = window.calcExtraMarkets(foundM, foundM.fs || 68);
+        var fMkt = mk.L.find(function(x){
+          return x.n === d.market || x.n.toLowerCase().indexOf(String(d.market || '').toLowerCase()) !== -1;
+        });
+        if (fMkt) {
+          if (fMkt.w === true) liveWon = true;
+          else if (fMkt.w === false) liveWon = false;
+          if (fMkt.statBadge) liveStatBadge = fMkt.statBadge;
+        }
+      }
+    }
+
+    var statPill = liveStatBadge ? '<span class="text-[9px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + liveStatBadge + '</span>' : '';
+    var wonPill = liveWon === true
+      ? '<span class="text-[9px] bg-emerald-500/25 text-emerald-300 border border-emerald-400 px-1.5 py-0.5 rounded font-mono font-black">✅ LANDED</span>'
+      : (liveWon === false ? '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-1.5 py-0.5 rounded font-mono font-black">✗ LOST</span>' : '');
     var formattedOdds = window.formatOdds(d.odds || 1.65, false);
 
-    return '<div class="flex items-center justify-between bg-slate-900/95 border border-slate-800 hover:border-emerald-500/40 p-2.5 rounded-xl shadow-sm transition gap-2">' +
+    var cardBorderCls = liveWon === true
+      ? 'bg-emerald-950/30 border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+      : 'bg-slate-900/95 border-slate-800 hover:border-emerald-500/40 shadow-sm';
+
+    return '<div class="flex items-center justify-between ' + cardBorderCls + ' border p-2.5 rounded-xl transition gap-2">' +
       '<div class="flex items-start gap-2 min-w-0 flex-1">' +
         '<span class="text-[10px] font-black mono text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">' + (idx + 1) + '</span>' +
         '<div class="min-w-0 flex-1">' +
@@ -2352,9 +2377,9 @@ window.renderSlipSelections = function() {
         '</div>' +
       '</div>' +
       '<div class="flex items-center gap-1.5 flex-shrink-0">' +
-        '<div class="bg-slate-950 border border-amber-500/40 rounded-lg px-2.5 py-1 text-center shadow-inner" title="Locked Odds (Read-Only)">' +
-          '<span class="text-[9px] text-slate-400 block leading-none uppercase font-bold">Odds</span>' +
-          '<span class="text-amber-300 font-black text-xs mono leading-tight">' + formattedOdds + '</span>' +
+        '<div class="bg-slate-950 border ' + (liveWon === true ? 'border-emerald-400/60' : 'border-amber-500/40') + ' rounded-lg px-2.5 py-1 text-center shadow-inner" title="Locked Odds (Read-Only)">' +
+          '<span class="text-[9px] ' + (liveWon === true ? 'text-emerald-300 font-black' : 'text-slate-400 font-bold') + ' block leading-none uppercase">' + (liveWon === true ? 'Landed' : 'Odds') + '</span>' +
+          '<span class="' + (liveWon === true ? 'text-emerald-300 font-black' : 'text-amber-300 font-black') + ' text-xs mono leading-tight">' + formattedOdds + '</span>' +
         '</div>' +
         '<button type="button" onclick="window.removeBetFromSlipByIndex(' + idx + ')" aria-label="Remove selection" class="text-slate-400 hover:text-rose-400 text-base font-black px-1.5 py-0.5 hover:bg-rose-500/10 rounded-lg transition cursor-pointer" title="Remove selection">&times;</button>' +
       '</div>' +
@@ -5980,10 +6005,41 @@ window.getXMatchSelectedMarketsList = function(m){
       chosenList.push(found);
     }
   });
+
+  // If no explicit override, check if user has this fixture in their betting slip or if a market landed live!
   if(chosenList.length === 0){
-    var defM = sortedM[0] || { n: "Match Result: " + m.fav + " to Win", p: m.fs || 75, odds: 1.55 };
-    chosenList = [defM];
+    // 1. Sync from user's active betting slip if present
+    var betSlipNames = [];
+    (window.betSlip || []).forEach(function(bId){
+      var d = (window.betSlipData && window.betSlipData[bId]) || (window.parseBetSelection ? window.parseBetSelection(bId) : null);
+      if(d && (d.team === m.fav || d.team === m.opp || d.opp === m.fav || d.opp === m.opp)){
+        if(d.market) betSlipNames.push(d.market);
+      }
+    });
+    betSlipNames.forEach(function(bsName){
+      var f = sortedM.find(function(x){
+        return x.n === bsName || x.n.toLowerCase().indexOf(bsName.toLowerCase()) !== -1 || bsName.toLowerCase().indexOf(x.n.toLowerCase()) !== -1;
+      });
+      if(f && !chosenList.some(function(c){ return c.n === f.n; })){
+        chosenList.push(f);
+      }
+    });
+
+    // 2. If match is live / kicked off (e.g. at half time), automatically pick the market that has ALREADY COME IN LIVE (w === true)
+    if(chosenList.length === 0 && mk.liveStats && mk.liveStats.hasKickedOff){
+      var wonMarketsLive = sortedM.filter(function(x){ return x.w === true; });
+      if(wonMarketsLive.length > 0){
+        chosenList.push(wonMarketsLive[0]);
+      }
+    }
+
+    // 3. Fallback to top confidence market
+    if(chosenList.length === 0){
+      var defM = sortedM[0] || { n: "Match Result: " + m.fav + " to Win", p: m.fs || 75, odds: 1.55 };
+      chosenList = [defM];
+    }
   }
+
   return { sortedM: sortedM, selectedMarkets: chosenList };
 };
 
@@ -6005,12 +6061,17 @@ window.getResolvedXSelections = function(){
     var actStr = String(m.actual || "");
     var isFT = !m.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr));
     var scMatch = actStr.match(/(\d+)\s*-\s*(\d+)/);
-    var ftScore = scMatch ? (scMatch[1] + "-" + scMatch[2]) : "";
+    var liveScore = scMatch ? (scMatch[1] + "-" + scMatch[2]) : "";
+    var minMatch = actStr.match(/(\d+)\s*'/);
+    var isHT = /\bHT\b/i.test(actStr) || (!isFT && (actStr.indexOf("45'") !== -1 || /half/i.test(actStr)));
+    var isLive = !isFT && (m.isLive || /live/i.test(actStr) || isHT || !!minMatch);
+    var elapsedMins = minMatch ? Number(minMatch[1]) : 45;
     var matchWon = /\(won\)/i.test(actStr);
+
+    var allLegsWon = selectedMarkets.length > 0 && selectedMarkets.every(function(l){ return l.w === true; });
+    var anyLegWon = selectedMarkets.some(function(l){ return l.w === true; });
     var firstMkt = selectedMarkets[0] || {};
-    var selWon = firstMkt.w !== undefined && firstMkt.w !== null
-      ? firstMkt.w
-      : (isFT ? matchWon : null);
+    var selWon = allLegsWon || anyLegWon || (firstMkt.w === true) || (isFT ? matchWon : null);
 
     result.push({
       id: m.id,
@@ -6025,7 +6086,11 @@ window.getResolvedXSelections = function(){
       odds: parseFloat(combMatchOdds.toFixed(2)),
       actual: actStr,
       isFT: isFT,
-      ftScore: ftScore,
+      isLive: isLive,
+      isHT: isHT,
+      liveScore: liveScore,
+      ftScore: isFT ? liveScore : "",
+      elapsedMins: elapsedMins,
       won: selWon,
       statBadge: firstMkt.statBadge || "",
       allMarkets: resolved.sortedM
@@ -6136,14 +6201,22 @@ window.generateXPostData = function(selections, style, oddsFmt){
   var combDec = 1;
   var totalPctSum = 0;
   var isBetBuilder = false;
+  var wonLegCount = 0;
+  var hasHT = false;
+  var hasLive = false;
 
   selections.forEach(function(s){
+    if(s.isHT) hasHT = true;
+    if(s.isLive) hasLive = true;
     var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds, w: s.won, statBadge: s.statBadge }];
     if(legs.length > 1) isBetBuilder = true;
     legs.forEach(function(l){
       totalLegs += 1;
       combDec *= (Number(l.odds) || 1.5);
       totalPctSum += (parseFloat(String(l.p).replace("%","")) || 75);
+      if(l.w === true || (s.won === true && legs.length === 1)){
+        wonLegCount += 1;
+      }
     });
   });
 
@@ -6159,23 +6232,39 @@ window.generateXPostData = function(selections, style, oddsFmt){
     var lines = [];
     if(isSingleMatchBuilder){
       var s0 = selections[0];
-      var legs0 = s0.markets || [{ n: s0.market, p: s0.pct, odds: s0.odds, w: s0.won, statBadge: s.statBadge }];
+      var legs0 = s0.markets || [{ n: s0.market, p: s0.pct, odds: s0.odds, w: s0.won, statBadge: s0.statBadge }];
       var isFT0 = !!s0.isFT;
+      var isHT0 = !!s0.isHT;
+      var isLive0 = !!s0.isLive;
       lines = legs0.map(function(leg){
         var pctNum = Math.round(parseFloat(String(leg.p).replace("%","")) || 75);
         var oddsStr = window.formatOdds(leg.odds || 1.5, false);
         var legWon = (leg.w === true) || (leg.w === undefined && isFT0 && s0.won === true);
-        var prefix0 = legWon ? "✅" : "🎯";
-        var statSuffix = (isFT0 && leg.statBadge && compactLevel === 0) ? (" [" + leg.statBadge + "]") : "";
+        var prefix0 = legWon ? "✅" : (isLive0 ? "⏳" : "🎯");
+        var statusSuffix = "";
+        if(legWon){
+          statusSuffix = isFT0
+            ? (s0.ftScore ? (" [FT " + s0.ftScore + "]") : " [FT]")
+            : isHT0
+            ? (s0.liveScore ? (" [HT " + s0.liveScore + " WON]") : " [HT WON]")
+            : (s0.liveScore ? (" [LIVE " + s0.liveScore + " WON]") : " [WON]");
+        } else if(isLive0){
+          statusSuffix = isHT0
+            ? (s0.liveScore ? (" [HT " + s0.liveScore + "]") : " [HT]")
+            : (s0.liveScore ? (" [LIVE " + s0.liveScore + "]") : " [LIVE]");
+        } else if(isFT0){
+          statusSuffix = s0.ftScore ? (" [FT " + s0.ftScore + "]") : " [FT]";
+        }
+
         if(compactLevel === 0){
           var cleanMkt = String(leg.n || "").replace(/^Match Result:\s*/i, "");
-          return prefix0 + " " + cleanMkt + statSuffix + " (" + oddsStr + " • " + pctNum + "%)";
+          return prefix0 + " " + cleanMkt + statusSuffix + " (" + oddsStr + " • " + pctNum + "%)";
         }
         if(compactLevel === 1){
           var shortPick = window.shortenMarketForX(leg.n, s0.fav, false);
-          return prefix0 + " " + shortPick + " (" + oddsStr + " • " + pctNum + "%)";
+          return prefix0 + " " + shortPick + statusSuffix + " (" + oddsStr + " • " + pctNum + "%)";
         }
-        return (legWon ? "✅ " : "• ") + window.shortenMarketForX(leg.n, s0.fav, false) + " " + oddsStr;
+        return (legWon ? "✅ " : "• ") + window.shortenMarketForX(leg.n, s0.fav, false) + " " + oddsStr + (legWon ? " WON" : (isFT0 ? " FT" : ""));
       });
     } else {
       lines = selections.map(function(s){
@@ -6183,12 +6272,28 @@ window.generateXPostData = function(selections, style, oddsFmt){
         var pctNum = Math.round(parseFloat(String(s.pct).replace("%","")) || 75);
         var oddsStr = window.formatOdds(s.odds || 1.5, false);
         var isFT = !!s.isFT;
-        var ftScore = s.ftScore || "";
+        var isHT = !!s.isHT;
+        var isLive = !!s.isLive;
+        var ftScore = s.ftScore || s.liveScore || "";
+        var anyLegWon = legs.some(function(l){ return l.w === true; });
         var allLegsWon = legs.every(function(l){ return l.w === true; });
-        var isWon = allLegsWon || (s.won === true) || (isFT && String(s.actual || "").toLowerCase().indexOf("(won)") !== -1);
-        var prefix = isWon ? "✅" : "🎯";
-        var ftTagFull = isFT ? (ftScore ? (" [FT " + ftScore + "]") : " [FT]") : "";
-        var ftTagShort = isFT ? (ftScore ? (" (FT " + ftScore + ")") : " (FT)") : "";
+        var isWon = allLegsWon || anyLegWon || (s.won === true) || (isFT && String(s.actual || "").toLowerCase().indexOf("(won)") !== -1);
+        var prefix = isWon ? "✅" : (isLive ? "⏳" : "🎯");
+
+        var statusTag = "";
+        if(isWon){
+          statusTag = isFT
+            ? (ftScore ? (" [FT " + ftScore + "]") : " [FT]")
+            : isHT
+            ? (s.liveScore ? (" [HT " + s.liveScore + " WON]") : " [HT WON]")
+            : (s.liveScore ? (" [LIVE " + s.liveScore + " WON]") : " [WON]");
+        } else if(isLive){
+          statusTag = isHT
+            ? (s.liveScore ? (" [HT " + s.liveScore + "]") : " [HT]")
+            : (s.liveScore ? (" [LIVE " + s.liveScore + "]") : " [LIVE]");
+        } else if(isFT){
+          statusTag = ftScore ? (" [FT " + ftScore + "]") : " [FT]";
+        }
 
         if(legs.length > 1){
           var mktFull = legs.map(function(l){
@@ -6198,25 +6303,25 @@ window.generateXPostData = function(selections, style, oddsFmt){
             ? mktFull
             : (legs.slice(0, 2).map(function(l){ return (l.w === true ? "✅" : "") + window.shortenMarketForX(l.n, s.fav, false); }).join(" + ") + " +" + (legs.length - 2) + " more");
           if(compactLevel === 0){
-            return prefix + " " + window.shortenTeamForX(s.fav) + ftTagFull + " (" + legs.length + "-Leg): " + mktFull + " (" + oddsStr + ")";
+            return prefix + " " + window.shortenTeamForX(s.fav) + statusTag + " (" + legs.length + "-Leg): " + mktFull + " (" + oddsStr + ")";
           }
           if(compactLevel === 1){
-            return prefix + " " + window.shortenTeamForX(s.fav) + ftTagShort + ": " + mktShort + " (" + oddsStr + ")";
+            return prefix + " " + window.shortenTeamForX(s.fav) + statusTag + ": " + mktShort + " (" + oddsStr + ")";
           }
-          return (isWon ? "✅ " : "• ") + window.shortenTeamForX(s.fav) + (isFT ? " FT" : "") + " (" + legs.length + "x): " + mktShort + " " + oddsStr;
+          return (isWon ? "✅ " : "• ") + window.shortenTeamForX(s.fav) + (isWon ? " WON" : (isFT ? " FT" : "")) + " (" + legs.length + "x): " + mktShort + " " + oddsStr;
         }
 
         if(compactLevel === 0){
           var cleanMkt = String(s.market || "").replace(/^Match Result:\s*/i, "");
           var hasTeam = cleanMkt.toLowerCase().indexOf(s.fav.toLowerCase()) !== -1;
           var pickLbl = hasTeam ? cleanMkt : (s.fav + " vs " + s.opp + ": " + cleanMkt);
-          return prefix + " " + pickLbl + ftTagFull + " (" + oddsStr + " • " + pctNum + "%)";
+          return prefix + " " + pickLbl + statusTag + " (" + oddsStr + " • " + pctNum + "%)";
         }
         if(compactLevel === 1){
           var shortPick = window.shortenMarketForX(s.market, s.fav);
-          return prefix + " " + shortPick + ftTagShort + " (" + oddsStr + " • " + pctNum + "%)";
+          return prefix + " " + shortPick + statusTag + " (" + oddsStr + " • " + pctNum + "%)";
         }
-        return (isWon ? "✅ " : "• ") + window.shortenMarketForX(s.market, s.fav) + (isFT ? " (FT)" : "") + " " + oddsStr;
+        return (isWon ? "✅ " : "• ") + window.shortenMarketForX(s.market, s.fav) + (isWon ? " WON" : (isFT ? " (FT)" : "")) + " " + oddsStr;
       });
     }
 
@@ -6225,10 +6330,19 @@ window.generateXPostData = function(selections, style, oddsFmt){
 
     if(count === 1){
       var s0 = selections[0];
-      var ftHdr0 = s0.isFT ? (s0.ftScore ? (" (FT " + s0.ftScore + ")") : " (FT)") : "";
+      var ftHdr0 = s0.isFT
+        ? (s0.ftScore ? (" (FT " + s0.ftScore + ")") : " (FT)")
+        : s0.isHT
+        ? (s0.liveScore ? (" (HT " + s0.liveScore + ")") : " (HT)")
+        : s0.isLive
+        ? (s0.liveScore ? (" (LIVE " + s0.liveScore + ")") : " (LIVE)")
+        : "";
       var mTitle = (compactLevel === 0 ? (s0.fav + " vs " + s0.opp) : (window.shortenTeamForX(s0.fav) + " v " + window.shortenTeamForX(s0.opp))) + ftHdr0;
       if(isSingleMatchBuilder){
-        if(st === "data"){
+        if(wonLegCount > 0 && (s0.isHT || s0.isLive)){
+          header = "🔥 BetBoy AI " + wonLegCount + "/" + totalLegs + " Won at Half-Time: " + mTitle;
+          footer = "💷 Combined " + combStr + " | 📸 Card below\n" + activeTags;
+        } else if(st === "data"){
           header = "🧠 AI " + totalLegs + "-Leg Bet Builder: " + mTitle;
           footer = "📊 Combined " + combStr + " (" + avgPct + "% Avg)\n" + activeTags;
         } else if(st === "results"){
@@ -6242,7 +6356,10 @@ window.generateXPostData = function(selections, style, oddsFmt){
           footer = "💷 Combined Odds " + combStr + " | 📸 Card below\n" + activeTags;
         }
       } else {
-        if(st === "data"){
+        if(wonLegCount > 0 && (s0.isHT || s0.isLive)){
+          header = "🔥 BetBoy AI Live Check-In: " + mTitle + " LANDED ✅";
+          footer = "💷 Live Odds " + combStr + " | 📸 Card below\n" + activeTags;
+        } else if(st === "data"){
           header = "🧠 AI Data Spotlight: " + mTitle;
           footer = "📊 " + avgPct + "% Model Confidence | 📸 Slip below\n" + activeTags;
         } else if(st === "results"){
@@ -6258,7 +6375,13 @@ window.generateXPostData = function(selections, style, oddsFmt){
       }
     } else {
       var slipDesc = isBetBuilder ? (totalLegs + "-Leg Builder") : (count + "-Fold");
-      if(st === "data"){
+      if(wonLegCount > 0 && hasHT){
+        header = "🔥 BetBoy AI Half-Time Check-In! " + wonLegCount + "/" + totalLegs + " Legs LANDED ✅ (" + combStr + ")";
+        footer = "📸 Live Card Attached | Model Precision\n" + activeTags;
+      } else if(wonLegCount > 0 && hasLive){
+        header = "🔥 BetBoy AI Live Check-In! " + wonLegCount + "/" + totalLegs + " Legs LANDED ✅ (" + combStr + ")";
+        footer = "📸 Live Card Attached | Model Precision\n" + activeTags;
+      } else if(st === "data"){
         header = "🧠 BetBoy AI " + slipDesc + " Slip (" + avgPct + "% Avg)";
         footer = "📊 Combined " + combStr + "\n" + activeTags;
       } else if(st === "results"){
@@ -6292,12 +6415,12 @@ window.generateXPostData = function(selections, style, oddsFmt){
     var flatItems = isSingleMatchBuilder
       ? (selections[0].markets || []).map(function(l){
           var lw = l.w === true;
-          return (lw ? "✅ " : "• ") + window.shortenMarketForX(l.n, selections[0].fav, false) + " " + window.formatOdds(l.odds || 1.5, false);
+          return (lw ? "✅ " : "• ") + window.shortenMarketForX(l.n, selections[0].fav, false) + " " + window.formatOdds(l.odds || 1.5, false) + (lw ? " WON" : "");
         })
       : selections.map(function(s){
           var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, odds: s.odds, w: s.won }];
-          var sw = s.won === true || legs.every(function(l){ return l.w === true; });
-          var lbl = legs.length > 1 ? (window.shortenTeamForX(s.fav) + (s.isFT ? " FT" : "") + " (" + legs.length + "x)") : (window.shortenMarketForX(s.market, s.fav) + (s.isFT ? " (FT)" : ""));
+          var sw = s.won === true || legs.every(function(l){ return l.w === true; }) || legs.some(function(l){ return l.w === true; });
+          var lbl = legs.length > 1 ? (window.shortenTeamForX(s.fav) + (sw ? " WON" : (s.isFT ? " FT" : "")) + " (" + legs.length + "x)") : (window.shortenMarketForX(s.market, s.fav) + (sw ? " WON" : (s.isFT ? " (FT)" : "")));
           return (sw ? "✅ " : "• ") + lbl + " " + window.formatOdds(s.odds || 1.5, false);
         });
 
@@ -6941,30 +7064,44 @@ window.renderXPostCanvasCard = function(){
   ctx.fillStyle = "#34d399";
   window.drawFittedCanvasText(ctx, headerSubtitle, 146, 114, 615, "left", 18, 13, "700", "'JetBrains Mono', monospace");
 
-  // Right Header Pill (Live Odds Format or FT Win Summary)
-  var ftLegsCount = 0;
+  // Right Header Pill (Live Odds Format or FT/HT Win Summary)
   var wonLegsCount = 0;
+  var liveMatchesCount = 0;
+  var htMatchesCount = 0;
   selections.forEach(function(s){
+    if(s.isHT) htMatchesCount++;
+    if(s.isLive) liveMatchesCount++;
     var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, w: s.won }];
     legs.forEach(function(l){
       var lw = l.w !== undefined ? l.w : s.won;
-      if(s.isFT || lw === true){
-        ftLegsCount++;
-        if(lw === true) wonLegsCount++;
+      if(lw === true || (s.won === true && s.isFT)){
+        wonLegsCount++;
       }
     });
   });
 
-  ctx.fillStyle = "rgba(16, 185, 129, 0.16)";
-  roundRect(W - 294, 64, 228, 48, 12);
+  ctx.fillStyle = wonLegsCount > 0 ? "rgba(16, 185, 129, 0.22)" : "rgba(16, 185, 129, 0.16)";
+  roundRect(W - 304, 64, 238, 48, 12);
   ctx.fill();
-  ctx.strokeStyle = "rgba(16, 185, 129, 0.5)";
+  ctx.strokeStyle = wonLegsCount > 0 ? "rgba(16, 185, 129, 0.75)" : "rgba(16, 185, 129, 0.5)";
   ctx.stroke();
-  ctx.fillStyle = "#6ee7b7";
-  var topRightPillTxt = ftLegsCount > 0
-    ? ("✅ " + wonLegsCount + "/" + totalLegs + " WON (FT)")
-    : (isBetBuilder ? ("🛠️ " + totalLegs + " MARKETS LOCKED") : "✓ LIVE ODDS LOCKED");
-  window.drawFittedCanvasText(ctx, topRightPillTxt, W - 180, 94, 210, "center", 17.5, 12.5, "800", "'JetBrains Mono', monospace");
+  ctx.fillStyle = wonLegsCount > 0 ? "#4ade80" : "#6ee7b7";
+
+  var topRightPillTxt = "";
+  if(wonLegsCount > 0){
+    if(liveMatchesCount > 0 || htMatchesCount > 0){
+      topRightPillTxt = "✅ " + wonLegsCount + "/" + totalLegs + " LANDED (" + (htMatchesCount > 0 ? "HT" : "LIVE") + ")";
+    } else {
+      topRightPillTxt = "✅ " + wonLegsCount + "/" + totalLegs + " WON (FT)";
+    }
+  } else if(liveMatchesCount > 0 || htMatchesCount > 0){
+    topRightPillTxt = "⏳ IN PLAY (" + (htMatchesCount > 0 ? "HT" : "LIVE") + ")";
+  } else if(isBetBuilder){
+    topRightPillTxt = "🛠️ " + totalLegs + " MARKETS LOCKED";
+  } else {
+    topRightPillTxt = "✓ LIVE ODDS LOCKED";
+  }
+  window.drawFittedCanvasText(ctx, topRightPillTxt, W - 185, 94, 220, "center", 17, 12, "800", "'JetBrains Mono', monospace");
 
   if(count === 0){
     ctx.fillStyle = "#94a3b8";
@@ -6996,13 +7133,17 @@ window.renderXPostCanvasCard = function(){
     });
 
     var isMatchFT = !!s.isFT;
-    var isSelectionWon = (s.won === true) || legs.every(function(l){ return l.w === true; });
+    var isMatchLive = !!s.isLive;
+    var isMatchHT = !!s.isHT;
+    var hasAnyLegWon = legs.some(function(l){ return l.w === true; });
+    var areAllLegsWon = legs.length > 0 && legs.every(function(l){ return l.w === true; });
+    var isSelectionWon = (s.won === true) || areAllLegsWon || hasAnyLegWon;
 
     // Row Card Container
     ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
     roundRect(42, y, W - 84, cardBoxH, 18);
     ctx.fill();
-    ctx.strokeStyle = isSelectionWon ? "rgba(16, 185, 129, 0.85)" : (pctNum >= 75 ? "rgba(16, 185, 129, 0.45)" : "rgba(251, 191, 36, 0.45)");
+    ctx.strokeStyle = isSelectionWon ? "rgba(16, 185, 129, 0.88)" : (pctNum >= 75 ? "rgba(16, 185, 129, 0.45)" : "rgba(251, 191, 36, 0.45)");
     ctx.lineWidth = isSelectionWon ? 2.5 : 2;
     ctx.stroke();
 
@@ -7024,15 +7165,23 @@ window.renderXPostCanvasCard = function(){
     var rightAnchorX = W - 222; // 858
     var maxLeftColW = legs.length === 1 ? 335 : 375;
 
-    var fixtureTitle = (isSelectionWon ? "✅ " : "") + s.fav + " vs " + s.opp;
+    var fixtureTitle = (isSelectionWon ? "✅ " : (isMatchLive ? "⏳ " : "")) + s.fav + " vs " + s.opp;
     ctx.fillStyle = "#ffffff";
     var titleFit = window.drawFittedCanvasText(ctx, fixtureTitle, leftStartX, y + 42, maxLeftColW, "left", 22.5, 14, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
     var lgName = window.getLeagueName ? window.getLeagueName(s.league) : (s.league || "");
-    ctx.fillStyle = isMatchFT ? "#34d399" : "#94a3b8";
-    var timeOrFtStr = isMatchFT
-      ? ("✓ FT " + (s.ftScore || s.actual || "") + (isSelectionWon && legs.length === 1 ? " • WON" : ""))
-      : ("KO " + (s.ko || "15:00") + (legs.length > 1 ? (" • 🛠️ " + legs.length + "-Leg") : ""));
+    ctx.fillStyle = isSelectionWon ? "#34d399" : (isMatchLive ? "#38bdf8" : "#94a3b8");
+
+    var timeOrFtStr = "";
+    if (isMatchFT) {
+      timeOrFtStr = "✓ FT " + (s.ftScore || s.actual || "") + (isSelectionWon && legs.length === 1 ? " • WON" : "");
+    } else if (isMatchHT) {
+      timeOrFtStr = "⏸️ HT " + (s.liveScore || "") + (isSelectionWon ? " • ✅ LANDED" : " • ⏳ LIVE");
+    } else if (isMatchLive) {
+      timeOrFtStr = "⏳ LIVE " + (s.liveScore || "") + " (" + (s.elapsedMins || 45) + "')" + (isSelectionWon ? " • ✅ LANDED" : "");
+    } else {
+      timeOrFtStr = "KO " + (s.ko || "15:00") + (legs.length > 1 ? (" • 🛠️ " + legs.length + "-Leg") : "");
+    }
     var subMeta = lgName + " • " + timeOrFtStr;
     var metaFit = window.drawFittedCanvasText(ctx, subMeta, leftStartX, y + 73, maxLeftColW, "left", 15, 11.5, "700", "'JetBrains Mono', monospace");
 
@@ -7048,18 +7197,31 @@ window.renderXPostCanvasCard = function(){
       ctx.fillStyle = legWon ? "#4ade80" : "#34d399";
       var mktFit = window.drawFittedCanvasText(ctx, mktLabel, rightAnchorX, y + 42, availRightW, "right", 19.5, 13.5, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
-      ctx.fillStyle = legWon ? "#86efac" : "#cbd5e1";
-      var confOrStatTxt = (isMatchFT && singleLeg.statBadge)
-        ? (singleLeg.statBadge + (legWon ? " • ✓ WON" : ""))
-        : ("AI Confidence: " + pctNum.toFixed(1) + "%" + (legWon ? " • ✓ WON" : ""));
+      ctx.fillStyle = legWon ? "#86efac" : (isMatchLive ? "#7dd3fc" : "#cbd5e1");
+      var confOrStatTxt = "";
+      if(legWon){
+        var statPart = singleLeg.statBadge || (isMatchHT ? ("HT " + (s.liveScore || "")) : isMatchLive ? ("LIVE " + (s.liveScore || "")) : "");
+        confOrStatTxt = (statPart ? (statPart + " • ") : "") + "✅ WON / LANDED";
+      } else if(isMatchLive){
+        confOrStatTxt = (singleLeg.statBadge ? (singleLeg.statBadge + " • ") : "") + "⏳ IN PLAY";
+      } else {
+        confOrStatTxt = "AI Confidence: " + pctNum.toFixed(1) + "%";
+      }
       var confY = mktFit.lines > 1 ? (y + 77) : (y + 73);
       window.drawFittedCanvasText(ctx, confOrStatTxt, rightAnchorX, confY, availRightW, "right", 15, 11.5, "700", "'JetBrains Mono', monospace");
     } else {
       var wonLegsInMatch = legs.filter(function(l){ return l.w === true; }).length;
-      ctx.fillStyle = "#34d399";
-      var multiTitle = isMatchFT
-        ? ("✅ " + wonLegsInMatch + "/" + legs.length + " Markets Won (FT)")
-        : ("🛠️ " + legs.length + " Markets Combined");
+      ctx.fillStyle = wonLegsInMatch > 0 ? "#4ade80" : "#34d399";
+      var multiTitle = "";
+      if(wonLegsInMatch > 0){
+        multiTitle = isMatchFT
+          ? ("✅ " + wonLegsInMatch + "/" + legs.length + " Markets Won (FT)")
+          : ("✅ " + wonLegsInMatch + "/" + legs.length + " Landed (" + (isMatchHT ? "HT" : "LIVE") + ")");
+      } else {
+        multiTitle = isMatchLive
+          ? ("⏳ " + legs.length + " Markets In Play (" + (isMatchHT ? "HT" : "LIVE") + ")")
+          : ("🛠️ " + legs.length + " Markets Combined");
+      }
       window.drawFittedCanvasText(ctx, multiTitle, rightAnchorX, y + 43, availRightW, "right", 18, 13, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
       ctx.fillStyle = "#cbd5e1";
@@ -7070,14 +7232,17 @@ window.renderXPostCanvasCard = function(){
     ctx.fillStyle = "#020617";
     roundRect(W - 206, y + 16, 144, 66, 14);
     ctx.fill();
-    ctx.strokeStyle = isSelectionWon ? "rgba(52, 211, 153, 0.8)" : "rgba(251, 191, 36, 0.55)";
+    ctx.strokeStyle = isSelectionWon ? "rgba(52, 211, 153, 0.85)" : (isMatchLive ? "rgba(56, 189, 248, 0.6)" : "rgba(251, 191, 36, 0.55)");
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.textAlign = "center";
-    ctx.fillStyle = isSelectionWon ? "#6ee7b7" : "#94a3b8";
+    ctx.fillStyle = isSelectionWon ? "#6ee7b7" : (isMatchLive ? "#7dd3fc" : "#94a3b8");
     ctx.font = "700 11px 'JetBrains Mono', monospace";
-    ctx.fillText(isSelectionWon ? "✓ WON ODDS" : (legs.length > 1 ? "BUILDER ODDS" : "LIVE ODDS"), W - 134, y + 38);
+    var boxHeaderTxt = isSelectionWon
+      ? (isMatchHT ? "✓ LANDED (HT)" : (isMatchLive ? "✓ WON LIVE" : "✓ WON ODDS"))
+      : (isMatchLive ? "⏳ LIVE ODDS" : (legs.length > 1 ? "BUILDER ODDS" : "LIVE ODDS"));
+    ctx.fillText(boxHeaderTxt, W - 134, y + 38);
 
     ctx.fillStyle = "#fde047";
     window.drawFittedCanvasText(ctx, window.formatOdds(s.odds || 1.55, false), W - 134, y + 67, 130, "center", 22, 14, "900", "'JetBrains Mono', monospace");
@@ -7093,16 +7258,16 @@ window.renderXPostCanvasCard = function(){
         var ly = gridStartY + row * 48;
         var isLegWon = leg.w === true;
 
-        ctx.fillStyle = isLegWon ? "rgba(6, 78, 59, 0.55)" : "rgba(2, 6, 23, 0.88)";
+        ctx.fillStyle = isLegWon ? "rgba(6, 78, 59, 0.75)" : "rgba(2, 6, 23, 0.88)";
         roundRect(lx, ly, colW, 42, 10);
         ctx.fill();
-        ctx.strokeStyle = isLegWon ? "rgba(52, 211, 153, 0.75)" : "rgba(16, 185, 129, 0.38)";
+        ctx.strokeStyle = isLegWon ? "rgba(52, 211, 153, 0.85)" : "rgba(16, 185, 129, 0.38)";
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
         var legOddsStr = window.formatOdds(leg.odds || 1.5, false);
         var legPctStr = Math.round(parseFloat(String(leg.p).replace("%","")) || 75) + "%";
-        var rightChipTxt = legOddsStr + " (" + (isLegWon ? "WON" : legPctStr) + ")";
+        var rightChipTxt = legOddsStr + " (" + (isLegWon ? "LANDED ✅" : legPctStr) + ")";
         ctx.textAlign = "right";
         ctx.fillStyle = isLegWon ? "#6ee7b7" : "#fde047";
         ctx.font = "800 13.5px 'JetBrains Mono', monospace";
@@ -7110,7 +7275,7 @@ window.renderXPostCanvasCard = function(){
         ctx.fillText(rightChipTxt, lx + colW - 12, ly + 26);
 
         var legName = window.formatXCardMarketLabel(leg.n, isLegWon, true);
-        if(leg.statBadge && isMatchFT) legName = legName + " [" + leg.statBadge + "]";
+        if(leg.statBadge && (isMatchFT || isMatchLive || isMatchHT)) legName = legName + " [" + leg.statBadge + "]";
         var availLegW = Math.max(180, colW - rightChipW - 32);
         ctx.fillStyle = "#f8fafc";
         window.drawFittedCanvasText(ctx, legName, lx + 12, ly + 26, availLegW, "left", 14.5, 10.5, "700", "'Plus Jakarta Sans', Arial, sans-serif");
@@ -7148,8 +7313,11 @@ window.renderXPostCanvasCard = function(){
   ctx.fillStyle = "#ffffff";
   window.drawFittedCanvasText(ctx, footerLeftLabel, 66, footerY + 41, 315, "left", 20.5, 14, "900", "'JetBrains Mono', monospace");
 
-  ctx.fillStyle = "#6ee7b7";
-  window.drawFittedCanvasText(ctx, "AVG AI CONFIDENCE: " + avgConf + "%", W * 0.52, footerY + 41, 290, "center", 18.5, 13.5, "800", "'JetBrains Mono', monospace");
+  ctx.fillStyle = wonLegsCount > 0 ? "#4ade80" : "#6ee7b7";
+  var midSummaryTxt = wonLegsCount > 0
+    ? ("AVG AI: " + avgConf + "% • " + wonLegsCount + "/" + totalLegs + " LANDED ✅")
+    : ("AVG AI CONFIDENCE: " + avgConf + "%");
+  window.drawFittedCanvasText(ctx, midSummaryTxt, W * 0.52, footerY + 41, 310, "center", 18.5, 13.5, "800", "'JetBrains Mono', monospace");
 
   ctx.fillStyle = "#fde047";
   window.drawFittedCanvasText(ctx, "£10 RETURNS: £" + estReturn, W - 66, footerY + 41, 300, "right", 20.5, 14, "900", "'JetBrains Mono', monospace");
@@ -7286,22 +7454,33 @@ window.refreshXPostStudioUI = function(){
       var actStr = String(m.actual || "");
       var isMatchFT = !m.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr));
       var scMatch = actStr.match(/(\d+)\s*-\s*(\d+)/);
-      var ftBadgeHtml = isMatchFT
-        ? '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">✓ FT ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : actStr) + '</span>'
-        : '';
+      var minMatch = actStr.match(/(\d+)\s*'/);
+      var isMatchHT = /\bHT\b/i.test(actStr) || (!isMatchFT && (actStr.indexOf("45'") !== -1 || /half/i.test(actStr)));
+      var isMatchLive = !isMatchFT && (m.isLive || /live/i.test(actStr) || isMatchHT || !!minMatch);
+      var hasAnyWonLeg = selectedMarkets.some(function(x){ return x.w === true; });
+
+      var ftBadgeHtml = "";
+      if (isMatchFT) {
+        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">✓ FT ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : actStr) + '</span>';
+      } else if (isMatchHT) {
+        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded ' + (hasAnyWonLeg ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' : 'bg-sky-500/20 text-sky-300 border-sky-500/40') + ' border whitespace-nowrap flex-shrink-0">⏸️ HT ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : '') + (hasAnyWonLeg ? ' • ✅ LANDED' : ' • LIVE') + '</span>';
+      } else if (isMatchLive) {
+        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded ' + (hasAnyWonLeg ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' : 'bg-sky-500/20 text-sky-300 border-sky-500/40') + ' border whitespace-nowrap flex-shrink-0">⏳ ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : 'LIVE') + (minMatch ? (' (' + minMatch[1] + '\')') : '') + (hasAnyWonLeg ? ' • ✅ LANDED' : '') + '</span>';
+      }
 
       var builderPanelHtml = "";
       if(isSel){
         var marketChipsHtml = sortedM.map(function(item, mIdx){
           var isMktPicked = selectedNames.indexOf(item.n) !== -1;
+          var isMktWon = item.w === true;
           var chipCls = isMktPicked
-            ? "bg-emerald-600/30 border-emerald-400 text-white ring-1 ring-emerald-400/60"
-            : "bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-600 hover:text-white";
+            ? (isMktWon ? "bg-emerald-600/35 border-emerald-400 text-white ring-2 ring-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.3)]" : "bg-emerald-600/30 border-emerald-400 text-white ring-1 ring-emerald-400/60")
+            : (isMktWon ? "bg-emerald-950/60 border-emerald-500/50 text-emerald-200 hover:border-emerald-400" : "bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-600 hover:text-white");
           var checkIcon = isMktPicked
             ? '<span class="text-emerald-300 font-black flex-shrink-0">✓</span>'
             : '<span class="text-slate-500 font-bold flex-shrink-0">+</span>';
-          var wonTick = item.w === true ? ' <span class="text-emerald-300 font-black flex-shrink-0">✅</span>' : '';
-          var statSub = item.statBadge ? ('<div class="text-sky-300 font-mono text-[8.5px] leading-tight mt-0.5">' + item.statBadge + (item.w === true ? ' • ✓ WON' : '') + '</div>') : '';
+          var wonTick = isMktWon ? ' <span class="text-emerald-300 font-black flex-shrink-0 bg-emerald-950/90 border border-emerald-400/50 px-1 py-0.2 rounded text-[8.5px]">✅ LANDED</span>' : '';
+          var statSub = item.statBadge ? ('<div class="' + (isMktWon ? 'text-emerald-300 font-bold' : 'text-sky-300') + ' font-mono text-[8.5px] leading-tight mt-0.5">' + item.statBadge + (isMktWon ? ' • ✓ WON LIVE' : '') + '</div>') : '';
           return '<button type="button" onclick="window.toggleXMatchMarketByIdx(' + m.id + ', ' + mIdx + ')" class="px-2 py-1.5 rounded-lg border text-left flex flex-col justify-center text-[9.5px] font-bold cursor-pointer transition ' + chipCls + '">' +
             '<div class="flex items-center justify-between gap-1.5 w-full">' +
               '<span class="min-w-0 flex-1 flex items-center gap-1">' + checkIcon + '<span class="leading-tight break-words">' + item.n + '</span>' + wonTick + '</span>' +
