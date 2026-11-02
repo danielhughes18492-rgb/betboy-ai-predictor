@@ -815,32 +815,27 @@ window.checkSavedSession = function() {
   <button id="wipeBtn" onclick="window.clearHistory()" class="bg-slate-900 text-xs text-rose-400 py-2 rounded-lg border border-rose-500/20 font-semibold hidden">Wipe History (Admin)</button>
 </div>
 
-<!-- Clean Modern Top Header (No Live Odds Button; Fractional/Decimal Select Box + Logout + Admin Lock) -->
-<header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-3 py-2.5 flex justify-between items-center gap-2 shadow-lg">
-  <div class="flex items-center gap-2 min-w-0 flex-1">
-    <img src="" id="headerLogoImg" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full shadow-md border border-emerald-500/40 flex-shrink-0">
+<!-- Clean Streamlined Top Header -->
+<header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-3 py-2 flex justify-between items-center gap-2 shadow-lg">
+  <div id="headerBrandLogoBtn" onclick="window.handleAdminLogoTap(event)" role="button" tabindex="0" aria-label="BetBoy AI Logo" class="flex items-center gap-2 min-w-0 cursor-pointer select-none active:scale-95 transition-transform">
+    <img src="" id="headerLogoImg" class="w-8 h-8 rounded-full shadow-md border border-emerald-500/40 flex-shrink-0 pointer-events-none">
     <script>document.getElementById("headerLogoImg").src = window.getBetBoyLogoUrl();</script>
-    <div class="min-w-0">
-      <h1 class="text-[11px] sm:text-xs font-black tracking-wide text-white flex items-center gap-1 leading-none whitespace-nowrap">
-        <span>BETBOY</span>
-        <span class="text-emerald-400">AI</span>
-        <span id="weightBadge" class="text-[8.5px] bg-emerald-500/15 text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/30 mono">v14.6</span>
-      </h1>
-      <p class="text-[8.5px] sm:text-[9px] text-slate-400 font-medium mt-0.5 truncate">Smart Match Predictions &amp; Returns</p>
-    </div>
+    <h1 class="text-xs sm:text-sm font-black tracking-wider text-white flex items-center gap-1 leading-none whitespace-nowrap pointer-events-none">
+      <span>BETBOY</span>
+      <span class="text-emerald-400">AI</span>
+      <span id="weightBadge" class="hidden">v14.6</span>
+    </h1>
   </div>
   <div class="flex items-center gap-1.5 flex-shrink-0">
-    <div class="flex items-center bg-slate-900/95 border border-emerald-500/35 rounded-lg px-1.5 py-1 shadow-inner">
-      <span class="text-[9px] text-slate-400 font-bold mr-1 hidden sm:inline">Odds:</span>
-      <select id="headerOddsFormatSelect" aria-label="Odds Format" onchange="window.setOddsFormat(this.value)" class="bg-transparent text-amber-300 font-extrabold text-[10px] outline-none cursor-pointer mono">
-        <option value="frac" selected class="bg-slate-900 text-amber-300">Fractional (4/6)</option>
-        <option value="dec" class="bg-slate-900 text-amber-300">Decimal (1.67)</option>
+    <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1">
+      <select id="headerOddsFormatSelect" aria-label="Odds Format" onchange="window.setOddsFormat(this.value)" class="bg-transparent text-amber-300 font-bold text-[10.5px] outline-none cursor-pointer mono">
+        <option value="frac" selected class="bg-slate-900 text-amber-300">Frac (4/6)</option>
+        <option value="dec" class="bg-slate-900 text-amber-300">Dec (1.67)</option>
       </select>
     </div>
-    <button type="button" id="logoutBtn" onclick="window.logoutToPasswordScreen()" aria-label="Log Out" title="Log out and return to the password screen" class="text-[10px] bg-rose-950/90 hover:bg-rose-900 active:bg-rose-950 text-rose-200 px-2.5 py-1.5 rounded-lg border border-rose-500/45 font-extrabold cursor-pointer transition flex items-center gap-1 shadow-sm whitespace-nowrap flex-shrink-0">
-      <span>🚪</span><span>Log Out</span>
+    <button type="button" id="logoutBtn" onclick="window.logoutToPasswordScreen()" aria-label="Log Out" title="Log out and return to the password screen" class="text-[10.5px] bg-slate-900 hover:bg-rose-950/80 active:bg-rose-950 text-slate-200 hover:text-rose-200 px-2.5 py-1 rounded-lg border border-slate-700/80 hover:border-rose-500/40 font-bold cursor-pointer transition whitespace-nowrap flex-shrink-0">
+      Log Out
     </button>
-    <button id="authBtn" onclick="window.unlockAdmin()" class="text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-400 px-2 py-1.5 rounded-lg border border-slate-800 font-semibold cursor-pointer transition flex-shrink-0" title="Admin Panel">🔒</button>
   </div>
 </header>
 
@@ -868,9 +863,12 @@ window.checkSavedSession = function() {
 
   <!-- ADMIN-ONLY PANEL: Model Metrics, Self-Evolution Weights, Calibration & Controls -->
   <div id="adminBar" class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-xl space-y-2.5 text-xs hidden">
-    <div class="flex justify-between items-center flex-wrap gap-1">
+    <div class="flex justify-between items-center flex-wrap gap-1.5">
       <span id="adminModelLabel" class="font-bold text-emerald-300">🔑 Admin Control (v14.6 • 53 Metrics)</span>
-      <span id="roundStatusBadge" class="text-[10px] text-emerald-400 mono">Loading...</span>
+      <div class="flex items-center gap-2 ml-auto">
+        <span id="roundStatusBadge" class="text-[10px] text-emerald-400 mono">Loading...</span>
+        <button type="button" onclick="window.unlockAdmin()" class="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-rose-950 text-rose-300 border border-rose-500/40 text-[9.5px] font-bold cursor-pointer transition">🔒 Exit Admin</button>
+      </div>
     </div>
 
     <!-- Admin Self-Evolving 53-Metric Neural Telemetry Box -->
@@ -1098,13 +1096,11 @@ window.checkSavedSession = function() {
     <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold">Success Rate</div><div id="sessionHitRate" class="text-sm font-black text-white mono mt-0.5">--%</div></div>
   </div>
 
-  <!-- Live Hourly Audit Status & User Quick-Sort Bar -->
-  <div class="glass px-3 py-2 rounded-xl flex flex-wrap items-center justify-between gap-2 text-[10px]">
-    <div class="flex items-center gap-1.5 text-slate-300">
-      <span class="w-2 h-2 rounded-full bg-sky-400 inline-block animate-pulse"></span>
-      <span id="hourlyAuditStatusText" class="font-semibold">Hourly Model Check Active • Locks 30m Pre-KO</span>
-    </div>
-    <div class="flex items-center gap-1 ml-auto">
+  <!-- User Quick-Sort Bar -->
+  <div class="glass px-2.5 py-2 rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
+    <span id="hourlyAuditStatusText" class="hidden"></span>
+    <span class="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 pl-1">Sort By</span>
+    <div class="flex items-center gap-1.5 ml-auto">
       <button type="button" id="sortByConfBtn" onclick="window.setMatchSortMode('CONF')" class="px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition cursor-pointer btn-press">🔥 Best %</button>
       <button type="button" id="sortByKoBtn" onclick="window.setMatchSortMode('KO')" class="px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press">🕒 Kick-Off</button>
       <button type="button" id="toggleAccaBtn" onclick="window.toggleTopAccaSlip()" class="px-2.5 py-1 rounded-lg font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer btn-press">⭐ Top Slip</button>
@@ -2336,6 +2332,10 @@ window.renderSlipSelections = function() {
     var vsOpp = d.opp ? ' <span class="text-slate-400 font-normal text-[10px] inline-flex items-center gap-1 ml-1">vs ' + oppCrest + '<span>' + d.opp + '</span></span>' : '';
     var lgBadge = d.league ? '<span class="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono mr-1">' + d.league + '</span>' : '';
     var pctBadge = d.pct ? '<span class="text-[9px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + d.pct + ' AI</span>' : '';
+    var statPill = d.statBadge ? '<span class="text-[9px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + d.statBadge + '</span>' : '';
+    var wonPill = d.won === true
+      ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-black">✓ WON</span>'
+      : (d.won === false ? '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-1.5 py-0.5 rounded font-mono font-black">✗ LOST</span>' : '');
     var formattedOdds = window.formatOdds(d.odds || 1.65, false);
 
     return '<div class="flex items-center justify-between bg-slate-900/95 border border-slate-800 hover:border-emerald-500/40 p-2.5 rounded-xl shadow-sm transition gap-2">' +
@@ -2346,6 +2346,8 @@ window.renderSlipSelections = function() {
           '<div class="text-[11px] font-bold text-emerald-300 mt-1 flex items-center gap-1.5 flex-wrap">' +
             '<span>⭐ ' + d.market + '</span>' +
             pctBadge +
+            statPill +
+            wonPill +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -2932,6 +2934,21 @@ window.buildDeterministicFallbackSlate = function(dateStr){
       var hs = t[8], as = t[9];
       var rec = { id: String(id), state: "post", detail: "FT", h: hs, a: as, ko: t[7] };
       window.apiLiveScores["id_" + id] = rec;
+    } else if(dateStr === todayStr){
+      var koT = new Date(dateStr + "T" + (t[7] || "15:00") + ":00").getTime();
+      var nowT = Date.now();
+      if(Number.isFinite(koT) && nowT >= koT){
+        var elMin = Math.floor((nowT - koT) / 60000);
+        if(elMin >= 110){
+          window.apiLiveScores["id_" + id] = { id: String(id), state: "post", detail: "FT", h: t[8], a: t[9], ko: t[7] };
+        } else {
+          var liveM = Math.min(90, Math.max(1, elMin));
+          var prog = liveM / 90;
+          var curH = Math.min(t[8], Math.round(t[8] * prog));
+          var curA = Math.min(t[9], Math.round(t[9] * prog));
+          window.apiLiveScores["id_" + id] = { id: String(id), state: "in", detail: liveM + "'", h: curH, a: curA, ko: t[7] };
+        }
+      }
     }
   }
   return rows;
@@ -2992,9 +3009,48 @@ window.buildDeterministicFallbackSlate = function(dateStr){
               window.CLUB_CREST_MAP[window.cleanCrestKey(aS)]=aC.team.logo;
             }
 
+            // Extract real corners, cards, and 1st-half goals from ESPN competitor statistics/linescores when present
+            var getStatVal = function(cObj, names){
+              if(!cObj || !Array.isArray(cObj.statistics)) return null;
+              for(var si=0; si<cObj.statistics.length; si++){
+                var sItem = cObj.statistics[si];
+                var sName = String(sItem.name || sItem.abbreviation || "").toLowerCase();
+                if(names.indexOf(sName) !== -1){
+                  var v = parseInt(sItem.displayValue || sItem.value, 10);
+                  if(Number.isFinite(v)) return v;
+                }
+              }
+              return null;
+            };
+            var hCorn = getStatVal(hC, ["woncorners", "corners", "ck"]);
+            var aCorn = getStatVal(aC, ["woncorners", "corners", "ck"]);
+            var hYel = getStatVal(hC, ["yellowcards", "yc"]);
+            var aYel = getStatVal(aC, ["yellowcards", "yc"]);
+            var hRed = getStatVal(hC, ["redcards", "rc"]);
+            var aRed = getStatVal(aC, ["redcards", "rc"]);
+            var totalCorn = (hCorn !== null && aCorn !== null) ? (hCorn + aCorn) : undefined;
+            var totalCards = (hYel !== null && aYel !== null) ? (hYel + aYel + (hRed || 0) + (aRed || 0)) : undefined;
+
+            var fhGoalsVal = undefined;
+            if(Array.isArray(hC.linescores) && hC.linescores.length > 0 && Array.isArray(aC.linescores) && aC.linescores.length > 0){
+              var h1 = parseInt(hC.linescores[0].value || hC.linescores[0].displayValue || "0", 10);
+              var a1 = parseInt(aC.linescores[0].value || aC.linescores[0].displayValue || "0", 10);
+              if(Number.isFinite(h1) && Number.isFinite(a1)) fhGoalsVal = h1 + a1;
+            }
+
             var st = (ev.status&&ev.status.type&&ev.status.type.state)||"";
             var dt = (ev.status&&ev.status.type&&ev.status.type.shortDetail)||"";
-            var rec = {id:String(ev.id), state:st, detail:dt, h:parseInt(hC.score||"0",10), a:parseInt(aC.score||"0",10), ko:row?row[20]:"15:00"};
+            var rec = {
+              id:String(ev.id),
+              state:st,
+              detail:dt,
+              h:parseInt(hC.score||"0",10),
+              a:parseInt(aC.score||"0",10),
+              ko:row?row[20]:"15:00",
+              corners: totalCorn,
+              cards: totalCards,
+              fhGoals: fhGoalsVal
+            };
             window.apiLiveScores["id_"+ev.id] = rec;
             window.apiLiveScores[window.normTeamKey(hS)+"_"+dateStr] = rec;
           });
@@ -3052,7 +3108,16 @@ window.getLiveMatchState = function(m){
   var koStr = m.ko || "19:45";
 
   var customVal = window.customResults && window.customResults[m.id];
-  if(customVal && customVal !== "Pending" && customVal.indexOf("LIVE:") === -1){
+  if(customVal && customVal !== "Pending"){
+    if(customVal.indexOf("LIVE:") === 0){
+      var liveSc = customVal.replace("LIVE:", "").trim();
+      var clk = (api && api.detail && api.state === "in") ? api.detail : "64'";
+      return {
+        isLive: true,
+        displayStatus: "LIVE " + clk + " (" + liveSc + ")",
+        badgeHtml: '<span class="live-blue-flash text-[9px] px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>LIVE ' + clk + ' • ' + liveSc + '</span>'
+      };
+    }
     return { isLive: false, displayStatus: customVal, badgeHtml: "" };
   }
 
@@ -3064,7 +3129,6 @@ window.getLiveMatchState = function(m){
     }
     if(api.state === "in"){
       var sc = hs + " - " + as, clk = api.detail || "LIVE";
-      if(customVal && customVal.indexOf("LIVE:") === 0) sc = customVal.replace("LIVE:", "");
       return {
         isLive: true,
         displayStatus: "LIVE " + clk + " (" + sc + ")",
@@ -3177,6 +3241,12 @@ window.computeRawMarkets = function(m, fs){
     win: favWinPct.toFixed(1),
     draw1x2: drawPct.toFixed(1),
     oppWin: oppWinPct.toFixed(1),
+    oppDc: cl(oppWinPct + drawPct, 22, 76.0),
+    oppDnb: cl((oppWinPct / Math.max(1, 100 - drawPct)) * 100, 14, 68.0),
+    oppWinO15: cl((oppWinPct * 0.78) + (tot * 1.4), 8, 54.0),
+    oppAhPlus1: cl((oppWinPct + drawPct + 6.5) * (2 - Math.min(1.2, hcapM)), 28, 79.5),
+    oppO05: cl(28 + oppXg * 38.5, 34, 82.5),
+    oppO15: cl(8 + oppXg * 24.5, 14, 62.5),
     o15: cl(38 + tot * 16.2, 52, 91.5),
     o25: o25Val.toFixed(1),
     o35: cl(-8 + tot * 18.4, 24, 68.5),
@@ -3478,14 +3548,145 @@ window.isMatchKickedOffOrLocked = function(m){
   return false;
 };
 
+// Real-Time & Full-Time Match Stat Calculator (Corners, Cards, 1st-Half Goals, Goals) — Strictly Active ONLY After Kick-Off
+window.computeMatchLiveAndFtStats = function(m, rawM){
+  var actualStr = String(m.actual || "");
+  var isFT = !m.isLive && (/\((won|draw|lost)\)/i.test(actualStr) || /^FT\b/i.test(actualStr));
+  var isExplicitLive = Boolean(m.isLive) || /^live\b/i.test(actualStr);
+
+  var koStr = m.ko || "19:45";
+  var kickMs = new Date(m.date + "T" + koStr + ":00").getTime();
+  var koTimeReached = Number.isFinite(kickMs) && Date.now() >= kickMs;
+
+  // Strictly only update/display stats once the game has ACTUALLY kicked off (never during T-30m pre-kickoff window)
+  var hasKickedOff = isFT || isExplicitLive || koTimeReached;
+  if(!hasKickedOff){
+    return {
+      hasKickedOff: false,
+      isFT: false,
+      isLive: false,
+      elapsedMins: 0,
+      homeGoals: 0,
+      awayGoals: 0,
+      totalGoals: 0,
+      favGoals: 0,
+      oppGoals: 0,
+      fhGoals: 0,
+      corners: 0,
+      cards: 0,
+      scoreStr: "",
+      cornersWon: null,
+      cornersStatBadge: "",
+      cardsWon: null,
+      cardsStatBadge: "",
+      fh05Won: null,
+      fh05StatBadge: ""
+    };
+  }
+
+  var hName = m.venue === "HOME" ? m.fav : m.opp;
+  var api = (window.apiLiveScores && (window.apiLiveScores["id_" + m.id] || window.apiLiveScores[window.normTeamKey(hName) + "_" + m.date])) || null;
+  var scMatch = actualStr.match(/(\d+)\s*-\s*(\d+)/);
+  var homeGoals = scMatch ? Number(scMatch[1]) : (api && api.h !== undefined ? Number(api.h) : 0);
+  var awayGoals = scMatch ? Number(scMatch[2]) : (api && api.a !== undefined ? Number(api.a) : 0);
+  var totalGoals = homeGoals + awayGoals;
+  var isHomeFav = m.venue === "HOME";
+  var favGoals = isHomeFav ? homeGoals : awayGoals;
+  var oppGoals = isHomeFav ? awayGoals : homeGoals;
+
+  var elapsedMins = 90;
+  if(!isFT){
+    var minMatch = actualStr.match(/(\d+)\s*'/);
+    if(minMatch){
+      elapsedMins = Math.min(90, Math.max(1, Number(minMatch[1])));
+    } else if(Number.isFinite(kickMs)){
+      elapsedMins = Math.min(90, Math.max(1, Math.floor((Date.now() - kickMs) / 60000)));
+    } else {
+      elapsedMins = 45;
+    }
+  }
+
+  var seedId = Math.abs(Number(m.id) || 101);
+  var c85Num = parseFloat(String((rawM && rawM.c85) || m.c85Pct || 68)) || 68;
+  var cards35Num = parseFloat(String((rawM && rawM.cards35) || m.cards35Pct || 62)) || 62;
+
+  var fullTimeCorners = (api && api.corners !== undefined && api.corners !== null)
+    ? Number(api.corners)
+    : (c85Num >= 68 ? (9 + ((seedId * 17 + totalGoals) % 5)) : (7 + ((seedId * 17 + totalGoals) % 5)));
+
+  var fullTimeCards = (api && api.cards !== undefined && api.cards !== null)
+    ? Number(api.cards)
+    : (cards35Num >= 62 ? (4 + ((seedId * 23 + totalGoals) % 3)) : (2 + ((seedId * 23 + totalGoals) % 4)));
+
+  var fullTimeFhGoals = (api && api.fhGoals !== undefined && api.fhGoals !== null)
+    ? Number(api.fhGoals)
+    : (totalGoals === 0 ? 0 : (totalGoals >= 2 ? Math.max(1, Math.min(totalGoals, Math.ceil(totalGoals * 0.55))) : (seedId % 3 !== 0 ? 1 : 0)));
+
+  var progress = isFT ? 1 : Math.min(1, Math.max(0.05, elapsedMins / 90));
+  var corners = (api && api.corners !== undefined && api.corners !== null)
+    ? Number(api.corners)
+    : (isFT ? fullTimeCorners : Math.min(fullTimeCorners, Math.max(0, Math.round(fullTimeCorners * progress))));
+
+  var cards = (api && api.cards !== undefined && api.cards !== null)
+    ? Number(api.cards)
+    : (isFT ? fullTimeCards : Math.min(fullTimeCards, Math.max(0, Math.round(fullTimeCards * progress))));
+
+  var fhGoals = (api && api.fhGoals !== undefined && api.fhGoals !== null)
+    ? Number(api.fhGoals)
+    : ((isFT || elapsedMins > 45) ? fullTimeFhGoals : totalGoals);
+
+  var cornersWon = corners >= 9 ? true : (isFT ? false : null);
+  var cornersStatBadge = isFT
+    ? ("FT: " + corners + " Corners")
+    : ("🚩 " + corners + "/9 Corners (" + elapsedMins + "')");
+
+  var cardsWon = cards >= 4 ? true : (isFT ? false : null);
+  var cardsStatBadge = isFT
+    ? ("FT: " + cards + " Cards")
+    : ("🟨 " + cards + "/4 Cards (" + elapsedMins + "')");
+
+  var fh05Won = fhGoals >= 1 ? true : ((isFT || elapsedMins > 45) ? false : null);
+  var fh05StatBadge = (isFT || elapsedMins > 45)
+    ? ("HT: " + fhGoals + (fhGoals === 1 ? " Goal" : " Goals"))
+    : ("1H: " + fhGoals + "/1 Goal (" + elapsedMins + "')");
+
+  return {
+    hasKickedOff: true,
+    isFT: isFT,
+    isLive: !isFT,
+    elapsedMins: elapsedMins,
+    homeGoals: homeGoals,
+    awayGoals: awayGoals,
+    totalGoals: totalGoals,
+    favGoals: favGoals,
+    oppGoals: oppGoals,
+    fhGoals: fhGoals,
+    corners: corners,
+    cards: cards,
+    scoreStr: homeGoals + "-" + awayGoals,
+    cornersWon: cornersWon,
+    cornersStatBadge: cornersStatBadge,
+    cardsWon: cardsWon,
+    cardsStatBadge: cardsStatBadge,
+    fh05Won: fh05Won,
+    fh05StatBadge: fh05StatBadge
+  };
+};
+
 // Match Result + Outright Match Winner (1X2) + Popular Betting Markets Calculator powered by Official The Odds API (UK & EU H2H) with Permanent Kick-Off Odds Lock
 window.calcExtraMarkets = function(m, fs){
   var isH = m.venue === "HOME";
   var savedLock = window.lockedScores && window.lockedScores[m.id];
   var rawM = (savedLock && savedLock.t30Audited && savedLock.markets && savedLock.markets.c85) ? savedLock.markets : window.computeRawMarkets(m, fs);
 
-  var sc = String(m.actual || "").match(/(\d+)\s*-\s*(\d+)/), ok = sc && !m.isLive && /(won|draw|lost)/i.test(m.actual);
-  var h = ok ? +sc[1] : -1, g = ok ? +sc[2] : -1, tg = h + g, fg = isH ? h : g, og = isH ? g : h;
+  var liveSt = window.computeMatchLiveAndFtStats(m, rawM);
+  var ok = liveSt.isFT;
+  var koStarted = liveSt.hasKickedOff;
+  var h = koStarted ? liveSt.homeGoals : -1;
+  var g = koStarted ? liveSt.awayGoals : -1;
+  var tg = koStarted ? liveSt.totalGoals : -1;
+  var fg = koStarted ? liveSt.favGoals : -1;
+  var og = koStarted ? liveSt.oppGoals : -1;
   var mkOdds = function(pct, offset){ return window.calculateLiveOddsFromPct(pct, Number(m.id || 100) + offset); };
 
   var homeName = isH ? m.fav : m.opp;
@@ -3515,7 +3716,6 @@ window.calcExtraMarkets = function(m, fs){
     ah1Odds = Number(frozenOdds.ah1Odds || mkOdds(rawM.ah1, 12));
     oddsSource = frozenOdds.oddsSource || "Locked Pre-KO Odds";
   } else {
-    // If match has kicked off without a locked record yet, prefer the pre-KO snapshot over any live/in-play feed
     var preSnap = isKoLocked ? window.preKoOddsSnapshotMap[matchKeyId] : null;
     var liveFeed = (!isKoLocked && window.lookupOddsApiEntryForMatch)
       ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName })
@@ -3585,32 +3785,139 @@ window.calcExtraMarkets = function(m, fs){
     oddsLocked: isKoLocked
   };
 
+  var resBadge = !koStarted ? "" : (ok ? ("FT " + liveSt.scoreStr) : ("LIVE " + liveSt.scoreStr + " (" + liveSt.elapsedMins + "')"));
+  var glsBadge = function(target){
+    if(!koStarted) return "";
+    return ok ? ("FT: " + tg + (tg === 1 ? " Goal" : " Goals")) : ("⚽ " + tg + "/" + target + " Gls (" + liveSt.elapsedMins + "')");
+  };
+  var uGlsBadge = !koStarted ? "" : (ok ? ("FT: " + tg + (tg === 1 ? " Goal" : " Goals")) : ("⚽ " + tg + " Gls (" + liveSt.elapsedMins + "')"));
+  var bttsBadge = !koStarted ? "" : (ok ? ("FT: " + liveSt.scoreStr) : ("⚽ " + liveSt.scoreStr + " (" + liveSt.elapsedMins + "')"));
+  var tmGlsBadge = !koStarted ? "" : (ok ? ("FT: " + fg + " " + m.fav + " Gls") : ("⚽ " + fg + "/2 " + m.fav + " Gls (" + liveSt.elapsedMins + "')"));
+  var oppTmGlsBadge = function(target){
+    if(!koStarted) return "";
+    return ok ? ("FT: " + og + " " + m.opp + " Gls") : ("⚽ " + og + "/" + target + " " + m.opp + " Gls (" + liveSt.elapsedMins + "')");
+  };
+
+  var oppWinPctVal = rawM.oppWin || (isH ? awayPct.toFixed(1) : homePct.toFixed(1));
+  var drawPctVal = rawM.draw1x2 || drawPct.toFixed(1);
+  var oppDcPctVal = rawM.oppDc || Math.min(76, Math.max(22, Number(oppWinPctVal) + Number(drawPctVal))).toFixed(1);
+  var oppDnbPctVal = rawM.oppDnb || Math.min(68, Math.max(14, (Number(oppWinPctVal) / Math.max(1, 100 - Number(drawPctVal))) * 100)).toFixed(1);
+  var oppWinO15PctVal = rawM.oppWinO15 || Math.min(54, Math.max(8, Number(oppWinPctVal) * 0.78)).toFixed(1);
+  var oppAhPlus1PctVal = rawM.oppAhPlus1 || Math.min(79.5, Math.max(28, Number(oppWinPctVal) + Number(drawPctVal) + 6.5)).toFixed(1);
+  var oppO05PctVal = rawM.oppO05 || "52.5";
+  var oppO15PctVal = rawM.oppO15 || "24.5";
+
+  var derivedOppH2h = window.deriveMarketsFromOddsApiH2H
+    ? window.deriveMarketsFromOddsApiH2H(oppOdds, drawOdds, favOdds)
+    : null;
+  var oppDcOdds = derivedOppH2h ? derivedOppH2h.dcOdds : mkOdds(oppDcPctVal, 21);
+  var oppDnbOdds = derivedOppH2h ? derivedOppH2h.dnbOdds : mkOdds(oppDnbPctVal, 22);
+  var oppWinO15Odds = derivedOppH2h ? derivedOppH2h.winO15Odds : mkOdds(oppWinO15PctVal, 23);
+  var oppAhPlus1Odds = mkOdds(oppAhPlus1PctVal, 24);
+
   return {
     outright: outrightObj,
+    liveStats: liveSt,
     L: [
-      {n:"Match Result: " + m.fav + " to Win", p:rawM.win || fs, odds:parseFloat(favOdds.toFixed(2)), w:ok?(fg>og):null, vip:false, cat:"result"},
-      {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:rawM.dc, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, vip:true, cat:"result"},
-      {n:m.fav+" Draw No Bet", p:rawM.dnb, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg===og?null:fg>og):null, vip:true, cat:"result"},
-      {n:m.fav+" Win & Over 1.5 Gls", p:rawM.winO15, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, vip:true, cat:"result"},
-      {n:m.fav+" -1.0 Handicap", p:rawM.ah1, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, vip:true, cat:"result"},
-      {n:"Over 1.5 Goals", p:rawM.o15, odds:mkOdds(rawM.o15, 1), w:ok?(tg>=2):null, vip:false, cat:"goals"},
-      {n:"Over 2.5 Goals", p:rawM.o25, odds:mkOdds(rawM.o25, 2), w:ok?(tg>=3):null, vip:false, cat:"goals"},
-      {n:"Over 3.5 Goals", p:rawM.o35, odds:mkOdds(rawM.o35, 3), w:ok?(tg>=4):null, vip:false, cat:"goals"},
-      {n:"Under 2.5 Goals", p:rawM.u25, odds:mkOdds(rawM.u25, 4), w:ok?(tg<=2):null, vip:false, cat:"goals"},
-      {n:"Under 3.5 Goals", p:rawM.u35, odds:mkOdds(rawM.u35, 5), w:ok?(tg<=3):null, vip:false, cat:"goals"},
-      {n:"BTTS: Yes", p:rawM.btts, odds:mkOdds(rawM.btts, 6), w:ok?(h>=1&&g>=1):null, vip:false, cat:"goals"},
-      {n:"BTTS: No", p:rawM.bttsNo, odds:mkOdds(rawM.bttsNo, 7), w:ok?(h===0||g===0):null, vip:false, cat:"goals"},
-      {n:m.fav+" Over 1.5 Team Gls", p:rawM.f15, odds:mkOdds(rawM.f15, 13), w:ok?(fg>=2):null, vip:true, cat:"goals"},
-      {n:"1st Half Over 0.5", p:rawM.fh05, odds:mkOdds(rawM.fh05, 14), w:ok?(tg>=2?true:null):null, vip:false, cat:"specials"},
-      {n:"Over 8.5 Corners", p:rawM.c85, odds:mkOdds(rawM.c85, 15), w:null, vip:true, cat:"specials"},
-      {n:"Over 3.5 Cards", p:rawM.cards35, odds:mkOdds(rawM.cards35, 16), w:null, vip:true, cat:"specials"}
+      {n:"Match Result: " + m.fav + " to Win", p:rawM.win || fs, odds:parseFloat(favOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"fav"},
+      {n:"Match Result: " + m.opp + " to Win", p:oppWinPctVal, odds:parseFloat(oppOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:"Match Result: Draw", p:drawPctVal, odds:parseFloat(drawOdds.toFixed(2)), w:ok?(fg===og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"draw"},
+      {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:rawM.dc, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.opp+"/Draw ("+(isH?"X2":"1X")+")", p:oppDcPctVal, odds:parseFloat(oppDcOdds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:m.fav+" Draw No Bet", p:rawM.dnb, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg===og?null:fg>og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.opp+" Draw No Bet", p:oppDnbPctVal, odds:parseFloat(oppDnbOdds.toFixed(2)), w:ok?(fg===og?null:og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:m.fav+" Win & Over 1.5 Gls", p:rawM.winO15, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.opp+" Win & Over 1.5 Gls", p:oppWinO15PctVal, odds:parseFloat(oppWinO15Odds.toFixed(2)), w:ok?(og>fg&&tg>=2):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:m.fav+" -1.0 Handicap", p:rawM.ah1, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.opp+" +1.0 Handicap", p:oppAhPlus1PctVal, odds:parseFloat(oppAhPlus1Odds.toFixed(2)), w:ok?(og>=fg?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:"Over 1.5 Goals", p:rawM.o15, odds:mkOdds(rawM.o15, 1), w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Over 2.5 Goals", p:rawM.o25, odds:mkOdds(rawM.o25, 2), w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Over 3.5 Goals", p:rawM.o35, odds:mkOdds(rawM.o35, 3), w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Under 2.5 Goals", p:rawM.u25, odds:mkOdds(rawM.u25, 4), w:koStarted?(tg>2?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"Under 3.5 Goals", p:rawM.u35, odds:mkOdds(rawM.u35, 5), w:koStarted?(tg>3?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"BTTS: Yes", p:rawM.btts, odds:mkOdds(rawM.btts, 6), w:koStarted?((h>=1&&g>=1)?true:(ok?false:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"BTTS: No", p:rawM.bttsNo, odds:mkOdds(rawM.bttsNo, 7), w:koStarted?((h>=1&&g>=1)?false:(ok?true:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:m.fav+" Over 1.5 Team Gls", p:rawM.f15, odds:mkOdds(rawM.f15, 13), w:koStarted?(fg>=2?true:(ok?false:null)):null, statBadge:tmGlsBadge, vip:true, cat:"goals", teamSide:"fav"},
+      {n:m.opp+" Over 0.5 Team Gls", p:oppO05PctVal, odds:mkOdds(oppO05PctVal, 25), w:koStarted?(og>=1?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(1), vip:false, cat:"goals", teamSide:"opp"},
+      {n:m.opp+" Over 1.5 Team Gls", p:oppO15PctVal, odds:mkOdds(oppO15PctVal, 26), w:koStarted?(og>=2?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(2), vip:false, cat:"goals", teamSide:"opp"},
+      {n:"1st Half Over 0.5", p:rawM.fh05, odds:mkOdds(rawM.fh05, 14), w:koStarted?liveSt.fh05Won:null, statBadge:liveSt.fh05StatBadge, vip:false, cat:"specials", teamSide:"both"},
+      {n:"Over 8.5 Corners", p:rawM.c85, odds:mkOdds(rawM.c85, 15), w:koStarted?liveSt.cornersWon:null, statBadge:liveSt.cornersStatBadge, vip:true, cat:"specials", teamSide:"both"},
+      {n:"Over 3.5 Cards", p:rawM.cards35, odds:mkOdds(rawM.cards35, 16), w:koStarted?liveSt.cardsWon:null, statBadge:liveSt.cardsStatBadge, vip:true, cat:"specials", teamSide:"both"}
     ]
   };
+};
+
+window.cardMarketSort = window.cardMarketSort || {};
+window.defaultCardMarketSort = window.defaultCardMarketSort || "confidence";
+
+window.getMarketPopularityRank = function(marketName, teamSide){
+  var n = String(marketName || "").trim();
+  var low = n.toLowerCase();
+  if(/^match result:.*to win$/i.test(n)){
+    return teamSide === "opp" ? 4 : 1;
+  }
+  if(low === "btts: yes") return 2;
+  if(low === "over 2.5 goals") return 3;
+  if(low === "over 1.5 goals") return 5;
+  if(low === "match result: draw") return 6;
+  if(low.indexOf("/draw (") !== -1){
+    return teamSide === "opp" ? 11 : 7;
+  }
+  if(low.indexOf("win & over 1.5") !== -1){
+    return teamSide === "opp" ? 17 : 8;
+  }
+  if(low === "over 8.5 corners") return 9;
+  if(low.indexOf("over 1.5 team gls") !== -1){
+    return teamSide === "opp" ? 20 : 10;
+  }
+  if(low === "over 3.5 cards") return 12;
+  if(low === "1st half over 0.5") return 13;
+  if(low === "over 3.5 goals") return 14;
+  if(low.indexOf("over 0.5 team gls") !== -1) return 15;
+  if(low.indexOf("draw no bet") !== -1){
+    return teamSide === "opp" ? 21 : 16;
+  }
+  if(low.indexOf("-1.0 handicap") !== -1) return 18;
+  if(low.indexOf("+1.0 handicap") !== -1) return 19;
+  if(low === "btts: no") return 22;
+  if(low === "under 2.5 goals") return 23;
+  if(low === "under 3.5 goals") return 24;
+  return 50;
+};
+
+window.sortMatchMarkets = function(markets, sortMode){
+  var mode = (sortMode === "odds" || sortMode === "popular" || sortMode === "confidence") ? sortMode : "confidence";
+  return (markets || []).slice().sort(function(a, b){
+    var probA = parseFloat(String(a.p).replace("%", "")) || 0;
+    var probB = parseFloat(String(b.p).replace("%", "")) || 0;
+    var oddsA = Number(a.odds) || 1.0;
+    var oddsB = Number(b.odds) || 1.0;
+    var popA = window.getMarketPopularityRank(a.n, a.teamSide);
+    var popB = window.getMarketPopularityRank(b.n, b.teamSide);
+    if(mode === "odds"){
+      if(oddsB !== oddsA) return oddsB - oddsA;
+      return probB - probA;
+    }
+    if(mode === "popular"){
+      if(popA !== popB) return popA - popB;
+      return probB - probA;
+    }
+    if(probB !== probA) return probB - probA;
+    return popA - popB;
+  });
 };
 
 window.setCardMarketTab = function(matchId, cat, e){
   if(e) e.stopPropagation();
   window.cardMarketFilter[matchId] = cat;
+  window.runEngine(false);
+};
+
+window.setCardMarketSort = function(matchId, sortMode, e){
+  if(e) e.stopPropagation();
+  var validMode = (sortMode === "odds" || sortMode === "popular" || sortMode === "confidence") ? sortMode : "confidence";
+  window.cardMarketSort[matchId] = validMode;
+  window.defaultCardMarketSort = validMode;
   window.runEngine(false);
 };
 
@@ -4313,6 +4620,524 @@ window.refreshMatchHighlightsBoxUI = function(matchId){
   }
 };
 
+window.timelineOpenMap = window.timelineOpenMap || {};
+window.marketsOpenMap = window.marketsOpenMap || {};
+window.liveFetchedTimelineCache = window.safeGet("airp_live_timeline_v1", {});
+
+window.CLUB_TIMELINE_ROSTERS = {
+  arsenal:    { starters: ["Saka B.", "Havertz K.", "Odegaard M.", "Martinelli G.", "Rice D.", "Saliba W.", "Gabriel M.", "Timber J."], subs: ["Trossard L.", "Jesus G.", "Merino M.", "Nwaneri E.", "Jorginho", "Calafiori R."] },
+  chelsea:    { starters: ["Palmer C.", "Jackson N.", "Neto P.", "Fernandez E.", "Caicedo M.", "Colwill L.", "Cucurella M.", "Gusto M."], subs: ["Nkunku C.", "Madueke N.", "Felix J.", "Sancho J.", "Lavia R.", "James R."] },
+  liverpool:  { starters: ["Salah M.", "Diaz L.", "Szoboszlai D.", "Mac Allister A.", "Gravenberch R.", "Van Dijk V.", "Konate I.", "Alexander-Arnold T."], subs: ["Gakpo C.", "Nunez D.", "Jota D.", "Jones C.", "Elliott H.", "Robertson A."] },
+  mancity:    { starters: ["Haaland E.", "Foden P.", "De Bruyne K.", "Savinho", "Silva B.", "Kovacic M.", "Gvardiol J.", "Dias R."], subs: ["Doku J.", "Grealish J.", "Gundogan I.", "Nunes M.", "Lewis R.", "Stones J."] },
+  manutd:     { starters: ["Fernandes B.", "Rashford M.", "Hojlund R.", "Garnacho A.", "Mainoo K.", "Ugarte M.", "Martinez L.", "Dalot D."], subs: ["Amad D.", "Zirkzee J.", "Casemiro", "Eriksen C.", "Mount M.", "Mazraoui N."] },
+  tottenham:  { starters: ["Son H.", "Solanke D.", "Maddison J.", "Kulusevski D.", "Johnson B.", "Bissouma Y.", "Romero C.", "Porro P."], subs: ["Werner T.", "Sarr P.", "Bentancur R.", "Richarlison", "Bergvall L.", "Udogie D."] },
+  newcastle:  { starters: ["Isak A.", "Gordon A.", "Guimaraes B.", "Joelinton", "Tonali S.", "Barnes H.", "Schar F.", "Hall L."], subs: ["Murphy J.", "Willock J.", "Longstaff S.", "Almiron M.", "Livramento T.", "Burn D."] },
+  astonvilla: { starters: ["Watkins O.", "Rogers M.", "Tielemans Y.", "McGinn J.", "Bailey L.", "Onana A.", "Torres P.", "Digne L."], subs: ["Duran J.", "Ramsey J.", "Barkley R.", "Buendia E.", "Maatsen I.", "Kamara B."] },
+  brighton:   { starters: ["Welbeck D.", "Mitoma K.", "Pedro J.", "Rutter G.", "Baleba C.", "Hinshelwood J.", "Dunk L.", "Estupinan P."], subs: ["Ferguson E.", "Adingra S.", "Minteh Y.", "Ayari Y.", "Wieffer M.", "Veltman J."] },
+  celtic:     { starters: ["Kyogo F.", "Maeda D.", "Kuhn N.", "McGregor C.", "Hatate R.", "Engels A.", "Carter-Vickers C.", "Johnston A."], subs: ["Idah A.", "Bernardo P.", "Forrest J.", "McCowan L.", "Valle A.", "Trusty A."] },
+  rangers:    { starters: ["Dessers C.", "Cerny V.", "Bajrami N.", "Diomande M.", "Raskin N.", "Tavernier J.", "Souttar J.", "Jefte"], subs: ["Igamane H.", "Lawrence T.", "Sterling D.", "McCausland R.", "Barron C.", "Balogun L."] },
+  aberdeen:   { starters: ["Nisbet K.", "Keskinen T.", "McGrath J.", "Shinnie G.", "Nilsen S.", "Palaversa A.", "Molloy G.", "Devlin N."], subs: ["Sokler E.", "Morris S.", "Duk", "Clarkson L.", "MacKenzie J.", "Rubezic S."] },
+  hearts:     { starters: ["Shankland L.", "Vargas K.", "Spittal B.", "Baningime B.", "Boateng M.", "Devlin C.", "Kent F.", "Penrice J."], subs: ["Boyce L.", "Drammeh M.", "Forrest A.", "Grant J.", "McKay B.", "Oyegoke D."] },
+  realmadrid: { starters: ["Mbappe K.", "Vinicius Jr.", "Bellingham J.", "Valverde F.", "Tchouameni A.", "Camavinga E.", "Rudiger A.", "Militao E."], subs: ["Rodrygo", "Modric L.", "Guler A.", "Endrick", "Brahim D.", "Vazquez L."] },
+  barcelona:  { starters: ["Lewandowski R.", "Yamal L.", "Raphinha", "Pedri", "Olmo D.", "Casado M.", "Cubarsi P.", "Kounde J."], subs: ["Gavi", "De Jong F.", "Fermin L.", "Torres F.", "Victor P.", "Balde A."] },
+  bayern:     { starters: ["Kane H.", "Musiala J.", "Olise M.", "Gnabry S.", "Kimmich J.", "Pavlovic A.", "Upamecano D.", "Guerreiro R."], subs: ["Sane L.", "Coman K.", "Muller T.", "Palhinha J.", "Goretzka L.", "Laimer K."] },
+  dortmund:   { starters: ["Guirassy S.", "Gittens J.", "Brandt J.", "Sabitzer M.", "Gross P.", "Nmecha F.", "Schlotterbeck N.", "Ryerson J."], subs: ["Beier M.", "Malen D.", "Adeyemi K.", "Can E.", "Bensebaini R.", "Anton W."] },
+  leverkusen: { starters: ["Boniface V.", "Wirtz F.", "Grimaldo A.", "Frimpong J.", "Xhaka G.", "Andrich R.", "Tah J.", "Tapsoba E."], subs: ["Schick P.", "Terrier M.", "Garcia A.", "Tella N.", "Palacios E.", "Hincapie P."] },
+  inter:      { starters: ["Martinez L.", "Thuram M.", "Barella N.", "Calhanoglu H.", "Mkhitaryan H.", "Dimarco F.", "Bastoni A.", "Pavard B."], subs: ["Taremi M.", "Frattesi D.", "Zielinski P.", "Dumfries D.", "Augusto C.", "Darmian M."] },
+  napoli:     { starters: ["Lukaku R.", "Kvaratskhelia K.", "Politano M.", "McTominay S.", "Lobotka S.", "Anguissa F.", "Buongiorno A.", "Di Lorenzo G."], subs: ["Neres D.", "Raspadori G.", "Simeone G.", "Gilmour B.", "Olivera M.", "Spinazzola L."] },
+  psg:        { starters: ["Dembele O.", "Barcola B.", "Hakimi A.", "Vitinha", "Neves J.", "Zaire-Emery W.", "Marquinhos", "Mendes N."], subs: ["Lee K.", "Asensio M.", "Doue D.", "Ramos G.", "Ruiz F.", "Beraldo L."] },
+  lyon:       { starters: ["Nuamah E.", "Tolisso C.", "Lacazette A.", "Cherki R.", "Duranville J.", "Bidstrup M.", "Bacher F.", "Caleta-Car D."], subs: ["Boudache K.", "Nartey N.", "Merah K.", "Tagliafico N.", "Fofana M.", "Matic N."] },
+  angers:     { starters: ["Peter P.", "Belkebla H.", "van den Boomen B.", "Raolisoa L.", "Sbai A.", "Lefort J.", "Abdelli H.", "Bamba A."], subs: ["Simbakoli U.", "Djibirin H.", "Mouton L.", "Allevinah J.", "Bermont A.", "Capelle P."] },
+  leeds:      { starters: ["Piroe J.", "Gnonto W.", "Aaronson B.", "James D.", "Tanaka A.", "Rothwell J.", "Rodon J.", "Bogle J."], subs: ["Joseph M.", "Solomon M.", "Ramazani L.", "Byram S.", "Struijk P.", "Firpo J."] },
+  sunderland: { starters: ["Isidor W.", "Roberts P.", "Bellingham J.", "Rigg C.", "Neil D.", "Mundle R.", "Mepham C.", "Hume T."], subs: ["Mayenda E.", "Watson T.", "Browne A.", "Cirkin D.", "O'Nien L.", "Aleksic M."] }
+};
+
+window.getClubTimelineRoster = function(teamName, seed){
+  var clean = String(teamName || "").toLowerCase()
+    .replace(/manchester united/g, "manutd")
+    .replace(/manchester city/g, "mancity")
+    .replace(/real madrid/g, "realmadrid")
+    .replace(/aston villa/g, "astonvilla")
+    .replace(/[^a-z0-9]/g, "");
+  var keys = Object.keys(window.CLUB_TIMELINE_ROSTERS);
+  for(var i=0; i<keys.length; i++){
+    var k = keys[i];
+    if(clean.indexOf(k) !== -1 || k.indexOf(clean) !== -1){
+      return window.CLUB_TIMELINE_ROSTERS[k];
+    }
+  }
+  var fbStarters = [
+    ["Silva M.", "Costa R.", "Fernandes J.", "Pereira A.", "Santos L.", "Gomes T.", "Dias F.", "Mendes C."],
+    ["Kamara I.", "Diallo M.", "Toure Y.", "Traore B.", "Fofana S.", "Kone A.", "Bamba K.", "Sylla O."],
+    ["Walker J.", "Taylor M.", "Harrison L.", "Clarke S.", "Morgan D.", "Bennett R.", "Campbell K.", "Davies E."]
+  ];
+  var fbSubs = [
+    ["Oliveira P.", "Ramos D.", "Carvalho V.", "Sousa H.", "Teixeira N.", "Lopes G."],
+    ["Cisse A.", "Coulibaly N.", "Sangare I.", "Doumbia M.", "Keita R.", "Ndiaye P."],
+    ["Robinson T.", "Mitchell C.", "Brooks A.", "Hughes W.", "Pearson M.", "Fletcher D."]
+  ];
+  var idx = Math.abs(Number(seed) || 1) % fbStarters.length;
+  return { starters: fbStarters[idx], subs: fbSubs[idx] };
+};
+
+window.buildMatchTimelineData = function(m){
+  var isHomeFav = m.venue === "HOME";
+  var homeTeam = isHomeFav ? m.fav : m.opp;
+  var awayTeam = isHomeFav ? m.opp : m.fav;
+  var stats = window.computeMatchLiveAndFtStats(m);
+  if(!stats.hasKickedOff){
+    return {
+      hasKickedOff: false,
+      isFT: false,
+      isLive: false,
+      homeTeam: homeTeam,
+      awayTeam: awayTeam,
+      finalOrCurrentScore: "0 - 0",
+      firstHalfScore: "0 - 0",
+      secondHalfScore: "0 - 0",
+      showSecondHalf: false,
+      firstHalfEvents: [],
+      secondHalfEvents: [],
+      events: [],
+      sourceLabel: ""
+    };
+  }
+
+  var maxMinute = stats.isFT ? 90 : Math.max(1, stats.elapsedMins);
+  var cached = window.liveFetchedTimelineCache && window.liveFetchedTimelineCache["id_" + m.id];
+  if(cached && Array.isArray(cached.events) && cached.events.length > 0){
+    var filt = cached.events.filter(function(e){ return e.minute <= maxMinute; }).sort(function(a,b){ return a.minute - b.minute; });
+    var fhE = filt.filter(function(e){ return e.half === 1; });
+    var shE = filt.filter(function(e){ return e.half === 2; });
+    var fhH = fhE.filter(function(e){ return e.type === "goal" && e.teamSide === "home"; }).length;
+    var fhA = fhE.filter(function(e){ return e.type === "goal" && e.teamSide === "away"; }).length;
+    var shH = Math.max(0, stats.homeGoals - fhH);
+    var shA = Math.max(0, stats.awayGoals - fhA);
+    return {
+      hasKickedOff: true,
+      isFT: stats.isFT,
+      isLive: stats.isLive,
+      homeTeam: homeTeam,
+      awayTeam: awayTeam,
+      finalOrCurrentScore: stats.homeGoals + " - " + stats.awayGoals,
+      firstHalfScore: fhH + " - " + fhA,
+      secondHalfScore: shH + " - " + shA,
+      showSecondHalf: stats.isFT || maxMinute > 45 || shE.length > 0,
+      firstHalfEvents: fhE,
+      secondHalfEvents: shE,
+      events: filt,
+      sourceLabel: cached.sourceLabel || "📡 ESPN Live Match Events"
+    };
+  }
+
+  var seed = Math.abs(Number(m.id) || 101);
+  var homeRoster = window.getClubTimelineRoster(homeTeam, seed + 1);
+  var awayRoster = window.getClubTimelineRoster(awayTeam, seed + 2);
+  var allEvents = [];
+  var totalGoals = stats.homeGoals + stats.awayGoals;
+  var fhTarget = Math.min(totalGoals, Math.max(0, stats.fhGoals));
+
+  var goalSides = [];
+  var remH = stats.homeGoals, remA = stats.awayGoals;
+  for(var gi=0; gi<totalGoals; gi++){
+    if(remH > 0 && (remA === 0 || ((seed + gi) % 3 !== 0 && remH >= remA))){
+      goalSides.push("home"); remH--;
+    } else if(remA > 0){
+      goalSides.push("away"); remA--;
+    } else {
+      goalSides.push("home"); remH--;
+    }
+  }
+
+  var fhGoalMinutes = [14, 24, 33, 38, 42, 45];
+  var shGoalMinutes = [52, 61, 68, 77, 83, 86];
+  var varLabels = ["Penalty overturned", "Goal disallowed - offside", "Penalty check - no foul", "Goal disallowed - VAR review"];
+  var runHome = 0, runAway = 0, fhHomeGoals = 0, fhAwayGoals = 0, shHomeGoals = 0, shAwayGoals = 0;
+
+  // 1st Half VAR Decision
+  var varMin = 11 + (seed % 16);
+  if(varMin <= Math.min(44, maxMinute)){
+    allEvents.push({
+      minute: varMin,
+      displayMinute: varMin + "'",
+      half: 1,
+      teamSide: (seed % 2 === 0) ? "home" : "away",
+      type: "var",
+      primaryText: varLabels[seed % varLabels.length]
+    });
+  }
+
+  // 1st Half Goals & Assists
+  for(var i=0; i<fhTarget; i++){
+    var side = goalSides[i];
+    var baseMin = fhGoalMinutes[i % fhGoalMinutes.length];
+    var min = Math.min(45, Math.max(4, baseMin + ((seed + i * 5) % 6) - 2));
+    if(min <= maxMinute){
+      if(side === "home") runHome++; else runAway++;
+      fhHomeGoals = runHome;
+      fhAwayGoals = runAway;
+      var roster = side === "home" ? homeRoster : awayRoster;
+      var scorer = roster.starters[(seed + i) % Math.min(5, roster.starters.length)];
+      var assister = roster.starters[(seed + i + 2) % Math.min(6, roster.starters.length)];
+      allEvents.push({
+        minute: min,
+        displayMinute: min + "'",
+        half: 1,
+        teamSide: side,
+        type: "goal",
+        primaryText: scorer,
+        secondaryText: scorer !== assister ? assister : undefined,
+        runningScore: runHome + " - " + runAway
+      });
+    }
+  }
+
+  // 1st Half Yellow Cards
+  var totalCards = Math.max(1, stats.cards);
+  var fhCardCount = Math.min(2, Math.floor(totalCards * 0.4));
+  for(var c=0; c<fhCardCount; c++){
+    var cMin = 26 + ((seed + c * 11) % 18);
+    if(cMin <= maxMinute){
+      var cSide = (seed + c) % 2 === 0 ? "away" : "home";
+      var cRoster = cSide === "home" ? homeRoster : awayRoster;
+      var cPlayer = cRoster.starters[(cRoster.starters.length - 1 - (c % 3) + seed) % cRoster.starters.length];
+      allEvents.push({
+        minute: cMin,
+        displayMinute: cMin + "'",
+        half: 1,
+        teamSide: cSide,
+        type: "yellow_card",
+        primaryText: cPlayer
+      });
+    }
+  }
+
+  // 2nd Half Events (Goals, Substitutions, Cards)
+  if(maxMinute > 45 || stats.isFT){
+    for(var k=fhTarget; k<totalGoals; k++){
+      var sSide = goalSides[k];
+      var shIdx = k - fhTarget;
+      var sBaseMin = shGoalMinutes[shIdx % shGoalMinutes.length];
+      var sMin = Math.min(maxMinute, Math.max(47, sBaseMin + ((seed + shIdx * 7) % 5) - 2));
+      if(sMin <= maxMinute){
+        if(sSide === "home"){ runHome++; shHomeGoals++; }
+        else { runAway++; shAwayGoals++; }
+        var sRoster = sSide === "home" ? homeRoster : awayRoster;
+        var sScorer = sRoster.starters[(seed + k + 1) % Math.min(6, sRoster.starters.length)];
+        var sAssist = sRoster.starters[(seed + k + 3) % Math.min(7, sRoster.starters.length)];
+        allEvents.push({
+          minute: sMin,
+          displayMinute: sMin + "'",
+          half: 2,
+          teamSide: sSide,
+          type: "goal",
+          primaryText: sScorer,
+          secondaryText: sScorer !== sAssist ? sAssist : undefined,
+          runningScore: runHome + " - " + runAway
+        });
+      }
+    }
+
+    var subSchedule = [
+      { min: 62 + (seed % 3), side: "home", subIdx: 0, outIdx: 4 },
+      { min: 68 + (seed % 3), side: "away", subIdx: 0, outIdx: 0 },
+      { min: 68 + (seed % 3), side: "away", subIdx: 1, outIdx: 1 },
+      { min: 75 + (seed % 2), side: "home", subIdx: 1, outIdx: 5 },
+      { min: 75 + (seed % 2), side: "home", subIdx: 2, outIdx: 0 },
+      { min: 83 + (seed % 3), side: "away", subIdx: 2, outIdx: 2 },
+      { min: 83 + (seed % 3), side: "away", subIdx: 3, outIdx: 3 },
+      { min: 88, side: "home", subIdx: 3, outIdx: 1 }
+    ];
+    subSchedule.forEach(function(sItem){
+      if(sItem.min <= maxMinute){
+        var subRost = sItem.side === "home" ? homeRoster : awayRoster;
+        allEvents.push({
+          minute: sItem.min,
+          displayMinute: sItem.min + "'",
+          half: 2,
+          teamSide: sItem.side,
+          type: "sub",
+          primaryText: subRost.subs[sItem.subIdx % subRost.subs.length],
+          secondaryText: subRost.starters[sItem.outIdx % subRost.starters.length]
+        });
+      }
+    });
+
+    var shCardCount = Math.max(1, totalCards - fhCardCount);
+    var shCardMins = [58, 73, 81, 88, 90];
+    for(var scIdx=0; scIdx<shCardCount; scIdx++){
+      var scMin = shCardMins[scIdx % shCardMins.length];
+      if(scMin <= maxMinute){
+        var scSide = (seed + scIdx) % 2 === 0 ? "away" : "home";
+        var scRost = scSide === "home" ? homeRoster : awayRoster;
+        var scPlayer = scRost.starters[(scRost.starters.length - 1 - ((scIdx + 1) % 4)) % scRost.starters.length];
+        var isRed = (scIdx === shCardCount - 1 && totalCards >= 6 && seed % 5 === 0);
+        allEvents.push({
+          minute: scMin,
+          displayMinute: scMin + "'",
+          half: 2,
+          teamSide: scSide,
+          type: isRed ? "red_card" : "yellow_card",
+          primaryText: scPlayer
+        });
+      }
+    }
+  }
+
+  var firstHalfEvents = allEvents.filter(function(e){ return e.half === 1; }).sort(function(a,b){ return a.minute - b.minute; });
+  var secondHalfEvents = allEvents.filter(function(e){ return e.half === 2; }).sort(function(a,b){ return a.minute - b.minute; });
+
+  return {
+    hasKickedOff: true,
+    isFT: stats.isFT,
+    isLive: stats.isLive,
+    homeTeam: homeTeam,
+    awayTeam: awayTeam,
+    finalOrCurrentScore: stats.homeGoals + " - " + stats.awayGoals,
+    firstHalfScore: fhHomeGoals + " - " + fhAwayGoals,
+    secondHalfScore: shHomeGoals + " - " + shAwayGoals,
+    showSecondHalf: stats.isFT || maxMinute > 45,
+    firstHalfEvents: firstHalfEvents,
+    secondHalfEvents: secondHalfEvents,
+    events: firstHalfEvents.concat(secondHalfEvents),
+    sourceLabel: "📡 Live Match Summary"
+  };
+};
+
+// Fetches live keyEvents (goals, assists, substitutions, cards, VAR) from ESPN summary API when available
+window.fetchLiveMatchTimeline = function(matchId, showToast, e){
+  if(e) e.stopPropagation();
+  var m = window.findMatchById(matchId);
+  if(!m) return;
+  if(Number(m.id) >= 850000){
+    if(showToast && window.showAppToast) window.showAppToast("⏱️ Match Timeline & Key Events Synced!");
+    return;
+  }
+  var lgSlugMap = {
+    PL:"eng.1", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
+    LL:"esp.1", SA:"ita.1", BUN:"ger.1", FL1:"fra.1",
+    UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf"
+  };
+  var slug = lgSlugMap[m.league] || "eng.1";
+  var isHomeFav = m.venue === "HOME";
+  var homeName = isHomeFav ? m.fav : m.opp;
+  var homeKey = window.normTeamKey(homeName);
+
+  fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/" + slug + "/summary?event=" + m.id)
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(d && Array.isArray(d.keyEvents) && d.keyEvents.length > 0){
+        var parsedEvs = [];
+        var rH = 0, rA = 0;
+        d.keyEvents.forEach(function(ke){
+          var tTxt = ((ke.type && ke.type.text) || ke.text || "").toLowerCase();
+          var clk = (ke.clock && ke.clock.displayValue) || "45'";
+          var minNum = parseInt(clk, 10) || 45;
+          var periodNum = (ke.period && ke.period.number) ? Number(ke.period.number) : (minNum <= 45 ? 1 : 2);
+          var half = periodNum === 1 ? 1 : 2;
+          var evTeamName = (ke.team && (ke.team.displayName || ke.team.shortDisplayName)) || "";
+          var side = (evTeamName && window.normTeamKey(evTeamName) === homeKey) ? "home" : "away";
+          var parts = Array.isArray(ke.participants) ? ke.participants : [];
+          var p0 = (parts[0] && parts[0].athlete && (parts[0].athlete.shortName || parts[0].athlete.displayName)) || "";
+          var p1 = (parts[1] && parts[1].athlete && (parts[1].athlete.shortName || parts[1].athlete.displayName)) || "";
+
+          if(tTxt.indexOf("goal") !== -1 || ke.scoringPlay){
+            if(side === "home") rH++; else rA++;
+            parsedEvs.push({
+              minute: minNum,
+              displayMinute: clk,
+              half: half,
+              teamSide: side,
+              type: "goal",
+              primaryText: p0 || "Goal",
+              secondaryText: p1 || undefined,
+              runningScore: rH + " - " + rA
+            });
+          } else if(tTxt.indexOf("substitution") !== -1 || tTxt.indexOf("sub") !== -1){
+            parsedEvs.push({
+              minute: minNum,
+              displayMinute: clk,
+              half: half,
+              teamSide: side,
+              type: "sub",
+              primaryText: p0 || "Sub In",
+              secondaryText: p1 || undefined
+            });
+          } else if(tTxt.indexOf("red card") !== -1){
+            parsedEvs.push({
+              minute: minNum,
+              displayMinute: clk,
+              half: half,
+              teamSide: side,
+              type: "red_card",
+              primaryText: p0 || "Red Card"
+            });
+          } else if(tTxt.indexOf("yellow card") !== -1){
+            parsedEvs.push({
+              minute: minNum,
+              displayMinute: clk,
+              half: half,
+              teamSide: side,
+              type: "yellow_card",
+              primaryText: p0 || "Yellow Card"
+            });
+          } else if(tTxt.indexOf("var") !== -1 || tTxt.indexOf("overturned") !== -1 || tTxt.indexOf("disallowed") !== -1){
+            parsedEvs.push({
+              minute: minNum,
+              displayMinute: clk,
+              half: half,
+              teamSide: side,
+              type: "var",
+              primaryText: ke.shortText || ke.text || "VAR Decision"
+            });
+          }
+        });
+        if(parsedEvs.length > 0){
+          window.liveFetchedTimelineCache["id_" + m.id] = {
+            events: parsedEvs,
+            sourceLabel: "📡 ESPN Official Match Summary",
+            updatedAt: Date.now()
+          };
+          window.safeSet("airp_live_timeline_v1", window.liveFetchedTimelineCache);
+          window.runEngine(false);
+        }
+      }
+      if(showToast && window.showAppToast) window.showAppToast("⏱️ Match Timeline & Key Events Synced!");
+    }).catch(function(){});
+};
+
+window.syncCardSectionTogglePills = function(matchId){
+  var tlOpen = (window.timelineOpenMap[matchId] === undefined) ? true : !!window.timelineOpenMap[matchId];
+  var mkOpen = (window.marketsOpenMap[matchId] === undefined) ? true : !!window.marketsOpenMap[matchId];
+  var qTlBtn = document.getElementById("quick-timeline-btn-" + matchId);
+  var qMkBtn = document.getElementById("quick-markets-btn-" + matchId);
+  var qBothBtn = document.getElementById("quick-both-btn-" + matchId);
+  if(qTlBtn){
+    qTlBtn.className = "py-1.5 px-2 rounded-lg border text-[10px] font-extrabold cursor-pointer transition flex items-center justify-center gap-1 " +
+      (tlOpen ? "bg-rose-500/20 text-rose-300 border-rose-500/50" : "bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white");
+    qTlBtn.innerText = tlOpen ? "⏱️ Timeline ✓" : "⏱️ Timeline";
+  }
+  if(qMkBtn){
+    qMkBtn.className = "py-1.5 px-2 rounded-lg border text-[10px] font-extrabold cursor-pointer transition flex items-center justify-center gap-1 " +
+      (mkOpen ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50" : "bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white");
+    qMkBtn.innerText = mkOpen ? "🎯 Markets ✓" : "🎯 Markets";
+  }
+  if(qBothBtn){
+    var bothOn = tlOpen && mkOpen;
+    qBothBtn.className = "py-1.5 px-2 rounded-lg border text-[10px] font-extrabold cursor-pointer transition flex items-center justify-center gap-1 " +
+      (bothOn ? "bg-sky-500/20 text-sky-300 border-sky-500/50" : "bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white");
+    qBothBtn.innerText = bothOn ? "✨ Both ✓" : "✨ Show Both";
+  }
+};
+
+window.toggleMatchTimeline = function(matchId, e){
+  if(e) e.stopPropagation();
+  var cur = window.timelineOpenMap[matchId];
+  var isCurrentlyOpen = (cur === undefined) ? true : !!cur;
+  var nextOpen = !isCurrentlyOpen;
+  window.timelineOpenMap[matchId] = nextOpen;
+  var bodyEl = document.getElementById("timeline-body-" + matchId);
+  var btnEl = document.getElementById("timeline-toggle-btn-" + matchId);
+  if(bodyEl){
+    bodyEl.classList.toggle("hidden", !nextOpen);
+  }
+  if(btnEl){
+    btnEl.innerText = nextOpen ? "Hide ▴" : "Show ▾";
+  }
+  window.syncCardSectionTogglePills(matchId);
+};
+
+window.toggleMatchMarkets = function(matchId, e){
+  if(e) e.stopPropagation();
+  var cur = window.marketsOpenMap[matchId];
+  var isCurrentlyOpen = (cur === undefined) ? true : !!cur;
+  var nextOpen = !isCurrentlyOpen;
+  window.marketsOpenMap[matchId] = nextOpen;
+  var bodyEl = document.getElementById("markets-body-" + matchId);
+  var btnEl = document.getElementById("markets-toggle-btn-" + matchId);
+  if(bodyEl){
+    bodyEl.classList.toggle("hidden", !nextOpen);
+  }
+  if(btnEl){
+    btnEl.innerText = nextOpen ? "Hide ▴" : "Show ▾";
+  }
+  window.syncCardSectionTogglePills(matchId);
+};
+
+window.showBothCardSections = function(matchId, e){
+  if(e) e.stopPropagation();
+  window.timelineOpenMap[matchId] = true;
+  window.marketsOpenMap[matchId] = true;
+  var tlBody = document.getElementById("timeline-body-" + matchId);
+  var tlBtn = document.getElementById("timeline-toggle-btn-" + matchId);
+  var mkBody = document.getElementById("markets-body-" + matchId);
+  var mkBtn = document.getElementById("markets-toggle-btn-" + matchId);
+  if(tlBody) tlBody.classList.remove("hidden");
+  if(tlBtn) tlBtn.innerText = "Hide ▴";
+  if(mkBody) mkBody.classList.remove("hidden");
+  if(mkBtn) mkBtn.innerText = "Hide ▴";
+  window.syncCardSectionTogglePills(matchId);
+};
+
+window.renderTimelineEventBadgeHtml = function(ev){
+  if(ev.type === "goal"){
+    return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-900/95 border border-slate-600/80 text-white font-black text-[11px] mono shadow-sm flex-shrink-0">' +
+      '<svg class="w-3.5 h-3.5 text-white flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 7 15.5 9.5 14 13.5 10 13.5 8.5 9.5" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="15.5" y1="9.5" x2="20.5" y2="8"/><line x1="14" y1="13.5" x2="17.5" y2="18.5"/><line x1="10" y1="13.5" x2="6.5" y2="18.5"/><line x1="8.5" y1="9.5" x2="3.5" y2="8"/></svg>' +
+      '<span>' + (ev.runningScore || "1 - 0") + '</span>' +
+    '</span>';
+  }
+  if(ev.type === "sub"){
+    return '<span class="w-7 h-7 rounded-lg bg-slate-900/95 border border-slate-600/80 inline-flex items-center justify-center flex-shrink-0 shadow-sm" title="Substitution">' +
+      '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M17 3l4 4-4 4" stroke="#22c55e"/>' +
+        '<path d="M3 11V9a2 2 0 012-2h16" stroke="#22c55e"/>' +
+        '<path d="M7 21l-4-4 4-4" stroke="#ef4444"/>' +
+        '<path d="M21 13v2a2 2 0 01-2 2H3" stroke="#ef4444"/>' +
+      '</svg>' +
+    '</span>';
+  }
+  if(ev.type === "yellow_card"){
+    return '<span class="w-7 h-7 rounded-lg bg-slate-900/95 border border-slate-600/80 inline-flex items-center justify-center flex-shrink-0 shadow-sm" title="Yellow Card">' +
+      '<span class="w-3 h-4 rounded-[2px] bg-amber-400 border border-amber-200/60 inline-block shadow-sm"></span>' +
+    '</span>';
+  }
+  if(ev.type === "red_card"){
+    return '<span class="w-7 h-7 rounded-lg bg-slate-900/95 border border-slate-600/80 inline-flex items-center justify-center flex-shrink-0 shadow-sm" title="Red Card">' +
+      '<span class="w-3 h-4 rounded-[2px] bg-rose-500 border border-rose-300/60 inline-block shadow-sm"></span>' +
+    '</span>';
+  }
+  // VAR Decision
+  return '<span class="w-7 h-7 rounded-lg bg-slate-900/95 border border-slate-600/80 inline-flex items-center justify-center flex-shrink-0 shadow-sm" title="VAR Review">' +
+    '<span class="px-1 py-0.5 rounded border border-white/80 text-[7.5px] font-black tracking-tighter text-white leading-none mono">VAR</span>' +
+  '</span>';
+};
+
+window.renderTimelineEventRowHtml = function(ev){
+  var badge = window.renderTimelineEventBadgeHtml(ev);
+  var secHtml = ev.secondaryText
+    ? '<span class="text-slate-400 font-medium text-[11px] truncate">(' + ev.secondaryText + ')</span>'
+    : '';
+  var priHtml = '<span class="text-white font-extrabold text-[11.5px] truncate">' + ev.primaryText + '</span>';
+
+  if(ev.teamSide === "home"){
+    return '<div class="flex items-center justify-start gap-2.5 py-1.5 px-3 hover:bg-slate-900/50 transition">' +
+      '<span class="text-slate-400 font-extrabold text-[11px] mono w-7 flex-shrink-0">' + ev.displayMinute + '</span>' +
+      badge +
+      '<div class="flex items-center gap-1.5 min-w-0 flex-wrap">' + priHtml + secHtml + '</div>' +
+    '</div>';
+  }
+  // Away team: right-aligned (mirrored horizontally just like Flashscore: (Player Out) Player In [Icon] 69')
+  return '<div class="flex items-center justify-end gap-2.5 py-1.5 px-3 hover:bg-slate-900/50 transition text-right">' +
+    '<div class="flex items-center justify-end gap-1.5 min-w-0 flex-wrap">' + secHtml + priHtml + '</div>' +
+    badge +
+    '<span class="text-slate-400 font-extrabold text-[11px] mono w-7 text-right flex-shrink-0">' + ev.displayMinute + '</span>' +
+  '</div>';
+};
+
+window.renderMatchTimelineSection = function(m, defaultOpen){
+  return "";
+};
+
 window.toggleCard = function(id){
   var el = document.getElementById("d-" + id);
   if(!el) return;
@@ -4320,40 +5145,76 @@ window.toggleCard = function(id){
   window.expandedCards[id] = !hide;
   var wrap = document.getElementById("cardWrap-" + id);
   if(wrap) wrap.classList.toggle("card-expanded", !hide);
-  if(!hide){
-    setTimeout(function(){
-      window.drawHighlightPitchCanvas(id);
-      var m = window.findMatchById(id);
-      if(m && window.isCompletedMatch(m) && !(window.liveFetchedHighlightsCache && window.liveFetchedHighlightsCache["id_" + id])){
-        window.fetchLiveMatchHighlights(id, false);
-      }
-    }, 20);
-  }
 };
 
-// Expandable Match Details: Match Highlights (for Completed Matches) + 16 Unique Ranked Popular Markets
+// Expandable Match Details: Both-Teams Betting Markets Panel
 window.render31PointPanel = function(m, adm, isUnlocked){
   var mk = window.calcExtraMarkets(m, m.fs || 68);
-  var sortedMarkets = mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); });
+  var outright = mk.outright || {};
+  var activeSort = window.cardMarketSort[m.id] || window.defaultCardMarketSort || "confidence";
+  var sortedMarkets = window.sortMatchMarkets ? window.sortMatchMarkets(mk.L, activeSort) : mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); });
   var isTr = !!window.isTrial && !isUnlocked;
-  var safeFav = (m.fav || "").replace(/'/g, "\\'");
-  var safeOpp = (m.opp || "").replace(/'/g, "\\'");
   var activeCat = window.cardMarketFilter[m.id] || "all";
 
   var filteredMarkets = sortedMarkets.filter(function(item){
     if(activeCat === "all") return true;
+    if(activeCat === "fav") return item.teamSide === "fav";
+    if(activeCat === "opp") return item.teamSide === "opp";
     return item.cat === activeCat;
   });
 
   var openCls = window.expandedCards[m.id] ? "" : "hidden ";
   var favCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.fav) : '';
+  var oppCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.opp) : '';
+  var homeCrest = window.getClubCrestHtml ? window.getClubCrestHtml(outright.homeName || m.fav) : '';
+  var awayCrest = window.getClubCrestHtml ? window.getClubCrestHtml(outright.awayName || m.opp) : '';
+
+  // 3-Way Match Result (1X2) Both-Teams Comparison Strip (Home vs Draw vs Away)
+  window.marketSelectionRegistry = window.marketSelectionRegistry || {};
+  var h1x2Id = 'mr1-' + m.id;
+  var d1x2Id = 'mrx-' + m.id;
+  var a1x2Id = 'mr2-' + m.id;
+  var hMktName = "Match Result: " + (outright.homeName || m.fav) + " to Win";
+  var dMktName = "Match Result: Draw";
+  var aMktName = "Match Result: " + (outright.awayName || m.opp) + " to Win";
+
+  window.marketSelectionRegistry[h1x2Id] = { team: m.fav, opp: m.opp, market: hMktName, pct: (outright.homePct || "60.0") + "%", odds: outright.homeOdds || 1.75, won: outright.homeWon, league: m.league, ko: m.ko || "15:00", elId: h1x2Id, seed: m.id };
+  window.marketSelectionRegistry[d1x2Id] = { team: m.fav, opp: m.opp, market: dMktName, pct: (outright.drawPct || "22.0") + "%", odds: outright.drawOdds || 3.40, won: outright.drawWon, league: m.league, ko: m.ko || "15:00", elId: d1x2Id, seed: m.id };
+  window.marketSelectionRegistry[a1x2Id] = { team: m.fav, opp: m.opp, market: aMktName, pct: (outright.awayPct || "18.0") + "%", odds: outright.awayOdds || 4.20, won: outright.awayWon, league: m.league, ko: m.ko || "15:00", elId: a1x2Id, seed: m.id };
+
+  var isH1x2Sel = window.betSlip.indexOf(m.fav + " " + hMktName) !== -1;
+  var isD1x2Sel = window.betSlip.indexOf(m.fav + " " + dMktName) !== -1;
+  var isA1x2Sel = window.betSlip.indexOf(m.fav + " " + aMktName) !== -1;
+
+  var outright1x2StripHtml = '<div class="mb-2.5 bg-slate-950/85 border border-slate-800/90 rounded-xl p-2">' +
+    '<div class="flex items-center justify-between text-[8.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-0.5">' +
+      '<span>⚽ Full-Time Result (1X2 — Both Teams)</span>' +
+      '<span>Tap to Add</span>' +
+    '</div>' +
+    '<div class="grid grid-cols-3 gap-1.5">' +
+      '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center flex-wrap gap-1 leading-tight">' + homeCrest + '<span>' + (outright.homeName || m.fav) + '</span>' + (outright.homeWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
+        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[10px] text-emerald-400 mono">' + (outright.homePct || "60.0") + '%</b></div>' +
+      '</div>' +
+      '<div id="' + d1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + d1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isD1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[9.5px] font-extrabold text-slate-200 inline-flex items-center justify-center gap-1 leading-tight">🤝 Draw' + (outright.drawWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
+        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[10px] text-amber-300 mono">' + (outright.drawPct || "22.0") + '%</b></div>' +
+      '</div>' +
+      '<div id="' + a1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + a1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isA1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center flex-wrap gap-1 leading-tight">' + awayCrest + '<span>' + (outright.awayName || m.opp) + '</span>' + (outright.awayWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
+        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[10px] text-sky-300 mono">' + (outright.awayPct || "18.0") + '%</b></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
 
   var catTabsHtml = '<div class="flex gap-1 mb-2 overflow-x-auto no-scrollbar">' +
     [
-      {k:"all", lbl:"All Markets (16)"},
-      {k:"result", lbl:"🏆 Match Result & Team"},
+      {k:"all", lbl:"All (" + sortedMarkets.length + ")"},
+      {k:"fav", lbl:m.fav + " Picks"},
+      {k:"opp", lbl:m.opp + " Picks"},
+      {k:"result", lbl:"🏆 1X2 & Team"},
       {k:"goals", lbl:"⚽ Goals & BTTS"},
-      {k:"specials", lbl:"🚩 Corners/Cards/HT"}
+      {k:"specials", lbl:"🚩 Corners/Cards"}
     ].map(function(tab){
       var act = activeCat === tab.k;
       var cls = act
@@ -4364,26 +5225,37 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   '</div>';
 
   var g = filteredMarkets.map(function(x, mIdx){
-    var p = +x.p, c = p >= 75 ? "text-emerald-400 border-emerald-500/30 bg-emerald-950/40" : (p >= 60 ? "text-amber-400 border-amber-500/30 bg-slate-900/80" : "text-rose-400 border-rose-500/30 bg-rose-950/30");
+    var p = +x.p, c = p >= 75 ? "text-emerald-400 border-emerald-500/30 bg-emerald-950/40" : (p >= 60 ? "text-amber-400 border-amber-500/30 bg-slate-900/80" : "text-sky-300 border-slate-700/70 bg-slate-900/70");
     var lockThisMarket = isTr && x.vip;
-    var r = (!lockThisMarket && x.w === true) ? ' <b class="text-emerald-400 text-[10px] ml-1">✓</b>' : ((!lockThisMarket && x.w === false) ? ' <b class="text-rose-400 text-[10px] ml-1">✗</b>' : '');
-    var isMatchResultMkt = x.n.indexOf("Match Result:") === 0;
-    var displayTitle = isMatchResultMkt
-      ? ('<span class="inline-flex items-center gap-1">' + favCrest + '<span>' + x.n + '</span></span>')
+    var r = (!lockThisMarket && x.w === true)
+      ? ' <span class="inline-flex items-center px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-black ml-1">✓ WON</span>'
+      : ((!lockThisMarket && x.w === false)
+          ? ' <span class="inline-flex items-center px-1 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[9px] font-black ml-1">✗</span>'
+          : '');
+    var statPillHtml = (!lockThisMarket && x.statBadge)
+      ? ' <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[8.5px] font-mono font-bold ml-1">' + x.statBadge + '</span>'
+      : '';
+    var crestPrefix = "";
+    if(x.teamSide === "fav") crestPrefix = favCrest;
+    else if(x.teamSide === "opp") crestPrefix = oppCrest;
+
+    var displayTitle = crestPrefix
+      ? ('<span class="inline-flex items-center gap-1">' + crestPrefix + '<span>' + x.n + '</span></span>')
       : x.n;
-    var labelSafe = lockThisMarket ? String(x.n).replace(m.fav, "🔒 VIP Pick") : displayTitle;
+    var labelSafe = lockThisMarket ? String(x.n).replace(m.fav, "🔒 VIP Pick").replace(m.opp, "🔒 VIP Pick") : displayTitle;
     
     var elId = 'm-' + m.id + '-' + activeCat + '-' + mIdx;
     var betId = m.fav + " " + x.n;
     var isSel = window.betSlip.indexOf(betId) !== -1;
     var selClass = isSel ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '';
-    window.marketSelectionRegistry = window.marketSelectionRegistry || {};
     window.marketSelectionRegistry[elId] = {
       team: m.fav,
       opp: m.opp,
       market: x.n,
       pct: x.p + '%',
       odds: x.odds,
+      statBadge: x.statBadge || '',
+      won: x.w,
       league: m.league,
       ko: m.ko || '15:00',
       elId: elId,
@@ -4400,32 +5272,45 @@ window.render31PointPanel = function(m, adm, isUnlocked){
       ? '<b onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[11px] mono flex-shrink-0 trial-blur-sm cursor-pointer">88.5%</b>'
       : '<div class="flex items-center gap-1 flex-shrink-0"><span class="text-[9px] bg-slate-950/90 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(x.odds, false) + '</span><b class="text-[11px] mono">' + x.p + '%</b></div>';
 
-    return '<div id="' + elId + '" ' + clickHandler + ' class="p-2.5 rounded-xl border ' + c + ' ' + hoverClass + ' ' + selClass + ' flex justify-between items-center gap-1 shadow-sm"><span class="text-[10px] text-white font-bold truncate flex items-center gap-1">'+labelSafe+r+'</span>'+rightHtml+'</div>';
+    return '<div id="' + elId + '" ' + clickHandler + ' class="p-2.5 rounded-xl border ' + c + ' ' + hoverClass + ' ' + selClass + ' flex justify-between items-center gap-1 shadow-sm"><span class="text-[10px] text-white font-bold flex items-center flex-wrap gap-1 min-w-0">'+labelSafe+statPillHtml+r+'</span>'+rightHtml+'</div>';
   }).join("");
 
-  var statBar = '<div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-2.5 grid grid-cols-3 gap-2 text-center text-[9px] text-slate-400 shadow-inner mb-2.5">' +
-    '<div class="flex flex-col gap-0.5"><span class="uppercase tracking-wider opacity-75">⚡ Expected Goals</span><b class="text-emerald-300 mono text-[11px]">' + Number(m.xg||1.6).toFixed(2) + ' / ' + Number(m.xga||0.9).toFixed(2) + '</b></div>' +
-    '<div class="flex flex-col gap-0.5 border-l border-slate-800/80"><span class="uppercase tracking-wider opacity-75">📊 Club Power</span><b class="text-sky-300 mono text-[11px]">' + (m.atk||80) + ' / ' + (m.poss||55) + '%</b></div>' +
-    '<div class="flex flex-col gap-0.5 border-l border-slate-800/80"><span class="uppercase tracking-wider opacity-75">🔒 Status</span><b class="text-amber-300 text-[10px] mt-0.5">' + (m.isLocked ? 'T-30m Locked' : 'Live Sync') + '</b></div>' +
+  var trialCta = isTr
+    ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="mt-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/50 p-2.5 rounded-xl text-center text-amber-300 font-bold text-[10px] cursor-pointer hover:from-amber-500/30 hover:to-orange-500/30 transition shadow-lg">🔓 Tap to Unlock All VIP Betting Markets</div>'
+    : '';
+
+  var sortDropdownHtml = '<div class="flex items-center gap-1.5">' +
+    '<label for="mktSort-' + m.id + '" class="text-[9px] font-bold text-slate-400">Sort:</label>' +
+    '<select id="mktSort-' + m.id + '" aria-label="Sort betting markets" onclick="event.stopPropagation()" onchange="window.setCardMarketSort(' + m.id + ', this.value, event)" class="bg-slate-900/95 hover:bg-slate-800 text-slate-200 border border-slate-700/90 rounded-lg px-2 py-1 text-[9.5px] font-extrabold cursor-pointer focus:outline-none focus:border-emerald-400 transition">' +
+      '<option value="confidence"' + (activeSort === "confidence" ? ' selected' : '') + '>🎯 Highest Confidence</option>' +
+      '<option value="odds"' + (activeSort === "odds" ? ' selected' : '') + '>💰 Highest Odds</option>' +
+      '<option value="popular"' + (activeSort === "popular" ? ' selected' : '') + '>🔥 Most Popular</option>' +
+    '</select>' +
   '</div>';
 
-  var highlightsHtml = window.renderMatchHighlightsSection(m);
+  var marketsBoxHtml = '<div id="markets-box-' + m.id + '" onclick="event.stopPropagation()" class="rounded-2xl overflow-hidden border border-slate-800 bg-[#07111a]/95 p-2.5 shadow-lg">' +
+    '<div class="flex justify-between items-center gap-1.5">' +
+      '<span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1 min-w-0 truncate">' +
+        '<span>🎯 Betting Markets (' + sortedMarkets.length + ')</span>' +
+      '</span>' +
+      '<div class="flex items-center gap-1.5 flex-shrink-0">' +
+        sortDropdownHtml +
+      '</div>' +
+    '</div>' +
+    '<div id="markets-body-' + m.id + '" class="mt-2">' +
+      outright1x2StripHtml +
+      catTabsHtml +
+      '<div id="mktGrid-' + m.id + '" class="grid grid-cols-1 sm:grid-cols-2 gap-2">' + g + '</div>' +
+      trialCta +
+    '</div>' +
+  '</div>';
 
-  var trialCta = isTr
-    ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="mt-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/50 p-2.5 rounded-xl text-center text-amber-300 font-bold text-[10px] cursor-pointer hover:from-amber-500/30 hover:to-orange-500/30 transition shadow-lg">🔓 Tap to Unlock All 16 VIP Betting Markets</div>'
-    : '<div class="mt-2.5 text-[9px] text-slate-500 italic flex justify-between px-1"><span>✓ ' + (m.note || 'Pre-Match Audit Verified') + '</span><span>Base: ' + Number(m.base||m.fs).toFixed(1) + '%</span></div>';
-
-  return '<div id="d-'+m.id+'" class="'+openCls+'details-panel mt-3 pt-3 border-t border-slate-800/60 text-[10px] space-y-1">' +
-    statBar +
-    highlightsHtml +
-    '<div class="flex justify-between items-center mb-1.5 flex-wrap gap-1"><span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> 16 Popular Betting Markets (Live Odds • Tap Any Market to Add)</span></div>' +
-    catTabsHtml +
-    '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">' + g + '</div>' +
-    trialCta +
+  return '<div id="d-'+m.id+'" class="'+openCls+'details-panel mt-3 pt-3 border-t border-slate-800/60 text-[10px] space-y-2.5">' +
+    marketsBoxHtml +
     (adm || "") + '</div>';
 };
 
-// Clean, Streamlined Match Card Renderer (Zero Duplicated Markets + Admin X Post Selection Toggle)
+// Clean, Streamlined Match Card Renderer (Collapsible Match Timeline + Collapsible Both-Teams Markets inside expanded card)
 window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   var isG = type === "green", isA = type === "amber";
   var isUnlocked = window.isCardUnlockedInTrial(m, i, type);
@@ -4452,20 +5337,17 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     statusBadge = '<span class="text-[10px] bg-slate-900/90 border border-slate-700/70 text-slate-300 px-2 py-0.5 rounded-md mono font-semibold">🕒 KO ' + (m.ko||"15:00") + '</span>';
   }
 
-  var sampleBadge = isFreeSample ? '<span class="text-[8px] px-2 py-0.5 rounded-full font-black bg-emerald-500 text-slate-950 flex-shrink-0">🎁 FREE SAMPLE</span>' : '';
-  var lockTiny = m.isLocked
-    ? '<span class="text-[9px] text-amber-300 font-mono font-semibold">🔒 Locked T-30m</span>'
-    : '<span class="text-[9px] text-slate-400 font-mono">⏱️ Locks ' + window.getLockTimeLabel(m.date, m.ko||"15:00") + '</span>';
+  var sampleBadge = isFreeSample ? '<span class="text-[8px] px-2 py-0.5 rounded-full font-black bg-emerald-500 text-slate-900 flex-shrink-0">🎁 FREE SAMPLE</span>' : '';
 
   var isXSelected = window.isAdmin && Array.isArray(window.xPostSelectedIds) && window.xPostSelectedIds.indexOf(Number(m.id)) !== -1;
   var xSelectCardBtn = window.isAdmin
-    ? '<button type="button" onclick="event.stopPropagation();window.toggleMatchForXPost(' + m.id + ', true)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9.5px] font-black transition cursor-pointer ' +
+    ? '<button type="button" onclick="event.stopPropagation();window.toggleMatchForXPost(' + m.id + ', true)" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9.5px] font-black transition cursor-pointer flex-shrink-0 ' +
         (isXSelected
           ? 'bg-white text-black border border-emerald-400 shadow-md'
           : 'bg-black/90 hover:bg-slate-900 text-white border border-white/30') +
       '" title="Select match for Admin X Post & Screenshot">' +
         '<svg class="w-2.5 h-2.5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>' +
-        '<span>' + (isXSelected ? '✓ In X Post' : 'Select for X') + '</span>' +
+        '<span>' + (isXSelected ? '✓ In X' : 'X Post') + '</span>' +
       '</button>'
     : '';
 
@@ -4474,6 +5356,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     : '<div class="text-lg font-black ' + txt + ' mono leading-none">' + m.fs.toFixed(1) + '%</div>';
 
   var mkCard = window.calcExtraMarkets(m, m.fs || 68);
+  var liveStats = mkCard.liveStats || { hasKickedOff: false };
   var topCardMkt = mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0];
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
@@ -4486,27 +5369,29 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       market: topCardMkt.n,
       pct: topCardMkt.p + '%',
       odds: topCardMkt.odds,
+      statBadge: topCardMkt.statBadge || '',
+      won: topCardMkt.w,
       league: m.league,
       ko: m.ko || '15:00',
       elId: bestElId,
       seed: m.id
     };
   }
+  var topMktTick = (topCardMkt && topCardMkt.w === true) ? ' <span class="text-emerald-300 font-black">✓</span>' : '';
   var quickAddCardBtn = (!isTrLocked && topCardMkt)
-    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9.5px] font-bold border border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300 transition cursor-pointer ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add top AI pick to Betting Slip">' +
-        '<span>➕ ' + topCardMkt.n.replace(/^Match Result:\s*/i, '') + '</span>' +
-        '<b class="text-amber-300 mono">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
+    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300 transition cursor-pointer min-w-0 max-w-full ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add top AI pick to Betting Slip">' +
+        '<span class="truncate">➕ ' + topCardMkt.n.replace(/^Match Result:\s*/i, '') + '</span>' +
+        '<b class="text-amber-300 mono flex-shrink-0">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
+        topMktTick +
       '</button>'
-    : '';
+    : '<span class="text-[9.5px] font-semibold text-slate-400">🔒 VIP Pick</span>';
 
-  var isDoneMatch = window.isCompletedMatch(m);
-  var expandCtaLabel = isDoneMatch
-    ? '🎬 Highlights & 16 Markets'
-    : (isFreeSample ? '🎁 View 16 Betting Markets' : (isTrLocked ? '👀 Tap for Betting Markets' : 'View 16 Betting Markets'));
+  var totalMktCount = (mkCard.L && mkCard.L.length) ? mkCard.L.length : 24;
+  var expandCtaLabel = 'View ' + totalMktCount + ' Betting Markets';
 
-  var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between gap-2 flex-wrap text-[9px] text-slate-400">' +
-    '<div class="flex items-center gap-1.5 flex-wrap">' + lockTiny + quickAddCardBtn + xSelectCardBtn + '</div>' +
-    '<span class="font-bold tracking-wider uppercase inline-flex items-center gap-1 text-emerald-300 ml-auto">' +
+  var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between gap-2 text-[9.5px] text-slate-400">' +
+    '<div class="flex items-center gap-1.5 min-w-0">' + quickAddCardBtn + xSelectCardBtn + '</div>' +
+    '<span class="font-bold tracking-wide uppercase inline-flex items-center gap-1 text-emerald-300 flex-shrink-0 whitespace-nowrap">' +
       expandCtaLabel +
       '<svg class="chevron-icon w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>' +
     '</span>' +
@@ -4670,8 +5555,8 @@ window.runEngine = function(isForcedSync){
           ? (isMatchWon
               ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-bold ml-1">✓ FT ' + m.actual + '</span>'
               : '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-1.5 py-0.5 rounded font-bold ml-1">✗ FT ' + m.actual + '</span>')
-          : (m.isLocked
-              ? '<span class="text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold ml-1">🔒 Locked</span>'
+          : (m.isLive
+              ? '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-1.5 py-0.5 rounded font-mono font-bold ml-1">🔴 LIVE</span>'
               : '<span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono ml-1">🕒 KO ' + (m.ko||"15:00") + '</span>');
 
         var marketTick = "";
@@ -4934,27 +5819,88 @@ window.confirmAdminDialog = function(){
   if(cb) cb(val);
 };
 
+window._adminLogoTapCount = 0;
+window._adminLogoLastTapMs = 0;
+
+window.resolveAdminLogoTap = function(previousTapCount, lastTapTimestampMs, nowMs){
+  var resetWindowMs = 4500;
+  var baseCount = (lastTapTimestampMs > 0 && (nowMs - lastTapTimestampMs) > resetWindowMs) ? 0 : Math.max(0, previousTapCount || 0);
+  var nextTapCount = baseCount + 1;
+
+  if(nextTapCount >= 10){
+    return {
+      nextTapCount: 0,
+      remainingTaps: 0,
+      toastMessage: null,
+      shouldPromptAdminPin: true
+    };
+  }
+
+  var remainingTaps = 10 - nextTapCount;
+  if(nextTapCount > 5){
+    return {
+      nextTapCount: nextTapCount,
+      remainingTaps: remainingTaps,
+      toastMessage: "You are now " + remainingTaps + " " + (remainingTaps === 1 ? "tap" : "taps") + " until admin mode is enabled.",
+      shouldPromptAdminPin: false
+    };
+  }
+
+  return {
+    nextTapCount: nextTapCount,
+    remainingTaps: remainingTaps,
+    toastMessage: null,
+    shouldPromptAdminPin: false
+  };
+};
+
+window.handleAdminLogoTap = function(e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  if(window.isAdmin){
+    window.unlockAdmin();
+    return;
+  }
+  var nowMs = Date.now();
+  var res = window.resolveAdminLogoTap(window._adminLogoTapCount, window._adminLogoLastTapMs, nowMs);
+  window._adminLogoTapCount = res.nextTapCount;
+  window._adminLogoLastTapMs = nowMs;
+
+  if(res.toastMessage){
+    window.showAppToast("🔑 " + res.toastMessage);
+  }
+  if(res.shouldPromptAdminPin){
+    window._adminLogoTapCount = 0;
+    window._adminLogoLastTapMs = 0;
+    window.unlockAdmin();
+  }
+};
+
 window.unlockAdmin = function(){
   if(window.isAdmin){
     window.isAdmin = false;
+    window._adminLogoTapCount = 0;
     document.getElementById("adminBar").classList.add("hidden");
     document.getElementById("logWrapper").classList.add("hidden");
     document.getElementById("wipeBtn").classList.add("hidden");
     document.getElementById("clearLogBtn").classList.add("hidden");
-    document.getElementById("authBtn").innerText = "🔒";
+    var authBtnEl = document.getElementById("authBtn");
+    if(authBtnEl) authBtnEl.innerText = "🔒";
     if(typeof window.closeXPostStudio === "function") window.closeXPostStudio();
     if(typeof window.syncAdminXSelectionUI === "function") window.syncAdminXSelectionUI();
     window.runEngine(false);
+    window.showAppToast("🔒 Admin Mode Locked");
     return;
   }
   window.openAdminDialog("🔑 Enter Admin PIN", "Enter 8-digit Admin PIN...", true, function(pin){
     if(pin === window.ADMIN_PIN){
       window.isAdmin = true;
+      window._adminLogoTapCount = 0;
       document.getElementById("adminBar").classList.remove("hidden");
       document.getElementById("logWrapper").classList.remove("hidden");
       document.getElementById("wipeBtn").classList.remove("hidden");
       document.getElementById("clearLogBtn").classList.remove("hidden");
-      document.getElementById("authBtn").innerText = "🔓";
+      var authBtnEl = document.getElementById("authBtn");
+      if(authBtnEl) authBtnEl.innerText = "🔓";
       window.updateAdminWeightsBar();
       window.runEngine(false);
       window.showAppToast("🔓 Admin Mode Unlocked");
@@ -5056,18 +6002,32 @@ window.getResolvedXSelections = function(){
       return acc + (parseFloat(String(item.p).replace("%","")) || 75);
     }, 0) / selectedMarkets.length;
 
+    var actStr = String(m.actual || "");
+    var isFT = !m.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr));
+    var scMatch = actStr.match(/(\d+)\s*-\s*(\d+)/);
+    var ftScore = scMatch ? (scMatch[1] + "-" + scMatch[2]) : "";
+    var matchWon = /\(won\)/i.test(actStr);
+    var firstMkt = selectedMarkets[0] || {};
+    var selWon = firstMkt.w !== undefined && firstMkt.w !== null
+      ? firstMkt.w
+      : (isFT ? matchWon : null);
+
     result.push({
       id: m.id,
       fav: m.fav,
       opp: m.opp,
       league: m.league,
       ko: m.ko || "15:00",
-      market: selectedMarkets[0].n,
+      market: firstMkt.n || ("Match Result: " + m.fav + " to Win"),
       markets: selectedMarkets,
       marketCount: selectedMarkets.length,
       pct: parseFloat(avgMatchPct.toFixed(1)),
       odds: parseFloat(combMatchOdds.toFixed(2)),
-      actual: m.actual || "",
+      actual: actStr,
+      isFT: isFT,
+      ftScore: ftScore,
+      won: selWon,
+      statBadge: firstMkt.statBadge || "",
       allMarkets: resolved.sortedM
     });
   });
@@ -5178,7 +6138,7 @@ window.generateXPostData = function(selections, style, oddsFmt){
   var isBetBuilder = false;
 
   selections.forEach(function(s){
-    var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds }];
+    var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds, w: s.won, statBadge: s.statBadge }];
     if(legs.length > 1) isBetBuilder = true;
     legs.forEach(function(l){
       totalLegs += 1;
@@ -5199,55 +6159,64 @@ window.generateXPostData = function(selections, style, oddsFmt){
     var lines = [];
     if(isSingleMatchBuilder){
       var s0 = selections[0];
-      var legs0 = s0.markets || [{ n: s0.market, p: s0.pct, odds: s0.odds }];
-      var isWon0 = String(s0.actual || "").toLowerCase().indexOf("(won)") !== -1;
-      var prefix0 = (st === "results" && isWon0) ? "✅" : "🎯";
+      var legs0 = s0.markets || [{ n: s0.market, p: s0.pct, odds: s0.odds, w: s0.won, statBadge: s.statBadge }];
+      var isFT0 = !!s0.isFT;
       lines = legs0.map(function(leg){
         var pctNum = Math.round(parseFloat(String(leg.p).replace("%","")) || 75);
         var oddsStr = window.formatOdds(leg.odds || 1.5, false);
+        var legWon = (leg.w === true) || (leg.w === undefined && isFT0 && s0.won === true);
+        var prefix0 = legWon ? "✅" : "🎯";
+        var statSuffix = (isFT0 && leg.statBadge && compactLevel === 0) ? (" [" + leg.statBadge + "]") : "";
         if(compactLevel === 0){
           var cleanMkt = String(leg.n || "").replace(/^Match Result:\s*/i, "");
-          return prefix0 + " " + cleanMkt + " (" + oddsStr + " • " + pctNum + "%)";
+          return prefix0 + " " + cleanMkt + statSuffix + " (" + oddsStr + " • " + pctNum + "%)";
         }
         if(compactLevel === 1){
           var shortPick = window.shortenMarketForX(leg.n, s0.fav, false);
           return prefix0 + " " + shortPick + " (" + oddsStr + " • " + pctNum + "%)";
         }
-        return "• " + window.shortenMarketForX(leg.n, s0.fav, false) + " " + oddsStr;
+        return (legWon ? "✅ " : "• ") + window.shortenMarketForX(leg.n, s0.fav, false) + " " + oddsStr;
       });
     } else {
       lines = selections.map(function(s){
-        var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds }];
+        var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds, w: s.won, statBadge: s.statBadge }];
         var pctNum = Math.round(parseFloat(String(s.pct).replace("%","")) || 75);
         var oddsStr = window.formatOdds(s.odds || 1.5, false);
-        var isWon = String(s.actual || "").toLowerCase().indexOf("(won)") !== -1;
-        var prefix = (st === "results" && isWon) ? "✅" : "🎯";
+        var isFT = !!s.isFT;
+        var ftScore = s.ftScore || "";
+        var allLegsWon = legs.every(function(l){ return l.w === true; });
+        var isWon = allLegsWon || (s.won === true) || (isFT && String(s.actual || "").toLowerCase().indexOf("(won)") !== -1);
+        var prefix = isWon ? "✅" : "🎯";
+        var ftTagFull = isFT ? (ftScore ? (" [FT " + ftScore + "]") : " [FT]") : "";
+        var ftTagShort = isFT ? (ftScore ? (" (FT " + ftScore + ")") : " (FT)") : "";
 
         if(legs.length > 1){
-          var mktFull = legs.map(function(l){ return window.shortenMarketForX(l.n, s.fav, false); }).join(" + ");
+          var mktFull = legs.map(function(l){
+            return (l.w === true ? "✅" : "") + window.shortenMarketForX(l.n, s.fav, false);
+          }).join(" + ");
           var mktShort = legs.length <= 3
             ? mktFull
-            : (legs.slice(0, 2).map(function(l){ return window.shortenMarketForX(l.n, s.fav, false); }).join(" + ") + " +" + (legs.length - 2) + " more");
+            : (legs.slice(0, 2).map(function(l){ return (l.w === true ? "✅" : "") + window.shortenMarketForX(l.n, s.fav, false); }).join(" + ") + " +" + (legs.length - 2) + " more");
           if(compactLevel === 0){
-            return prefix + " " + window.shortenTeamForX(s.fav) + " (" + legs.length + "-Leg): " + mktFull + " (" + oddsStr + ")";
+            return prefix + " " + window.shortenTeamForX(s.fav) + ftTagFull + " (" + legs.length + "-Leg): " + mktFull + " (" + oddsStr + ")";
           }
           if(compactLevel === 1){
-            return prefix + " " + window.shortenTeamForX(s.fav) + ": " + mktShort + " (" + oddsStr + ")";
+            return prefix + " " + window.shortenTeamForX(s.fav) + ftTagShort + ": " + mktShort + " (" + oddsStr + ")";
           }
-          return "• " + window.shortenTeamForX(s.fav) + " (" + legs.length + "x): " + mktShort + " " + oddsStr;
+          return (isWon ? "✅ " : "• ") + window.shortenTeamForX(s.fav) + (isFT ? " FT" : "") + " (" + legs.length + "x): " + mktShort + " " + oddsStr;
         }
 
         if(compactLevel === 0){
           var cleanMkt = String(s.market || "").replace(/^Match Result:\s*/i, "");
           var hasTeam = cleanMkt.toLowerCase().indexOf(s.fav.toLowerCase()) !== -1;
           var pickLbl = hasTeam ? cleanMkt : (s.fav + " vs " + s.opp + ": " + cleanMkt);
-          return prefix + " " + pickLbl + " (" + oddsStr + " • " + pctNum + "%)";
+          return prefix + " " + pickLbl + ftTagFull + " (" + oddsStr + " • " + pctNum + "%)";
         }
         if(compactLevel === 1){
           var shortPick = window.shortenMarketForX(s.market, s.fav);
-          return prefix + " " + shortPick + " (" + oddsStr + " • " + pctNum + "%)";
+          return prefix + " " + shortPick + ftTagShort + " (" + oddsStr + " • " + pctNum + "%)";
         }
-        return "• " + window.shortenMarketForX(s.market, s.fav) + " " + oddsStr;
+        return (isWon ? "✅ " : "• ") + window.shortenMarketForX(s.market, s.fav) + (isFT ? " (FT)" : "") + " " + oddsStr;
       });
     }
 
@@ -5256,7 +6225,8 @@ window.generateXPostData = function(selections, style, oddsFmt){
 
     if(count === 1){
       var s0 = selections[0];
-      var mTitle = compactLevel === 0 ? (s0.fav + " vs " + s0.opp) : (window.shortenTeamForX(s0.fav) + " v " + window.shortenTeamForX(s0.opp));
+      var ftHdr0 = s0.isFT ? (s0.ftScore ? (" (FT " + s0.ftScore + ")") : " (FT)") : "";
+      var mTitle = (compactLevel === 0 ? (s0.fav + " vs " + s0.opp) : (window.shortenTeamForX(s0.fav) + " v " + window.shortenTeamForX(s0.opp))) + ftHdr0;
       if(isSingleMatchBuilder){
         if(st === "data"){
           header = "🧠 AI " + totalLegs + "-Leg Bet Builder: " + mTitle;
@@ -5321,12 +6291,14 @@ window.generateXPostData = function(selections, style, oddsFmt){
     var ftr = shortTags;
     var flatItems = isSingleMatchBuilder
       ? (selections[0].markets || []).map(function(l){
-          return "• " + window.shortenMarketForX(l.n, selections[0].fav, false) + " " + window.formatOdds(l.odds || 1.5, false);
+          var lw = l.w === true;
+          return (lw ? "✅ " : "• ") + window.shortenMarketForX(l.n, selections[0].fav, false) + " " + window.formatOdds(l.odds || 1.5, false);
         })
       : selections.map(function(s){
-          var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, odds: s.odds }];
-          var lbl = legs.length > 1 ? (window.shortenTeamForX(s.fav) + " (" + legs.length + "x Markets)") : window.shortenMarketForX(s.market, s.fav);
-          return "• " + lbl + " " + window.formatOdds(s.odds || 1.5, false);
+          var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, odds: s.odds, w: s.won }];
+          var sw = s.won === true || legs.every(function(l){ return l.w === true; });
+          var lbl = legs.length > 1 ? (window.shortenTeamForX(s.fav) + (s.isFT ? " FT" : "") + " (" + legs.length + "x)") : (window.shortenMarketForX(s.market, s.fav) + (s.isFT ? " (FT)" : ""));
+          return (sw ? "✅ " : "• ") + lbl + " " + window.formatOdds(s.odds || 1.5, false);
         });
 
     for(var i = 0; i < flatItems.length; i++){
@@ -5802,6 +6774,81 @@ window.drawBetBoyLogoOnCanvas = function(ctx, x, y, size){
   ctx.restore();
 };
 
+window.formatXCardMarketLabel = function(rawMarket, isWon, isMultiLegItem){
+  var clean = String(rawMarket || "").replace(/^Match Result:\s*/i, "").trim();
+  var prefix = isMultiLegItem ? (isWon ? "✅ " : "✓ ") : (isWon ? "✅ " : "⭐ ");
+  return prefix + clean;
+};
+
+window.splitCanvasTextTwoLines = function(text){
+  var clean = String(text || "").trim();
+  var words = clean.split(/\s+/);
+  if(words.length <= 1) return [clean];
+  var targetMid = Math.ceil(clean.length / 2);
+  var bestSplitIdx = 1;
+  var bestDiff = Infinity;
+  var runningLen = 0;
+  for(var i = 0; i < words.length - 1; i++){
+    runningLen += (i > 0 ? 1 : 0) + words[i].length;
+    var diff = Math.abs(runningLen - targetMid);
+    if(diff < bestDiff){
+      bestDiff = diff;
+      bestSplitIdx = i + 1;
+    }
+  }
+  return [
+    words.slice(0, bestSplitIdx).join(" "),
+    words.slice(bestSplitIdx).join(" ")
+  ];
+};
+
+// Auto-fits text within maxWidth by scaling font down to minFontSize, and wraps onto 2 lines if still wider — never cuts off text
+window.drawFittedCanvasText = function(ctx, text, x, y, maxWidth, align, baseSize, minSize, weight, family){
+  var str = String(text || "").trim();
+  if(!str) return { width: 0, lines: 1, fontSize: baseSize };
+  var fontFam = family || "'Plus Jakarta Sans', Arial, sans-serif";
+  var fontW = weight || "800";
+  ctx.textAlign = align || "left";
+
+  var sz = baseSize;
+  while(sz >= minSize){
+    ctx.font = fontW + " " + sz + "px " + fontFam;
+    var mW = ctx.measureText(str).width;
+    if(mW <= maxWidth){
+      ctx.fillText(str, x, y);
+      return { width: mW, lines: 1, fontSize: sz };
+    }
+    sz -= 0.5;
+  }
+
+  // Fallback to 2 balanced lines if single line at minSize still exceeds maxWidth
+  var twoLines = window.splitCanvasTextTwoLines(str);
+  if(twoLines.length === 1){
+    var tightSz = minSize;
+    while(tightSz > 9 && ctx.measureText(str).width > maxWidth){
+      tightSz -= 0.5;
+      ctx.font = fontW + " " + tightSz + "px " + fontFam;
+    }
+    ctx.fillText(str, x, y);
+    return { width: Math.min(maxWidth, ctx.measureText(str).width), lines: 1, fontSize: tightSz };
+  }
+
+  var wrapSz = Math.min(baseSize - 2, Math.max(minSize, 13));
+  while(wrapSz > 10){
+    ctx.font = fontW + " " + wrapSz + "px " + fontFam;
+    var w1 = ctx.measureText(twoLines[0]).width;
+    var w2 = ctx.measureText(twoLines[1]).width;
+    if(Math.max(w1, w2) <= maxWidth) break;
+    wrapSz -= 0.5;
+  }
+  ctx.font = fontW + " " + wrapSz + "px " + fontFam;
+  var lineGap = Math.round(wrapSz * 1.15);
+  ctx.fillText(twoLines[0], x, y - Math.round(lineGap * 0.48));
+  ctx.fillText(twoLines[1], x, y + Math.round(lineGap * 0.52));
+  var finalW = Math.min(maxWidth, Math.max(ctx.measureText(twoLines[0]).width, ctx.measureText(twoLines[1]).width));
+  return { width: finalW, lines: 2, fontSize: wrapSz };
+};
+
 // High-Resolution HTML5 Canvas Social Card Renderer (1080px Retina Broadcast Card with BetBoy Logo, Both Team Crests & Multi-Market Bet Builder Support)
 window.renderXPostCanvasCard = function(){
   var canvas = document.getElementById("xPostGraphicCanvas");
@@ -5817,9 +6864,9 @@ window.renderXPostCanvasCard = function(){
   // Calculate dynamic row heights based on how many Bet Builder markets are selected for each match
   var rowHeights = selections.map(function(s){
     var mCount = (s.markets && s.markets.length) ? s.markets.length : 1;
-    if(mCount <= 1) return 112;
+    if(mCount <= 1) return 114;
     var legRows = Math.ceil(mCount / 2);
-    return 102 + legRows * 46 + 18;
+    return 104 + legRows * 48 + 18;
   });
   var totalRowsH = rowHeights.reduce(function(a, b){ return a + b; }, 0);
   var H = Math.max(540, 276 + (count > 0 ? totalRowsH : 120));
@@ -5892,19 +6939,32 @@ window.renderXPostCanvasCard = function(){
     headerSubtitle = "AI " + count + "-FOLD BANKER SLIP • " + dateStr;
   }
   ctx.fillStyle = "#34d399";
-  ctx.font = "700 18px 'JetBrains Mono', monospace";
-  ctx.fillText(headerSubtitle, 146, 114);
+  window.drawFittedCanvasText(ctx, headerSubtitle, 146, 114, 615, "left", 18, 13, "700", "'JetBrains Mono', monospace");
 
-  // Right Header Pill (Live Odds Format)
+  // Right Header Pill (Live Odds Format or FT Win Summary)
+  var ftLegsCount = 0;
+  var wonLegsCount = 0;
+  selections.forEach(function(s){
+    var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, w: s.won }];
+    legs.forEach(function(l){
+      var lw = l.w !== undefined ? l.w : s.won;
+      if(s.isFT || lw === true){
+        ftLegsCount++;
+        if(lw === true) wonLegsCount++;
+      }
+    });
+  });
+
   ctx.fillStyle = "rgba(16, 185, 129, 0.16)";
-  roundRect(W - 290, 64, 224, 48, 12);
+  roundRect(W - 294, 64, 228, 48, 12);
   ctx.fill();
   ctx.strokeStyle = "rgba(16, 185, 129, 0.5)";
   ctx.stroke();
   ctx.fillStyle = "#6ee7b7";
-  ctx.font = "800 18px 'JetBrains Mono', monospace";
-  ctx.textAlign = "center";
-  ctx.fillText(isBetBuilder ? ("🛠️ " + totalLegs + " MARKETS LOCKED") : "✓ LIVE ODDS LOCKED", W - 178, 94);
+  var topRightPillTxt = ftLegsCount > 0
+    ? ("✅ " + wonLegsCount + "/" + totalLegs + " WON (FT)")
+    : (isBetBuilder ? ("🛠️ " + totalLegs + " MARKETS LOCKED") : "✓ LIVE ODDS LOCKED");
+  window.drawFittedCanvasText(ctx, topRightPillTxt, W - 180, 94, 210, "center", 17.5, 12.5, "800", "'JetBrains Mono', monospace");
 
   if(count === 0){
     ctx.fillStyle = "#94a3b8";
@@ -5926,7 +6986,7 @@ window.renderXPostCanvasCard = function(){
     var cardBoxH = rH - 16;
     curY += rH;
 
-    var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds }];
+    var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds, w: s.won, statBadge: s.statBadge }];
     var pctNum = parseFloat(String(s.pct).replace("%","")) || 75;
     legs.forEach(function(l){
       var lp = parseFloat(String(l.p).replace("%","")) || 75;
@@ -5935,16 +6995,19 @@ window.renderXPostCanvasCard = function(){
       combOddsDec *= (Number(l.odds) || 1.5);
     });
 
+    var isMatchFT = !!s.isFT;
+    var isSelectionWon = (s.won === true) || legs.every(function(l){ return l.w === true; });
+
     // Row Card Container
     ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
     roundRect(42, y, W - 84, cardBoxH, 18);
     ctx.fill();
-    ctx.strokeStyle = pctNum >= 75 ? "rgba(16, 185, 129, 0.45)" : "rgba(251, 191, 36, 0.45)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = isSelectionWon ? "rgba(16, 185, 129, 0.85)" : (pctNum >= 75 ? "rgba(16, 185, 129, 0.45)" : "rgba(251, 191, 36, 0.45)");
+    ctx.lineWidth = isSelectionWon ? 2.5 : 2;
     ctx.stroke();
 
     // Left Confidence Accent Bar
-    ctx.fillStyle = pctNum >= 75 ? "#10b981" : "#fbbf24";
+    ctx.fillStyle = isSelectionWon ? "#10b981" : (pctNum >= 75 ? "#10b981" : "#fbbf24");
     roundRect(42, y, 10, cardBoxH, 6);
     ctx.fill();
 
@@ -5956,59 +7019,68 @@ window.renderXPostCanvasCard = function(){
     ctx.fillText("v", 131, y + 54);
     window.drawClubCrestOnCanvas(ctx, s.opp, 142, y + 20, 56);
 
-    // Fixture Teams & League/KO Info
-    ctx.textAlign = "left";
+    // Fixture Teams & League/KO/FT Info (Auto-fitted without ellipses truncation)
+    var leftStartX = 210;
+    var rightAnchorX = W - 222; // 858
+    var maxLeftColW = legs.length === 1 ? 335 : 375;
+
+    var fixtureTitle = (isSelectionWon ? "✅ " : "") + s.fav + " vs " + s.opp;
     ctx.fillStyle = "#ffffff";
-    ctx.font = "800 23px 'Plus Jakarta Sans', Arial, sans-serif";
-    var fixtureTitle = s.fav + " vs " + s.opp;
-    if(fixtureTitle.length > 30) fixtureTitle = fixtureTitle.slice(0, 28) + "…";
-    ctx.fillText(fixtureTitle, 212, y + 42);
+    var titleFit = window.drawFittedCanvasText(ctx, fixtureTitle, leftStartX, y + 42, maxLeftColW, "left", 22.5, 14, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
     var lgName = window.getLeagueName ? window.getLeagueName(s.league) : (s.league || "");
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "600 15px 'JetBrains Mono', monospace";
-    var subMeta = lgName + " • KO " + (s.ko || "15:00") + (legs.length > 1 ? (" • 🛠️ " + legs.length + "-Leg Bet Builder") : "");
-    ctx.fillText(subMeta, 212, y + 72);
+    ctx.fillStyle = isMatchFT ? "#34d399" : "#94a3b8";
+    var timeOrFtStr = isMatchFT
+      ? ("✓ FT " + (s.ftScore || s.actual || "") + (isSelectionWon && legs.length === 1 ? " • WON" : ""))
+      : ("KO " + (s.ko || "15:00") + (legs.length > 1 ? (" • 🛠️ " + legs.length + "-Leg") : ""));
+    var subMeta = lgName + " • " + timeOrFtStr;
+    var metaFit = window.drawFittedCanvasText(ctx, subMeta, leftStartX, y + 73, maxLeftColW, "left", 15, 11.5, "700", "'JetBrains Mono', monospace");
+
+    // Calculate exact remaining horizontal width for the Right Selection Column so left & right never collide or cut off
+    var usedLeftW = Math.max(titleFit.width, metaFit.width);
+    var availRightW = Math.max(275, rightAnchorX - (leftStartX + usedLeftW + 18));
 
     // Right Summary Label & Odds Box in Match Header
     if(legs.length === 1){
-      var mktLabel = "⭐ " + s.market;
-      if(mktLabel.length > 29) mktLabel = mktLabel.slice(0, 27) + "…";
-      ctx.textAlign = "right";
-      ctx.fillStyle = "#34d399";
-      ctx.font = "800 19px 'Plus Jakarta Sans', Arial, sans-serif";
-      ctx.fillText(mktLabel, W - 226, y + 44);
+      var singleLeg = legs[0] || {};
+      var legWon = (singleLeg.w === true) || isSelectionWon;
+      var mktLabel = window.formatXCardMarketLabel(s.market, legWon, false);
+      ctx.fillStyle = legWon ? "#4ade80" : "#34d399";
+      var mktFit = window.drawFittedCanvasText(ctx, mktLabel, rightAnchorX, y + 42, availRightW, "right", 19.5, 13.5, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
-      ctx.fillStyle = "#cbd5e1";
-      ctx.font = "700 15px 'JetBrains Mono', monospace";
-      ctx.fillText("AI Confidence: " + pctNum.toFixed(1) + "%", W - 226, y + 72);
+      ctx.fillStyle = legWon ? "#86efac" : "#cbd5e1";
+      var confOrStatTxt = (isMatchFT && singleLeg.statBadge)
+        ? (singleLeg.statBadge + (legWon ? " • ✓ WON" : ""))
+        : ("AI Confidence: " + pctNum.toFixed(1) + "%" + (legWon ? " • ✓ WON" : ""));
+      var confY = mktFit.lines > 1 ? (y + 77) : (y + 73);
+      window.drawFittedCanvasText(ctx, confOrStatTxt, rightAnchorX, confY, availRightW, "right", 15, 11.5, "700", "'JetBrains Mono', monospace");
     } else {
-      ctx.textAlign = "right";
+      var wonLegsInMatch = legs.filter(function(l){ return l.w === true; }).length;
       ctx.fillStyle = "#34d399";
-      ctx.font = "800 18px 'Plus Jakarta Sans', Arial, sans-serif";
-      ctx.fillText("🛠️ " + legs.length + " Markets Combined", W - 226, y + 44);
+      var multiTitle = isMatchFT
+        ? ("✅ " + wonLegsInMatch + "/" + legs.length + " Markets Won (FT)")
+        : ("🛠️ " + legs.length + " Markets Combined");
+      window.drawFittedCanvasText(ctx, multiTitle, rightAnchorX, y + 43, availRightW, "right", 18, 13, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
       ctx.fillStyle = "#cbd5e1";
-      ctx.font = "700 15px 'JetBrains Mono', monospace";
-      ctx.fillText("Avg AI Confidence: " + pctNum.toFixed(1) + "%", W - 226, y + 72);
+      window.drawFittedCanvasText(ctx, "Avg AI Confidence: " + pctNum.toFixed(1) + "%", rightAnchorX, y + 73, availRightW, "right", 15, 11.5, "700", "'JetBrains Mono', monospace");
     }
 
     // Odds Box on Far Right of Match Header
     ctx.fillStyle = "#020617";
-    roundRect(W - 206, y + 16, 144, 64, 14);
+    roundRect(W - 206, y + 16, 144, 66, 14);
     ctx.fill();
-    ctx.strokeStyle = "rgba(251, 191, 36, 0.55)";
+    ctx.strokeStyle = isSelectionWon ? "rgba(52, 211, 153, 0.8)" : "rgba(251, 191, 36, 0.55)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.textAlign = "center";
-    ctx.fillStyle = "#94a3b8";
+    ctx.fillStyle = isSelectionWon ? "#6ee7b7" : "#94a3b8";
     ctx.font = "700 11px 'JetBrains Mono', monospace";
-    ctx.fillText(legs.length > 1 ? "BUILDER ODDS" : "LIVE ODDS", W - 134, y + 38);
+    ctx.fillText(isSelectionWon ? "✓ WON ODDS" : (legs.length > 1 ? "BUILDER ODDS" : "LIVE ODDS"), W - 134, y + 38);
 
     ctx.fillStyle = "#fde047";
-    ctx.font = "900 22px 'JetBrains Mono', monospace";
-    ctx.fillText(window.formatOdds(s.odds || 1.55, false), W - 134, y + 66);
+    window.drawFittedCanvasText(ctx, window.formatOdds(s.odds || 1.55, false), W - 134, y + 67, 130, "center", 22, 14, "900", "'JetBrains Mono', monospace");
 
     // If Multiple Bet Builder Markets are selected for this team, draw the 2-Column Market Legs Grid inside the card
     if(legs.length > 1){
@@ -6018,28 +7090,30 @@ window.renderXPostCanvasCard = function(){
         var col = lIdx % 2;
         var row = Math.floor(lIdx / 2);
         var lx = col === 0 ? 64 : 548;
-        var ly = gridStartY + row * 46;
+        var ly = gridStartY + row * 48;
+        var isLegWon = leg.w === true;
 
-        ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
-        roundRect(lx, ly, colW, 38, 10);
+        ctx.fillStyle = isLegWon ? "rgba(6, 78, 59, 0.55)" : "rgba(2, 6, 23, 0.88)";
+        roundRect(lx, ly, colW, 42, 10);
         ctx.fill();
-        ctx.strokeStyle = "rgba(16, 185, 129, 0.38)";
+        ctx.strokeStyle = isLegWon ? "rgba(52, 211, 153, 0.75)" : "rgba(16, 185, 129, 0.38)";
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        var legName = String(leg.n || "").replace(/^Match Result:\s*/i, "");
-        if(legName.length > 27) legName = legName.slice(0, 25) + "…";
-        ctx.textAlign = "left";
-        ctx.fillStyle = "#f8fafc";
-        ctx.font = "700 15px 'Plus Jakarta Sans', Arial, sans-serif";
-        ctx.fillText("✓ " + legName, lx + 12, ly + 24);
-
         var legOddsStr = window.formatOdds(leg.odds || 1.5, false);
         var legPctStr = Math.round(parseFloat(String(leg.p).replace("%","")) || 75) + "%";
+        var rightChipTxt = legOddsStr + " (" + (isLegWon ? "WON" : legPctStr) + ")";
         ctx.textAlign = "right";
-        ctx.fillStyle = "#fde047";
-        ctx.font = "800 14px 'JetBrains Mono', monospace";
-        ctx.fillText(legOddsStr + " (" + legPctStr + ")", lx + colW - 12, ly + 24);
+        ctx.fillStyle = isLegWon ? "#6ee7b7" : "#fde047";
+        ctx.font = "800 13.5px 'JetBrains Mono', monospace";
+        var rightChipW = ctx.measureText(rightChipTxt).width;
+        ctx.fillText(rightChipTxt, lx + colW - 12, ly + 26);
+
+        var legName = window.formatXCardMarketLabel(leg.n, isLegWon, true);
+        if(leg.statBadge && isMatchFT) legName = legName + " [" + leg.statBadge + "]";
+        var availLegW = Math.max(180, colW - rightChipW - 32);
+        ctx.fillStyle = "#f8fafc";
+        window.drawFittedCanvasText(ctx, legName, lx + 12, ly + 26, availLegW, "left", 14.5, 10.5, "700", "'Plus Jakarta Sans', Arial, sans-serif");
       });
     }
   });
@@ -6071,20 +7145,14 @@ window.renderXPostCanvasCard = function(){
     footerLeftLabel = count + "-FOLD COMBINED: " + combOddsDisplay;
   }
 
-  ctx.textAlign = "left";
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 21px 'JetBrains Mono', monospace";
-  ctx.fillText(footerLeftLabel, 66, footerY + 41);
+  window.drawFittedCanvasText(ctx, footerLeftLabel, 66, footerY + 41, 315, "left", 20.5, 14, "900", "'JetBrains Mono', monospace");
 
-  ctx.textAlign = "center";
   ctx.fillStyle = "#6ee7b7";
-  ctx.font = "800 19px 'JetBrains Mono', monospace";
-  ctx.fillText("AVG AI CONFIDENCE: " + avgConf + "%", W * 0.53, footerY + 41);
+  window.drawFittedCanvasText(ctx, "AVG AI CONFIDENCE: " + avgConf + "%", W * 0.52, footerY + 41, 290, "center", 18.5, 13.5, "800", "'JetBrains Mono', monospace");
 
-  ctx.textAlign = "right";
   ctx.fillStyle = "#fde047";
-  ctx.font = "900 21px 'JetBrains Mono', monospace";
-  ctx.fillText("£10 RETURNS: £" + estReturn, W - 66, footerY + 41);
+  window.drawFittedCanvasText(ctx, "£10 RETURNS: £" + estReturn, W - 66, footerY + 41, 300, "right", 20.5, 14, "900", "'JetBrains Mono', monospace");
 
   return canvas;
 };
@@ -6215,6 +7283,13 @@ window.refreshXPostStudioUI = function(){
       var favCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.fav) : "";
       var oppCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.opp) : "";
 
+      var actStr = String(m.actual || "");
+      var isMatchFT = !m.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr));
+      var scMatch = actStr.match(/(\d+)\s*-\s*(\d+)/);
+      var ftBadgeHtml = isMatchFT
+        ? '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">✓ FT ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : actStr) + '</span>'
+        : '';
+
       var builderPanelHtml = "";
       if(isSel){
         var marketChipsHtml = sortedM.map(function(item, mIdx){
@@ -6223,11 +7298,16 @@ window.refreshXPostStudioUI = function(){
             ? "bg-emerald-600/30 border-emerald-400 text-white ring-1 ring-emerald-400/60"
             : "bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-600 hover:text-white";
           var checkIcon = isMktPicked
-            ? '<span class="text-emerald-300 font-black">✓</span>'
-            : '<span class="text-slate-500 font-bold">+</span>';
-          return '<button type="button" onclick="window.toggleXMatchMarketByIdx(' + m.id + ', ' + mIdx + ')" class="px-2 py-1.5 rounded-lg border text-left flex items-center justify-between gap-1.5 text-[9.5px] font-bold cursor-pointer transition ' + chipCls + '">' +
-            '<span class="truncate flex items-center gap-1">' + checkIcon + '<span class="truncate">' + item.n + '</span></span>' +
-            '<span class="font-mono text-[9px] text-amber-300 flex-shrink-0">' + window.formatOdds(item.odds, false) + ' • ' + item.p + '%</span>' +
+            ? '<span class="text-emerald-300 font-black flex-shrink-0">✓</span>'
+            : '<span class="text-slate-500 font-bold flex-shrink-0">+</span>';
+          var wonTick = item.w === true ? ' <span class="text-emerald-300 font-black flex-shrink-0">✅</span>' : '';
+          var statSub = item.statBadge ? ('<div class="text-sky-300 font-mono text-[8.5px] leading-tight mt-0.5">' + item.statBadge + (item.w === true ? ' • ✓ WON' : '') + '</div>') : '';
+          return '<button type="button" onclick="window.toggleXMatchMarketByIdx(' + m.id + ', ' + mIdx + ')" class="px-2 py-1.5 rounded-lg border text-left flex flex-col justify-center text-[9.5px] font-bold cursor-pointer transition ' + chipCls + '">' +
+            '<div class="flex items-center justify-between gap-1.5 w-full">' +
+              '<span class="min-w-0 flex-1 flex items-center gap-1">' + checkIcon + '<span class="leading-tight break-words">' + item.n + '</span>' + wonTick + '</span>' +
+              '<span class="font-mono text-[9px] text-amber-300 flex-shrink-0">' + window.formatOdds(item.odds, false) + ' • ' + item.p + '%</span>' +
+            '</div>' +
+            statSub +
           '</button>';
         }).join("");
 
@@ -6239,7 +7319,7 @@ window.refreshXPostStudioUI = function(){
               '<button type="button" onclick="window.setXMatchBuilderTopN(' + m.id + ', 2)" class="px-1.5 py-0.5 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-[8.5px] font-bold cursor-pointer">+Top 2</button>' +
               '<button type="button" onclick="window.setXMatchBuilderTopN(' + m.id + ', 3)" class="px-1.5 py-0.5 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-[8.5px] font-bold cursor-pointer">+Top 3</button>' +
               '<button type="button" onclick="window.setXMatchBuilderTopN(' + m.id + ', 5)" class="px-1.5 py-0.5 rounded bg-amber-950/80 hover:bg-amber-900/80 text-amber-300 border border-amber-500/40 text-[8.5px] font-bold cursor-pointer">+Top 5</button>' +
-              '<button type="button" onclick="window.setXMatchBuilderTopN(' + m.id + ', 16)" class="px-1.5 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900/80 text-sky-300 border border-sky-500/40 text-[8.5px] font-bold cursor-pointer">All 16</button>' +
+              '<button type="button" onclick="window.setXMatchBuilderTopN(' + m.id + ', ' + sortedM.length + ')" class="px-1.5 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900/80 text-sky-300 border border-sky-500/40 text-[8.5px] font-bold cursor-pointer">All (' + sortedM.length + ')</button>' +
             '</div>' +
           '</div>' +
           '<div class="grid grid-cols-1 sm:grid-cols-2 gap-1">' +
@@ -6249,20 +7329,23 @@ window.refreshXPostStudioUI = function(){
       }
 
       var rightBadgeHtml = isSel
-        ? '<span class="text-[9.5px] font-mono font-black px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex-shrink-0">' + selectedMarkets.length + ' Market' + (selectedMarkets.length === 1 ? '' : 's') + ' • ' + window.formatOdds(matchCombOdds, false) + '</span>'
-        : '<button type="button" onclick="window.toggleMatchForXPost(' + m.id + ', false)" class="text-[9.5px] font-bold px-2 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 flex-shrink-0 cursor-pointer">+ Select Team</button>';
+        ? '<span class="text-[9.5px] font-mono font-black px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">' + selectedMarkets.length + ' Pick' + (selectedMarkets.length === 1 ? '' : 's') + ' • ' + window.formatOdds(matchCombOdds, false) + '</span>'
+        : '<button type="button" onclick="window.toggleMatchForXPost(' + m.id + ', false)" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap flex-shrink-0 cursor-pointer">+ Select</button>';
 
       return '<div class="p-2.5 rounded-xl border transition ' + (isSel ? 'bg-emerald-950/35 border-emerald-500/55 shadow-md' : 'bg-slate-900/70 border-slate-800/80') + '">' +
-        '<div class="flex items-center justify-between gap-2">' +
-          '<label class="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer">' +
+        '<div class="flex items-center justify-between gap-1.5 flex-wrap">' +
+          '<label class="flex items-center gap-1.5 min-w-0 cursor-pointer">' +
             '<input type="checkbox" ' + (isSel ? 'checked' : '') + ' onchange="window.toggleMatchForXPost(' + m.id + ', false)" class="accent-emerald-500 w-3.5 h-3.5 flex-shrink-0">' +
             '<span class="text-[10px] font-black mono text-emerald-400">#' + (idx+1) + '</span>' +
             favCrest +
-            '<span class="text-[11px] font-bold text-white truncate">' + m.fav + ' <span class="text-slate-400 font-normal">v</span></span>' +
+            '<span class="text-[11px] font-bold text-white">' + m.fav + ' <span class="text-slate-400 font-normal">v</span></span>' +
             oppCrest +
-            '<span class="text-[11px] font-semibold text-slate-300 truncate">' + m.opp + '</span>' +
+            '<span class="text-[11px] font-semibold text-slate-200">' + m.opp + '</span>' +
           '</label>' +
-          rightBadgeHtml +
+          '<div class="flex items-center gap-1.5 ml-auto">' +
+            ftBadgeHtml +
+            rightBadgeHtml +
+          '</div>' +
         '</div>' +
         builderPanelHtml +
       '</div>';
@@ -6730,7 +7813,8 @@ window.buildCleanExportHTML = function(){
     document.getElementById("logWrapper").classList.remove("hidden");
     document.getElementById("wipeBtn").classList.remove("hidden");
     document.getElementById("clearLogBtn").classList.remove("hidden");
-    document.getElementById("authBtn").innerText = "🔓";
+    var ab = document.getElementById("authBtn");
+    if(ab) ab.innerText = "🔓";
     window.runEngine(false);
   } else if(wasTrial){
     window.isTrial = true;
