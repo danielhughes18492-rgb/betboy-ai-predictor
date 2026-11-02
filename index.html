@@ -145,6 +145,47 @@ window.getBetBoyLogoUrl = function(){
   return window.makeBetBoyLogoSvg();
 };
 
+window.make18PlusLogoUrl = function(){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">' +
+    '<circle cx="60" cy="60" r="55" fill="#090d16" stroke="#e11d48" stroke-width="9"/>' +
+    '<circle cx="60" cy="60" r="44" fill="none" stroke="#f43f5e" stroke-width="2" stroke-opacity="0.45"/>' +
+    '<text x="57" y="67" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="40" fill="#ffffff" text-anchor="middle" letter-spacing="-1">18<tspan fill="#f43f5e" font-size="32" dy="-7">+</tspan></text>' +
+    '<text x="60" y="92" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="13.5" fill="#fda4af" text-anchor="middle" letter-spacing="1.5">ONLY</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeBeGambleAwareLogoUrl = function(){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="310" height="60" viewBox="0 0 310 60">' +
+    '<circle cx="24" cy="30" r="19" fill="#ff8200" fill-opacity="0.16" stroke="#ff8200" stroke-width="2.5"/>' +
+    '<text x="24" y="36" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="16" fill="#ff8200" text-anchor="middle">18+</text>' +
+    '<text x="54" y="35" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="26" letter-spacing="-0.3">' +
+      '<tspan fill="#ff8200">Be</tspan>' +
+      '<tspan fill="#ffffff">Gamble</tspan>' +
+      '<tspan fill="#ff8200">Aware</tspan>' +
+      '<tspan fill="#e2e8f0" font-weight="700" font-size="17">.org</tspan>' +
+    '</text>' +
+    '<rect x="54" y="45" width="248" height="3.5" rx="1.75" fill="#ff8200"/>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeGamStopLogoUrl = function(){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="265" height="60" viewBox="0 0 265 60">' +
+    '<text x="8" y="34" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="30" fill="#ffffff" letter-spacing="-0.5">GAM</text>' +
+    '<text x="80" y="34" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="30" fill="#38bdf8" letter-spacing="-0.5">ST</text>' +
+    '<g transform="translate(133, 23)">' +
+      '<circle cx="0" cy="0" r="13.5" fill="#e11d48" stroke="#38bdf8" stroke-width="3"/>' +
+      '<rect x="-6.5" y="-2.2" width="13" height="4.4" rx="1.5" fill="#ffffff"/>' +
+    '</g>' +
+    '<text x="150" y="34" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="30" fill="#38bdf8" letter-spacing="-0.5">P</text>' +
+    '<circle cx="238" cy="23" r="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>' +
+    '<path d="M232,23 L236,27 L245,18" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<text x="8" y="53" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="800" font-size="10.4" fill="#94a3b8" letter-spacing="1.6">FREE ONLINE SELF-EXCLUSION</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
 window._betBoyLogoCanvasImg = new Image();
 window._betBoyLogoCanvasImg.src = window.getBetBoyLogoUrl();
 
@@ -632,7 +673,33 @@ window.checkSavedSession = function() {
       <div id="paypal-button-container-P-1PM21183MX578164LNLSTG6Q" class="mt-1"></div>
     </div>
 
-    <div class="text-[10px] text-slate-500 tracking-wide font-mono pt-2 border-t border-slate-800/60">Copyright © BetBoy 2026</div>
+    <!-- Responsible Gambling & 18+ Notice (Main Password Screen) -->
+    <div id="gateResponsibleGamblingNotice" class="pt-3 border-t border-slate-800/80 space-y-2.5 text-center">
+      <div class="flex items-center justify-center gap-2 flex-wrap">
+        <span class="inline-flex items-center gap-1.5 bg-rose-950/80 border border-rose-500/50 text-rose-200 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+          <img src="" id="gate18PlusImg" alt="18+ Only" class="w-4 h-4 rounded-full">
+          <span>18+ Only</span>
+        </span>
+        <span class="text-[10px] font-bold text-amber-300 tracking-wide uppercase">Responsible Gambling</span>
+      </div>
+      <div class="flex items-center justify-center gap-6 py-1">
+        <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" aria-label="BeGambleAware.org" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+          <img src="" id="gateBgaLogoImg" alt="BeGambleAware.org" class="h-8 w-auto object-contain">
+        </a>
+        <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" aria-label="GamStop" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+          <img src="" id="gateGamstopLogoImg" alt="GamStop" class="h-8 w-auto object-contain">
+        </a>
+      </div>
+      <p id="gateResponsibleGamblingPhrase" class="text-[10px] text-slate-300 leading-relaxed font-medium px-1">
+        Please gamble responsibly. 18+ only. BetBoy AI provides statistical analysis and predictions for informational and entertainment purposes only.
+      </p>
+      <div class="text-[10px] text-slate-500 tracking-wide font-mono pt-1 border-t border-slate-800/60">Copyright © BetBoy 2026</div>
+    </div>
+    <script>
+      if(document.getElementById("gate18PlusImg")) document.getElementById("gate18PlusImg").src = window.make18PlusLogoUrl();
+      if(document.getElementById("gateBgaLogoImg")) document.getElementById("gateBgaLogoImg").src = window.makeBeGambleAwareLogoUrl();
+      if(document.getElementById("gateGamstopLogoImg")) document.getElementById("gateGamstopLogoImg").src = window.makeGamStopLogoUrl();
+    </script>
   </div>
 </div>
 
@@ -993,7 +1060,38 @@ window.checkSavedSession = function() {
     <div id="logContainer" class="space-y-1 max-h-48 overflow-y-auto mono text-[10px] text-slate-300"></div>
   </div>
 
-  <div id="betBoyFooter" class="text-center text-[10px] text-slate-500 font-mono pt-4 pb-2 border-t border-slate-800/60">Copyright © BetBoy 2026 • AI Results Predictor</div>
+  <!-- Responsible Gambling & 18+ Notice Footer (Bottom on the User End of the Website) -->
+  <footer id="betBoyFooter" class="glass p-4 rounded-2xl border border-slate-800/90 text-center space-y-3 mt-4 mb-2 shadow-lg">
+    <div class="flex items-center justify-center gap-2 flex-wrap">
+      <span class="inline-flex items-center gap-1.5 bg-rose-950/85 border border-rose-500/50 text-rose-200 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow">
+        <img src="" id="footer18PlusImg" alt="18+ Only" class="w-4 h-4 rounded-full">
+        <span>18+ Only</span>
+      </span>
+      <span class="text-[10.5px] font-extrabold text-amber-300 uppercase tracking-wider">Responsible Gambling &amp; 18+ Notice</span>
+    </div>
+
+    <div class="flex items-center justify-center gap-8 py-1 flex-wrap">
+      <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" aria-label="BeGambleAware.org" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+        <img src="" id="footerBgaLogoImg" alt="BeGambleAware.org" class="h-9 w-auto object-contain">
+      </a>
+      <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" aria-label="GamStop" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+        <img src="" id="footerGamstopLogoImg" alt="GamStop" class="h-9 w-auto object-contain">
+      </a>
+    </div>
+
+    <p id="footerResponsibleGamblingPhrase" class="text-[11px] text-slate-200 leading-relaxed font-medium max-w-md mx-auto">
+      Please gamble responsibly. 18+ only. BetBoy AI provides statistical analysis and predictions for informational and entertainment purposes only.
+    </p>
+
+    <div class="text-[10px] text-slate-500 font-mono pt-2 border-t border-slate-800/70">
+      Copyright © BetBoy 2026 • AI Results Predictor • <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-amber-300 underline">BeGambleAware.org</a> • <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-sky-300 underline">GamStop</a>
+    </div>
+    <script>
+      if(document.getElementById("footer18PlusImg")) document.getElementById("footer18PlusImg").src = window.make18PlusLogoUrl();
+      if(document.getElementById("footerBgaLogoImg")) document.getElementById("footerBgaLogoImg").src = window.makeBeGambleAwareLogoUrl();
+      if(document.getElementById("footerGamstopLogoImg")) document.getElementById("footerGamstopLogoImg").src = window.makeGamStopLogoUrl();
+    </script>
+  </footer>
 </main>
 </div>
 
@@ -1004,7 +1102,7 @@ window.checkSavedSession = function() {
     <div class="min-w-0">
       <div class="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5 flex-wrap">
         <span>Betting Slip Guide</span>
-        <span class="text-[10px] bg-slate-950/50 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded-md font-mono font-bold" id="miniSlipOddsBadge">@ 1/1</span>
+        <span class="text-[10px] bg-slate-950/50 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded-md font-mono font-bold" id="miniSlipOddsBadge">1/1</span>
       </div>
       <div class="text-[10px] font-semibold text-emerald-100 truncate max-w-[215px] sm:max-w-xs mt-0.5" id="miniSlipPreview">Tap to enter stake &amp; calculate returns</div>
     </div>
@@ -1331,8 +1429,266 @@ window.slipStake = window.safeGet("airp_slip_stake", 10);
 window.slipBetMode = window.safeGet("airp_slip_mode", "acca");
 window.oddsFormat = "frac"; // Default to Fractional until user changes it in the select box
 window.cardMarketFilter = {};
-window.liveBet365OddsMap = window.safeGet("airp_live_bet365_odds_v1", {});
-window.lastBet365OddsSyncTime = Date.now();
+window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=uk&markets=h2h&apiKey=684bf55faedcee9aceacb5eb68726661";
+window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=684bf55faedcee9aceacb5eb68726661";
+window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v1", {});
+window.liveBet365OddsMap = window.liveOddsApiMap;
+window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v1", {});
+window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v1", {});
+window.lastOddsApiSyncTime = Number(window.safeGet("airp_the_odds_api_sync_ts", 0)) || 0;
+window.oddsApiInFlight = false;
+
+window.ODDS_TEAM_ALIAS_MAP = {
+  manchestercity: "mancity", mancity: "mancity",
+  manchesterunited: "manutd", manchesterutd: "manutd", manutd: "manutd",
+  tottenhamhotspur: "tottenham", spurs: "tottenham",
+  newcastleunited: "newcastle", newcastleutd: "newcastle",
+  westhamunited: "westham", westham: "westham",
+  wolverhamptonwanderers: "wolves", wolves: "wolves",
+  nottinghamforest: "nottmforest",
+  brightonandhovealbion: "brighton", brightonhovealbion: "brighton",
+  leicestercity: "leicester", ipswichtown: "ipswich", leedsunited: "leeds",
+  sheffieldunited: "sheffutd",
+  parissaintgermain: "psg", parisstgermain: "psg", psg: "psg",
+  bayernmunich: "bayern", bayernmunchen: "bayern", fcbayernmunchen: "bayern",
+  bayerleverkusen: "leverkusen", bayer04leverkusen: "leverkusen",
+  borussiadortmund: "dortmund", borussiamonchengladbach: "gladbach",
+  eintrachtfrankfurt: "frankfurt", rbleipzig: "leipzig",
+  atleticomadrid: "atletico", atleticodemadrid: "atletico",
+  athleticbilbao: "athleticclub", athleticclub: "athleticclub",
+  realsociedad: "realsociedad", realbetis: "realbetis", realmadrid: "realmadrid",
+  internazionale: "inter", intermilan: "inter", acmilan: "milan",
+  hellasverona: "verona", sportingcp: "sporting", sportinglisbon: "sporting",
+  glasgowrangers: "rangers", celticfc: "celtic", heartofmidlothian: "hearts"
+};
+
+window.normalizeOddsTeamKey = function(name) {
+  var raw = String(name || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, "and")
+    .replace(/\b(fc|afc|cf|sc|ac|as|ud|cd|rcd|sv|vfb|vfl|1\.|tsg|bsc|ssc|us)\b/g, " ")
+    .replace(/[^a-z0-9]/g, "");
+  return window.ODDS_TEAM_ALIAS_MAP[raw] || raw;
+};
+
+window.parseTheOddsApiEvents = function(ukEvents, euEvents) {
+  var combined = [];
+  if (Array.isArray(ukEvents)) {
+    ukEvents.forEach(function(ev) {
+      if (ev && ev.home_team && ev.away_team) combined.push({ ev: ev, region: "uk" });
+    });
+  }
+  if (Array.isArray(euEvents)) {
+    euEvents.forEach(function(ev) {
+      if (ev && ev.home_team && ev.away_team) combined.push({ ev: ev, region: "eu" });
+    });
+  }
+
+  var accMap = {};
+  combined.forEach(function(item) {
+    var ev = item.ev;
+    var region = item.region;
+    var homeKey = window.normalizeOddsTeamKey(ev.home_team);
+    var awayKey = window.normalizeOddsTeamKey(ev.away_team);
+    if (!homeKey || !awayKey) return;
+
+    var matchKey = homeKey + "_vs_" + awayKey;
+    if (!accMap[matchKey]) {
+      accMap[matchKey] = {
+        eventId: String(ev.id || matchKey),
+        homeTeam: ev.home_team,
+        awayTeam: ev.away_team,
+        homeKey: homeKey,
+        awayKey: awayKey,
+        homePrices: [],
+        drawPrices: [],
+        awayPrices: [],
+        bookmakerKeys: {},
+        regions: {},
+        commenceTime: ev.commence_time || ""
+      };
+    }
+
+    var bucket = accMap[matchKey];
+    bucket.regions[region] = true;
+
+    var bookmakers = Array.isArray(ev.bookmakers) ? ev.bookmakers : [];
+    bookmakers.forEach(function(bm) {
+      if (!bm || !Array.isArray(bm.markets)) return;
+      var h2hMarket = null;
+      for (var i = 0; i < bm.markets.length; i++) {
+        if (bm.markets[i] && bm.markets[i].key === "h2h" && Array.isArray(bm.markets[i].outcomes)) {
+          h2hMarket = bm.markets[i];
+          break;
+        }
+      }
+      if (!h2hMarket) return;
+
+      var hPrice = 0, dPrice = 0, aPrice = 0;
+      h2hMarket.outcomes.forEach(function(out) {
+        if (!out || typeof out.price !== "number" || out.price <= 1.0) return;
+        var outLower = String(out.name || "").trim().toLowerCase();
+        var outKey = window.normalizeOddsTeamKey(out.name);
+        if (outLower === "draw" || outLower === "tie") {
+          dPrice = out.price;
+        } else if (out.name === ev.home_team || outKey === homeKey) {
+          hPrice = out.price;
+        } else if (out.name === ev.away_team || outKey === awayKey) {
+          aPrice = out.price;
+        }
+      });
+
+      if (hPrice > 1.0 && aPrice > 1.0) {
+        bucket.homePrices.push(hPrice);
+        bucket.awayPrices.push(aPrice);
+        if (dPrice > 1.0) bucket.drawPrices.push(dPrice);
+        bucket.bookmakerKeys[region + ":" + (bm.key || bm.title || "bm")] = true;
+      }
+    });
+  });
+
+  var avg = function(arr, fallback) {
+    if (!arr || !arr.length) return fallback;
+    var s = 0;
+    for (var i = 0; i < arr.length; i++) s += arr[i];
+    return parseFloat((s / arr.length).toFixed(2));
+  };
+
+  var outMap = Object.assign({}, window.liveOddsApiMap || {});
+  var nowTs = Date.now();
+  Object.keys(accMap).forEach(function(matchKey) {
+    var b = accMap[matchKey];
+    if (!b.homePrices.length || !b.awayPrices.length) return;
+    // Do not overwrite pre-kickoff odds if the match has already kicked off
+    var koTs = b.commenceTime ? Date.parse(b.commenceTime) : NaN;
+    if (Number.isFinite(koTs) && nowTs >= koTs && outMap[matchKey] && outMap[matchKey].homeOdds > 1.0) {
+      return;
+    }
+    var parsed = {
+      eventId: b.eventId,
+      homeTeam: b.homeTeam,
+      awayTeam: b.awayTeam,
+      homeKey: b.homeKey,
+      awayKey: b.awayKey,
+      homeOdds: avg(b.homePrices, 2.10),
+      drawOdds: avg(b.drawPrices, 3.30),
+      awayOdds: avg(b.awayPrices, 3.40),
+      bookmakerCount: Object.keys(b.bookmakerKeys).length,
+      regions: Object.keys(b.regions),
+      commenceTime: b.commenceTime,
+      updatedAt: nowTs
+    };
+    outMap[matchKey] = parsed;
+    outMap["id_" + b.eventId] = parsed;
+    outMap["team_" + b.homeKey] = parsed;
+    outMap["team_" + b.awayKey] = parsed;
+  });
+
+  return outMap;
+};
+
+window.lookupOddsApiEntryForMatch = function(oddsMap, match) {
+  if (!oddsMap || typeof oddsMap !== "object" || !match) return null;
+  var hKey = window.normalizeOddsTeamKey(match.homeName);
+  var aKey = window.normalizeOddsTeamKey(match.awayName);
+
+  var direct = oddsMap[hKey + "_vs_" + aKey];
+  if (direct && direct.homeOdds > 1.0 && direct.awayOdds > 1.0) {
+    return {
+      homeOdds: Number(direct.homeOdds),
+      drawOdds: Number(direct.drawOdds || 3.30),
+      awayOdds: Number(direct.awayOdds),
+      bookmakerCount: direct.bookmakerCount || 1,
+      regions: direct.regions || ["uk", "eu"]
+    };
+  }
+
+  var reversed = oddsMap[aKey + "_vs_" + hKey];
+  if (reversed && reversed.homeOdds > 1.0 && reversed.awayOdds > 1.0) {
+    return {
+      homeOdds: Number(reversed.awayOdds),
+      drawOdds: Number(reversed.drawOdds || 3.30),
+      awayOdds: Number(reversed.homeOdds),
+      bookmakerCount: reversed.bookmakerCount || 1,
+      regions: reversed.regions || ["uk", "eu"]
+    };
+  }
+
+  if (match.id !== undefined && match.id !== null) {
+    var byId = oddsMap["id_" + match.id];
+    if (byId && byId.homeOdds > 1.0 && byId.awayOdds > 1.0) {
+      return {
+        homeOdds: Number(byId.homeOdds),
+        drawOdds: Number(byId.drawOdds || 3.30),
+        awayOdds: Number(byId.awayOdds),
+        bookmakerCount: byId.bookmakerCount || 1,
+        regions: byId.regions || ["uk", "eu"]
+      };
+    }
+  }
+
+  return null;
+};
+
+window.deriveMarketsFromOddsApiH2H = function(favOdds, drawOdds, oppOdds) {
+  var safeFav = (Number.isFinite(favOdds) && favOdds > 1.01) ? favOdds : 1.75;
+  var safeDraw = (Number.isFinite(drawOdds) && drawOdds > 1.01) ? drawOdds : 3.40;
+  var safeOpp = (Number.isFinite(oppOdds) && oppOdds > 1.01) ? oppOdds : 4.20;
+
+  var pFavRaw = 1 / safeFav;
+  var pDrawRaw = 1 / safeDraw;
+  var pOppRaw = 1 / safeOpp;
+  var overround = pFavRaw + pDrawRaw + pOppRaw;
+
+  var fairFav = pFavRaw / overround;
+  var fairDraw = pDrawRaw / overround;
+  var fairOpp = pOppRaw / overround;
+
+  var dcProb = Math.min(0.95, Math.max(0.25, (fairFav + fairDraw) * 1.045));
+  var dnbProb = Math.min(0.94, Math.max(0.20, (fairFav / Math.max(0.05, fairFav + fairOpp)) * 1.042));
+
+  return {
+    winOdds: parseFloat(safeFav.toFixed(2)),
+    dcOdds: parseFloat(Math.min(4.50, Math.max(1.06, 1 / dcProb)).toFixed(2)),
+    dnbOdds: parseFloat(Math.min(6.00, Math.max(1.08, 1 / dnbProb)).toFixed(2)),
+    winO15Odds: parseFloat(Math.min(9.50, Math.max(1.18, safeFav * 1.24)).toFixed(2)),
+    ah1Odds: parseFloat(Math.min(12.00, Math.max(1.28, safeFav * 1.52)).toFixed(2))
+  };
+};
+
+window.fetchTheOddsApiMarkets = function(forceRefresh) {
+  var now = Date.now();
+  // Throttle background calls to once every 10 minutes unless forced
+  if (!forceRefresh && window.oddsApiInFlight) return Promise.resolve(window.liveOddsApiMap);
+  if (!forceRefresh && window.lastOddsApiSyncTime && (now - window.lastOddsApiSyncTime < 600000) && Object.keys(window.liveOddsApiMap || {}).length > 0) {
+    return Promise.resolve(window.liveOddsApiMap);
+  }
+  window.oddsApiInFlight = true;
+
+  return Promise.allSettled([
+    fetch(window.THE_ODDS_API_UK_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; }),
+    fetch(window.THE_ODDS_API_EU_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; })
+  ]).then(function(results) {
+    window.oddsApiInFlight = false;
+    var ukEvents = (results[0] && Array.isArray(results[0].value)) ? results[0].value : [];
+    var euEvents = (results[1] && Array.isArray(results[1].value)) ? results[1].value : [];
+    if (ukEvents.length > 0 || euEvents.length > 0) {
+      window.liveOddsApiMap = window.parseTheOddsApiEvents(ukEvents, euEvents);
+      window.liveBet365OddsMap = window.liveOddsApiMap;
+      window.lastOddsApiSyncTime = Date.now();
+      window.safeSet("airp_the_odds_api_v1", window.liveOddsApiMap);
+      window.safeSet("airp_the_odds_api_sync_ts", window.lastOddsApiSyncTime);
+      if (window.runEngine) window.runEngine(false);
+      if (window.updateMiniSlip) window.updateMiniSlip();
+    }
+    return window.liveOddsApiMap;
+  }).catch(function() {
+    window.oddsApiInFlight = false;
+    return window.liveOddsApiMap;
+  });
+};
 
 window.UK_FRACTION_LADDER = [
   [1, 10], [1, 9], [1, 8], [1, 7], [1, 6], [1, 5], [2, 9], [1, 4], [2, 7], [3, 10],
@@ -1445,13 +1801,16 @@ window.calculateLiveOddsFromPct = function(pct, seed) {
 };
 
 window.syncLiveOddsNow = function(showToastFlag) {
-  window.lastBet365OddsSyncTime = Date.now();
+  window.lastOddsApiSyncTime = Date.now();
+  if (typeof window.fetchTheOddsApiMarkets === "function") {
+    window.fetchTheOddsApiMarkets(true);
+  }
   if (typeof window.syncRealLiveScores === "function") {
     window.syncRealLiveScores(true);
   }
-  var tStr = new Date(window.lastBet365OddsSyncTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  var tStr = new Date(window.lastOddsApiSyncTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   var slipLbl = document.getElementById("slipLiveOddsSyncStatus");
-  if (slipLbl) slipLbl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Live Odds Locked (' + tStr + ')';
+  if (slipLbl) slipLbl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>The Odds API (UK/EU) Locked (' + tStr + ')';
 
   window.betSlip.forEach(function(betId) {
     var existing = window.betSlipData[betId];
@@ -1469,7 +1828,7 @@ window.syncLiveOddsNow = function(showToastFlag) {
   }
   if (window.runEngine) window.runEngine(false);
   if (showToastFlag && window.showAppToast) {
-    window.showAppToast("🟢 Live Odds Updated (" + tStr + ")");
+    window.showAppToast("🟢 Official Odds API (UK & EU) Updated (" + tStr + ")");
   }
 };
 window.syncLiveBet365OddsNow = window.syncLiveOddsNow;
@@ -1684,7 +2043,7 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
         node.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
       }
     });
-    if (window.showAppToast) window.showAppToast("➕ Added: " + team + " • " + market + " (@ " + window.formatOdds(odds, false) + ")");
+    if (window.showAppToast) window.showAppToast("➕ Added: " + team + " • " + market + " (" + window.formatOdds(odds, false) + ")");
   }
   window.updateMiniSlip(true);
   var modal = document.getElementById('bookmakerModal');
@@ -1819,12 +2178,12 @@ window.updateMiniSlip = function(animatePulse) {
     var calc = window.calculateSlipReturnsSummary();
     cnt.innerText = total;
     if (oddsBadge) {
-      oddsBadge.innerText = "@ " + window.formatOdds(calc.combinedOdds, true);
+      oddsBadge.innerText = window.formatOdds(calc.combinedOdds, true);
     }
     if (prev) {
       var summaryList = window.betSlip.map(function(id) {
         var d = window.betSlipData[id] || window.parseBetSelection(id);
-        return d.team + " (" + d.market + " @ " + window.formatOdds(d.odds || 1.65, false) + ")";
+        return d.team + " (" + d.market + " " + window.formatOdds(d.odds || 1.65, false) + ")";
       });
       prev.innerHTML = "£" + calc.totalStake.toFixed(2) + " Stake ➔ <b class='text-white'>£" + calc.potentialReturn.toFixed(2) + " Return</b> • " + summaryList.join(', ');
       prev.title = summaryList.join('\n');
@@ -1894,9 +2253,9 @@ window.renderSlipSelections = function() {
         '</div>' +
       '</div>' +
       '<div class="flex items-center gap-1.5 flex-shrink-0">' +
-        '<div class="bg-slate-950 border border-amber-500/40 rounded-lg px-2.5 py-1 text-center shadow-inner" title="Live Odds (Read-Only)">' +
-          '<span class="text-[9px] text-slate-400 block leading-none uppercase font-bold">Live Odds</span>' +
-          '<span class="text-amber-300 font-black text-xs mono leading-tight">@ ' + formattedOdds + '</span>' +
+        '<div class="bg-slate-950 border border-amber-500/40 rounded-lg px-2.5 py-1 text-center shadow-inner" title="Locked Odds (Read-Only)">' +
+          '<span class="text-[9px] text-slate-400 block leading-none uppercase font-bold">Odds</span>' +
+          '<span class="text-amber-300 font-black text-xs mono leading-tight">' + formattedOdds + '</span>' +
         '</div>' +
         '<button type="button" onclick="window.removeBetFromSlipByIndex(' + idx + ')" aria-label="Remove selection" class="text-slate-400 hover:text-rose-400 text-base font-black px-1.5 py-0.5 hover:bg-rose-500/10 rounded-lg transition cursor-pointer" title="Remove selection">&times;</button>' +
       '</div>' +
@@ -1950,7 +2309,7 @@ window.copyCurrentBetSlip = function() {
     parsed.map(function(b, idx) {
       var oppText = b.opp ? " vs " + b.opp : "";
       var pctText = b.pct ? " (" + b.pct + " AI)" : "";
-      var oddsText = " @ " + window.formatOdds(b.odds || 1.65, false);
+      var oddsText = " " + window.formatOdds(b.odds || 1.65, false);
       return (idx + 1) + ". " + b.team + oppText + " — " + b.market + oddsText + pctText;
     }).join("\n") +
     "\n\nCombined Odds: " + window.formatOdds(calc.combinedOdds, true) +
@@ -2536,23 +2895,6 @@ window.buildDeterministicFallbackSlate = function(dateStr){
               window.CLUB_CREST_MAP[window.cleanCrestKey(aS)]=aC.team.logo;
             }
 
-            // Parse live sportsbook 1X2 & Over/Under odds when present in feed
-            try {
-              if(comp.odds && comp.odds[0]){
-                var od = comp.odds[0];
-                var hMl = od.homeTeamOdds && od.homeTeamOdds.moneyLine;
-                var aMl = od.awayTeamOdds && od.awayTeamOdds.moneyLine;
-                var dMl = od.drawOdds && od.drawOdds.moneyLine;
-                window.liveBet365OddsMap["id_" + ev.id] = {
-                  homeOdds: hMl ? window.americanToDecimalOdds(hMl, 60, idx) : null,
-                  awayOdds: aMl ? window.americanToDecimalOdds(aMl, 30, idx) : null,
-                  drawOdds: dMl ? window.americanToDecimalOdds(dMl, 25, idx) : null,
-                  overUnder: od.overUnder || null,
-                  updatedAt: Date.now()
-                };
-              }
-            } catch(e){}
-
             var st = (ev.status&&ev.status.type&&ev.status.type.state)||"";
             var dt = (ev.status&&ev.status.type&&ev.status.type.shortDetail)||"";
             var rec = {id:String(ev.id), state:st, detail:dt, h:parseInt(hC.score||"0",10), a:parseInt(aC.score||"0",10), ko:row?row[20]:"15:00"};
@@ -2570,7 +2912,6 @@ window.buildDeterministicFallbackSlate = function(dateStr){
         window.DAILY_FIXTURES[dateStr] = window.buildDeterministicFallbackSlate(dateStr);
       }
       window.safeSet("airp_espn_truth_v4", window.apiLiveScores);
-      window.safeSet("airp_live_bet365_odds_v1", window.liveBet365OddsMap);
       window.safeSet("airp_club_crests_v2", window.CLUB_CREST_MAP);
       window.safeSet("airp_official_league_logos_v1", window.LEAGUE_LOGOS);
       if(typeof window.autoSettleAndEvolveCompletedDays === "function") window.autoSettleAndEvolveCompletedDays();
@@ -2583,6 +2924,9 @@ window.buildDeterministicFallbackSlate = function(dateStr){
 
   window.syncRealLiveScores = function(forceAll){
     try {
+      if(typeof window.fetchTheOddsApiMarkets === "function"){
+        window.fetchTheOddsApiMarkets(!!forceAll);
+      }
       var dateObj = window.getRollingDates();
       var activeDate = window.selectedDate || dateObj.today;
       window.fetchAllLeaguesForDate(activeDate, !!forceAll);
@@ -3022,7 +3366,22 @@ window.syncOvernightLogs = function(){
   }
 };
 
-// Match Result + Outright Match Winner (1X2) + Popular Betting Markets Calculator with Live Odds
+window.isMatchKickedOffOrLocked = function(m){
+  if(!m) return false;
+  if(m.isLocked || m.isLive) return true;
+  var actLow = String(m.actual || "").toLowerCase();
+  if(actLow.indexOf("live") !== -1 || actLow.indexOf("(won)") !== -1 || actLow.indexOf("(draw)") !== -1 || actLow.indexOf("(lost)") !== -1){
+    return true;
+  }
+  var koStr = m.ko || "19:45";
+  var kickMs = new Date(m.date + "T" + koStr + ":00").getTime();
+  if(Number.isFinite(kickMs)){
+    return Date.now() >= (kickMs - (window.LOCK_BEFORE_KO_MS || 0));
+  }
+  return false;
+};
+
+// Match Result + Outright Match Winner (1X2) + Popular Betting Markets Calculator powered by Official The Odds API (UK & EU H2H) with Permanent Kick-Off Odds Lock
 window.calcExtraMarkets = function(m, fs){
   var isH = m.venue === "HOME";
   var savedLock = window.lockedScores && window.lockedScores[m.id];
@@ -3032,18 +3391,79 @@ window.calcExtraMarkets = function(m, fs){
   var h = ok ? +sc[1] : -1, g = ok ? +sc[2] : -1, tg = h + g, fg = isH ? h : g, og = isH ? g : h;
   var mkOdds = function(pct, offset){ return window.calculateLiveOddsFromPct(pct, Number(m.id || 100) + offset); };
 
-  var liveFeed = window.liveBet365OddsMap && window.liveBet365OddsMap["id_" + m.id];
   var homeName = isH ? m.fav : m.opp;
   var awayName = isH ? m.opp : m.fav;
   var homePct = isH ? Number(rawM.win || fs || 68) : Number(rawM.oppWin || 18);
   var awayPct = isH ? Number(rawM.oppWin || 18) : Number(rawM.win || fs || 68);
   var drawPct = Number(rawM.draw1x2 || 21);
 
-  var homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : mkOdds(homePct, 101);
-  var drawOdds = (liveFeed && liveFeed.drawOdds) ? Number(liveFeed.drawOdds) : mkOdds(drawPct, 102);
-  var awayOdds = (liveFeed && liveFeed.awayOdds) ? Number(liveFeed.awayOdds) : mkOdds(awayPct, 103);
-  var favOdds = isH ? homeOdds : awayOdds;
-  var oppOdds = isH ? awayOdds : homeOdds;
+  window.lockedOddsMap = window.lockedOddsMap || {};
+  window.preKoOddsSnapshotMap = window.preKoOddsSnapshotMap || {};
+  var matchKeyId = String(m.id);
+  var isKoLocked = window.isMatchKickedOffOrLocked(m);
+
+  // If the match has already kicked off or locked and we have frozen odds, strictly use them so odds NEVER change after kick-off
+  var frozenOdds = window.lockedOddsMap[matchKeyId] || (savedLock && savedLock.lockedOdds) || null;
+  var homeOdds, drawOdds, awayOdds, favOdds, oppOdds, dcOdds, dnbOdds, winO15Odds, ah1Odds, oddsSource;
+
+  if (isKoLocked && frozenOdds && frozenOdds.homeOdds > 1.0 && frozenOdds.awayOdds > 1.0) {
+    homeOdds = Number(frozenOdds.homeOdds);
+    drawOdds = Number(frozenOdds.drawOdds);
+    awayOdds = Number(frozenOdds.awayOdds);
+    favOdds = isH ? homeOdds : awayOdds;
+    oppOdds = isH ? awayOdds : homeOdds;
+    dcOdds = Number(frozenOdds.dcOdds || mkOdds(rawM.dc, 8));
+    dnbOdds = Number(frozenOdds.dnbOdds || mkOdds(rawM.dnb, 9));
+    winO15Odds = Number(frozenOdds.winO15Odds || mkOdds(rawM.winO15, 11));
+    ah1Odds = Number(frozenOdds.ah1Odds || mkOdds(rawM.ah1, 12));
+    oddsSource = frozenOdds.oddsSource || "Locked Pre-KO Odds";
+  } else {
+    // If match has kicked off without a locked record yet, prefer the pre-KO snapshot over any live/in-play feed
+    var preSnap = isKoLocked ? window.preKoOddsSnapshotMap[matchKeyId] : null;
+    var liveFeed = (!isKoLocked && window.lookupOddsApiEntryForMatch)
+      ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName })
+      : (preSnap || (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName }) : null));
+
+    homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : mkOdds(homePct, 101);
+    drawOdds = (liveFeed && liveFeed.drawOdds) ? Number(liveFeed.drawOdds) : mkOdds(drawPct, 102);
+    awayOdds = (liveFeed && liveFeed.awayOdds) ? Number(liveFeed.awayOdds) : mkOdds(awayPct, 103);
+    favOdds = isH ? homeOdds : awayOdds;
+    oppOdds = isH ? awayOdds : homeOdds;
+
+    var derivedH2h = (liveFeed && window.deriveMarketsFromOddsApiH2H)
+      ? window.deriveMarketsFromOddsApiH2H(favOdds, drawOdds, oppOdds)
+      : null;
+
+    dcOdds = derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8);
+    dnbOdds = derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9);
+    winO15Odds = derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11);
+    ah1Odds = derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12);
+    oddsSource = liveFeed ? "The Odds API (UK/EU)" : "AI Calibrated";
+
+    var snapshotRecord = {
+      homeOdds: parseFloat(homeOdds.toFixed(2)),
+      drawOdds: parseFloat(drawOdds.toFixed(2)),
+      awayOdds: parseFloat(awayOdds.toFixed(2)),
+      favOdds: parseFloat(favOdds.toFixed(2)),
+      oppOdds: parseFloat(oppOdds.toFixed(2)),
+      dcOdds: parseFloat(dcOdds.toFixed(2)),
+      dnbOdds: parseFloat(dnbOdds.toFixed(2)),
+      winO15Odds: parseFloat(winO15Odds.toFixed(2)),
+      ah1Odds: parseFloat(ah1Odds.toFixed(2)),
+      oddsSource: oddsSource,
+      lockedAtMs: Date.now(),
+      oddsLocked: true
+    };
+
+    if (isKoLocked) {
+      window.lockedOddsMap[matchKeyId] = snapshotRecord;
+      if (savedLock) savedLock.lockedOdds = snapshotRecord;
+      window.safeSet("airp_locked_ko_odds_v1", window.lockedOddsMap);
+    } else {
+      window.preKoOddsSnapshotMap[matchKeyId] = snapshotRecord;
+      window.safeSet("airp_pre_ko_odds_v1", window.preKoOddsSnapshotMap);
+    }
+  }
 
   var outrightObj = {
     homeName: homeName,
@@ -3063,17 +3483,19 @@ window.calcExtraMarkets = function(m, fs){
     favWon: ok ? (fg > og) : null,
     oppName: m.opp,
     oppPct: Number(rawM.oppWin || 18).toFixed(1),
-    oppOdds: parseFloat(oppOdds.toFixed(2))
+    oppOdds: parseFloat(oppOdds.toFixed(2)),
+    oddsSource: oddsSource,
+    oddsLocked: isKoLocked
   };
 
   return {
     outright: outrightObj,
     L: [
       {n:"Match Result: " + m.fav + " to Win", p:rawM.win || fs, odds:parseFloat(favOdds.toFixed(2)), w:ok?(fg>og):null, vip:false, cat:"result"},
-      {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:rawM.dc, odds:mkOdds(rawM.dc, 8), w:ok?(fg>=og):null, vip:true, cat:"result"},
-      {n:m.fav+" Draw No Bet", p:rawM.dnb, odds:mkOdds(rawM.dnb, 9), w:ok?(fg===og?null:fg>og):null, vip:true, cat:"result"},
-      {n:m.fav+" Win & Over 1.5 Gls", p:rawM.winO15, odds:mkOdds(rawM.winO15, 11), w:ok?(fg>og&&tg>=2):null, vip:true, cat:"result"},
-      {n:m.fav+" -1.0 Handicap", p:rawM.ah1, odds:mkOdds(rawM.ah1, 12), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, vip:true, cat:"result"},
+      {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:rawM.dc, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, vip:true, cat:"result"},
+      {n:m.fav+" Draw No Bet", p:rawM.dnb, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg===og?null:fg>og):null, vip:true, cat:"result"},
+      {n:m.fav+" Win & Over 1.5 Gls", p:rawM.winO15, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, vip:true, cat:"result"},
+      {n:m.fav+" -1.0 Handicap", p:rawM.ah1, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, vip:true, cat:"result"},
       {n:"Over 1.5 Goals", p:rawM.o15, odds:mkOdds(rawM.o15, 1), w:ok?(tg>=2):null, vip:false, cat:"goals"},
       {n:"Over 2.5 Goals", p:rawM.o25, odds:mkOdds(rawM.o25, 2), w:ok?(tg>=3):null, vip:false, cat:"goals"},
       {n:"Over 3.5 Goals", p:rawM.o35, odds:mkOdds(rawM.o35, 3), w:ok?(tg>=4):null, vip:false, cat:"goals"},
@@ -3879,7 +4301,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
 
     var rightHtml = lockThisMarket
       ? '<b onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[11px] mono flex-shrink-0 trial-blur-sm cursor-pointer">88.5%</b>'
-      : '<div class="flex items-center gap-1 flex-shrink-0"><span class="text-[9px] bg-slate-950/90 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">@' + window.formatOdds(x.odds, false) + '</span><b class="text-[11px] mono">' + x.p + '%</b></div>';
+      : '<div class="flex items-center gap-1 flex-shrink-0"><span class="text-[9px] bg-slate-950/90 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(x.odds, false) + '</span><b class="text-[11px] mono">' + x.p + '%</b></div>';
 
     return '<div id="' + elId + '" ' + clickHandler + ' class="p-2.5 rounded-xl border ' + c + ' ' + hoverClass + ' ' + selClass + ' flex justify-between items-center gap-1 shadow-sm"><span class="text-[10px] text-white font-bold truncate flex items-center gap-1">'+labelSafe+r+'</span>'+rightHtml+'</div>';
   }).join("");
@@ -3976,7 +4398,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   var quickAddCardBtn = (!isTrLocked && topCardMkt)
     ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9.5px] font-bold border border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300 transition cursor-pointer ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add top AI pick to Betting Slip">' +
         '<span>➕ ' + topCardMkt.n.replace(/^Match Result:\s*/i, '') + '</span>' +
-        '<b class="text-amber-300 mono">@' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
+        '<b class="text-amber-300 mono">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
       '</button>'
     : '';
 
@@ -4183,13 +4605,13 @@ window.runEngine = function(isForcedSync){
           '</div>' +
           '<div class="text-right flex-shrink-0">' +
             '<span class="text-emerald-400 font-black mono text-sm">' + m.fs.toFixed(1) + '%</span>' +
-            '<span class="text-[10px] text-slate-300 block mt-0.5">⭐ ' + (bestM ? bestM.n + ' (<b class="text-amber-300 mono">@' + window.formatOdds(bestM.odds, false) + '</b> • ' + bestM.p + '%)' : '') + marketTick + '</span>' +
+            '<span class="text-[10px] text-slate-300 block mt-0.5">⭐ ' + (bestM ? bestM.n + ' (<b class="text-amber-300 mono">' + window.formatOdds(bestM.odds, false) + '</b> • ' + bestM.p + '%)' : '') + marketTick + '</span>' +
           '</div>' +
         '</div>';
       }).join("");
       var topBadge = document.getElementById("topAccaCombinedOddsBadge");
       if(topBadge){
-        topBadge.innerText = "5-Fold @ " + window.formatOdds(topCombOdds, true);
+        topBadge.innerText = "5-Fold • " + window.formatOdds(topCombOdds, true);
       }
     } else {
       slipList.innerHTML = '<div class="text-slate-500 text-xs">No fixtures available for this filter.</div>';
@@ -4688,13 +5110,13 @@ window.generateXPostData = function(selections, style, oddsFmt){
         var oddsStr = window.formatOdds(leg.odds || 1.5, false);
         if(compactLevel === 0){
           var cleanMkt = String(leg.n || "").replace(/^Match Result:\s*/i, "");
-          return prefix0 + " " + cleanMkt + " (@" + oddsStr + " • " + pctNum + "%)";
+          return prefix0 + " " + cleanMkt + " (" + oddsStr + " • " + pctNum + "%)";
         }
         if(compactLevel === 1){
           var shortPick = window.shortenMarketForX(leg.n, s0.fav, false);
-          return prefix0 + " " + shortPick + " (@" + oddsStr + " • " + pctNum + "%)";
+          return prefix0 + " " + shortPick + " (" + oddsStr + " • " + pctNum + "%)";
         }
-        return "• " + window.shortenMarketForX(leg.n, s0.fav, false) + " @" + oddsStr;
+        return "• " + window.shortenMarketForX(leg.n, s0.fav, false) + " " + oddsStr;
       });
     } else {
       lines = selections.map(function(s){
@@ -4710,25 +5132,25 @@ window.generateXPostData = function(selections, style, oddsFmt){
             ? mktFull
             : (legs.slice(0, 2).map(function(l){ return window.shortenMarketForX(l.n, s.fav, false); }).join(" + ") + " +" + (legs.length - 2) + " more");
           if(compactLevel === 0){
-            return prefix + " " + window.shortenTeamForX(s.fav) + " (" + legs.length + "-Leg): " + mktFull + " (@" + oddsStr + ")";
+            return prefix + " " + window.shortenTeamForX(s.fav) + " (" + legs.length + "-Leg): " + mktFull + " (" + oddsStr + ")";
           }
           if(compactLevel === 1){
-            return prefix + " " + window.shortenTeamForX(s.fav) + ": " + mktShort + " (@" + oddsStr + ")";
+            return prefix + " " + window.shortenTeamForX(s.fav) + ": " + mktShort + " (" + oddsStr + ")";
           }
-          return "• " + window.shortenTeamForX(s.fav) + " (" + legs.length + "x): " + mktShort + " @" + oddsStr;
+          return "• " + window.shortenTeamForX(s.fav) + " (" + legs.length + "x): " + mktShort + " " + oddsStr;
         }
 
         if(compactLevel === 0){
           var cleanMkt = String(s.market || "").replace(/^Match Result:\s*/i, "");
           var hasTeam = cleanMkt.toLowerCase().indexOf(s.fav.toLowerCase()) !== -1;
           var pickLbl = hasTeam ? cleanMkt : (s.fav + " vs " + s.opp + ": " + cleanMkt);
-          return prefix + " " + pickLbl + " (@" + oddsStr + " • " + pctNum + "%)";
+          return prefix + " " + pickLbl + " (" + oddsStr + " • " + pctNum + "%)";
         }
         if(compactLevel === 1){
           var shortPick = window.shortenMarketForX(s.market, s.fav);
-          return prefix + " " + shortPick + " (@" + oddsStr + " • " + pctNum + "%)";
+          return prefix + " " + shortPick + " (" + oddsStr + " • " + pctNum + "%)";
         }
-        return "• " + window.shortenMarketForX(s.market, s.fav) + " @" + oddsStr;
+        return "• " + window.shortenMarketForX(s.market, s.fav) + " " + oddsStr;
       });
     }
 
@@ -4741,16 +5163,16 @@ window.generateXPostData = function(selections, style, oddsFmt){
       if(isSingleMatchBuilder){
         if(st === "data"){
           header = "🧠 AI " + totalLegs + "-Leg Bet Builder: " + mTitle;
-          footer = "📊 Combined @" + combStr + " (" + avgPct + "% Avg)\n" + activeTags;
+          footer = "📊 Combined " + combStr + " (" + avgPct + "% Avg)\n" + activeTags;
         } else if(st === "results"){
           header = "✅ AI " + totalLegs + "-Leg Bet Builder: " + mTitle;
-          footer = "🔥 Combined @" + combStr + " | 📸 Card below\n" + activeTags;
+          footer = "🔥 Combined " + combStr + " | 📸 Card below\n" + activeTags;
         } else if(st === "compact"){
-          header = "⚡ " + totalLegs + "-Leg Bet Builder: " + mTitle + " (@" + combStr + ")";
+          header = "⚡ " + totalLegs + "-Leg Bet Builder: " + mTitle + " (" + combStr + ")";
           footer = activeTags;
         } else {
           header = "🔥 BetBoy AI " + totalLegs + "-Leg Bet Builder: " + mTitle;
-          footer = "💷 Combined Odds @" + combStr + " | 📸 Card below\n" + activeTags;
+          footer = "💷 Combined Odds " + combStr + " | 📸 Card below\n" + activeTags;
         }
       } else {
         if(st === "data"){
@@ -4758,34 +5180,34 @@ window.generateXPostData = function(selections, style, oddsFmt){
           footer = "📊 " + avgPct + "% Model Confidence | 📸 Slip below\n" + activeTags;
         } else if(st === "results"){
           header = "✅ AI Spotlight Check: " + mTitle;
-          footer = "🔥 " + avgPct + "% AI Edge (@" + combStr + ")\n" + activeTags;
+          footer = "🔥 " + avgPct + "% AI Edge (" + combStr + ")\n" + activeTags;
         } else if(st === "compact"){
           header = "⚡ BetBoy AI Pick: " + mTitle;
           footer = activeTags;
         } else {
           header = "🔥 BetBoy AI Banker: " + mTitle;
-          footer = "💷 Live Odds @" + combStr + " | 📸 Card below\n" + activeTags;
+          footer = "💷 Live Odds " + combStr + " | 📸 Card below\n" + activeTags;
         }
       }
     } else {
       var slipDesc = isBetBuilder ? (totalLegs + "-Leg Builder") : (count + "-Fold");
       if(st === "data"){
         header = "🧠 BetBoy AI " + slipDesc + " Slip (" + avgPct + "% Avg)";
-        footer = "📊 Combined @ " + combStr + "\n" + activeTags;
+        footer = "📊 Combined " + combStr + "\n" + activeTags;
       } else if(st === "results"){
-        header = "✅ BetBoy AI " + slipDesc + " Card (@ " + combStr + ")";
+        header = "✅ BetBoy AI " + slipDesc + " Card (" + combStr + ")";
         footer = "🔥 Model Precision | 📸 Card attached\n" + activeTags;
       } else if(st === "compact"){
-        header = "⚡ AI " + slipDesc + " (@ " + combStr + ")";
+        header = "⚡ AI " + slipDesc + " (" + combStr + ")";
         footer = activeTags;
       } else {
-        header = "🔥 BetBoy AI " + slipDesc + " Acca (@ " + combStr + ")";
+        header = "🔥 BetBoy AI " + slipDesc + " Acca (" + combStr + ")";
         footer = "🤖 " + avgPct + "% Avg AI Confidence | 📸 Card below\n" + activeTags;
       }
     }
 
     if(compactLevel === 2){
-      footer = totalLegs > 1 ? ("Combined: @" + combStr + " 🔥\n" + shortTags) : shortTags;
+      footer = totalLegs > 1 ? ("Combined: " + combStr + " 🔥\n" + shortTags) : shortTags;
     }
     return header + "\n\n" + lines.join("\n") + "\n\n" + footer;
   };
@@ -4797,17 +5219,17 @@ window.generateXPostData = function(selections, style, oddsFmt){
   if(finalPost.length > limit){
     var shown = [];
     var hdr = isSingleMatchBuilder
-      ? ("🔥 " + window.shortenTeamForX(selections[0].fav) + " " + totalLegs + "-Leg Builder (@" + combStr + ")")
-      : ("🔥 AI " + (isBetBuilder ? (totalLegs + "-Leg") : (count + "-Fold")) + " (@" + combStr + ")");
+      ? ("🔥 " + window.shortenTeamForX(selections[0].fav) + " " + totalLegs + "-Leg Builder (" + combStr + ")")
+      : ("🔥 AI " + (isBetBuilder ? (totalLegs + "-Leg") : (count + "-Fold")) + " (" + combStr + ")");
     var ftr = shortTags;
     var flatItems = isSingleMatchBuilder
       ? (selections[0].markets || []).map(function(l){
-          return "• " + window.shortenMarketForX(l.n, selections[0].fav, false) + " @" + window.formatOdds(l.odds || 1.5, false);
+          return "• " + window.shortenMarketForX(l.n, selections[0].fav, false) + " " + window.formatOdds(l.odds || 1.5, false);
         })
       : selections.map(function(s){
           var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, odds: s.odds }];
           var lbl = legs.length > 1 ? (window.shortenTeamForX(s.fav) + " (" + legs.length + "x Markets)") : window.shortenMarketForX(s.market, s.fav);
-          return "• " + lbl + " @" + window.formatOdds(s.odds || 1.5, false);
+          return "• " + lbl + " " + window.formatOdds(s.odds || 1.5, false);
         });
 
     for(var i = 0; i < flatItems.length; i++){
@@ -4845,7 +5267,7 @@ window.syncAdminXSelectionUI = function(){
     if(window.isAdmin && count > 0){
       dock.classList.remove("hidden");
       if(dockLbl){
-        dockLbl.innerText = count + " Team" + (count === 1 ? "" : "s") + " • " + totalLegs + " Market" + (totalLegs === 1 ? "" : "s") + " (@" + window.formatOdds(combDec, true) + ")";
+        dockLbl.innerText = count + " Team" + (count === 1 ? "" : "s") + " • " + totalLegs + " Market" + (totalLegs === 1 ? "" : "s") + " (" + window.formatOdds(combDec, true) + ")";
       }
     } else {
       dock.classList.add("hidden");
@@ -4855,7 +5277,7 @@ window.syncAdminXSelectionUI = function(){
   if(studioCnt){
     studioCnt.innerText = count === 0
       ? "0 Picks"
-      : (count + " Team" + (count === 1 ? "" : "s") + " • " + totalLegs + " Market" + (totalLegs === 1 ? "" : "s") + " (@" + window.formatOdds(combDec, true) + ")");
+      : (count + " Team" + (count === 1 ? "" : "s") + " • " + totalLegs + " Market" + (totalLegs === 1 ? "" : "s") + " (" + window.formatOdds(combDec, true) + ")");
   }
 };
 
@@ -5489,7 +5911,7 @@ window.renderXPostCanvasCard = function(){
 
     ctx.fillStyle = "#fde047";
     ctx.font = "900 22px 'JetBrains Mono', monospace";
-    ctx.fillText("@" + window.formatOdds(s.odds || 1.55, false), W - 134, y + 66);
+    ctx.fillText(window.formatOdds(s.odds || 1.55, false), W - 134, y + 66);
 
     // If Multiple Bet Builder Markets are selected for this team, draw the 2-Column Market Legs Grid inside the card
     if(legs.length > 1){
@@ -5515,7 +5937,7 @@ window.renderXPostCanvasCard = function(){
         ctx.font = "700 15px 'Plus Jakarta Sans', Arial, sans-serif";
         ctx.fillText("✓ " + legName, lx + 12, ly + 24);
 
-        var legOddsStr = "@" + window.formatOdds(leg.odds || 1.5, false);
+        var legOddsStr = window.formatOdds(leg.odds || 1.5, false);
         var legPctStr = Math.round(parseFloat(String(leg.p).replace("%","")) || 75) + "%";
         ctx.textAlign = "right";
         ctx.fillStyle = "#fde047";
@@ -5543,13 +5965,13 @@ window.renderXPostCanvasCard = function(){
 
   var footerLeftLabel = "";
   if(count === 1 && totalLegs > 1){
-    footerLeftLabel = totalLegs + "-LEG BUILDER: @" + combOddsDisplay;
+    footerLeftLabel = totalLegs + "-LEG BUILDER: " + combOddsDisplay;
   } else if(count === 1){
-    footerLeftLabel = "SINGLE ODDS: @" + combOddsDisplay;
+    footerLeftLabel = "SINGLE ODDS: " + combOddsDisplay;
   } else if(isBetBuilder){
-    footerLeftLabel = totalLegs + "-LEG COMBINED: @" + combOddsDisplay;
+    footerLeftLabel = totalLegs + "-LEG COMBINED: " + combOddsDisplay;
   } else {
-    footerLeftLabel = count + "-FOLD COMBINED: @" + combOddsDisplay;
+    footerLeftLabel = count + "-FOLD COMBINED: " + combOddsDisplay;
   }
 
   ctx.textAlign = "left";
@@ -5708,13 +6130,13 @@ window.refreshXPostStudioUI = function(){
             : '<span class="text-slate-500 font-bold">+</span>';
           return '<button type="button" onclick="window.toggleXMatchMarketByIdx(' + m.id + ', ' + mIdx + ')" class="px-2 py-1.5 rounded-lg border text-left flex items-center justify-between gap-1.5 text-[9.5px] font-bold cursor-pointer transition ' + chipCls + '">' +
             '<span class="truncate flex items-center gap-1">' + checkIcon + '<span class="truncate">' + item.n + '</span></span>' +
-            '<span class="font-mono text-[9px] text-amber-300 flex-shrink-0">@' + window.formatOdds(item.odds, false) + ' • ' + item.p + '%</span>' +
+            '<span class="font-mono text-[9px] text-amber-300 flex-shrink-0">' + window.formatOdds(item.odds, false) + ' • ' + item.p + '%</span>' +
           '</button>';
         }).join("");
 
         builderPanelHtml = '<div class="mt-2 pt-2 border-t border-slate-800/90 space-y-1.5">' +
           '<div class="flex items-center justify-between gap-1.5 flex-wrap">' +
-            '<span class="text-[9.5px] font-black text-emerald-300 uppercase tracking-wide">🛠️ Bet Builder Markets (' + selectedMarkets.length + ' Selected • Combined @' + window.formatOdds(matchCombOdds, false) + ')</span>' +
+            '<span class="text-[9.5px] font-black text-emerald-300 uppercase tracking-wide">🛠️ Bet Builder Markets (' + selectedMarkets.length + ' Selected • Combined ' + window.formatOdds(matchCombOdds, false) + ')</span>' +
             '<div class="flex items-center gap-1 flex-wrap">' +
               '<button type="button" onclick="window.setXMatchBuilderTopN(' + m.id + ', 1)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[8.5px] font-bold cursor-pointer">1 Pick</button>' +
               '<button type="button" onclick="window.setXMatchBuilderTopN(' + m.id + ', 2)" class="px-1.5 py-0.5 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-[8.5px] font-bold cursor-pointer">+Top 2</button>' +
@@ -5730,7 +6152,7 @@ window.refreshXPostStudioUI = function(){
       }
 
       var rightBadgeHtml = isSel
-        ? '<span class="text-[9.5px] font-mono font-black px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex-shrink-0">' + selectedMarkets.length + ' Market' + (selectedMarkets.length === 1 ? '' : 's') + ' • @' + window.formatOdds(matchCombOdds, false) + '</span>'
+        ? '<span class="text-[9.5px] font-mono font-black px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex-shrink-0">' + selectedMarkets.length + ' Market' + (selectedMarkets.length === 1 ? '' : 's') + ' • ' + window.formatOdds(matchCombOdds, false) + '</span>'
         : '<button type="button" onclick="window.toggleMatchForXPost(' + m.id + ', false)" class="text-[9.5px] font-bold px-2 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 flex-shrink-0 cursor-pointer">+ Select Team</button>';
 
       return '<div class="p-2.5 rounded-xl border transition ' + (isSel ? 'bg-emerald-950/35 border-emerald-500/55 shadow-md' : 'bg-slate-900/70 border-slate-800/80') + '">' +
@@ -6283,6 +6705,7 @@ window.updateModelHeaders();
 window.updateAdminWeightsBar();
 window.updateHourlyCountdownBanner();
 window.refreshMasterPassBtnLabel();
+window.fetchTheOddsApiMarkets(false);
 window.initDateTabs();
 window.updateMiniSlip();
 window.checkSavedSession();
