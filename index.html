@@ -480,9 +480,29 @@ window.exitTrialToSubscribe = function() {
   if (tb) tb.classList.add("hidden");
   document.getElementById("appContainer").style.display = "none";
   document.getElementById("authGate").style.display = "flex";
+  var inp = document.getElementById("passInput");
+  if (inp) {
+    inp.value = (window.rememberPassEnabled && window.savedPassValue) ? window.savedPassValue : "";
+  }
+  if (typeof window.syncRememberPassUI === "function") window.syncRememberPassUI();
   var ppSec = document.getElementById("paypalGateSection");
   if (ppSec && ppSec.scrollIntoView) {
     setTimeout(function(){ ppSec.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80);
+  }
+};
+
+window.logoutToPasswordScreen = function() {
+  if (typeof window.closeAdminDialog === "function") window.closeAdminDialog();
+  if (typeof window.closeXPostStudio === "function") window.closeXPostStudio();
+  if (typeof window.closeSlipModal === "function") window.closeSlipModal();
+  var miniBar = document.getElementById("miniSlipBar");
+  if (miniBar) miniBar.style.display = "none";
+  var err = document.getElementById("errorMsg");
+  if (err) err.style.display = "none";
+  window.checkSavedSession();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (typeof window.showAppToast === "function") {
+    window.showAppToast("🔒 Logged out to password screen");
   }
 };
 
@@ -578,6 +598,68 @@ window.verifyPersonalSubPass = function(inputCode){
   return { valid: true, expires: expDays * 86400000 };
 };
 
+window.rememberPassEnabled = Boolean(window.safeGet("airp_remember_pass_enabled", false));
+window.savedPassValue = String(window.safeGet("airp_saved_pass_value", "") || "");
+
+window.syncRememberPassUI = function() {
+  var cb = document.getElementById("rememberPassCheckbox");
+  var inp = document.getElementById("passInput");
+  var isOn = !!window.rememberPassEnabled;
+  var hasSaved = isOn && Boolean(window.savedPassValue);
+
+  if (cb) {
+    cb.checked = isOn;
+  }
+  if (inp && hasSaved && !inp.value) {
+    inp.value = window.savedPassValue;
+  }
+};
+
+window.toggleRememberPassword = function(explicitChecked) {
+  var cb = document.getElementById("rememberPassCheckbox");
+  var inp = document.getElementById("passInput");
+  var curVal = inp ? inp.value.trim() : "";
+  var nextState = typeof explicitChecked === "boolean"
+    ? explicitChecked
+    : !window.rememberPassEnabled;
+
+  window.rememberPassEnabled = nextState;
+  window.safeSet("airp_remember_pass_enabled", nextState);
+
+  if (nextState) {
+    if (curVal) {
+      window.savedPassValue = curVal;
+      window.safeSet("airp_saved_pass_value", curVal);
+    }
+  } else {
+    window.savedPassValue = "";
+    window.safeSet("airp_saved_pass_value", "");
+  }
+
+  if (cb) cb.checked = nextState;
+};
+
+window.onPassInputChanged = function(el) {
+  if (!el) return;
+  var raw = el.value.trim();
+  if (window.rememberPassEnabled) {
+    window.savedPassValue = raw;
+    window.safeSet("airp_saved_pass_value", raw);
+  }
+  if (raw.replace(/\s+/g, "").length >= 8 && !raw.toUpperCase().startsWith("BB-")) {
+    window.unlockGateNow(false);
+  }
+};
+
+window.persistRememberedPassIfEnabled = function(rawVal) {
+  var clean = (rawVal || "").trim();
+  if (window.rememberPassEnabled && clean) {
+    window.savedPassValue = clean;
+    window.safeSet("airp_saved_pass_value", clean);
+    window.safeSet("airp_remember_pass_enabled", true);
+  }
+};
+
 window.unlockGateNow = function(isButtonPress) {
   var inp = document.getElementById("passInput");
   var err = document.getElementById("errorMsg");
@@ -585,6 +667,7 @@ window.unlockGateNow = function(isButtonPress) {
   var cleanVal = rawVal.replace(/\s+/g, "");
 
   if (cleanVal === window.ADMIN_PIN) {
+    window.persistRememberedPassIfEnabled(rawVal);
     localStorage.removeItem("airp_auth_session");
     window.grantSessionAccess("admin");
     return;
@@ -599,6 +682,7 @@ window.unlockGateNow = function(isButtonPress) {
       window.triggerWobbleError();
       return;
     }
+    window.persistRememberedPassIfEnabled(rawVal);
     localStorage.removeItem("airp_auth_session");
     window.grantSessionAccess("user");
     return;
@@ -607,6 +691,7 @@ window.unlockGateNow = function(isButtonPress) {
   if (rawVal.toUpperCase().startsWith("BB-")) {
     var check = window.verifyPersonalSubPass(rawVal);
     if (check.valid) {
+      window.persistRememberedPassIfEnabled(rawVal);
       localStorage.removeItem("airp_auth_session");
       window.grantSessionAccess("user");
       return;
@@ -637,7 +722,12 @@ window.checkSavedSession = function() {
   var inp = document.getElementById("passInput");
   if(gate) gate.style.display = "flex";
   if(app) app.style.display = "none";
-  if(inp) inp.value = "";
+  window.rememberPassEnabled = Boolean(window.safeGet("airp_remember_pass_enabled", false));
+  window.savedPassValue = String(window.safeGet("airp_saved_pass_value", "") || "");
+  if(inp) {
+    inp.value = (window.rememberPassEnabled && window.savedPassValue) ? window.savedPassValue : "";
+  }
+  window.syncRememberPassUI();
 };
 </script>
 </head>
@@ -650,9 +740,13 @@ window.checkSavedSession = function() {
       <h2 class="text-base font-black tracking-wider text-white">BETBOY <span class="text-emerald-400">AI PREDICTOR</span></h2>
     </div>
     <div class="space-y-2 my-auto">
-      <input type="text" id="passInput" oninput="if(this.value.replace(/\s+/g,'').length>=8 && !this.value.toUpperCase().startsWith('BB-'))window.unlockGateNow(false)" onkeydown="if(event.key==='Enter')window.unlockGateNow(true)" placeholder="Enter Personal Pass (BB-...) or PIN" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-center text-white tracking-widest text-sm focus:border-emerald-500 outline-none transition">
+      <input type="text" id="passInput" oninput="window.onPassInputChanged(this)" onkeydown="if(event.key==='Enter')window.unlockGateNow(true)" placeholder="Enter Personal Pass (BB-...) or PIN" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-center text-white tracking-widest text-sm focus:border-emerald-500 outline-none transition">
+      <label class="inline-flex items-center justify-center gap-2 text-xs text-slate-300 font-medium cursor-pointer select-none py-0.5">
+        <input type="checkbox" id="rememberPassCheckbox" onchange="window.toggleRememberPassword(this.checked)" class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
+        <span>Remember password</span>
+      </label>
       <button type="button" onclick="window.unlockGateNow(true)" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 font-bold py-2.5 rounded-xl text-white shadow transition text-xs cursor-pointer">Unlock Access</button>
-      <button type="button" onclick="window.enterTrialMode()" class="w-full bg-slate-900 hover:bg-slate-800 active:bg-slate-950 font-bold py-2 rounded-xl text-amber-300 border border-amber-500/40 shadow transition text-xs cursor-pointer flex items-center justify-center gap-1.5">👀 Try Free Preview (Teaser Mode)</button>
+      <button type="button" id="tryFreeGateBtn" onclick="window.enterTrialMode()" class="w-full bg-amber-400 hover:bg-amber-300 active:bg-amber-500 font-extrabold py-2.5 rounded-xl text-slate-950 shadow transition text-xs cursor-pointer flex items-center justify-center gap-1.5">👀 Try Free Preview</button>
       <p id="errorMsg" style="display:none;" class="text-[10px] text-rose-400 font-semibold">Incorrect password. Please try again.</p>
     </div>
 
@@ -721,29 +815,32 @@ window.checkSavedSession = function() {
   <button id="wipeBtn" onclick="window.clearHistory()" class="bg-slate-900 text-xs text-rose-400 py-2 rounded-lg border border-rose-500/20 font-semibold hidden">Wipe History (Admin)</button>
 </div>
 
-<!-- Clean Modern Top Header (No Live Odds Button; Fractional/Decimal Select Box + Admin Lock) -->
-<header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-3 py-2.5 flex justify-between items-center shadow-lg">
-  <div class="flex items-center gap-2.5">
-    <img src="" id="headerLogoImg" class="w-9 h-9 rounded-full shadow-md border border-emerald-500/40">
+<!-- Clean Modern Top Header (No Live Odds Button; Fractional/Decimal Select Box + Logout + Admin Lock) -->
+<header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-3 py-2.5 flex justify-between items-center gap-2 shadow-lg">
+  <div class="flex items-center gap-2 min-w-0 flex-1">
+    <img src="" id="headerLogoImg" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full shadow-md border border-emerald-500/40 flex-shrink-0">
     <script>document.getElementById("headerLogoImg").src = window.getBetBoyLogoUrl();</script>
-    <div>
-      <h1 class="text-xs font-black tracking-wide text-white flex items-center gap-1.5 leading-none">
+    <div class="min-w-0">
+      <h1 class="text-[11px] sm:text-xs font-black tracking-wide text-white flex items-center gap-1 leading-none whitespace-nowrap">
         <span>BETBOY</span>
-        <span class="text-emerald-400">AI PREDICTOR</span>
-        <span id="weightBadge" class="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 mono">v14.6</span>
+        <span class="text-emerald-400">AI</span>
+        <span id="weightBadge" class="text-[8.5px] bg-emerald-500/15 text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/30 mono">v14.6</span>
       </h1>
-      <p class="text-[9px] text-slate-400 font-medium mt-0.5">Smart Match Predictions &amp; Returns Calculator</p>
+      <p class="text-[8.5px] sm:text-[9px] text-slate-400 font-medium mt-0.5 truncate">Smart Match Predictions &amp; Returns</p>
     </div>
   </div>
-  <div class="flex items-center gap-1.5">
-    <div class="flex items-center bg-slate-900/95 border border-emerald-500/35 rounded-lg px-2 py-1 shadow-inner">
+  <div class="flex items-center gap-1.5 flex-shrink-0">
+    <div class="flex items-center bg-slate-900/95 border border-emerald-500/35 rounded-lg px-1.5 py-1 shadow-inner">
       <span class="text-[9px] text-slate-400 font-bold mr-1 hidden sm:inline">Odds:</span>
       <select id="headerOddsFormatSelect" aria-label="Odds Format" onchange="window.setOddsFormat(this.value)" class="bg-transparent text-amber-300 font-extrabold text-[10px] outline-none cursor-pointer mono">
         <option value="frac" selected class="bg-slate-900 text-amber-300">Fractional (4/6)</option>
         <option value="dec" class="bg-slate-900 text-amber-300">Decimal (1.67)</option>
       </select>
     </div>
-    <button id="authBtn" onclick="window.unlockAdmin()" class="text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-400 px-2.5 py-1.5 rounded-lg border border-slate-800 font-semibold cursor-pointer transition" title="Admin Panel">🔒</button>
+    <button type="button" id="logoutBtn" onclick="window.logoutToPasswordScreen()" aria-label="Log Out" title="Log out and return to the password screen" class="text-[10px] bg-rose-950/90 hover:bg-rose-900 active:bg-rose-950 text-rose-200 px-2.5 py-1.5 rounded-lg border border-rose-500/45 font-extrabold cursor-pointer transition flex items-center gap-1 shadow-sm whitespace-nowrap flex-shrink-0">
+      <span>🚪</span><span>Log Out</span>
+    </button>
+    <button id="authBtn" onclick="window.unlockAdmin()" class="text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-400 px-2 py-1.5 rounded-lg border border-slate-800 font-semibold cursor-pointer transition flex-shrink-0" title="Admin Panel">🔒</button>
   </div>
 </header>
 
@@ -6615,11 +6712,16 @@ window.buildCleanExportHTML = function(){
   localStorage.removeItem("airp_auth_session");
   document.getElementById("authGate").style.display = "flex";
   document.getElementById("appContainer").style.display = "none";
+  var wasRememberOn = window.rememberPassEnabled;
+  window.rememberPassEnabled = false;
+  if(typeof window.syncRememberPassUI === "function") window.syncRememberPassUI();
   document.getElementById("passInput").value = "";
   document.getElementById("errorMsg").style.display = "none";
   var snap = JSON.stringify({stamp:Date.now(),version:window.modelState.version,injectedStats:window.modelState.injectedStats,hist:window.scanHistory,logs:window.logHistory,drift:window.liveDriftMap,results:window.customResults,lockedScores:window.lockedScores,subPasses:window.subPassState,traffic:window.trafficLedger});
   var html = document.documentElement.outerHTML;
   html = html.replace(/\/\* STATE_START \*\/[\s\S]*?\/\* STATE_END \*\//, "/* STATE_START */\nwindow.PUBLISHED_STATE=" + snap + ";\n/* STATE_END */");
+  window.rememberPassEnabled = wasRememberOn;
+  if(typeof window.syncRememberPassUI === "function") window.syncRememberPassUI();
   document.getElementById("authGate").style.display = "none";
   document.getElementById("appContainer").style.display = "block";
   if(wasAdmin){
