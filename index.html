@@ -1891,7 +1891,7 @@ window.fetchTheOddsApiMarkets = function(forceRefresh) {
 window.UK_FRACTION_LADDER = [
   [1, 10], [1, 9], [1, 8], [1, 7], [1, 6], [1, 5], [2, 9], [1, 4], [2, 7], [3, 10],
   [1, 3], [4, 11], [2, 5], [4, 9], [1, 2], [8, 15], [4, 7], [3, 5], [8, 13], [4, 6],
-  [7, 10], [8, 11], [3, 4], [4, 5], [5, 6], [9, 10], [10, 11], [1, 1], [11, 10], [6, 5],
+  [7, 10], [8, 11], [3, 4], [4, 5], [5, 6], [9, 10], [10, 11], [1, 1], [21, 20], [11, 10], [23, 20], [6, 5],
   [5, 4], [13, 10], [11, 8], [7, 5], [6, 4], [8, 5], [13, 8], [7, 4], [9, 5], [15, 8],
   [2, 1], [21, 10], [9, 4], [12, 5], [5, 2], [13, 5], [11, 4], [14, 5], [3, 1], [16, 5],
   [10, 3], [7, 2], [4, 1], [9, 2], [5, 1], [11, 2], [6, 1], [13, 2], [7, 1], [15, 2],
@@ -1990,12 +1990,97 @@ window.americanToDecimalOdds = function(ml, fallbackPct, seed) {
   return window.calculateLiveOddsFromPct(fallbackPct || 65, seed || 0);
 };
 
-window.calculateLiveOddsFromPct = function(pct, seed) {
+window.resolveMarketOddsCurveSpec = function(marketType) {
+  if (!marketType) return null;
+  var key = String(marketType).trim().toLowerCase();
+  if (!key) return null;
+
+  if (key === "o15" || key === "over 1.5 goals" || (key.indexOf("over 1.5") !== -1 && key.indexOf("team") === -1 && key.indexOf("win") === -1)) {
+    return { minPct: 52.0, maxPct: 91.5, minOdds: 1.22, maxOdds: 1.50 };
+  }
+  if (key === "o25" || key === "over 2.5 goals") {
+    return { minPct: 38.0, maxPct: 84.5, minOdds: 1.53, maxOdds: 2.15 };
+  }
+  if (key === "o35" || key === "over 3.5 goals") {
+    return { minPct: 24.0, maxPct: 68.5, minOdds: 2.25, maxOdds: 3.60 };
+  }
+  if (key === "btts" || key === "btts: yes") {
+    return { minPct: 36.0, maxPct: 84.0, minOdds: 1.57, maxOdds: 2.05 };
+  }
+  if (key === "c85" || key.indexOf("8.5 corners") !== -1 || key.indexOf("9.5 corners") !== -1) {
+    return { minPct: 51.0, maxPct: 85.5, minOdds: 1.44, maxOdds: 1.85 };
+  }
+  if (key === "cards35" || key.indexOf("3.5 cards") !== -1 || key.indexOf("4.5 cards") !== -1) {
+    return { minPct: 44.0, maxPct: 82.5, minOdds: 1.50, maxOdds: 2.10 };
+  }
+  if (key === "fh05" || key.indexOf("1st half over 0.5") !== -1) {
+    return { minPct: 48.0, maxPct: 86.5, minOdds: 1.33, maxOdds: 1.67 };
+  }
+  if (key === "f15" || (key.indexOf("over 1.5 team gls") !== -1 && key !== "oppo15")) {
+    return { minPct: 41.0, maxPct: 86.5, minOdds: 1.44, maxOdds: 2.10 };
+  }
+  if (key === "oppo05" || key.indexOf("over 0.5 team gls") !== -1) {
+    return { minPct: 34.0, maxPct: 82.5, minOdds: 1.40, maxOdds: 2.05 };
+  }
+  if (key === "oppo15") {
+    return { minPct: 14.0, maxPct: 62.5, minOdds: 2.40, maxOdds: 4.40 };
+  }
+  if (key === "u25" || key === "under 2.5 goals") {
+    return { minPct: 22.0, maxPct: 68.0, minOdds: 1.62, maxOdds: 2.25 };
+  }
+  if (key === "u35" || key === "under 3.5 goals") {
+    return { minPct: 54.0, maxPct: 89.5, minOdds: 1.25, maxOdds: 1.57 };
+  }
+  if (key === "bttsno" || key === "btts: no") {
+    return { minPct: 22.0, maxPct: 68.0, minOdds: 1.70, maxOdds: 2.25 };
+  }
+  if (key === "dc" || key.indexOf("/draw (") !== -1) {
+    return { minPct: 64.0, maxPct: 93.5, minOdds: 1.20, maxOdds: 1.50 };
+  }
+  if (key === "oppdc") {
+    return { minPct: 22.0, maxPct: 76.0, minOdds: 1.40, maxOdds: 2.50 };
+  }
+  if (key === "dnb" || key.indexOf("draw no bet") !== -1) {
+    return { minPct: 58.0, maxPct: 90.5, minOdds: 1.25, maxOdds: 1.75 };
+  }
+  if (key === "oppdnb") {
+    return { minPct: 14.0, maxPct: 68.0, minOdds: 1.65, maxOdds: 3.50 };
+  }
+  if (key === "wino15" || key.indexOf("win & over 1.5") !== -1) {
+    return { minPct: 42.0, maxPct: 81.5, minOdds: 1.44, maxOdds: 2.25 };
+  }
+  if (key === "oppwino15") {
+    return { minPct: 8.0, maxPct: 54.0, minOdds: 2.20, maxOdds: 5.50 };
+  }
+  if (key === "ah1" || key.indexOf("-1.0 handicap") !== -1) {
+    return { minPct: 32.0, maxPct: 74.5, minOdds: 1.62, maxOdds: 2.65 };
+  }
+  if (key === "oppahplus1" || key.indexOf("+1.0 handicap") !== -1) {
+    return { minPct: 28.0, maxPct: 79.5, minOdds: 1.40, maxOdds: 2.30 };
+  }
+  if (key === "win1x2") {
+    return { minPct: 48.0, maxPct: 86.8, minOdds: 1.28, maxOdds: 1.95 };
+  }
+  return null;
+};
+
+window.calculateLiveOddsFromPct = function(pct, seed, marketType) {
   var num = typeof pct === "string" ? parseFloat(pct.replace("%", "")) : Number(pct);
-  var validPct = (Number.isFinite(num) && num > 0) ? Math.min(95, Math.max(12, num)) : 65;
-  var micro = (((seed || 0) % 7) - 3) * 0.01;
+  var validPct = (Number.isFinite(num) && num > 0) ? Math.min(95, Math.max(8, num)) : 65;
+  var micro = (((Math.abs(Number(seed) || 0) % 7) - 3) * 0.01);
+
+  var curve = window.resolveMarketOddsCurveSpec ? window.resolveMarketOddsCurveSpec(marketType) : null;
+  if (curve) {
+    var clampedP = Math.min(curve.maxPct, Math.max(curve.minPct, validPct));
+    var spanP = Math.max(1, curve.maxPct - curve.minPct);
+    var t = (curve.maxPct - clampedP) / spanP;
+    var curved = curve.minOdds + t * (curve.maxOdds - curve.minOdds) + micro;
+    var bounded = Math.min(curve.maxOdds, Math.max(curve.minOdds, curved));
+    return parseFloat(bounded.toFixed(2));
+  }
+
   var raw = (100 / (validPct * 1.042)) + micro;
-  return parseFloat(Math.min(15.0, Math.max(1.08, raw)).toFixed(2));
+  return parseFloat(Math.min(15.0, Math.max(1.22, raw)).toFixed(2));
 };
 
 window.syncLiveOddsNow = function(showToastFlag) {
@@ -2035,7 +2120,7 @@ window.parseBetSelection = function(rawItem) {
   if (typeof rawItem === 'object' && rawItem !== null && rawItem.team && rawItem.market) {
     var objOdds = (rawItem.odds && Number(rawItem.odds) > 1.01)
       ? Number(rawItem.odds)
-      : window.calculateLiveOddsFromPct(rawItem.pct || 68, rawItem.seed || 0);
+      : window.calculateLiveOddsFromPct(rawItem.pct || 68, rawItem.seed || 0, rawItem.market);
     return Object.assign({}, rawItem, { odds: parseFloat(objOdds.toFixed(2)) });
   }
   var str = String(rawItem || '').trim();
@@ -2117,7 +2202,7 @@ window.parseBetSelection = function(rawItem) {
     }
   } catch(e) {}
 
-  var calcOdds = (foundOdds && foundOdds > 1.01) ? foundOdds : window.calculateLiveOddsFromPct(pct, matchId);
+  var calcOdds = (foundOdds && foundOdds > 1.01) ? foundOdds : window.calculateLiveOddsFromPct(pct, matchId, market);
   return {
     id: str,
     team: team || 'Selection',
@@ -3907,7 +3992,7 @@ window.calcExtraMarkets = function(m, fs){
   var tg = koStarted ? liveSt.totalGoals : -1;
   var fg = koStarted ? liveSt.favGoals : -1;
   var og = koStarted ? liveSt.oppGoals : -1;
-  var mkOdds = function(pct, offset){ return window.calculateLiveOddsFromPct(pct, Number(m.id || 100) + offset); };
+  var mkOdds = function(pct, offset, marketType){ return window.calculateLiveOddsFromPct(pct, Number(m.id || 100) + offset, marketType); };
 
   var homeName = isH ? m.fav : m.opp;
   var awayName = isH ? m.opp : m.fav;
@@ -3930,10 +4015,10 @@ window.calcExtraMarkets = function(m, fs){
     awayOdds = Number(frozenOdds.awayOdds);
     favOdds = isH ? homeOdds : awayOdds;
     oppOdds = isH ? awayOdds : homeOdds;
-    dcOdds = Number(frozenOdds.dcOdds || mkOdds(rawM.dc, 8));
-    dnbOdds = Number(frozenOdds.dnbOdds || mkOdds(rawM.dnb, 9));
-    winO15Odds = Number(frozenOdds.winO15Odds || mkOdds(rawM.winO15, 11));
-    ah1Odds = Number(frozenOdds.ah1Odds || mkOdds(rawM.ah1, 12));
+    dcOdds = Math.max(1.20, Number(frozenOdds.dcOdds || mkOdds(rawM.dc, 8, "dc")));
+    dnbOdds = Math.max(1.25, Number(frozenOdds.dnbOdds || mkOdds(rawM.dnb, 9, "dnb")));
+    winO15Odds = Math.max(1.44, Number(frozenOdds.winO15Odds || mkOdds(rawM.winO15, 11, "winO15")));
+    ah1Odds = Math.max(1.62, Number(frozenOdds.ah1Odds || mkOdds(rawM.ah1, 12, "ah1")));
     oddsSource = frozenOdds.oddsSource || "Locked Pre-KO Odds";
   } else {
     var preSnap = isKoLocked ? window.preKoOddsSnapshotMap[matchKeyId] : null;
@@ -3941,20 +4026,21 @@ window.calcExtraMarkets = function(m, fs){
       ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName })
       : (preSnap || (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName }) : null));
 
-    homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : mkOdds(homePct, 101);
+    homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : mkOdds(homePct, 101, isH ? "win1x2" : undefined);
     drawOdds = (liveFeed && liveFeed.drawOdds) ? Number(liveFeed.drawOdds) : mkOdds(drawPct, 102);
-    awayOdds = (liveFeed && liveFeed.awayOdds) ? Number(liveFeed.awayOdds) : mkOdds(awayPct, 103);
-    favOdds = isH ? homeOdds : awayOdds;
+    awayOdds = (liveFeed && liveFeed.awayOdds) ? Number(liveFeed.awayOdds) : mkOdds(awayPct, 103, !isH ? "win1x2" : undefined);
+    favOdds = Math.max(1.25, isH ? homeOdds : awayOdds);
     oppOdds = isH ? awayOdds : homeOdds;
+    if (isH) homeOdds = favOdds; else awayOdds = favOdds;
 
     var derivedH2h = (liveFeed && window.deriveMarketsFromOddsApiH2H)
       ? window.deriveMarketsFromOddsApiH2H(favOdds, drawOdds, oppOdds)
       : null;
 
-    dcOdds = derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8);
-    dnbOdds = derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9);
-    winO15Odds = derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11);
-    ah1Odds = derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12);
+    dcOdds = Math.max(1.20, derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8, "dc"));
+    dnbOdds = Math.max(1.25, derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb"));
+    winO15Odds = Math.max(1.44, derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15"));
+    ah1Odds = Math.max(1.62, derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12, "ah1"));
     oddsSource = liveFeed ? "The Odds API (UK/EU)" : "AI Calibrated";
 
     var snapshotRecord = {
@@ -4030,10 +4116,10 @@ window.calcExtraMarkets = function(m, fs){
   var derivedOppH2h = window.deriveMarketsFromOddsApiH2H
     ? window.deriveMarketsFromOddsApiH2H(oppOdds, drawOdds, favOdds)
     : null;
-  var oppDcOdds = derivedOppH2h ? derivedOppH2h.dcOdds : mkOdds(oppDcPctVal, 21);
-  var oppDnbOdds = derivedOppH2h ? derivedOppH2h.dnbOdds : mkOdds(oppDnbPctVal, 22);
-  var oppWinO15Odds = derivedOppH2h ? derivedOppH2h.winO15Odds : mkOdds(oppWinO15PctVal, 23);
-  var oppAhPlus1Odds = mkOdds(oppAhPlus1PctVal, 24);
+  var oppDcOdds = Math.max(1.40, derivedOppH2h ? derivedOppH2h.dcOdds : mkOdds(oppDcPctVal, 21, "oppDc"));
+  var oppDnbOdds = Math.max(1.65, derivedOppH2h ? derivedOppH2h.dnbOdds : mkOdds(oppDnbPctVal, 22, "oppDnb"));
+  var oppWinO15Odds = Math.max(2.20, derivedOppH2h ? derivedOppH2h.winO15Odds : mkOdds(oppWinO15PctVal, 23, "oppWinO15"));
+  var oppAhPlus1Odds = mkOdds(oppAhPlus1PctVal, 24, "oppAhPlus1");
 
   return {
     outright: outrightObj,
@@ -4050,20 +4136,190 @@ window.calcExtraMarkets = function(m, fs){
       {n:m.opp+" Win & Over 1.5 Gls", p:oppWinO15PctVal, odds:parseFloat(oppWinO15Odds.toFixed(2)), w:ok?(og>fg&&tg>=2):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
       {n:m.fav+" -1.0 Handicap", p:rawM.ah1, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
       {n:m.opp+" +1.0 Handicap", p:oppAhPlus1PctVal, odds:parseFloat(oppAhPlus1Odds.toFixed(2)), w:ok?(og>=fg?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:"Over 1.5 Goals", p:rawM.o15, odds:mkOdds(rawM.o15, 1), w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Over 2.5 Goals", p:rawM.o25, odds:mkOdds(rawM.o25, 2), w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Over 3.5 Goals", p:rawM.o35, odds:mkOdds(rawM.o35, 3), w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Under 2.5 Goals", p:rawM.u25, odds:mkOdds(rawM.u25, 4), w:koStarted?(tg>2?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"Under 3.5 Goals", p:rawM.u35, odds:mkOdds(rawM.u35, 5), w:koStarted?(tg>3?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"BTTS: Yes", p:rawM.btts, odds:mkOdds(rawM.btts, 6), w:koStarted?((h>=1&&g>=1)?true:(ok?false:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"BTTS: No", p:rawM.bttsNo, odds:mkOdds(rawM.bttsNo, 7), w:koStarted?((h>=1&&g>=1)?false:(ok?true:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:m.fav+" Over 1.5 Team Gls", p:rawM.f15, odds:mkOdds(rawM.f15, 13), w:koStarted?(fg>=2?true:(ok?false:null)):null, statBadge:tmGlsBadge, vip:true, cat:"goals", teamSide:"fav"},
-      {n:m.opp+" Over 0.5 Team Gls", p:oppO05PctVal, odds:mkOdds(oppO05PctVal, 25), w:koStarted?(og>=1?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(1), vip:false, cat:"goals", teamSide:"opp"},
-      {n:m.opp+" Over 1.5 Team Gls", p:oppO15PctVal, odds:mkOdds(oppO15PctVal, 26), w:koStarted?(og>=2?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(2), vip:false, cat:"goals", teamSide:"opp"},
-      {n:"1st Half Over 0.5", p:rawM.fh05, odds:mkOdds(rawM.fh05, 14), w:koStarted?liveSt.fh05Won:null, statBadge:liveSt.fh05StatBadge, vip:false, cat:"specials", teamSide:"both"},
-      {n:"Over 8.5 Corners", p:rawM.c85, odds:mkOdds(rawM.c85, 15), w:koStarted?liveSt.cornersWon:null, statBadge:liveSt.cornersStatBadge, vip:true, cat:"specials", teamSide:"both"},
-      {n:"Over 3.5 Cards", p:rawM.cards35, odds:mkOdds(rawM.cards35, 16), w:koStarted?liveSt.cardsWon:null, statBadge:liveSt.cardsStatBadge, vip:true, cat:"specials", teamSide:"both"}
+      {n:"Over 1.5 Goals", p:rawM.o15, odds:mkOdds(rawM.o15, 1, "o15"), w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Over 2.5 Goals", p:rawM.o25, odds:mkOdds(rawM.o25, 2, "o25"), w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Over 3.5 Goals", p:rawM.o35, odds:mkOdds(rawM.o35, 3, "o35"), w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Under 2.5 Goals", p:rawM.u25, odds:mkOdds(rawM.u25, 4, "u25"), w:koStarted?(tg>2?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"Under 3.5 Goals", p:rawM.u35, odds:mkOdds(rawM.u35, 5, "u35"), w:koStarted?(tg>3?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"BTTS: Yes", p:rawM.btts, odds:mkOdds(rawM.btts, 6, "btts"), w:koStarted?((h>=1&&g>=1)?true:(ok?false:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"BTTS: No", p:rawM.bttsNo, odds:mkOdds(rawM.bttsNo, 7, "bttsNo"), w:koStarted?((h>=1&&g>=1)?false:(ok?true:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:m.fav+" Over 1.5 Team Gls", p:rawM.f15, odds:mkOdds(rawM.f15, 13, "f15"), w:koStarted?(fg>=2?true:(ok?false:null)):null, statBadge:tmGlsBadge, vip:true, cat:"goals", teamSide:"fav"},
+      {n:m.opp+" Over 0.5 Team Gls", p:oppO05PctVal, odds:mkOdds(oppO05PctVal, 25, "oppO05"), w:koStarted?(og>=1?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(1), vip:false, cat:"goals", teamSide:"opp"},
+      {n:m.opp+" Over 1.5 Team Gls", p:oppO15PctVal, odds:mkOdds(oppO15PctVal, 26, "oppO15"), w:koStarted?(og>=2?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(2), vip:false, cat:"goals", teamSide:"opp"},
+      {n:"1st Half Over 0.5", p:rawM.fh05, odds:mkOdds(rawM.fh05, 14, "fh05"), w:koStarted?liveSt.fh05Won:null, statBadge:liveSt.fh05StatBadge, vip:false, cat:"specials", teamSide:"both"},
+      {n:"Over 8.5 Corners", p:rawM.c85, odds:mkOdds(rawM.c85, 15, "c85"), w:koStarted?liveSt.cornersWon:null, statBadge:liveSt.cornersStatBadge, vip:true, cat:"specials", teamSide:"both"},
+      {n:"Over 3.5 Cards", p:rawM.cards35, odds:mkOdds(rawM.cards35, 16, "cards35"), w:koStarted?liveSt.cardsWon:null, statBadge:liveSt.cardsStatBadge, vip:true, cat:"specials", teamSide:"both"}
     ]
+  };
+};
+
+// Top-Level Sweet-Spot Market Priority & Selection for Match Card Quick-Add & AI Daily Banker Slip
+window.getBankerMarketSweetSpotPriority = function(marketName){
+  var low = String(marketName || "").toLowerCase();
+  if(low === "over 2.5 goals") return 1;
+  if(low === "btts: yes") return 2;
+  if(low.indexOf("draw no bet") !== -1) return 3;
+  if(low.indexOf("over 1.5 team gls") !== -1) return 4;
+  if(low.indexOf("win & over 1.5") !== -1) return 5;
+  if(low.indexOf("match result:") === 0 && low.indexOf("to win") !== -1) return 6;
+  if(low === "1st half over 0.5") return 7;
+  if(low === "over 8.5 corners") return 8;
+  if(low.indexOf("-1.0 handicap") !== -1) return 9;
+  if(low === "over 3.5 cards") return 10;
+  if(low === "over 1.5 goals") return 12;
+  if(low.indexOf("/draw (") !== -1) return 22;
+  if(low.indexOf("under ") === 0) return 25;
+  if(low === "btts: no") return 26;
+  return 15;
+};
+
+window.selectBankerSlipMarket = function(markets){
+  if(!Array.isArray(markets) || !markets.length) return null;
+  var parseP = function(item){ return parseFloat(String(item.p).replace("%", "")) || 0; };
+  var parseO = function(item){ return Number(item.odds) || 1.0; };
+
+  var nonOpp = markets.filter(function(item){ return item.teamSide !== "opp" && item.teamSide !== "draw"; });
+  var basePool = nonOpp.length > 0 ? nonOpp : markets.slice();
+
+  var sortSweetSpot = function(a, b){
+    var pDiff = parseP(b) - parseP(a);
+    if(Math.abs(pDiff) > 0.05) return pDiff;
+    return window.getBankerMarketSweetSpotPriority(a.n) - window.getBankerMarketSweetSpotPriority(b.n);
+  };
+
+  // 1. Sweet Spot: 66% <= p <= 78% (and never ultra-short < 1.25)
+  var sweetAll = basePool.filter(function(item){
+    var p = parseP(item);
+    var o = parseO(item);
+    return p >= 66.0 && p <= 78.0 && o >= 1.25;
+  });
+  if(sweetAll.length > 0){
+    var prefAll = sweetAll.filter(function(item){ return window.getBankerMarketSweetSpotPriority(item.n) < 20; });
+    var poolAll = (prefAll.length > 0 ? prefAll : sweetAll).slice().sort(sortSweetSpot);
+    var topByConf = poolAll[0];
+    var strictCand = poolAll.filter(function(item){
+      return parseO(item) >= 1.35 && (parseP(topByConf) - parseP(item)) <= 3.5;
+    });
+    if(strictCand.length > 0) return strictCand[0];
+    return topByConf;
+  }
+
+  // 3. Fallback Rule: No markets between 66% and 78% -> pick market closest to 75% that is still < 82% and >= 1.25 (1/4)
+  var under82 = basePool.filter(function(item){
+    var p = parseP(item);
+    var o = parseO(item);
+    return p < 82.0 && o >= 1.25;
+  });
+  if(under82.length > 0){
+    var prefUnder82 = under82.filter(function(item){ return window.getBankerMarketSweetSpotPriority(item.n) < 20; });
+    var poolFallback = prefUnder82.length > 0 ? prefUnder82 : under82;
+    return poolFallback.slice().sort(function(a, b){
+      var dA = Math.abs(parseP(a) - 75.0);
+      var dB = Math.abs(parseP(b) - 75.0);
+      if(Math.abs(dA - dB) > 0.05) return dA - dB;
+      return window.getBankerMarketSweetSpotPriority(a.n) - window.getBankerMarketSweetSpotPriority(b.n);
+    })[0];
+  }
+
+  var validOddsPool = basePool.filter(function(item){
+    return parseO(item) >= 1.25 && window.getBankerMarketSweetSpotPriority(item.n) < 20;
+  });
+  var finalPool = validOddsPool.length > 0 ? validOddsPool : basePool;
+  return finalPool.slice().sort(function(a, b){
+    return Math.abs(parseP(a) - 75.0) - Math.abs(parseP(b) - 75.0);
+  })[0];
+};
+
+window.selectDailyBankerSlip = function(matchMarketsList, minTotalOdds, maxTotalOdds){
+  var minTarget = minTotalOdds || 3.50;
+  var maxTarget = maxTotalOdds || 6.00;
+  var parseP = function(item){ return parseFloat(String(item.p).replace("%", "")) || 0; };
+  var parseO = function(item){ return Number(item.odds) || 1.0; };
+
+  var selections = (matchMarketsList || []).map(function(mkts){
+    return window.selectBankerSlipMarket(mkts);
+  });
+
+  var calcComb = function(list){
+    return list.reduce(function(acc, it){ return acc * (it ? parseO(it) : 1.0); }, 1.0);
+  };
+
+  var combined = calcComb(selections);
+
+  // If combined < 3.50 (5/2), step up legs using sweet-spot/value markets on the same match cards
+  if(combined < minTarget && selections.length > 0){
+    for(var passUp = 0; passUp < 3 && combined < minTarget; passUp++){
+      for(var i = 0; i < matchMarketsList.length && combined < minTarget; i++){
+        var curr = selections[i];
+        if(!curr) continue;
+        var currO = parseO(curr);
+        var poolUp = (matchMarketsList[i] || []).filter(function(item){
+          return item.teamSide !== "opp" &&
+            item.teamSide !== "draw" &&
+            parseP(item) >= 60.0 &&
+            parseP(item) < 82.0 &&
+            parseO(item) > currO &&
+            parseO(item) <= 1.85;
+        });
+        if(poolUp.length > 0){
+          var sortedUp = poolUp.slice().sort(function(a, b){ return parseO(a) - parseO(b); });
+          var chosenUp = sortedUp[0];
+          for(var u = 0; u < sortedUp.length; u++){
+            var candUp = sortedUp[u];
+            var projUp = (combined / currO) * parseO(candUp);
+            chosenUp = candUp;
+            if(projUp >= minTarget && projUp <= maxTarget) break;
+          }
+          selections[i] = chosenUp;
+          combined = calcComb(selections);
+        }
+      }
+    }
+  }
+
+  // If combined > 6.00 (5/1), step down highest-odds legs to safer higher-confidence (>= 1.25 / 1.22) markets on the same match cards
+  if(combined > maxTarget && selections.length > 0){
+    for(var passDn = 0; passDn < 4 && combined > maxTarget; passDn++){
+      var idxs = selections.map(function(_, idx){ return idx; }).sort(function(a, b){
+        var oB = selections[b] ? parseO(selections[b]) : 0;
+        var oA = selections[a] ? parseO(selections[a]) : 0;
+        return oB - oA;
+      });
+      var maxAllowedP = passDn < 2 ? 82.0 : 91.5;
+      var minAllowedO = passDn < 2 ? 1.25 : 1.22;
+      for(var k = 0; k < idxs.length && combined > maxTarget; k++){
+        var idx = idxs[k];
+        var currDn = selections[idx];
+        if(!currDn) continue;
+        var currOddsDn = parseO(currDn);
+        var poolDn = (matchMarketsList[idx] || []).filter(function(item){
+          return item.teamSide !== "opp" &&
+            item.teamSide !== "draw" &&
+            String(item.n || "").toLowerCase().indexOf("/draw (") === -1 &&
+            parseP(item) >= 64.0 &&
+            parseP(item) <= maxAllowedP &&
+            parseO(item) >= minAllowedO &&
+            parseO(item) < currOddsDn;
+        });
+        if(poolDn.length > 0){
+          var sortedDn = poolDn.slice().sort(function(a, b){ return parseO(b) - parseO(a); });
+          for(var d = 0; d < sortedDn.length; d++){
+            var candDn = sortedDn[d];
+            var projDn = (combined / currOddsDn) * parseO(candDn);
+            if(projDn >= minTarget){
+              selections[idx] = candDn;
+              combined = calcComb(selections);
+              if(combined <= maxTarget) break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    selections: selections,
+    combinedOdds: parseFloat(combined.toFixed(2))
   };
 };
 
@@ -5565,7 +5821,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
   var mkCard = window.calcExtraMarkets(m, m.fs || 68);
   var liveStats = mkCard.liveStats || { hasKickedOff: false };
-  var topCardMkt = mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0];
+  var topCardMkt = (window.selectBankerSlipMarket ? window.selectBankerSlipMarket(mkCard.L) : null) || mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0];
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
   var isBestInSlip = window.betSlip.indexOf(bestBetId) !== -1;
