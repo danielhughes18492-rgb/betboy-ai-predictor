@@ -57,7 +57,48 @@
   .slip-pop-anim { animation: slipBounce 0.36s cubic-bezier(0.34, 1.56, 0.64, 1); }
   #greenResults > div, #amberResults > div, #redResults > div { animation: fadeSlideUp 0.32s cubic-bezier(0.16,1,0.3,1) both; }
   #greenResults > div:hover, #amberResults > div:hover, #redResults > div:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.18) !important; box-shadow: 0 14px 34px -6px rgba(0, 0, 0, 0.6); }
-  [id^="d-"]:not(.hidden) { animation: expandDetails 0.26s cubic-bezier(0.16,1,0.3,1) forwards; }
+  div[id^="d-"] {
+    display: block !important;
+    overflow: hidden;
+    transition: height 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+                max-height 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                margin-top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                padding-top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-top-color 0.26s ease,
+                visibility 0s linear 0s;
+    will-change: height, max-height, opacity, transform;
+  }
+  div[id^="d-"].hidden,
+  div[id^="d-"].details-collapsed {
+    display: block !important;
+    height: 0px;
+    max-height: 0px;
+    opacity: 0;
+    transform: translateY(-6px);
+    margin-top: 0px !important;
+    padding-top: 0px !important;
+    border-top-width: 0px !important;
+    border-top-color: transparent !important;
+    pointer-events: none;
+    visibility: hidden;
+    transition: height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.22s ease,
+                transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                margin-top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                padding-top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-top-color 0.22s ease,
+                visibility 0s linear 0.32s;
+  }
+  div[id^="d-"]:not(.hidden) {
+    max-height: 2400px;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    visibility: visible;
+  }
   .chevron-icon { transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
   .card-expanded .chevron-icon { transform: rotate(180deg); color: #34d399; }
   .kpi-Interactive { cursor:pointer; position:relative; overflow:hidden; transition: all 0.22s cubic-bezier(0.16,1,0.3,1) !important; }
@@ -119,10 +160,12 @@
     #greenResults > *, #amberResults > *, #redResults > * {
       margin-top: 0 !important;
     }
-    div[id^="cardWrap-"].card-expanded {
+    div[id^="cardWrap-"].card-expanded,
+    div[id^="cardWrap-"].card-collapsing {
       grid-column: 1 / -1 !important;
     }
-    div[id^="cardWrap-"].card-expanded [id^="mktGrid-"] {
+    div[id^="cardWrap-"].card-expanded [id^="mktGrid-"],
+    div[id^="cardWrap-"].card-collapsing [id^="mktGrid-"] {
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
       gap: 0.65rem !important;
     }
@@ -167,7 +210,8 @@
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
       gap: 1rem !important;
     }
-    div[id^="cardWrap-"].card-expanded [id^="mktGrid-"] {
+    div[id^="cardWrap-"].card-expanded [id^="mktGrid-"],
+    div[id^="cardWrap-"].card-collapsing [id^="mktGrid-"] {
       grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     }
   }
@@ -3336,8 +3380,9 @@ window.buildDeterministicFallbackSlate = function(dateStr){
       t[1] === "HOME" ? "Home Fortress & xG Edge" : "Elite Away Mismatch",
       Math.round(conf) + "%", t[7]
     ]);
+    var isHomeT = (t[1] !== "AWAY");
+    var hs = isHomeT ? t[8] : t[9], as = isHomeT ? t[9] : t[8];
     if(isPastDay){
-      var hs = t[8], as = t[9];
       var rec = { id: String(id), state: "post", detail: "FT", h: hs, a: as, ko: t[7] };
       window.apiLiveScores["id_" + id] = rec;
     } else if(dateStr === todayStr){
@@ -3346,12 +3391,12 @@ window.buildDeterministicFallbackSlate = function(dateStr){
       if(Number.isFinite(koT) && nowT >= koT){
         var elMin = Math.floor((nowT - koT) / 60000);
         if(elMin >= 110){
-          window.apiLiveScores["id_" + id] = { id: String(id), state: "post", detail: "FT", h: t[8], a: t[9], ko: t[7] };
+          window.apiLiveScores["id_" + id] = { id: String(id), state: "post", detail: "FT", h: hs, a: as, ko: t[7] };
         } else {
           var liveM = Math.min(90, Math.max(1, elMin));
           var prog = liveM / 90;
-          var curH = Math.min(t[8], Math.round(t[8] * prog));
-          var curA = Math.min(t[9], Math.round(t[9] * prog));
+          var curH = Math.min(hs, Math.round(hs * prog));
+          var curA = Math.min(as, Math.round(as * prog));
           window.apiLiveScores["id_" + id] = { id: String(id), state: "in", detail: liveM + "'", h: curH, a: curA, ko: t[7] };
         }
       }
@@ -3996,6 +4041,23 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
   var kickMs = (m && m.date) ? new Date(m.date + "T" + koStr + ":00").getTime() : NaN;
   var koTimeReached = Number.isFinite(kickMs) && Date.now() >= kickMs;
 
+  // Determine whether m.fav is the Home Team or Away Team from API truth, scoreboard text, or venue
+  var isHomeFav = (m && typeof m.isHomeFav === "boolean")
+    ? m.isHomeFav
+    : (String((m && m.venue) || "HOME").toUpperCase() !== "AWAY");
+  if(api && api.homeKey && favKey && oppKey){
+    if(api.homeKey === favKey) isHomeFav = true;
+    else if(api.homeKey === oppKey) isHomeFav = false;
+  } else if(apiByFav && !apiByOpp){
+    isHomeFav = true;
+  } else if(apiByOpp && !apiByFav){
+    isHomeFav = false;
+  } else if(m && (m.homeTeam || m.home) && favKey && oppKey){
+    var explicitHomeKey = normFn(m.homeTeam || m.home);
+    if(explicitHomeKey === favKey) isHomeFav = true;
+    else if(explicitHomeKey === oppKey) isHomeFav = false;
+  }
+
   // Strictly only update/display stats once the game has ACTUALLY kicked off (never during T-30m pre-kickoff window)
   var hasKickedOff = isFT || isExplicitLive || koTimeReached;
   if(!hasKickedOff){
@@ -4003,6 +4065,9 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
       hasKickedOff: false,
       isFT: false,
       isLive: false,
+      isHomeFav: isHomeFav,
+      homeTeam: isHomeFav ? favName : oppName,
+      awayTeam: isHomeFav ? oppName : favName,
       elapsedMins: 0,
       homeGoals: 0,
       awayGoals: 0,
@@ -4023,21 +4088,6 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
     };
   }
 
-  // Determine whether m.fav is the Home Team or Away Team from API truth, scoreboard text, or venue
-  var isHomeFav = String((m && m.venue) || "HOME").toUpperCase() !== "AWAY";
-  if(api && api.homeKey && favKey && oppKey){
-    if(api.homeKey === favKey) isHomeFav = true;
-    else if(api.homeKey === oppKey) isHomeFav = false;
-  } else if(apiByFav && !apiByOpp){
-    isHomeFav = true;
-  } else if(apiByOpp && !apiByFav){
-    isHomeFav = false;
-  } else if(m && (m.homeTeam || m.home) && favKey && oppKey){
-    var explicitHomeKey = normFn(m.homeTeam || m.home);
-    if(explicitHomeKey === favKey) isHomeFav = true;
-    else if(explicitHomeKey === oppKey) isHomeFav = false;
-  }
-
   // Extract API home and away scores when present
   var apiHomeScore = undefined;
   var apiAwayScore = undefined;
@@ -4050,8 +4100,8 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
     else if(api.awayGoals !== undefined && api.awayGoals !== null) apiAwayScore = Number(api.awayGoals);
     else if(api.awayScore !== undefined && api.awayScore !== null) apiAwayScore = Number(api.awayScore);
   }
-  if(apiHomeScore === undefined && m && m.homeGoals !== undefined) apiHomeScore = Number(m.homeGoals);
-  if(apiAwayScore === undefined && m && m.awayGoals !== undefined) apiAwayScore = Number(m.awayGoals);
+  if(apiHomeScore === undefined && m && m.homeGoals !== undefined && m.homeGoals !== null) apiHomeScore = Number(m.homeGoals);
+  if(apiAwayScore === undefined && m && m.awayGoals !== undefined && m.awayGoals !== null) apiAwayScore = Number(m.awayGoals);
 
   var hasCustomOverride = Boolean(window.customResults && m && window.customResults[m.id] && window.customResults[m.id] !== "Pending");
   var homeGoals = 0;
@@ -4060,15 +4110,17 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
   if(scMatch){
     var scFirst = Number(scMatch[1]);
     var scSecond = Number(scMatch[2]);
-    // Check if scoreboard text explicitly names teams on either side of the scoreline (e.g. "Stuttgart 2-0 Galatasaray")
+    // Check if scoreboard text explicitly names teams around or before the scoreline (e.g. "Stuttgart 2-0 Galatasaray" or "Sporting vs Shakhtar LIVE 0-1")
     var scoreIdx = actualStr.indexOf(scMatch[0]);
     var beforeScore = scoreIdx > 0 ? normFn(actualStr.slice(0, scoreIdx)) : "";
     var afterScore = scoreIdx >= 0 ? normFn(actualStr.slice(scoreIdx + scMatch[0].length)) : "";
-    if(favKey && oppKey && beforeScore && afterScore){
-      if(beforeScore.indexOf(favKey) !== -1 && afterScore.indexOf(oppKey) !== -1){
+    if(favKey && oppKey){
+      if(beforeScore && afterScore && beforeScore.indexOf(favKey) !== -1 && afterScore.indexOf(oppKey) !== -1){
         isHomeFav = true;
-      } else if(beforeScore.indexOf(oppKey) !== -1 && afterScore.indexOf(favKey) !== -1){
+      } else if(beforeScore && afterScore && beforeScore.indexOf(oppKey) !== -1 && afterScore.indexOf(favKey) !== -1){
         isHomeFav = false;
+      } else if(beforeScore && beforeScore.indexOf(favKey) !== -1 && beforeScore.indexOf(oppKey) !== -1){
+        isHomeFav = beforeScore.indexOf(favKey) < beforeScore.indexOf(oppKey);
       }
     }
     homeGoals = Number.isFinite(scFirst) ? scFirst : 0;
@@ -4605,18 +4657,45 @@ window.sortMatchMarkets = function(markets, sortMode){
   });
 };
 
+window.animateOpenDetailsPanelResize = function(matchId, prevHeight){
+  if(!prevHeight || !window.expandedCards || !window.expandedCards[matchId]) return;
+  var newEl = document.getElementById("d-" + matchId);
+  if(!newEl) return;
+  var nextHeight = newEl.offsetHeight || newEl.scrollHeight || 0;
+  if(!nextHeight || Math.abs(nextHeight - prevHeight) <= 4) return;
+  if(newEl._animTimer) clearTimeout(newEl._animTimer);
+  newEl.style.height = prevHeight + "px";
+  newEl.style.maxHeight = Math.max(prevHeight, nextHeight, 2400) + "px";
+  void newEl.offsetHeight;
+  newEl.style.height = nextHeight + "px";
+  newEl.style.maxHeight = (nextHeight + 24) + "px";
+  newEl._animTimer = setTimeout(function(){
+    if(window.expandedCards[matchId]){
+      newEl.style.height = "auto";
+      newEl.style.maxHeight = "none";
+    }
+    newEl._animTimer = null;
+  }, 350);
+};
+
 window.setCardMarketTab = function(matchId, cat, e){
   if(e) e.stopPropagation();
+  var oldEl = document.getElementById("d-" + matchId);
+  var prevH = (oldEl && window.expandedCards && window.expandedCards[matchId]) ? oldEl.offsetHeight : 0;
   window.cardMarketFilter[matchId] = cat;
   window.runEngine(false);
+  window.animateOpenDetailsPanelResize(matchId, prevH);
 };
 
 window.setCardMarketSort = function(matchId, sortMode, e){
   if(e) e.stopPropagation();
+  var oldEl = document.getElementById("d-" + matchId);
+  var prevH = (oldEl && window.expandedCards && window.expandedCards[matchId]) ? oldEl.offsetHeight : 0;
   var validMode = (sortMode === "odds" || sortMode === "popular" || sortMode === "confidence") ? sortMode : "confidence";
   window.cardMarketSort[matchId] = validMode;
   window.defaultCardMarketSort = validMode;
   window.runEngine(false);
+  window.animateOpenDetailsPanelResize(matchId, prevH);
 };
 
 // ============================================================================
@@ -5839,10 +5918,86 @@ window.renderMatchTimelineSection = function(m, defaultOpen){
 window.toggleCard = function(id){
   var el = document.getElementById("d-" + id);
   if(!el) return;
-  var hide = el.classList.toggle("hidden");
-  window.expandedCards[id] = !hide;
   var wrap = document.getElementById("cardWrap-" + id);
-  if(wrap) wrap.classList.toggle("card-expanded", !hide);
+  var isCurrentlyOpen = !!window.expandedCards[id] && !el.classList.contains("hidden");
+  var nextOpen = !isCurrentlyOpen;
+  window.expandedCards[id] = nextOpen;
+
+  if(el._animTimer){
+    clearTimeout(el._animTimer);
+    el._animTimer = null;
+  }
+
+  if(nextOpen){
+    if(wrap){
+      wrap.classList.remove("card-collapsing");
+      wrap.classList.add("card-expanded");
+      wrap.setAttribute("aria-expanded", "true");
+    }
+    el.classList.remove("hidden", "details-collapsed");
+    el.classList.add("details-expanded");
+    el.setAttribute("aria-hidden", "false");
+
+    // Measure exact expanded height with transition temporarily disabled
+    el.style.transition = "none";
+    el.style.height = "auto";
+    el.style.maxHeight = "none";
+    var targetHeight = Math.max(el.scrollHeight || el.offsetHeight || 0, 120);
+
+    // Lock start state at 0px and force synchronous reflow
+    el.style.height = "0px";
+    el.style.maxHeight = "0px";
+    el.style.opacity = "0";
+    void el.offsetHeight;
+
+    // Re-enable smooth CSS transition and animate to targetHeight
+    el.style.transition = "";
+    void el.offsetHeight;
+    el.style.height = targetHeight + "px";
+    el.style.maxHeight = (targetHeight + 24) + "px";
+    el.style.opacity = "1";
+
+    if(typeof window.drawHighlightPitchCanvas === "function"){
+      window.drawHighlightPitchCanvas(id);
+    }
+
+    el._animTimer = setTimeout(function(){
+      if(window.expandedCards[id]){
+        el.style.height = "auto";
+        el.style.maxHeight = "none";
+        el.style.opacity = "1";
+      }
+      el._animTimer = null;
+    }, 350);
+  } else {
+    var currentHeight = el.offsetHeight || el.scrollHeight || 0;
+    el.style.height = currentHeight + "px";
+    el.style.maxHeight = currentHeight + "px";
+    el.style.opacity = "1";
+    void el.offsetHeight;
+
+    if(wrap){
+      wrap.classList.remove("card-expanded");
+      wrap.classList.add("card-collapsing");
+      wrap.setAttribute("aria-expanded", "false");
+    }
+    el.classList.remove("details-expanded");
+    el.classList.add("details-collapsed", "hidden");
+    el.setAttribute("aria-hidden", "true");
+    el.style.height = "0px";
+    el.style.maxHeight = "0px";
+    el.style.opacity = "0";
+
+    el._animTimer = setTimeout(function(){
+      if(!window.expandedCards[id]){
+        if(wrap) wrap.classList.remove("card-collapsing");
+        el.style.height = "0px";
+        el.style.maxHeight = "0px";
+        el.style.opacity = "0";
+      }
+      el._animTimer = null;
+    }, 350);
+  }
 };
 
 // Expandable Match Details: Both-Teams Betting Markets Panel
@@ -5861,7 +6016,8 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     return item.cat === activeCat;
   });
 
-  var openCls = window.expandedCards[m.id] ? "" : "hidden ";
+  var isExpandedNow = !!window.expandedCards[m.id];
+  var openCls = isExpandedNow ? "details-expanded " : "hidden details-collapsed ";
   var favCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.fav) : '';
   var oppCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.opp) : '';
   var homeCrest = window.getClubCrestHtml ? window.getClubCrestHtml(outright.homeName || m.fav) : '';
@@ -6003,7 +6159,11 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     '</div>' +
   '</div>';
 
-  return '<div id="d-'+m.id+'" class="'+openCls+'details-panel mt-3 pt-3 border-t border-slate-800/60 text-[10px] space-y-2.5">' +
+  var inlinePanelStyle = isExpandedNow
+    ? ' style="height:auto;max-height:none;opacity:1;" aria-hidden="false"'
+    : ' style="height:0px;max-height:0px;opacity:0;" aria-hidden="true"';
+
+  return '<div id="d-'+m.id+'" class="'+openCls+'details-panel mt-3 pt-3 border-t border-slate-800/60 text-[10px] space-y-2.5"' + inlinePanelStyle + '>' +
     marketsBoxHtml +
     (adm || "") + '</div>';
 };
@@ -6929,6 +7089,102 @@ window.getXMatchSelectedMarketsList = function(m){
   return { sortedM: sortedM, allMarkets: sortedM, selectedMarkets: chosenList };
 };
 
+window.resolveXCardRowFixture = function(s){
+  if(!s) return { isHomeFav: true, homeTeam: "Home", awayTeam: "Away", homeGoals: null, awayGoals: null, hasScore: false, scoreStr: "", isFT: false, isLive: false, isHT: false, elapsedMins: 45 };
+  var fixtures = window.currentEvaluatedFixtures || [];
+  var m = (s.id !== undefined && s.id !== null)
+    ? fixtures.find(function(f){ return Number(f.id) === Number(s.id); })
+    : null;
+  var sourceObj = m || s;
+  var st = window.computeMatchLiveAndFtStats ? window.computeMatchLiveAndFtStats(sourceObj) : null;
+  var normFn = window.normTeamKey || function(v){ return String(v || "").toLowerCase().replace(/[^a-z0-9]/g, ""); };
+
+  var favName = String(s.fav || (m && m.fav) || s.homeTeam || s.home || "");
+  var oppName = String(s.opp || (m && m.opp) || s.awayTeam || s.away || "");
+
+  var isHomeFav = true;
+  if(typeof s.isHomeFav === "boolean"){
+    isHomeFav = s.isHomeFav;
+  } else if(s.venue !== undefined && s.venue !== null && String(s.venue).trim() !== ""){
+    isHomeFav = String(s.venue).toUpperCase() !== "AWAY";
+  } else if(st && typeof st.isHomeFav === "boolean"){
+    isHomeFav = st.isHomeFav;
+  } else if(m && m.venue !== undefined && m.venue !== null){
+    isHomeFav = String(m.venue).toUpperCase() !== "AWAY";
+  }
+
+  var homeTeam = String(s.homeTeam || s.home || (m && (m.homeTeam || m.home)) || (isHomeFav ? favName : oppName) || "Home");
+  var awayTeam = String(s.awayTeam || s.away || (m && (m.awayTeam || m.away)) || (isHomeFav ? oppName : favName) || "Away");
+
+  var actStr = String(s.actual !== undefined ? s.actual : ((m && m.actual) || ""));
+  var isFT = (typeof s.isFT === "boolean") ? s.isFT : Boolean(st ? st.isFT : (!s.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr))));
+  var isHT = (typeof s.isHT === "boolean") ? s.isHT : (/\bHT\b/i.test(actStr) || (!isFT && (actStr.indexOf("45'") !== -1 || /half/i.test(actStr))));
+  var minMatch = actStr.match(/(\d+)\s*'/);
+  var isLive = (typeof s.isLive === "boolean") ? s.isLive : Boolean(!isFT && ((m && m.isLive) || /live/i.test(actStr) || isHT || !!minMatch || (st && st.isLive)));
+  var elapsedMins = Number(s.elapsedMins || (minMatch ? minMatch[1] : (st && st.elapsedMins)) || 45);
+
+  var homeGoals = null;
+  var awayGoals = null;
+
+  if(s.homeGoals !== undefined && s.homeGoals !== null && s.awayGoals !== undefined && s.awayGoals !== null && Number.isFinite(Number(s.homeGoals)) && Number.isFinite(Number(s.awayGoals))){
+    homeGoals = Number(s.homeGoals);
+    awayGoals = Number(s.awayGoals);
+  } else {
+    var rawScoreCandidate = String(s.ftScore || s.liveScore || actStr || "");
+    var cleanForScore = rawScoreCandidate
+      .replace(/\b\d{4}-\d{2}-\d{2}\b/g, " ")
+      .replace(/\bT-\d+m\b/gi, " ")
+      .replace(/\b\d+(?:\+\d+)?\s*'/g, " ");
+    var scM = cleanForScore.match(/(\d+)\s*-\s*(\d+)/);
+    if(scM){
+      var n1 = Number(scM[1]);
+      var n2 = Number(scM[2]);
+      var homeK = normFn(homeTeam);
+      var awayK = normFn(awayTeam);
+      var scPos = rawScoreCandidate.indexOf(scM[0]);
+      var beforeSc = scPos > 0 ? normFn(rawScoreCandidate.slice(0, scPos)) : "";
+      var afterSc = scPos >= 0 ? normFn(rawScoreCandidate.slice(scPos + scM[0].length)) : "";
+      // If text explicitly wrote AwayTeam before score and HomeTeam after score, map accordingly; otherwise standard HomeGoals - AwayGoals
+      if(homeK && awayK && beforeSc && afterSc && beforeSc.indexOf(awayK) !== -1 && afterSc.indexOf(homeK) !== -1){
+        homeGoals = n2;
+        awayGoals = n1;
+      } else if(homeK && awayK && beforeSc && beforeSc.indexOf(awayK) !== -1 && beforeSc.indexOf(homeK) !== -1 && beforeSc.indexOf(awayK) < beforeSc.indexOf(homeK)){
+        homeGoals = n2;
+        awayGoals = n1;
+      } else {
+        homeGoals = n1;
+        awayGoals = n2;
+      }
+      // If m matches sourceObj and st has settled FT (Won)/(Lost) alignment, keep consistent with st
+      if(m && st && st.hasKickedOff && !s.liveScore && !s.ftScore && s.actual === undefined){
+        homeGoals = st.homeGoals;
+        awayGoals = st.awayGoals;
+      }
+    } else if(st && st.hasKickedOff){
+      homeGoals = Number(st.homeGoals || 0);
+      awayGoals = Number(st.awayGoals || 0);
+    }
+  }
+
+  var hasScore = (homeGoals !== null && awayGoals !== null && Number.isFinite(homeGoals) && Number.isFinite(awayGoals));
+  var scoreStr = hasScore ? (homeGoals + "-" + awayGoals) : "";
+
+  return {
+    isHomeFav: isHomeFav,
+    venue: isHomeFav ? "HOME" : "AWAY",
+    homeTeam: homeTeam,
+    awayTeam: awayTeam,
+    homeGoals: hasScore ? homeGoals : null,
+    awayGoals: hasScore ? awayGoals : null,
+    hasScore: hasScore,
+    scoreStr: scoreStr,
+    isFT: isFT,
+    isLive: isLive,
+    isHT: isHT,
+    elapsedMins: elapsedMins
+  };
+};
+
 window.getResolvedXSelections = function(){
   var fixtures = window.currentEvaluatedFixtures || [];
   var result = [];
@@ -6944,14 +7200,13 @@ window.getResolvedXSelections = function(){
       return acc + (parseFloat(String(item.p).replace("%","")) || 75);
     }, 0) / selectedMarkets.length;
 
+    var rowFix = window.resolveXCardRowFixture(m);
     var actStr = String(m.actual || "");
-    var isFT = !m.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr));
-    var scMatch = actStr.match(/(\d+)\s*-\s*(\d+)/);
-    var liveScore = scMatch ? (scMatch[1] + "-" + scMatch[2]) : "";
-    var minMatch = actStr.match(/(\d+)\s*'/);
-    var isHT = /\bHT\b/i.test(actStr) || (!isFT && (actStr.indexOf("45'") !== -1 || /half/i.test(actStr)));
-    var isLive = !isFT && (m.isLive || /live/i.test(actStr) || isHT || !!minMatch);
-    var elapsedMins = minMatch ? Number(minMatch[1]) : 45;
+    var isFT = rowFix.isFT;
+    var isHT = rowFix.isHT;
+    var isLive = rowFix.isLive;
+    var liveScore = rowFix.scoreStr;
+    var elapsedMins = rowFix.elapsedMins;
     var matchWon = /\(won\)/i.test(actStr);
 
     var allLegsWon = selectedMarkets.length > 0 && selectedMarkets.every(function(l){ return l.w === true; });
@@ -6963,6 +7218,12 @@ window.getResolvedXSelections = function(){
       id: m.id,
       fav: m.fav,
       opp: m.opp,
+      venue: rowFix.venue,
+      isHomeFav: rowFix.isHomeFav,
+      homeTeam: rowFix.homeTeam,
+      awayTeam: rowFix.awayTeam,
+      homeGoals: rowFix.homeGoals,
+      awayGoals: rowFix.awayGoals,
       league: m.league,
       ko: m.ko || "15:00",
       market: firstMkt.n || ("Match Result: " + m.fav + " to Win"),
@@ -7198,9 +7459,10 @@ window.generateXPostData = function(selections, style, oddsFmt){
         }
 
         if(compactLevel === 0){
+          var rowFixC = window.resolveXCardRowFixture ? window.resolveXCardRowFixture(s) : { homeTeam: s.homeTeam || s.fav, awayTeam: s.awayTeam || s.opp };
           var cleanMkt = String(s.market || "").replace(/^Match Result:\s*/i, "");
-          var hasTeam = cleanMkt.toLowerCase().indexOf(s.fav.toLowerCase()) !== -1;
-          var pickLbl = hasTeam ? cleanMkt : (s.fav + " vs " + s.opp + ": " + cleanMkt);
+          var hasTeam = cleanMkt.toLowerCase().indexOf(s.fav.toLowerCase()) !== -1 || cleanMkt.toLowerCase().indexOf(String(rowFixC.homeTeam).toLowerCase()) !== -1 || cleanMkt.toLowerCase().indexOf(String(rowFixC.awayTeam).toLowerCase()) !== -1;
+          var pickLbl = hasTeam ? cleanMkt : (rowFixC.homeTeam + " vs " + rowFixC.awayTeam + ": " + cleanMkt);
           return prefix + " " + pickLbl + statusTag + " (" + oddsStr + " • " + pctNum + "%)";
         }
         if(compactLevel === 1){
@@ -7216,14 +7478,16 @@ window.generateXPostData = function(selections, style, oddsFmt){
 
     if(count === 1){
       var s0 = selections[0];
+      var rf0 = window.resolveXCardRowFixture ? window.resolveXCardRowFixture(s0) : { homeTeam: s0.homeTeam || s0.fav, awayTeam: s0.awayTeam || s0.opp, scoreStr: s0.ftScore || s0.liveScore || "" };
+      var sc0 = rf0.scoreStr || s0.ftScore || s0.liveScore || "";
       var ftHdr0 = s0.isFT
-        ? (s0.ftScore ? (" (FT " + s0.ftScore + ")") : " (FT)")
+        ? (sc0 ? (" (FT " + sc0 + ")") : " (FT)")
         : s0.isHT
-        ? (s0.liveScore ? (" (HT " + s0.liveScore + ")") : " (HT)")
+        ? (sc0 ? (" (HT " + sc0 + ")") : " (HT)")
         : s0.isLive
-        ? (s0.liveScore ? (" (LIVE " + s0.liveScore + ")") : " (LIVE)")
+        ? (sc0 ? (" (LIVE " + sc0 + ")") : " (LIVE)")
         : "";
-      var mTitle = (compactLevel === 0 ? (s0.fav + " vs " + s0.opp) : (window.shortenTeamForX(s0.fav) + " v " + window.shortenTeamForX(s0.opp))) + ftHdr0;
+      var mTitle = (compactLevel === 0 ? (rf0.homeTeam + " vs " + rf0.awayTeam) : (window.shortenTeamForX(rf0.homeTeam) + " v " + window.shortenTeamForX(rf0.awayTeam))) + ftHdr0;
       if(isSingleMatchBuilder){
         if(wonLegCount > 0 && (s0.isHT || s0.isLive)){
           header = "🔥 BetBoy AI " + wonLegCount + "/" + totalLegs + " Won at Half-Time: " + mTitle;
@@ -8005,11 +8269,32 @@ window.renderXPostCanvasCard = function(){
   var sumPct = 0;
   var totalPctLegs = 0;
 
+  var renderedRowsMeta = [];
+
   selections.forEach(function(s, idx){
     var y = curY;
     var rH = rowHeights[idx];
     var cardBoxH = rH - 16;
     curY += rH;
+
+    var rowFix = window.resolveXCardRowFixture ? window.resolveXCardRowFixture(s) : {
+      isHomeFav: s.venue !== "AWAY",
+      homeTeam: s.homeTeam || (s.venue === "AWAY" ? s.opp : s.fav),
+      awayTeam: s.awayTeam || (s.venue === "AWAY" ? s.fav : s.opp),
+      homeGoals: typeof s.homeGoals === "number" ? s.homeGoals : null,
+      awayGoals: typeof s.awayGoals === "number" ? s.awayGoals : null,
+      hasScore: false,
+      scoreStr: s.ftScore || s.liveScore || "",
+      isFT: !!s.isFT,
+      isLive: !!s.isLive,
+      isHT: !!s.isHT,
+      elapsedMins: s.elapsedMins || 45
+    };
+
+    var homeTeam = rowFix.homeTeam;
+    var awayTeam = rowFix.awayTeam;
+    var homeGoals = rowFix.homeGoals;
+    var awayGoals = rowFix.awayGoals;
 
     var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, p: s.pct, odds: s.odds, w: s.won, statBadge: s.statBadge }];
     var pctNum = parseFloat(String(s.pct).replace("%","")) || 75;
@@ -8020,9 +8305,12 @@ window.renderXPostCanvasCard = function(){
       combOddsDec *= (Number(l.odds) || 1.5);
     });
 
-    var isMatchFT = !!s.isFT;
-    var isMatchLive = !!s.isLive;
-    var isMatchHT = !!s.isHT;
+    var isMatchFT = rowFix.isFT;
+    var isMatchLive = rowFix.isLive;
+    var isMatchHT = rowFix.isHT;
+    var hasScore = rowFix.hasScore && (isMatchFT || isMatchLive || isMatchHT);
+    var scoreStr = hasScore ? (homeGoals + "-" + awayGoals) : (rowFix.scoreStr || "");
+
     var hasAnyLegWon = legs.some(function(l){ return l.w === true; });
     var areAllLegsWon = legs.length > 0 && legs.every(function(l){ return l.w === true; });
     var isSelectionWon = (s.won === true) || areAllLegsWon || hasAnyLegWon;
@@ -8040,20 +8328,49 @@ window.renderXPostCanvasCard = function(){
     roundRect(42, y, 10, cardBoxH, 6);
     ctx.fill();
 
-    // Draw BOTH Team Crests (Favourite/Home Crest + Opponent/Away Crest)
-    window.drawClubCrestOnCanvas(ctx, s.fav, 64, y + 20, 56);
+    // Draw BOTH Team Crests in Standard Fixture Order: HOME TEAM on Left (x=64), AWAY TEAM on Right (x=142)
+    window.drawClubCrestOnCanvas(ctx, homeTeam, 64, y + 14, 54);
     ctx.fillStyle = "#64748b";
     ctx.font = "900 13px 'Plus Jakarta Sans', Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("v", 131, y + 54);
-    window.drawClubCrestOnCanvas(ctx, s.opp, 142, y + 20, 56);
+    ctx.fillText("v", 131, y + 46);
+    window.drawClubCrestOnCanvas(ctx, awayTeam, 142, y + 14, 54);
 
-    // Fixture Teams & League/KO/FT Info (Auto-fitted without ellipses truncation)
+    // Scoreboard / Home-Away Overlay Pill directly beneath Home (Left) & Away (Right) Crests
+    ctx.fillStyle = "rgba(2, 6, 23, 0.92)";
+    roundRect(64, y + 71, 134, 20, 6);
+    ctx.fill();
+    ctx.strokeStyle = hasScore ? (isSelectionWon ? "rgba(52, 211, 153, 0.65)" : "rgba(56, 189, 248, 0.55)") : "rgba(100, 116, 139, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if(hasScore){
+      ctx.font = "900 12px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      // Home score under Home crest (left), separator in middle, Away score under Away crest (right)
+      ctx.fillText(String(homeGoals), 91, y + 85);
+      ctx.fillStyle = isSelectionWon ? "#34d399" : "#38bdf8";
+      ctx.fillText("-", 131, y + 85);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(String(awayGoals), 169, y + 85);
+    } else {
+      ctx.font = "800 9.5px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#94a3b8";
+      ctx.textAlign = "center";
+      ctx.fillText("HOME", 91, y + 84);
+      ctx.fillStyle = "#475569";
+      ctx.fillText("•", 131, y + 84);
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillText("AWAY", 169, y + 84);
+    }
+
+    // Fixture Teams & League/KO/FT Info (Always Home Team vs Away Team on Left/Right)
     var leftStartX = 210;
     var rightAnchorX = W - 222; // 858
     var maxLeftColW = legs.length === 1 ? 335 : 375;
 
-    var fixtureTitle = (isSelectionWon ? "✅ " : (isMatchLive ? "⏳ " : "")) + s.fav + " vs " + s.opp;
+    var fixtureTitle = (isSelectionWon ? "✅ " : (isMatchLive ? "⏳ " : "")) + homeTeam + " vs " + awayTeam;
     ctx.fillStyle = "#ffffff";
     var titleFit = window.drawFittedCanvasText(ctx, fixtureTitle, leftStartX, y + 42, maxLeftColW, "left", 22.5, 14, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
@@ -8062,16 +8379,29 @@ window.renderXPostCanvasCard = function(){
 
     var timeOrFtStr = "";
     if (isMatchFT) {
-      timeOrFtStr = "✓ FT " + (s.ftScore || s.actual || "") + (isSelectionWon && legs.length === 1 ? " • WON" : "");
+      timeOrFtStr = "✓ FT " + (scoreStr || s.actual || "") + (isSelectionWon && legs.length === 1 ? " • WON" : "");
     } else if (isMatchHT) {
-      timeOrFtStr = "⏸️ HT " + (s.liveScore || "") + (isSelectionWon ? " • ✅ LANDED" : " • ⏳ LIVE");
+      timeOrFtStr = "⏸️ HT " + scoreStr + (isSelectionWon ? " • ✅ LANDED" : " • ⏳ LIVE");
     } else if (isMatchLive) {
-      timeOrFtStr = "⏳ LIVE " + (s.liveScore || "") + " (" + (s.elapsedMins || 45) + "')" + (isSelectionWon ? " • ✅ LANDED" : "");
+      timeOrFtStr = "⏳ LIVE " + scoreStr + " (" + (rowFix.elapsedMins || 45) + "')" + (isSelectionWon ? " • ✅ LANDED" : "");
     } else {
       timeOrFtStr = "KO " + (s.ko || "15:00") + (legs.length > 1 ? (" • 🛠️ " + legs.length + "-Leg") : "");
     }
     var subMeta = lgName + " • " + timeOrFtStr;
     var metaFit = window.drawFittedCanvasText(ctx, subMeta, leftStartX, y + 73, maxLeftColW, "left", 15, 11.5, "700", "'JetBrains Mono', monospace");
+
+    renderedRowsMeta.push({
+      id: s.id,
+      homeTeam: homeTeam,
+      awayTeam: awayTeam,
+      leftTeam: homeTeam,
+      rightTeam: awayTeam,
+      homeGoals: homeGoals,
+      awayGoals: awayGoals,
+      scoreStr: scoreStr,
+      fixtureTitle: fixtureTitle,
+      subMeta: subMeta
+    });
 
     // Calculate exact remaining horizontal width for the Right Selection Column so left & right never collide or cut off
     var usedLeftW = Math.max(titleFit.width, metaFit.width);
@@ -8088,7 +8418,7 @@ window.renderXPostCanvasCard = function(){
       ctx.fillStyle = legWon ? "#86efac" : (isMatchLive ? "#7dd3fc" : "#cbd5e1");
       var confOrStatTxt = "";
       if(legWon){
-        var statPart = singleLeg.statBadge || (isMatchHT ? ("HT " + (s.liveScore || "")) : isMatchLive ? ("LIVE " + (s.liveScore || "")) : "");
+        var statPart = singleLeg.statBadge || (isMatchHT ? ("HT " + scoreStr) : isMatchLive ? ("LIVE " + scoreStr) : "");
         confOrStatTxt = (statPart ? (statPart + " • ") : "") + "✅ WON / LANDED";
       } else if(isMatchLive){
         confOrStatTxt = (singleLeg.statBadge ? (singleLeg.statBadge + " • ") : "") + "⏳ IN PLAY";
@@ -8210,6 +8540,7 @@ window.renderXPostCanvasCard = function(){
   ctx.fillStyle = "#fde047";
   window.drawFittedCanvasText(ctx, "£10 RETURNS: £" + estReturn, W - 66, footerY + 41, 300, "right", 20.5, 14, "900", "'JetBrains Mono', monospace");
 
+  canvas._lastRenderedRows = renderedRowsMeta;
   return canvas;
 };
 
@@ -8337,24 +8668,34 @@ window.refreshXPostStudioUI = function(){
       var selectedMarkets = resolved.selectedMarkets;
       var selectedNames = selectedMarkets.map(function(x){ return x.n; });
       var matchCombOdds = selectedMarkets.reduce(function(acc, x){ return acc * (Number(x.odds) || 1.5); }, 1);
-      var favCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.fav) : "";
-      var oppCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.opp) : "";
+      var rowFixUi = window.resolveXCardRowFixture ? window.resolveXCardRowFixture(m) : {
+        homeTeam: m.venue === "AWAY" ? m.opp : m.fav,
+        awayTeam: m.venue === "AWAY" ? m.fav : m.opp,
+        scoreStr: "",
+        isFT: false,
+        isLive: false,
+        isHT: false,
+        elapsedMins: 45
+      };
+      var homeTeamUi = rowFixUi.homeTeam;
+      var awayTeamUi = rowFixUi.awayTeam;
+      var homeCrest = window.getClubCrestHtml ? window.getClubCrestHtml(homeTeamUi) : "";
+      var awayCrest = window.getClubCrestHtml ? window.getClubCrestHtml(awayTeamUi) : "";
 
       var actStr = String(m.actual || "");
-      var isMatchFT = !m.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr));
-      var scMatch = actStr.match(/(\d+)\s*-\s*(\d+)/);
-      var minMatch = actStr.match(/(\d+)\s*'/);
-      var isMatchHT = /\bHT\b/i.test(actStr) || (!isMatchFT && (actStr.indexOf("45'") !== -1 || /half/i.test(actStr)));
-      var isMatchLive = !isMatchFT && (m.isLive || /live/i.test(actStr) || isMatchHT || !!minMatch);
+      var isMatchFT = rowFixUi.isFT;
+      var isMatchHT = rowFixUi.isHT;
+      var isMatchLive = rowFixUi.isLive;
+      var scoreUi = rowFixUi.scoreStr;
       var hasAnyWonLeg = selectedMarkets.some(function(x){ return x.w === true; });
 
       var ftBadgeHtml = "";
       if (isMatchFT) {
-        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">✓ FT ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : actStr) + '</span>';
+        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">✓ FT ' + (scoreUi || actStr) + '</span>';
       } else if (isMatchHT) {
-        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded ' + (hasAnyWonLeg ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' : 'bg-sky-500/20 text-sky-300 border-sky-500/40') + ' border whitespace-nowrap flex-shrink-0">⏸️ HT ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : '') + (hasAnyWonLeg ? ' • ✅ LANDED' : ' • LIVE') + '</span>';
+        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded ' + (hasAnyWonLeg ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' : 'bg-sky-500/20 text-sky-300 border-sky-500/40') + ' border whitespace-nowrap flex-shrink-0">⏸️ HT ' + scoreUi + (hasAnyWonLeg ? ' • ✅ LANDED' : ' • LIVE') + '</span>';
       } else if (isMatchLive) {
-        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded ' + (hasAnyWonLeg ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' : 'bg-sky-500/20 text-sky-300 border-sky-500/40') + ' border whitespace-nowrap flex-shrink-0">⏳ ' + (scMatch ? (scMatch[1] + '-' + scMatch[2]) : 'LIVE') + (minMatch ? (' (' + minMatch[1] + '\')') : '') + (hasAnyWonLeg ? ' • ✅ LANDED' : '') + '</span>';
+        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded ' + (hasAnyWonLeg ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' : 'bg-sky-500/20 text-sky-300 border-sky-500/40') + ' border whitespace-nowrap flex-shrink-0">⏳ LIVE ' + (scoreUi || '') + (rowFixUi.elapsedMins ? (' (' + rowFixUi.elapsedMins + '\')') : '') + (hasAnyWonLeg ? ' • ✅ LANDED' : '') + '</span>';
       }
 
       var builderPanelHtml = "";
@@ -8405,10 +8746,10 @@ window.refreshXPostStudioUI = function(){
           '<label class="flex items-center gap-1.5 min-w-0 cursor-pointer">' +
             '<input type="checkbox" ' + (isSel ? 'checked' : '') + ' onchange="window.toggleMatchForXPost(' + m.id + ', false)" class="accent-emerald-500 w-3.5 h-3.5 flex-shrink-0">' +
             '<span class="text-[10px] font-black mono text-emerald-400">#' + (idx+1) + '</span>' +
-            favCrest +
-            '<span class="text-[11px] font-bold text-white">' + m.fav + ' <span class="text-slate-400 font-normal">v</span></span>' +
-            oppCrest +
-            '<span class="text-[11px] font-semibold text-slate-200">' + m.opp + '</span>' +
+            homeCrest +
+            '<span class="text-[11px] font-bold text-white">' + homeTeamUi + ' <span class="text-slate-400 font-normal">v</span></span>' +
+            awayCrest +
+            '<span class="text-[11px] font-semibold text-slate-200">' + awayTeamUi + '</span>' +
           '</label>' +
           '<div class="flex items-center gap-1.5 ml-auto">' +
             ftBadgeHtml +
