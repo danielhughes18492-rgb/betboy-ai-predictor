@@ -5698,6 +5698,165 @@ window.runEngine = function(isForcedSync){
     capped.sort(function(a,b){ return String(a.ko||"15:00").localeCompare(String(b.ko||"15:00")) || (b.fs - a.fs); });
   }
 
+  // Helper: Sweet-Spot Market Priority & Selection for AI Daily High-Confidence Banker Slip
+  window.getBankerMarketSweetSpotPriority = window.getBankerMarketSweetSpotPriority || function(marketName){
+    var low = String(marketName || "").toLowerCase();
+    if(low === "over 2.5 goals") return 1;
+    if(low === "btts: yes") return 2;
+    if(low.indexOf("draw no bet") !== -1) return 3;
+    if(low.indexOf("over 1.5 team gls") !== -1) return 4;
+    if(low.indexOf("win & over 1.5") !== -1) return 5;
+    if(low.indexOf("match result:") === 0 && low.indexOf("to win") !== -1) return 6;
+    if(low === "1st half over 0.5") return 7;
+    if(low === "over 8.5 corners") return 8;
+    if(low.indexOf("-1.0 handicap") !== -1) return 9;
+    if(low === "over 3.5 cards") return 10;
+    if(low.indexOf("under ") === 0) return 25;
+    if(low === "btts: no") return 26;
+    return 15;
+  };
+
+  window.selectBankerSlipMarket = window.selectBankerSlipMarket || function(markets){
+    if(!Array.isArray(markets) || !markets.length) return null;
+    var parseP = function(item){ return parseFloat(String(item.p).replace("%", "")) || 0; };
+    var parseO = function(item){ return Number(item.odds) || 1.0; };
+
+    var nonOpp = markets.filter(function(item){ return item.teamSide !== "opp" && item.teamSide !== "draw"; });
+    var basePool = nonOpp.length > 0 ? nonOpp : markets.slice();
+
+    var sortSweetSpot = function(a, b){
+      var pDiff = parseP(b) - parseP(a);
+      if(Math.abs(pDiff) > 0.05) return pDiff;
+      return window.getBankerMarketSweetSpotPriority(a.n) - window.getBankerMarketSweetSpotPriority(b.n);
+    };
+
+    // 1. Sweet Spot: 66% <= p <= 78% (and never ultra-short < 1.25)
+    var sweetAll = basePool.filter(function(item){
+      var p = parseP(item);
+      var o = parseO(item);
+      return p >= 66.0 && p <= 78.0 && o >= 1.25;
+    });
+    if(sweetAll.length > 0){
+      var prefAll = sweetAll.filter(function(item){ return window.getBankerMarketSweetSpotPriority(item.n) < 20; });
+      var poolAll = (prefAll.length > 0 ? prefAll : sweetAll).slice().sort(sortSweetSpot);
+      var topByConf = poolAll[0];
+      var strictCand = poolAll.filter(function(item){
+        return parseO(item) >= 1.35 && (parseP(topByConf) - parseP(item)) <= 3.5;
+      });
+      if(strictCand.length > 0) return strictCand[0];
+      return topByConf;
+    }
+
+    // 3. Fallback Rule: No markets between 66% and 78% -> pick market closest to 75% that is still < 82% and >= 1.25 (1/4)
+    var under82 = basePool.filter(function(item){
+      var p = parseP(item);
+      var o = parseO(item);
+      return p < 82.0 && o >= 1.25;
+    });
+    if(under82.length > 0){
+      return under82.slice().sort(function(a, b){
+        var dA = Math.abs(parseP(a) - 75.0);
+        var dB = Math.abs(parseP(b) - 75.0);
+        if(Math.abs(dA - dB) > 0.05) return dA - dB;
+        return window.getBankerMarketSweetSpotPriority(a.n) - window.getBankerMarketSweetSpotPriority(b.n);
+      })[0];
+    }
+
+    return basePool.slice().sort(function(a, b){
+      return Math.abs(parseP(a) - 75.0) - Math.abs(parseP(b) - 75.0);
+    })[0];
+  };
+
+  window.selectDailyBankerSlip = window.selectDailyBankerSlip || function(matchMarketsList, minTotalOdds, maxTotalOdds){
+    var minTarget = minTotalOdds || 3.50;
+    var maxTarget = maxTotalOdds || 6.00;
+    var parseP = function(item){ return parseFloat(String(item.p).replace("%", "")) || 0; };
+    var parseO = function(item){ return Number(item.odds) || 1.0; };
+
+    var selections = (matchMarketsList || []).map(function(mkts){
+      return window.selectBankerSlipMarket(mkts);
+    });
+
+    var calcComb = function(list){
+      return list.reduce(function(acc, it){ return acc * (it ? parseO(it) : 1.0); }, 1.0);
+    };
+
+    var combined = calcComb(selections);
+
+    // If combined < 3.50 (5/2), step up legs using sweet-spot/value markets on the same match cards
+    if(combined < minTarget && selections.length > 0){
+      for(var passUp = 0; passUp < 3 && combined < minTarget; passUp++){
+        for(var i = 0; i < matchMarketsList.length && combined < minTarget; i++){
+          var curr = selections[i];
+          if(!curr) continue;
+          var currO = parseO(curr);
+          var poolUp = (matchMarketsList[i] || []).filter(function(item){
+            return item.teamSide !== "opp" &&
+              item.teamSide !== "draw" &&
+              parseP(item) >= 60.0 &&
+              parseP(item) < 82.0 &&
+              parseO(item) > currO &&
+              parseO(item) <= 1.75;
+          });
+          if(poolUp.length > 0){
+            var sortedUp = poolUp.slice().sort(function(a, b){ return parseO(a) - parseO(b); });
+            var chosenUp = sortedUp[0];
+            for(var u = 0; u < sortedUp.length; u++){
+              var candUp = sortedUp[u];
+              var projUp = (combined / currO) * parseO(candUp);
+              chosenUp = candUp;
+              if(projUp >= minTarget && projUp <= maxTarget) break;
+            }
+            selections[i] = chosenUp;
+            combined = calcComb(selections);
+          }
+        }
+      }
+    }
+
+    // If combined > 6.00 (5/1), step down highest-odds legs to safer 66%-81.9% (>= 1.25) markets on the same match cards
+    if(combined > maxTarget && selections.length > 0){
+      for(var passDn = 0; passDn < 3 && combined > maxTarget; passDn++){
+        var idxs = selections.map(function(_, idx){ return idx; }).sort(function(a, b){
+          var oB = selections[b] ? parseO(selections[b]) : 0;
+          var oA = selections[a] ? parseO(selections[a]) : 0;
+          return oB - oA;
+        });
+        for(var k = 0; k < idxs.length && combined > maxTarget; k++){
+          var idx = idxs[k];
+          var currDn = selections[idx];
+          if(!currDn) continue;
+          var currOddsDn = parseO(currDn);
+          var poolDn = (matchMarketsList[idx] || []).filter(function(item){
+            return item.teamSide !== "opp" &&
+              item.teamSide !== "draw" &&
+              parseP(item) >= 66.0 &&
+              parseP(item) < 82.0 &&
+              parseO(item) >= 1.25 &&
+              parseO(item) < currOddsDn;
+          });
+          if(poolDn.length > 0){
+            var sortedDn = poolDn.slice().sort(function(a, b){ return parseO(b) - parseO(a); });
+            for(var d = 0; d < sortedDn.length; d++){
+              var candDn = sortedDn[d];
+              var projDn = (combined / currOddsDn) * parseO(candDn);
+              if(projDn >= minTarget){
+                selections[idx] = candDn;
+                combined = calcComb(selections);
+                if(combined <= maxTarget) break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      selections: selections,
+      combinedOdds: parseFloat(combined.toFixed(2))
+    };
+  };
+
   // Populate Top Daily 5-Fold High-Confidence Banker Slip (with Club Crests & Live Odds) & store selections for "➕ Add to Slip"
   var slipList = document.getElementById("topAccaSlipList");
   window.currentTopAccaSelections = [];
@@ -5727,14 +5886,19 @@ window.runEngine = function(isForcedSync){
       bankerPool.sort(function(a,b){ return b.fs - a.fs; });
     }
     var topFive = bankerPool.slice(0, 5);
+    var topFiveMarketsList = topFive.map(function(m){
+      var mk = window.calcExtraMarkets(m, m.fs);
+      return (mk && mk.L) ? mk.L : [];
+    });
+    var bankerSlipPlan = window.selectDailyBankerSlip(topFiveMarketsList, 3.50, 6.00);
     var topCombOdds = 1;
     if(topFive.length){
       slipList.innerHTML = topFive.map(function(m, idx){
-        var mk = window.calcExtraMarkets(m, m.fs);
-        var bestM = mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0];
+        var bestM = bankerSlipPlan.selections[idx];
         var stLow = (m.actual || "").toLowerCase();
         var isFT = !m.isLive && (stLow.indexOf("(won)")!==-1 || stLow.indexOf("(draw)")!==-1 || stLow.indexOf("(lost)")!==-1);
         var isMatchWon = stLow.indexOf("(won)") !== -1;
+        var isLegSettledWon = (isFT && bestM && bestM.w !== null && bestM.w !== undefined) ? (bestM.w === true) : isMatchWon;
         var elId = 'slip-' + m.id;
         var favCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.fav) : '';
         var oppCrest = window.getClubCrestHtml ? window.getClubCrestHtml(m.opp) : '';
@@ -5757,13 +5921,17 @@ window.runEngine = function(isForcedSync){
           window.marketSelectionRegistry[elId] = selObj;
         }
 
+        var t30LockTag = (!isFT && !m.isLive && m.isLocked)
+          ? '<span class="text-[8.5px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded font-mono font-bold ml-1">🔒 T-30m Locked</span>'
+          : '';
+
         var lockStateBadge = isFT
-          ? (isMatchWon
+          ? (isLegSettledWon
               ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-bold ml-1">✓ FT ' + m.actual + '</span>'
               : '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-1.5 py-0.5 rounded font-bold ml-1">✗ FT ' + m.actual + '</span>')
           : (m.isLive
               ? '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-1.5 py-0.5 rounded font-mono font-bold ml-1">🔴 LIVE</span>'
-              : '<span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono ml-1">🕒 KO ' + (m.ko||"15:00") + '</span>');
+              : '<span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono ml-1">🕒 KO ' + (m.ko||"15:00") + '</span>' + t30LockTag);
 
         var marketTick = "";
         if(isFT && bestM){
@@ -5774,7 +5942,7 @@ window.runEngine = function(isForcedSync){
         if(window.isTrial && idx > 0 && !isFT){
           return '<div onclick="window.exitTrialToSubscribe()" class="flex justify-between items-center bg-slate-950/85 border border-amber-500/30 px-3 py-2.5 rounded-xl cursor-pointer hover:border-amber-500/60 transition shadow-sm gap-2">' +
             '<div class="truncate pr-2 flex items-center flex-wrap gap-1.5"><span class="text-amber-400 font-black mono">' + (idx+1) + '.</span>' + favCrest + '<b class="text-white trial-blur-sm">VIP Banker</b> <span class="text-slate-400 text-[10px] inline-flex items-center gap-1">vs ' + oppCrest + '<span>' + m.opp + '</span></span>' + lockStateBadge + '</div>' +
-            '<div class="text-right flex-shrink-0"><span class="text-emerald-400 font-black mono trial-blur-sm">85.4%</span> <span class="text-[9px] text-amber-400 font-bold block mt-0.5">🔒 Tap to Unlock</span></div>' +
+            '<div class="text-right flex-shrink-0"><span class="text-emerald-400 font-black mono trial-blur-sm">74.2%</span> <span class="text-[9px] text-amber-400 font-bold block mt-0.5">🔒 Tap to Unlock</span></div>' +
           '</div>';
         }
         
@@ -5783,7 +5951,7 @@ window.runEngine = function(isForcedSync){
         var selClass = isSel ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '';
         var clickHandler = 'onclick="window.toggleBetSlipByEl(\'' + elId + '\', event)"';
 
-        return '<div id="' + elId + '" ' + clickHandler + ' class="flex justify-between items-center bg-slate-950/85 border ' + (isFT && isMatchWon ? 'border-emerald-500/40' : 'border-slate-800 hover:border-emerald-400/50') + ' px-3 py-2.5 rounded-xl shadow-sm cursor-pointer transition gap-2 ' + selClass + '">' +
+        return '<div id="' + elId + '" ' + clickHandler + ' class="flex justify-between items-center bg-slate-950/85 border ' + (isFT && isLegSettledWon ? 'border-emerald-500/40' : 'border-slate-800 hover:border-emerald-400/50') + ' px-3 py-2.5 rounded-xl shadow-sm cursor-pointer transition gap-2 ' + selClass + '">' +
           '<div class="min-w-0 pr-1 flex items-center flex-wrap gap-1.5">' +
             '<span class="text-amber-400 font-black mono">' + (idx+1) + '.</span>' +
             '<span class="inline-flex items-center gap-1.5 font-extrabold text-white text-[13px]">' + favCrest + '<span>' + m.fav + '</span></span>' +
@@ -5792,14 +5960,15 @@ window.runEngine = function(isForcedSync){
             (window.isTrial && idx===0 && !isFT ? ' <span class="text-[8px] bg-emerald-500 text-slate-950 font-black px-1.5 py-0.5 rounded ml-1">FREE LEG</span>' : '') +
           '</div>' +
           '<div class="text-right flex-shrink-0">' +
-            '<span class="text-emerald-400 font-black mono text-sm">' + m.fs.toFixed(1) + '%</span>' +
+            '<span class="text-emerald-400 font-black mono text-sm">' + (bestM ? bestM.p : m.fs.toFixed(1)) + '%</span>' +
             '<span class="text-[10px] text-slate-300 block mt-0.5">⭐ ' + (bestM ? bestM.n + ' (<b class="text-amber-300 mono">' + window.formatOdds(bestM.odds, false) + '</b> • ' + bestM.p + '%)' : '') + marketTick + '</span>' +
           '</div>' +
         '</div>';
       }).join("");
       var topBadge = document.getElementById("topAccaCombinedOddsBadge");
       if(topBadge){
-        topBadge.innerText = "5-Fold • " + window.formatOdds(topCombOdds, true);
+        var foldLabel = topFive.length + "-Fold";
+        topBadge.innerText = foldLabel + " • " + window.formatOdds(topCombOdds, true);
       }
     } else {
       slipList.innerHTML = '<div class="text-slate-500 text-xs">No fixtures available for this filter.</div>';
