@@ -70,6 +70,107 @@
   .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
   .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
   body.admin-mode-active:not(.admin-preview-feed-active) #userFeedSection { display: none !important; }
+
+  /* Automatic Desktop Layout Adaptation (Active when opened on Laptop/Desktop >= 1024px) */
+  @media (min-width: 1024px) {
+    #authGate > div {
+      max-width: 34rem !important;
+      padding: 2rem !important;
+    }
+    #appContainer > header {
+      padding-left: max(1.5rem, calc((100vw - 76rem) / 2)) !important;
+      padding-right: max(1.5rem, calc((100vw - 76rem) / 2)) !important;
+      padding-top: 0.75rem !important;
+      padding-bottom: 0.75rem !important;
+    }
+    #appContainer > main {
+      max-width: 76rem !important;
+      padding: 1.25rem 1.5rem !important;
+    }
+    #dateTabsContainer {
+      display: grid !important;
+      grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+      gap: 0.5rem !important;
+      overflow-x: visible !important;
+    }
+    #dateTabsContainer > button {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+    #leagueFilters {
+      flex-wrap: wrap !important;
+      overflow-x: visible !important;
+      gap: 0.5rem !important;
+    }
+    #topAccaSlipList {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+      gap: 0.65rem !important;
+    }
+    #topAccaSlipList > * {
+      margin-top: 0 !important;
+    }
+    #greenResults, #amberResults, #redResults {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 0.9rem !important;
+      align-items: start !important;
+    }
+    #greenResults > *, #amberResults > *, #redResults > * {
+      margin-top: 0 !important;
+    }
+    div[id^="cardWrap-"].card-expanded {
+      grid-column: 1 / -1 !important;
+    }
+    div[id^="cardWrap-"].card-expanded [id^="mktGrid-"] {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 0.65rem !important;
+    }
+    #adminBar:not(.hidden) {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 1rem !important;
+      align-items: start !important;
+    }
+    #adminBar > * {
+      margin-top: 0 !important;
+    }
+    #adminBar > div:first-child {
+      grid-column: 1 / -1 !important;
+    }
+    #bookmakerModal {
+      align-items: center !important;
+      padding: 1.5rem !important;
+    }
+    #bookieSheet {
+      max-width: 40rem !important;
+      border-radius: 1.5rem !important;
+    }
+    #xPostStudioSheet {
+      max-width: 56rem !important;
+    }
+    #miniSlipBar {
+      max-width: 38rem !important;
+    }
+  }
+
+  @media (min-width: 1360px) {
+    #appContainer > header {
+      padding-left: max(2rem, calc((100vw - 86rem) / 2)) !important;
+      padding-right: max(2rem, calc((100vw - 86rem) / 2)) !important;
+    }
+    #appContainer > main {
+      max-width: 86rem !important;
+      padding: 1.5rem 2rem !important;
+    }
+    #greenResults, #amberResults, #redResults {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 1rem !important;
+    }
+    div[id^="cardWrap-"].card-expanded [id^="mktGrid-"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+  }
 </style>
 <script>
 window.ADMIN_PIN = "18041992";
@@ -840,7 +941,7 @@ window.checkSavedSession = function() {
   </div>
 </header>
 
-<main class="p-3 space-y-3 max-w-lg mx-auto">
+<main class="p-3 lg:p-6 space-y-3 lg:space-y-4 max-w-lg lg:max-w-6xl xl:max-w-7xl mx-auto">
   <!-- Easy 3-Step User Guide Bar -->
   <div class="glass px-3 py-2 rounded-xl border border-slate-800/90 flex items-center justify-between gap-1 text-[9.5px] text-slate-300 shadow-sm">
     <div class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black flex items-center justify-center text-[8px] mono">1</span><span>Tap any fixture</span></div>
@@ -9396,6 +9497,80 @@ window.setInterval(function(){
   }
 }, 30000);
 
+window.resolveResponsiveLayoutProfile = function(viewportWidth, userAgent){
+  var width = (Number.isFinite(viewportWidth) && viewportWidth > 0) ? Math.round(viewportWidth) : 390;
+  var ua = String(userAgent || "").toLowerCase();
+  var isMobileTouchUa = /iphone|ipod|android.*mobile|windows phone|blackberry/i.test(ua);
+  if(width >= 1360 && !isMobileTouchUa){
+    return {
+      deviceType: "wide-desktop",
+      isDesktop: true,
+      isWideDesktop: true,
+      bodyClasses: ["desktop-layout", "wide-desktop-layout"],
+      matchGridCols: 3,
+      expandedMarketCols: 4,
+      bankerSlipCols: 5,
+      adminGridCols: 2,
+      expandCardFullRow: true
+    };
+  }
+  if(width >= 1024 || (width >= 960 && !isMobileTouchUa)){
+    return {
+      deviceType: "desktop",
+      isDesktop: true,
+      isWideDesktop: false,
+      bodyClasses: ["desktop-layout"],
+      matchGridCols: 2,
+      expandedMarketCols: 3,
+      bankerSlipCols: 5,
+      adminGridCols: 2,
+      expandCardFullRow: true
+    };
+  }
+  if(width >= 768){
+    return {
+      deviceType: "tablet",
+      isDesktop: false,
+      isWideDesktop: false,
+      bodyClasses: ["tablet-layout"],
+      matchGridCols: 2,
+      expandedMarketCols: 2,
+      bankerSlipCols: 2,
+      adminGridCols: 1,
+      expandCardFullRow: true
+    };
+  }
+  return {
+    deviceType: "mobile",
+    isDesktop: false,
+    isWideDesktop: false,
+    bodyClasses: ["mobile-layout"],
+    matchGridCols: 1,
+    expandedMarketCols: 1,
+    bankerSlipCols: 1,
+    adminGridCols: 1,
+    expandCardFullRow: false
+  };
+};
+
+window.syncResponsiveDesktopLayout = function(){
+  var w = window.innerWidth || document.documentElement.clientWidth || 390;
+  var ua = (typeof navigator !== "undefined" && navigator.userAgent) ? navigator.userAgent : "";
+  var profile = window.resolveResponsiveLayoutProfile(w, ua);
+  window.currentLayoutProfile = profile;
+  var b = document.body;
+  if(!b) return profile;
+  b.classList.remove("mobile-layout", "tablet-layout", "desktop-layout", "wide-desktop-layout");
+  profile.bodyClasses.forEach(function(cls){ b.classList.add(cls); });
+  b.setAttribute("data-device-layout", profile.deviceType);
+  return profile;
+};
+
+window.syncResponsiveDesktopLayout();
+window.addEventListener("resize", function(){
+  window.syncResponsiveDesktopLayout();
+}, { passive: true });
+
 window.initTrafficLedger();
 window.recordLiveAppVisit("gate");
 window.updateModelHeaders();
@@ -9407,6 +9582,7 @@ window.initDateTabs();
 window.updateMiniSlip();
 window.checkSavedSession();
 window.addEventListener("load", function(){
+  window.syncResponsiveDesktopLayout();
   if(typeof window.initPayPalSubscribeButton === "function") window.initPayPalSubscribeButton();
 });
 </script>
