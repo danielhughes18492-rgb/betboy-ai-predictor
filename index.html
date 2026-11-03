@@ -69,6 +69,7 @@
   #scrollTopFab.vis { opacity:1; pointer-events:auto; transform:translateY(0); }
   .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
   .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
+  body.admin-mode-active:not(.admin-preview-feed-active) #userFeedSection { display: none !important; }
 </style>
 <script>
 window.ADMIN_PIN = "18041992";
@@ -862,25 +863,45 @@ window.checkSavedSession = function() {
   </div>
 
   <!-- ADMIN-ONLY PANEL: Model Metrics, Self-Evolution Weights, Calibration & Controls -->
-  <div id="adminBar" class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-xl space-y-2.5 text-xs hidden">
-    <div class="flex justify-between items-center flex-wrap gap-1.5">
-      <span id="adminModelLabel" class="font-bold text-emerald-300">🔑 Admin Control (v14.6 • 53 Metrics)</span>
-      <div class="flex items-center gap-2 ml-auto">
+  <div id="adminBar" class="bg-emerald-950/40 border border-emerald-500/40 p-3.5 rounded-2xl space-y-3 text-xs hidden">
+    <!-- Admin Top Header -->
+    <div class="flex justify-between items-center flex-wrap gap-2 border-b border-emerald-500/20 pb-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block animate-ping"></span>
+        <span id="adminModelLabel" class="font-black text-emerald-300 text-sm tracking-wide">🔑 Admin Control (v15.0 • 60 Metrics)</span>
+      </div>
+      <div class="flex items-center gap-1.5 ml-auto">
+        <button type="button" id="adminToggleFeedViewBtn" onclick="window.toggleAdminFeedPreview()" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-300 border border-sky-500/40 text-[10px] font-bold cursor-pointer transition">👁️ Preview Feed</button>
         <span id="roundStatusBadge" class="text-[10px] text-emerald-400 mono">Loading...</span>
-        <button type="button" onclick="window.unlockAdmin()" class="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-rose-950 text-rose-300 border border-rose-500/40 text-[9.5px] font-bold cursor-pointer transition">🔒 Exit Admin</button>
+        <button type="button" onclick="window.unlockAdmin()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950 text-rose-300 border border-rose-500/40 text-[10px] font-bold cursor-pointer transition">🔒 Exit Admin</button>
       </div>
     </div>
 
-    <!-- Admin Self-Evolving 53-Metric Neural Telemetry Box -->
-    <div class="bg-slate-950/90 border border-emerald-500/30 rounded-xl p-2.5 space-y-2 text-[10px]">
+    <!-- 1. APP ACTIVITY & AUTONOMOUS AUDIT LOG (FIRST SECTION IN ADMIN PANEL) -->
+    <div id="logWrapper" class="bg-slate-950/95 border border-emerald-500/35 rounded-2xl p-3 space-y-2 shadow-inner">
+      <div class="flex justify-between items-center border-b border-slate-800/90 pb-1.5 gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+          <span class="font-extrabold text-emerald-300 text-[11px] tracking-wide">📋 App Activity &amp; Autonomous Audit Log</span>
+          <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-bold">Live Stream</span>
+        </div>
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button id="clearLogBtn" type="button" onclick="window.clearLog()" class="text-[9.5px] bg-slate-900 hover:bg-rose-950 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded-lg font-bold cursor-pointer transition">Clear Log</button>
+        </div>
+      </div>
+      <div id="logContainer" class="space-y-1 max-h-40 overflow-y-auto mono text-[9.5px] text-slate-300 pr-1 divide-y divide-slate-800/40"></div>
+    </div>
+
+    <!-- 2. Admin Self-Evolving 60-Metric Neural Telemetry Box -->
+    <div class="bg-slate-950/90 border border-emerald-500/30 rounded-2xl p-3 space-y-2 text-[10px]">
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-          <span id="neuralEngineHeaderBadge" class="font-black text-emerald-300 uppercase tracking-wide">🧠 53-Metric Self-Evolving Engine (v14.6)</span>
+          <span id="neuralEngineHeaderBadge" class="font-black text-emerald-300 uppercase tracking-wide">🧠 60-Metric Self-Evolving Engine (v15.0)</span>
         </div>
         <div class="flex items-center gap-1.5 ml-auto">
           <span id="neuralAuditedCounter" class="bg-slate-900 border border-slate-700/80 text-slate-200 px-2 py-0.5 rounded-md font-mono font-bold">FT Audited: 0</span>
-          <button type="button" onclick="window.toggleNeuralMetricsPanel()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">Inspect 53 Metrics &amp; Evolution ▾</button>
+          <button type="button" onclick="window.toggleNeuralMetricsPanel()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">Inspect 60 Metrics &amp; Evolution ▾</button>
         </div>
       </div>
 
@@ -892,13 +913,13 @@ window.checkSavedSession = function() {
       </div>
 
       <div id="neuralLastLearningNote" class="bg-slate-900/90 border border-emerald-500/25 rounded-lg px-2.5 py-1.5 text-emerald-300 font-mono text-[9px]">
-        🧠 <b>Latest Self-Calibration:</b> 53-Metric Neural Baseline Calibrated &amp; Active
+        🧠 <b>Latest Self-Calibration:</b> 60-Metric Neural Baseline Calibrated &amp; Active
       </div>
 
-      <!-- Expandable Full 53 Metrics & Evolution Inspector (Admin Only) -->
+      <!-- Expandable Full 60 Metrics & Evolution Inspector (Admin Only) -->
       <div id="neuralMetricsExpandBox" class="hidden pt-2 border-t border-slate-800 space-y-2 text-[9px] text-slate-300">
         <div class="flex justify-between items-center">
-          <span class="font-bold text-emerald-400 uppercase tracking-wider">📊 All 53 Active Model Metrics &amp; Learned Calibration</span>
+          <span class="font-bold text-emerald-400 uppercase tracking-wider">📊 All 60 Active Model Metrics &amp; Learned Calibration</span>
           <span id="adminLearnedTeamsCount" class="font-mono text-amber-300">0 Clubs Calibrated</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
@@ -907,7 +928,7 @@ window.checkSavedSession = function() {
             <div id="adminCore31MetricsList" class="space-y-0.5 text-slate-300 font-mono text-[8.5px]"></div>
           </div>
           <div class="bg-slate-900/90 border border-slate-800 p-2 rounded-lg space-y-1">
-            <div class="font-bold text-emerald-300 border-b border-slate-800 pb-1">🧬 Self-Evolved Neural Metrics (32–53+):</div>
+            <div class="font-bold text-emerald-300 border-b border-slate-800 pb-1">🧬 Self-Evolved Neural Metrics (32–60+):</div>
             <div id="adminEvolvedMetricsList" class="space-y-0.5 text-emerald-300 font-mono text-[8.5px]"></div>
           </div>
         </div>
@@ -915,42 +936,111 @@ window.checkSavedSession = function() {
       </div>
     </div>
 
-    <div class="grid gap-1.5 grid-cols-3">
-      <button onclick="window.toggleDrawer()" class="bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-lg text-emerald-300 border border-emerald-500/30 shadow text-[11px] cursor-pointer">📂 Archive</button>
-      <button onclick="window.triggerManualHourlyAudit()" class="bg-sky-700 hover:bg-sky-600 font-bold py-2 rounded-lg text-white shadow text-[11px] cursor-pointer">⏱️ Hourly Audit</button>
-      <button id="improveBtn" onclick="window.autoFetchAndImprove(false)" class="bg-emerald-600 hover:bg-emerald-500 font-bold py-2 rounded-lg text-white shadow text-[11px] cursor-pointer">⚡ Evolve AI</button>
+    <!-- 3. Admin System Operations Grid (Clean 6-Button Grid) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <button type="button" onclick="window.triggerManualHourlyAudit()" class="bg-sky-700 hover:bg-sky-600 font-bold py-2 px-2.5 rounded-xl text-white shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
+        <span>⏱️ Hourly Audit</span>
+      </button>
+      <button type="button" id="improveBtn" onclick="window.autoFetchAndImprove(false)" class="bg-emerald-600 hover:bg-emerald-500 font-bold py-2 px-2.5 rounded-xl text-white shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
+        <span>⚡ Evolve AI</span>
+      </button>
+      <button type="button" onclick="window.syncLiveOddsNow(true)" class="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 font-bold py-2 px-2.5 rounded-xl shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
+        <span>🔄 Sync Odds API</span>
+      </button>
+      <button type="button" onclick="window.toggleDrawer()" class="bg-slate-800 hover:bg-slate-700 font-bold py-2 px-2.5 rounded-xl text-emerald-300 border border-emerald-500/30 shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
+        <span>📂 Past Archive</span>
+      </button>
+      <button type="button" onclick="window.forceLockAllT30Odds()" class="bg-slate-900 hover:bg-amber-950/60 text-amber-300 border border-amber-500/40 font-bold py-2 px-2.5 rounded-xl shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
+        <span>🛡️ Lock T-30m Odds</span>
+      </button>
+      <button type="button" onclick="window.clearAdminAppCache()" class="bg-slate-900 hover:bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold py-2 px-2.5 rounded-xl shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
+        <span>🧹 Clear Cache</span>
+      </button>
     </div>
 
-    <!-- Admin X Post Mode & Auto-Screenshot Studio Bar (Official X Logo) -->
-    <div class="bg-slate-950/95 border border-slate-700/80 rounded-xl p-2.5 space-y-2 shadow-lg">
+    <!-- 𝕏 ADMIN POST TO X STUDIO CARD (Dedicated Admin Tool with Half-Time Re-Post Persistence) -->
+    <div id="adminXPostStudioCard" class="bg-slate-950/95 border border-sky-500/40 rounded-2xl p-3.5 space-y-2.5 shadow-lg">
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-lg bg-black border border-white/25 flex items-center justify-center text-white shadow-inner flex-shrink-0">
-            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+          <span class="w-7 h-7 rounded-lg bg-black border border-white/30 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
           </span>
           <div>
-            <div class="font-black text-white text-[11px] leading-tight flex items-center gap-1.5">
-              <span>Admin X Post Studio</span>
+            <div class="font-black text-white text-xs leading-tight flex items-center gap-1.5 flex-wrap">
+              <span>Admin 𝕏 Post Studio</span>
               <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-bold">≤280 Chars • Free X Ready</span>
             </div>
-            <div class="text-[9.5px] text-slate-400">Select 1 or multiple matches • Auto-saves HD screenshot &amp; builds dynamic X post</div>
+            <div class="text-[9.5px] text-slate-400">Craft social card, auto-save screenshot, and post native to X</div>
           </div>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-1.5">
-        <button type="button" id="openXPostStudioBtn" onclick="window.openXPostStudio()" class="bg-black hover:bg-slate-900 text-white border border-white/30 hover:border-white/60 font-black py-2 px-3 rounded-xl text-[11px] shadow-md flex items-center justify-center gap-2 cursor-pointer transition btn-press">
+
+      <!-- Saved Posts Folder in Admin Panel -->
+      <div id="adminSavedXCardStatusBox" class="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-2.5 space-y-2 text-[9.5px]">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <button type="button" id="adminToggleFolderBtn" onclick="window.toggleAdminSavedPostsFolder()" class="flex items-center gap-1.5 min-w-0 text-left cursor-pointer group">
+            <span id="adminFolderIcon" class="text-base">📁</span>
+            <span class="font-black text-emerald-300 group-hover:text-emerald-200 underline decoration-emerald-500/40">Saved Posts Folder</span>
+            <span id="adminSavedXCardStatusText" class="text-slate-300 font-mono text-[9px] bg-slate-950/90 border border-slate-700 px-1.5 py-0.5 rounded">0 Saved Posts</span>
+            <span id="adminFolderChevron" class="text-[9px] text-emerald-400 font-bold ml-0.5">▾ Open Folder</span>
+          </button>
+          <div class="flex items-center gap-1.5 ml-auto">
+            <button type="button" id="adminClearSavedCardBtn" onclick="window.clearAllSavedXPostsHistory()" class="text-[9px] text-rose-300 hover:text-rose-200 underline cursor-pointer font-bold hidden">🗑️ Empty Folder</button>
+          </div>
+        </div>
+        <!-- Expandable Folder Contents in Admin Panel showing old posts & live ✅ won ticks -->
+        <div id="adminSavedCardsChipsRow" class="space-y-1.5 pt-1 border-t border-slate-800/80 hidden"></div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <button type="button" onclick="window.openXPostStudio()" class="bg-black hover:bg-slate-900 text-white border border-white/40 hover:border-emerald-400 font-black py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-2 cursor-pointer transition btn-press">
           <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-          <span>Open X Post Studio</span>
+          <span>𝕏 Open Post Studio</span>
         </button>
-        <button type="button" id="toggleXFeedSelectBtn" onclick="window.toggleXFeedSelectionMode()" class="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 font-bold py-2 px-3 rounded-xl text-[11px] shadow flex items-center justify-center gap-1.5 cursor-pointer transition btn-press">
-          <svg class="w-3 h-3 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-          <span id="toggleXFeedSelectBtnLbl">Select on Cards (<span id="adminXSelectedBadgeCount">0</span>)</span>
+        <button type="button" id="adminOpenSavedFolderModalBtn" onclick="window.openSavedPostsFolderFromAdmin()" class="bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-black py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-1.5 cursor-pointer transition btn-press">
+          <span>📁 Saved Posts Folder (0)</span>
+        </button>
+        <button type="button" id="adminOpenSavedHtCardBtn" onclick="window.openSavedHalfTimeXCard()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-2 cursor-pointer transition btn-press">
+          <span>💾 Re-Post Half-Time (Live)</span>
         </button>
       </div>
     </div>
 
-    <!-- Admin Live Website Traffic & Visitor Calculator (betboyai.co.uk) -->
-    <div id="adminTrafficPanel" class="bg-slate-950/95 border border-sky-500/35 rounded-xl p-3 space-y-2.5 shadow-lg">
+    <!-- 4. Beneficial Admin Controls: Confidence Gate Strictness & Model Reset -->
+    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2 text-[10px]">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <span class="font-extrabold text-white text-[11px] flex items-center gap-1.5">
+          <span>🎯 Prediction Confidence Gate Strictness</span>
+          <span id="adminGateActiveBadge" class="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded">Balanced (75%)</span>
+        </span>
+        <button type="button" onclick="window.resetModelWeightsToBaseline()" class="text-[9px] text-slate-400 hover:text-amber-300 underline cursor-pointer font-bold transition">↺ Reset Weights to Baseline</button>
+      </div>
+      <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+        <button type="button" id="adminGateBtn-balanced" onclick="window.setAdminConfidenceGate('balanced')" class="py-1.5 rounded-lg font-black bg-emerald-600 text-white shadow cursor-pointer transition text-center">🎯 Balanced (75%)</button>
+        <button type="button" id="adminGateBtn-conservative" onclick="window.setAdminConfidenceGate('conservative')" class="py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition text-center">🛡️ Selective (78%)</button>
+        <button type="button" id="adminGateBtn-aggressive" onclick="window.setAdminConfidenceGate('aggressive')" class="py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition text-center">⚡ Aggressive (70%)</button>
+      </div>
+    </div>
+
+    <!-- 5. PayPal Subscriber Pass Manager -->
+    <div id="adminSubManagerBox" class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">
+      <div class="flex justify-between items-center gap-2 flex-wrap border-b border-slate-800/80 pb-1.5">
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">💳</span>
+          <span class="font-extrabold text-white text-[11px]">PayPal Subscriber Pass Manager</span>
+        </div>
+        <button type="button" id="toggleMasterPassBtn" onclick="window.toggleLegacyMasterPass()" class="text-[9.5px] px-2 py-0.5 rounded-md font-bold border border-amber-500/40 bg-amber-500/15 text-amber-300 cursor-pointer transition">Shared Pass (12341867): ON</button>
+      </div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <button type="button" onclick="window.adminCreateManualPass()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2 px-2.5 rounded-xl text-[10.5px] shadow cursor-pointer transition">➕ Issue 30d Pass</button>
+        <button type="button" onclick="window.adminRevokePassPrompt()" class="bg-rose-900/70 hover:bg-rose-800 text-rose-200 border border-rose-500/30 font-bold py-2 px-2.5 rounded-xl text-[10.5px] cursor-pointer transition">🚫 Revoke Pass</button>
+      </div>
+      <div id="adminSubPassOutput" style="display:none;" class="bg-slate-950 border border-slate-800 p-2 rounded-xl text-[10px] font-mono text-emerald-300 select-all"></div>
+    </div>
+
+    <!-- 6. Admin Live Website Traffic & Visitor Calculator (betboyai.co.uk) -->
+    <div id="adminTrafficPanel" class="bg-slate-950/95 border border-sky-500/35 rounded-2xl p-3 space-y-2.5 shadow-lg">
       <div class="flex items-center justify-between gap-2 flex-wrap border-b border-slate-800/90 pb-2">
         <div class="flex items-center gap-2">
           <span class="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/40 flex items-center justify-center text-sky-300 text-xs font-black flex-shrink-0">📈</span>
@@ -1049,109 +1139,89 @@ window.checkSavedSession = function() {
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-500/20">
-      <button onclick="window.downloadSnapshotFile()" class="bg-indigo-600 hover:bg-indigo-500 font-bold py-2 rounded-lg text-white shadow text-[11px] cursor-pointer">💾 Download HTML</button>
-      <button onclick="window.exportSnapshot()" class="bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-lg text-emerald-300 border border-emerald-500/30 text-[11px] cursor-pointer">📋 Copy HTML</button>
+  <!-- USER MATCH FEED SECTION: Visible to users, hidden by default in Admin Mode -->
+  <div id="userFeedSection" class="space-y-3">
+    <!-- Symmetrical Rolling Date Bar (3 Past, Today, 3 Future) -->
+    <div class="bg-slate-900/95 p-1.5 rounded-xl border border-slate-800 shadow-inner">
+      <div id="dateTabsContainer" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 scroll-smooth relative"></div>
     </div>
-    <div id="adminSubManagerBox" class="pt-2 mt-1 border-t border-emerald-500/20 space-y-1.5">
-      <div class="flex justify-between items-center">
-        <span class="font-bold text-emerald-300 text-[11px]">💳 PayPal Subscriber Pass Manager</span>
-        <button type="button" id="toggleMasterPassBtn" onclick="window.toggleLegacyMasterPass()" class="text-[9px] px-2 py-0.5 rounded font-bold border border-amber-500/40 bg-amber-500/15 text-amber-300 cursor-pointer">Shared Pass (12341867): ON</button>
+
+    <!-- Filter Competitions Bar (Ordered by Country: England, Spain, Germany, France, Italy, Scotland, then Cup Competitions) -->
+    <div class="glass p-2.5 rounded-xl text-xs space-y-2">
+      <div class="flex justify-between items-center px-0.5">
+        <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Filter Competitions (By Country &amp; Cups)</span>
+        <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition">Clear All (13)</button>
       </div>
-      <div class="grid grid-cols-2 gap-1.5">
-        <button type="button" onclick="window.adminCreateManualPass()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow">➕ Issue 30d Pass</button>
-        <button type="button" onclick="window.adminRevokePassPrompt()" class="bg-rose-900/70 hover:bg-rose-800 text-rose-200 border border-rose-500/30 font-bold py-1.5 px-2 rounded-lg text-[10px]">🚫 Revoke Pass</button>
+      <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
+        <script>
+          document.write(window.ALL_LEAGUES.map(function(code){
+            var cTag = (window.LEAGUE_COUNTRY_TAGS && window.LEAGUE_COUNTRY_TAGS[code]) ? '<span class="text-[10px] opacity-85">' + window.LEAGUE_COUNTRY_TAGS[code] + '</span>' : '';
+            return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500">' + cTag + '<span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span>' + window.getLeagueName(code) + '</span></label>';
+          }).join(""));
+        </script>
       </div>
-      <div id="adminSubPassOutput" style="display:none;" class="bg-slate-950 border border-slate-800 p-2 rounded-lg text-[10px] font-mono text-emerald-300 select-all"></div>
     </div>
-  </div>
 
-  <!-- Symmetrical Rolling Date Bar (3 Past, Today, 3 Future) -->
-  <div class="bg-slate-900/95 p-1.5 rounded-xl border border-slate-800 shadow-inner">
-    <div id="dateTabsContainer" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 scroll-smooth relative"></div>
-  </div>
-
-  <!-- Filter Competitions Bar (Ordered by Country: England, Spain, Germany, France, Italy, Scotland, then Cup Competitions) -->
-  <div class="glass p-2.5 rounded-xl text-xs space-y-2">
-    <div class="flex justify-between items-center px-0.5">
-      <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Filter Competitions (By Country &amp; Cups)</span>
-      <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition">Clear All (13)</button>
+    <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Success Rate) -->
+    <div class="grid gap-1.5 text-center grid-cols-4">
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5">0/0</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5">0</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5">0</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold">Success Rate</div><div id="sessionHitRate" class="text-sm font-black text-white mono mt-0.5">--%</div></div>
     </div>
-    <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
-      <script>
-        document.write(window.ALL_LEAGUES.map(function(code){
-          var cTag = (window.LEAGUE_COUNTRY_TAGS && window.LEAGUE_COUNTRY_TAGS[code]) ? '<span class="text-[10px] opacity-85">' + window.LEAGUE_COUNTRY_TAGS[code] + '</span>' : '';
-          return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500">' + cTag + '<span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span>' + window.getLeagueName(code) + '</span></label>';
-        }).join(""));
-      </script>
-    </div>
-  </div>
 
-  <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Success Rate) -->
-  <div class="grid gap-1.5 text-center grid-cols-4">
-    <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5">0/0</div></div>
-    <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5">0</div></div>
-    <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5">0</div></div>
-    <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold">Success Rate</div><div id="sessionHitRate" class="text-sm font-black text-white mono mt-0.5">--%</div></div>
-  </div>
-
-  <!-- User Quick-Sort Bar -->
-  <div class="glass px-2.5 py-2 rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
-    <span id="hourlyAuditStatusText" class="hidden"></span>
-    <span class="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 pl-1">Sort By</span>
-    <div class="flex items-center gap-1.5 ml-auto">
-      <button type="button" id="sortByConfBtn" onclick="window.setMatchSortMode('CONF')" class="px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition cursor-pointer btn-press">🔥 Best %</button>
-      <button type="button" id="sortByKoBtn" onclick="window.setMatchSortMode('KO')" class="px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press">🕒 Kick-Off</button>
-      <button type="button" id="toggleAccaBtn" onclick="window.toggleTopAccaSlip()" class="px-2.5 py-1 rounded-lg font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer btn-press">⭐ Top Slip</button>
-    </div>
-  </div>
-
-  <!-- Collapsible Daily Top Value Acca / Banker Builder Slip (with Club Crests & 1-Click Add to Slip) -->
-  <div id="topAccaSlipBox" class="glass p-3.5 rounded-2xl border border-amber-500/40 space-y-2.5 hidden shadow-xl">
-    <div class="flex justify-between items-center border-b border-slate-800/90 pb-2 gap-2 flex-wrap">
-      <div>
-        <span class="text-xs font-black text-amber-300 flex items-center gap-1.5">
-          <span>⭐ AI Daily High-Confidence Banker Slip</span>
-          <span id="topAccaCombinedOddsBadge" class="text-[9.5px] bg-slate-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-mono font-bold">5-Fold</span>
-        </span>
-        <p class="text-[9.5px] text-slate-400 mt-0.5">Tap any selection below or press <b>➕ Add to Slip</b> to load all 5 into your Betting Slip.</p>
+    <!-- User Quick-Sort Bar -->
+    <div class="glass px-2.5 py-2 rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
+      <span id="hourlyAuditStatusText" class="hidden"></span>
+      <span class="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 pl-1">Sort By</span>
+      <div class="flex items-center gap-1.5 ml-auto">
+        <button type="button" id="sortByConfBtn" onclick="window.setMatchSortMode('CONF')" class="px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition cursor-pointer btn-press">🔥 Best %</button>
+        <button type="button" id="sortByKoBtn" onclick="window.setMatchSortMode('KO')" class="px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press">🕒 Kick-Off</button>
+        <button type="button" id="toggleAccaBtn" onclick="window.toggleTopAccaSlip()" class="px-2.5 py-1 rounded-lg font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer btn-press">⭐ Top Slip</button>
       </div>
-      <button type="button" id="addTopAccaBtn" onclick="window.addDailyAccaToSlip(event)" class="text-[11px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-3.5 py-2 rounded-xl shadow-lg border border-emerald-400/40 cursor-pointer transition btn-press flex items-center gap-1 flex-shrink-0">
-        <span>➕ Add to Slip</span>
-      </button>
     </div>
-    <div id="topAccaSlipList" class="space-y-2 text-xs mt-1"></div>
-  </div>
 
-  <!-- Instant Team & League Search Bar -->
-  <div id="liveTeamSearchWrap" class="glass p-2 rounded-xl mb-2 relative flex items-center">
-    <input type="search" id="instantSearchInput" placeholder="🔍 Instant team / league search..." oninput="window.filterAppCards(this.value)" class="w-full bg-slate-950/90 border border-slate-800 pl-3 pr-8 py-2 rounded-lg text-xs text-white outline-none focus:border-emerald-500 transition">
-    <button type="button" id="clearSearchBtn" onclick="var inp=document.getElementById('instantSearchInput');inp.value='';window.filterAppCards('');" style="display:none;" class="absolute right-4 text-slate-400 hover:text-white font-bold text-sm px-1.5 cursor-pointer">×</button>
-  </div>
-
-  <!-- Green, Amber & Red Fixture Tiers -->
-  <div>
-    <h2 class="font-bold text-emerald-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> GREEN PICKS (75%+ HIGH-CONFIDENCE)</h2>
-    <div id="greenResults" class="space-y-2.5"></div>
-  </div>
-  <div>
-    <h2 class="font-bold text-amber-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> AMBER PICKS (60%–74.9% MODERATE / CAUTION)</h2>
-    <div id="amberResults" class="space-y-2.5"></div>
-  </div>
-  <div>
-    <h2 class="font-bold text-rose-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> RED PICKS (BELOW 60% • AVOID)</h2>
-    <div id="redResults" class="space-y-2.5"></div>
-  </div>
-
-  <!-- Admin-Only Evolution Log -->
-  <div id="logWrapper" class="glass p-3 rounded-xl space-y-1.5 text-xs border border-emerald-500/30 hidden">
-    <div class="flex justify-between items-center border-b border-slate-800 pb-1">
-      <span class="font-bold text-emerald-400">📋 Admin Autonomous Evolution &amp; T-30m Lock Audit Log</span>
-      <button id="clearLogBtn" onclick="window.clearLog()" class="text-[10px] text-rose-400 font-bold hidden">Clear</button>
+    <!-- Collapsible Daily Top Value Acca / Banker Builder Slip (with Club Crests & 1-Click Add to Slip) -->
+    <div id="topAccaSlipBox" class="glass p-3.5 rounded-2xl border border-amber-500/40 space-y-2.5 hidden shadow-xl">
+      <div class="flex justify-between items-center border-b border-slate-800/90 pb-2 gap-2 flex-wrap">
+        <div>
+          <span class="text-xs font-black text-amber-300 flex items-center gap-1.5">
+            <span>⭐ AI Daily High-Confidence Banker Slip</span>
+            <span id="topAccaCombinedOddsBadge" class="text-[9.5px] bg-slate-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-mono font-bold">5-Fold</span>
+          </span>
+          <p class="text-[9.5px] text-slate-400 mt-0.5">Tap any selection below or press <b>➕ Add to Slip</b> to load all 5 into your Betting Slip.</p>
+        </div>
+        <button type="button" id="addTopAccaBtn" onclick="window.addDailyAccaToSlip(event)" class="text-[11px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-3.5 py-2 rounded-xl shadow-lg border border-emerald-400/40 cursor-pointer transition btn-press flex items-center gap-1 flex-shrink-0">
+          <span>➕ Add to Slip</span>
+        </button>
+      </div>
+      <div id="topAccaSlipList" class="space-y-2 text-xs mt-1"></div>
     </div>
-    <div id="logContainer" class="space-y-1 max-h-48 overflow-y-auto mono text-[10px] text-slate-300"></div>
+
+    <!-- Instant Team & League Search Bar -->
+    <div id="liveTeamSearchWrap" class="glass p-2 rounded-xl mb-2 relative flex items-center">
+      <input type="search" id="instantSearchInput" placeholder="🔍 Instant team / league search..." oninput="window.filterAppCards(this.value)" class="w-full bg-slate-950/90 border border-slate-800 pl-3 pr-8 py-2 rounded-lg text-xs text-white outline-none focus:border-emerald-500 transition">
+      <button type="button" id="clearSearchBtn" onclick="var inp=document.getElementById('instantSearchInput');inp.value='';window.filterAppCards('');" style="display:none;" class="absolute right-4 text-slate-400 hover:text-white font-bold text-sm px-1.5 cursor-pointer">×</button>
+    </div>
+
+    <!-- Green, Amber & Red Fixture Tiers -->
+    <div>
+      <h2 class="font-bold text-emerald-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> GREEN PICKS (75%+ HIGH-CONFIDENCE)</h2>
+      <div id="greenResults" class="space-y-2.5"></div>
+    </div>
+    <div>
+      <h2 class="font-bold text-amber-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> AMBER PICKS (60%–74.9% MODERATE / CAUTION)</h2>
+      <div id="amberResults" class="space-y-2.5"></div>
+    </div>
+    <div>
+      <h2 class="font-bold text-rose-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> RED PICKS (BELOW 60% • AVOID)</h2>
+      <div id="redResults" class="space-y-2.5"></div>
+    </div>
   </div>
+
+  <!-- (App Activity & Audit Log is now the primary section inside the Admin Panel) -->
 
   <!-- Responsible Gambling & 18+ Notice Footer (Bottom on the User End of the Website) -->
   <footer id="betBoyFooter" class="glass p-4 rounded-2xl border border-slate-800/90 text-center space-y-3 mt-4 mb-2 shadow-lg">
@@ -1360,6 +1430,37 @@ window.checkSavedSession = function() {
       <button type="button" onclick="window.closeXPostStudio()" aria-label="Close X Post Studio" class="text-slate-400 hover:text-white text-2xl font-bold px-2 py-0.5 leading-none cursor-pointer">&times;</button>
     </div>
 
+    <!-- Clickable Saved Posts Folder (Stores old posts & updates live with ✅ won ticks at half-time / full-time) -->
+    <div id="xStudioSavedPostsHistoryBox" class="p-3 rounded-2xl border bg-slate-950/90 border-amber-500/40 space-y-2.5 shadow-lg">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <button type="button" id="xStudioFolderToggleBtn" onclick="window.toggleSavedPostsFolder()" class="flex items-center gap-2 min-w-0 text-left cursor-pointer group">
+          <span id="xStudioFolderIcon" class="text-xl flex-shrink-0">📂</span>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-black text-amber-300 group-hover:text-amber-200 underline decoration-amber-500/40">Saved Posts Folder</span>
+              <span id="xStudioSavedHistoryCountBadge" class="text-[9.5px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold">0 Saved</span>
+              <span id="xStudioFolderToggleLabel" class="text-[9.5px] text-emerald-300 font-bold bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg">▾ Click to Toggle Folder</span>
+            </div>
+            <div class="text-[9px] text-slate-400 mt-0.5">Click folder to view your saved posts • Tap any old post to load it with live scores &amp; automatic ✅ won ticks</div>
+          </div>
+        </button>
+        <div class="flex items-center gap-1.5 ml-auto flex-wrap">
+          <button type="button" onclick="window.saveActiveXCardSelections(false, null, false)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-xl text-[9.5px] cursor-pointer transition flex items-center gap-1 shadow" title="Save current selection to folder">
+            <span>💾 Save to Folder</span>
+          </button>
+          <button type="button" onclick="window.saveActiveXCardSelections(false, null, true)" class="bg-amber-600/80 hover:bg-amber-500 text-white font-bold px-2.5 py-1.5 rounded-xl text-[9.5px] cursor-pointer transition flex items-center gap-1 shadow" title="Save current picks as a brand new post in the folder">
+            <span>➕ Save as New Post</span>
+          </button>
+          <button type="button" id="xStudioClearAllHistoryBtn" onclick="window.clearAllSavedXPostsHistory()" class="bg-slate-900 hover:bg-rose-950 text-rose-300 border border-rose-500/40 font-bold px-2.5 py-1.5 rounded-xl text-[9.5px] cursor-pointer transition hidden">
+            <span>🗑️ Empty Folder</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Folder Drawer: Scrollable list of saved post cards with live per-leg ✅ won ticks & 1-click re-post -->
+      <div id="xStudioSavedHistoryList" class="space-y-2 max-h-64 overflow-y-auto pr-1 pt-2 border-t border-slate-800/90"></div>
+    </div>
+
     <!-- Step 1: Quick Preset Buttons & Match/Market Multi-Selector (Supports Multi-Market Bet Builder per Team) -->
     <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2.5">
       <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -1429,6 +1530,10 @@ window.checkSavedSession = function() {
 
       <!-- Primary Action Buttons with Official X Logo -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+        <button type="button" id="postNativeToXBtn" onclick="window.postNativeToX()" class="bg-gradient-to-r from-sky-500 via-emerald-600 to-teal-600 hover:from-sky-400 hover:to-teal-500 text-white font-black py-3 px-4 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer transition btn-press sm:col-span-2">
+          <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+          <span>💾 Post Native to 𝕏 &amp; Save for Half-Time</span>
+        </button>
         <button type="button" id="copyAndSaveXPostBtn" onclick="window.copyXPostAndSaveScreenshot()" class="bg-black hover:bg-slate-900 text-white border border-white/40 hover:border-emerald-400 font-black py-3 px-4 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer transition btn-press">
           <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
           <span>Copy X Post &amp; Save Screenshot</span>
@@ -2616,7 +2721,7 @@ window.adminCreateManualPass = function(){
   var out = document.getElementById("adminSubPassOutput");
   if(out){
     out.style.display = "block";
-    out.innerHTML = "✅ <b>New 1-Device 30d Pass:</b> " + code + "<br><span class='text-slate-400'>Locks to the subscriber's phone on first login. Click Download HTML to publish.</span>";
+    out.innerHTML = "✅ <b>New 1-Device 30d Pass:</b> " + code + "<br><span class='text-slate-400'>Locks to the subscriber's phone on first login. Code copied to clipboard.</span>";
   }
   try { navigator.clipboard.writeText(code); } catch(e){}
   window.addLog("🎟️ Admin generated 30-day 1-device pass: <b>" + code + "</b>");
@@ -2626,7 +2731,7 @@ window.adminRevokePassPrompt = function(){
   var out = document.getElementById("adminSubPassOutput");
   if(!out) return;
   out.style.display = "block";
-  out.innerHTML = '<div class="flex gap-1 items-center"><input id="revokeInputBox" placeholder="Enter BB-XXXX-... to revoke" class="flex-1 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-white text-[10px]"><button onclick="window.confirmRevokePass()" class="bg-rose-600 text-white px-2 py-1 rounded font-bold text-[10px]">Block</button></div>';
+  out.innerHTML = '<div class="flex gap-1 items-center"><input id="revokeInputBox" placeholder="Enter BB-XXXX-... to revoke" class="flex-1 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-white text-[10px]"><button onclick="window.confirmRevokePass()" class="bg-rose-600 text-white px-2 py-1 rounded font-bold text-[10px] cursor-pointer">Block</button></div>';
 };
 
 window.confirmRevokePass = function(){
@@ -2638,8 +2743,98 @@ window.confirmRevokePass = function(){
     window.safeSet("airp_sub_pass_state", window.subPassState);
   }
   var out = document.getElementById("adminSubPassOutput");
-  if(out) out.innerHTML = "🚫 Pass <b>" + val + "</b> is now revoked. Click <b>Download HTML</b> to publish revocation.";
+  if(out) out.innerHTML = "🚫 Pass <b>" + val + "</b> is now revoked.";
   window.addLog("🚫 Admin revoked subscriber pass: <b>" + val + "</b>");
+};
+
+// ============================================================================
+// BENEFICIAL ADMIN CONTROLS: Confidence Gate, Weights Reset, Odds Locking & Cache
+// ============================================================================
+window.adminConfThresholds = window.adminConfThresholds || (function(){
+  var saved = window.safeGet("airp_conf_gate", "balanced");
+  if(saved === "conservative") return { mode: "conservative", green: 78.0, amber: 65.0 };
+  if(saved === "aggressive") return { mode: "aggressive", green: 70.0, amber: 55.0 };
+  return { mode: "balanced", green: 75.0, amber: 60.0 };
+})();
+
+window.setAdminConfidenceGate = function(level){
+  if(!window.isAdmin) return;
+  var g = 75.0, a = 60.0, label = "Balanced (75%)";
+  if(level === "conservative"){
+    g = 78.0; a = 65.0; label = "Selective (78%)";
+  } else if(level === "aggressive"){
+    g = 70.0; a = 55.0; label = "Aggressive (70%)";
+  } else {
+    level = "balanced";
+  }
+  window.adminConfThresholds = { mode: level, green: g, amber: a };
+  window.safeSet("airp_conf_gate", level);
+
+  ["balanced", "conservative", "aggressive"].forEach(function(k){
+    var btn = document.getElementById("adminGateBtn-" + k);
+    if(btn){
+      btn.className = (k === level)
+        ? "py-1.5 rounded-lg font-black bg-emerald-600 text-white shadow cursor-pointer transition text-center"
+        : "py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition text-center";
+    }
+  });
+  var badge = document.getElementById("adminGateActiveBadge");
+  if(badge) badge.innerText = label;
+
+  window.addLog("🎯 <b>Admin Confidence Gate Adjusted:</b> Set to <b>" + label + "</b> (Green ≥" + g + "%, Amber ≥" + a + "%).");
+  window.runEngine(false);
+  window.showAppToast("🎯 Confidence Gate: " + label);
+};
+
+window.resetModelWeightsToBaseline = function(){
+  if(!window.isAdmin) return;
+  if(!confirm("Reset AI neural weights back to the calibrated baseline (+4.20 / -3.20 / 12.00 / 1.00x)?")) return;
+  window.modelState.weights = { home: 4.20, away: -3.20, draw: 12.00, xg: 1.00 };
+  window.modelState.teamReliability = {};
+  window.safeSet("airp_v122_state", window.modelState);
+  window.updateAdminWeightsBar();
+  window.addLog("↺ <b>Admin Model Calibration:</b> Reset neural weights to calibrated baseline (+4.20 / -3.20 / 12.00 / 1.00x).");
+  window.runEngine(false);
+  window.showAppToast("↺ Weights Restored to Baseline");
+};
+
+window.forceLockAllT30Odds = function(){
+  if(!window.isAdmin) return;
+  var fixtures = window.currentEvaluatedFixtures || [];
+  var count = 0;
+  window.lockedOddsMap = window.lockedOddsMap || {};
+  fixtures.forEach(function(m){
+    var mkId = String(m.id);
+    if(!window.lockedOddsMap[mkId] && window.calcExtraMarkets){
+      var ext = window.calcExtraMarkets(m, m.fs || 68);
+      if(ext && ext.outright){
+        window.lockedOddsMap[mkId] = {
+          homeOdds: ext.outright.favOdds || 1.65,
+          drawOdds: ext.outright.drawOdds || 3.30,
+          awayOdds: ext.outright.oppOdds || 3.40,
+          oddsSource: "Admin Locked Pre-KO Odds",
+          lockedAtMs: Date.now(),
+          oddsLocked: true
+        };
+        count++;
+      }
+    }
+  });
+  window.safeSet("airp_locked_ko_odds_v1", window.lockedOddsMap);
+  window.addLog("🛡️ <b>Admin T-30m Odds Lock:</b> Manually enforced permanent odds freeze on " + (count || fixtures.length) + " fixtures.");
+  window.runEngine(false);
+  window.showAppToast("🛡️ Locked T-30m Odds for " + (count || fixtures.length) + " Fixtures");
+};
+
+window.clearAdminAppCache = function(){
+  if(!window.isAdmin) return;
+  try {
+    sessionStorage.clear();
+    localStorage.removeItem("airp_slip_cache");
+  } catch(e){}
+  window.addLog("🧹 <b>Admin Maintenance:</b> Flushed transient app cache & refreshed live engine.");
+  window.runEngine(false);
+  window.showAppToast("🧹 Temporary Cache Cleared");
 };
 
 window.initPayPalSubscribeButton = function(){
@@ -5364,18 +5559,6 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
   var sampleBadge = isFreeSample ? '<span class="text-[8px] px-2 py-0.5 rounded-full font-black bg-emerald-500 text-slate-900 flex-shrink-0">🎁 FREE SAMPLE</span>' : '';
 
-  var isXSelected = window.isAdmin && Array.isArray(window.xPostSelectedIds) && window.xPostSelectedIds.indexOf(Number(m.id)) !== -1;
-  var xSelectCardBtn = window.isAdmin
-    ? '<button type="button" onclick="event.stopPropagation();window.toggleMatchForXPost(' + m.id + ', true)" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9.5px] font-black transition cursor-pointer flex-shrink-0 ' +
-        (isXSelected
-          ? 'bg-white text-black border border-emerald-400 shadow-md'
-          : 'bg-black/90 hover:bg-slate-900 text-white border border-white/30') +
-      '" title="Select match for Admin X Post & Screenshot">' +
-        '<svg class="w-2.5 h-2.5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>' +
-        '<span>' + (isXSelected ? '✓ In X' : 'X Post') + '</span>' +
-      '</button>'
-    : '';
-
   var pctDisplay = isTrLocked
     ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-lg font-black ' + txt + ' mono leading-none trial-blur cursor-pointer" title="Subscribe to unblur">84.5%</div>'
     : '<div class="text-lg font-black ' + txt + ' mono leading-none">' + m.fs.toFixed(1) + '%</div>';
@@ -5415,16 +5598,14 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   var expandCtaLabel = 'View ' + totalMktCount + ' Betting Markets';
 
   var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between gap-2 text-[9.5px] text-slate-400">' +
-    '<div class="flex items-center gap-1.5 min-w-0">' + quickAddCardBtn + xSelectCardBtn + '</div>' +
+    '<div class="flex items-center gap-1.5 min-w-0">' + quickAddCardBtn + '</div>' +
     '<span class="font-bold tracking-wide uppercase inline-flex items-center gap-1 text-emerald-300 flex-shrink-0 whitespace-nowrap">' +
       expandCtaLabel +
       '<svg class="chevron-icon w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>' +
     '</span>' +
   '</div>';
 
-  var xRingCls = isXSelected ? ' ring-2 ring-white/80' : '';
-
-  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer' + isExp + xRingCls + '">' +
+  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer' + isExp + '">' +
     '<div class="flex justify-between items-start gap-3">' +
       '<div class="flex-1 min-w-0 space-y-2">' +
         '<div class="flex items-center gap-1.5 flex-wrap">' +
@@ -5631,25 +5812,27 @@ window.runEngine = function(isForcedSync){
   var rsb = document.getElementById("roundStatusBadge");
   if(rsb) rsb.innerText = humanDateLabel + " (" + window.selectedDate + ") • " + capped.length + " Official Fixtures";
 
+  var gThresh = (window.adminConfThresholds && window.adminConfThresholds.green) || 75.0;
+  var aThresh = (window.adminConfThresholds && window.adminConfThresholds.amber) || 60.0;
   var greens = [], ambers = [], reds = [];
   capped.forEach(function(item){
-    if(item.fs >= 75.0) greens.push(item);
-    else if(item.fs >= 60.0) ambers.push(item);
+    if(item.fs >= gThresh) greens.push(item);
+    else if(item.fs >= aThresh) ambers.push(item);
     else reds.push(item);
   });
 
   window._hasGreenSample = greens.length > 0;
 
   var adminResControls = function(id){
-    return window.isAdmin ? '<div class="pt-1.5 mt-1.5 border-t border-slate-800 flex items-center justify-between flex-wrap gap-1"><span class="text-emerald-300 font-bold">Admin Live Override:</span><div class="flex gap-1"><button onclick="window.promptLiveScore(' + id + ',event)" class="bg-sky-700 px-2 py-0.5 rounded text-white font-bold">⚽ Set Live Score</button><button onclick="window.setMatchResult(' + id + ',\'Pending\',event)" class="bg-slate-700 px-2 py-0.5 rounded text-white">Reset to Auto-Tracker</button></div></div>' : "";
+    return window.isAdmin ? '<div class="pt-1.5 mt-1.5 border-t border-slate-800 flex items-center justify-between flex-wrap gap-1"><span class="text-emerald-300 font-bold">Admin Live Override:</span><div class="flex gap-1"><button onclick="window.promptLiveScore(' + id + ',event)" class="bg-sky-700 px-2 py-0.5 rounded text-white font-bold cursor-pointer">⚽ Set Live Score</button><button onclick="window.setMatchResult(' + id + ',\'Pending\',event)" class="bg-slate-700 px-2 py-0.5 rounded text-white cursor-pointer">Reset to Auto-Tracker</button></div></div>' : "";
   };
 
-  document.getElementById("greenResults").innerHTML = greens.length ? greens.map(function(m,i){return window.renderBasicCleanCard(m,i,'green',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Green Picks (75%+) for selected competitions on this date.</p>';
-  document.getElementById("amberResults").innerHTML = ambers.length ? ambers.map(function(m,i){return window.renderBasicCleanCard(m,i,'amber',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Amber Picks (60-74.9%) for selected competitions on this date.</p>';
+  document.getElementById("greenResults").innerHTML = greens.length ? greens.map(function(m,i){return window.renderBasicCleanCard(m,i,'green',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Green Picks (' + gThresh + '%+) for selected competitions on this date.</p>';
+  document.getElementById("amberResults").innerHTML = ambers.length ? ambers.map(function(m,i){return window.renderBasicCleanCard(m,i,'amber',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Amber Picks (' + aThresh + '–' + (gThresh - 0.1).toFixed(1) + '%) for selected competitions on this date.</p>';
   
   var redResContainer = document.getElementById("redResults");
   if(redResContainer){
-    redResContainer.innerHTML = reds.length ? reds.map(function(m,i){return window.renderBasicCleanCard(m,i,'red',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Red Picks (<60%) for selected competitions on this date.</p>';
+    redResContainer.innerHTML = reds.length ? reds.map(function(m,i){return window.renderBasicCleanCard(m,i,'red',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Red Picks (&lt;' + aThresh + '%) for selected competitions on this date.</p>';
     if(redResContainer.parentElement) redResContainer.parentElement.style.display = "block";
   }
 
@@ -5670,6 +5853,15 @@ window.runEngine = function(isForcedSync){
   var lc = document.getElementById("logContainer");
   if(lc) lc.innerHTML = window.logHistory.join("");
   window.renderHistoryDrawer();
+
+  var ufs = document.getElementById("userFeedSection");
+  if(ufs){
+    if(window.isAdmin && !window.adminShowFeedPreview){
+      ufs.classList.add("hidden");
+    } else if(!window.isAdmin || window.adminShowFeedPreview){
+      ufs.classList.remove("hidden");
+    }
+  }
 
   window.scrollTo(scrollX, scrollY);
 };
@@ -5900,14 +6092,35 @@ window.handleAdminLogoTap = function(e){
   }
 };
 
+window.adminShowFeedPreview = false;
+window.toggleAdminFeedPreview = function(){
+  window.adminShowFeedPreview = !window.adminShowFeedPreview;
+  var ufs = document.getElementById("userFeedSection");
+  var btn = document.getElementById("adminToggleFeedViewBtn");
+  if(window.adminShowFeedPreview){
+    document.body.classList.add("admin-preview-feed-active");
+    if(ufs) ufs.classList.remove("hidden");
+    if(btn) btn.innerText = "⚙️ Admin Controls Only";
+    window.showAppToast("👁️ Previewing Match Feed");
+  } else {
+    document.body.classList.remove("admin-preview-feed-active");
+    if(ufs) ufs.classList.add("hidden");
+    if(btn) btn.innerText = "👁️ Preview Feed";
+    window.showAppToast("⚙️ Returned to Admin Controls");
+  }
+};
+
 window.unlockAdmin = function(){
   if(window.isAdmin){
     window.isAdmin = false;
     window._adminLogoTapCount = 0;
-    document.getElementById("adminBar").classList.add("hidden");
-    document.getElementById("logWrapper").classList.add("hidden");
-    document.getElementById("wipeBtn").classList.add("hidden");
-    document.getElementById("clearLogBtn").classList.add("hidden");
+    window.adminShowFeedPreview = false;
+    document.body.classList.remove("admin-mode-active", "admin-preview-feed-active");
+    var ufs = document.getElementById("userFeedSection"); if(ufs) ufs.classList.remove("hidden");
+    var ab = document.getElementById("adminBar"); if(ab) ab.classList.add("hidden");
+    var lw = document.getElementById("logWrapper"); if(lw) lw.classList.add("hidden");
+    var wb = document.getElementById("wipeBtn"); if(wb) wb.classList.add("hidden");
+    var cb = document.getElementById("clearLogBtn"); if(cb) cb.classList.add("hidden");
     var authBtnEl = document.getElementById("authBtn");
     if(authBtnEl) authBtnEl.innerText = "🔒";
     if(typeof window.closeXPostStudio === "function") window.closeXPostStudio();
@@ -5920,13 +6133,39 @@ window.unlockAdmin = function(){
     if(pin === window.ADMIN_PIN){
       window.isAdmin = true;
       window._adminLogoTapCount = 0;
-      document.getElementById("adminBar").classList.remove("hidden");
-      document.getElementById("logWrapper").classList.remove("hidden");
-      document.getElementById("wipeBtn").classList.remove("hidden");
-      document.getElementById("clearLogBtn").classList.remove("hidden");
+      window.adminShowFeedPreview = false;
+      document.body.classList.add("admin-mode-active");
+      document.body.classList.remove("admin-preview-feed-active");
+      var ufs = document.getElementById("userFeedSection"); if(ufs) ufs.classList.add("hidden");
+      var toggleFeedBtn = document.getElementById("adminToggleFeedViewBtn");
+      if(toggleFeedBtn) toggleFeedBtn.innerText = "👁️ Preview Feed";
+
+      var ab = document.getElementById("adminBar"); if(ab) ab.classList.remove("hidden");
+      var lw = document.getElementById("logWrapper"); if(lw) lw.classList.remove("hidden");
+      var wb = document.getElementById("wipeBtn"); if(wb) wb.classList.remove("hidden");
+      var cb = document.getElementById("clearLogBtn"); if(cb) cb.classList.remove("hidden");
       var authBtnEl = document.getElementById("authBtn");
       if(authBtnEl) authBtnEl.innerText = "🔓";
+
+      var lc = document.getElementById("logContainer");
+      if(lc && window.logHistory) lc.innerHTML = window.logHistory.join("");
+
+      var gateMode = (window.adminConfThresholds && window.adminConfThresholds.mode) || "balanced";
+      ["balanced", "conservative", "aggressive"].forEach(function(k){
+        var btn = document.getElementById("adminGateBtn-" + k);
+        if(btn){
+          btn.className = (k === gateMode)
+            ? "py-1.5 rounded-lg font-black bg-emerald-600 text-white shadow cursor-pointer transition text-center"
+            : "py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition text-center";
+        }
+      });
+      var gateBadge = document.getElementById("adminGateActiveBadge");
+      if(gateBadge){
+        gateBadge.innerText = gateMode === "conservative" ? "Selective (78%)" : (gateMode === "aggressive" ? "Aggressive (70%)" : "Balanced (75%)");
+      }
+
       window.updateAdminWeightsBar();
+      if(typeof window.updateSavedXCardBadge === "function") window.updateSavedXCardBadge();
       window.runEngine(false);
       window.showAppToast("🔓 Admin Mode Unlocked");
     } else if(pin){
@@ -6569,6 +6808,7 @@ window.setXMatchMarketOverride = function(matchId, marketName){
 };
 
 window.clearXPostSelections = function(){
+  window.activeSavedXCardId = null;
   window.xPostSelectedIds = [];
   window.xPostMarketOverrides = {};
   window.syncAdminXSelectionUI();
@@ -6582,6 +6822,7 @@ window.clearXPostSelections = function(){
 window.applyXPresetSelections = function(preset){
   var fixtures = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; });
   if(!fixtures.length) return;
+  window.activeSavedXCardId = null;
   window.xPostSelectedIds = [];
   window.xPostMarketOverrides = {};
   if(preset === "single"){
@@ -7357,6 +7598,7 @@ window.saveXCardImage = function(showToastMsg){
 
 // Native Mobile Share Sheet to Save Directly to iOS/Android Camera Roll
 window.shareXCardToCameraRoll = function(){
+  if(typeof window.saveActiveXCardSelections === "function") window.saveActiveXCardSelections(true);
   var canvas = window.renderXPostCanvasCard();
   if(!canvas) return;
   var postTextarea = document.getElementById("xPostTextarea");
@@ -7534,11 +7776,674 @@ window.refreshXPostStudioUI = function(){
   window.regenerateXPostText();
 };
 
+window.SAVED_X_CARD_STORAGE_KEY = "airp_saved_x_card_v1";
+window.SAVED_X_POSTS_HISTORY_KEY = "airp_saved_x_posts_history_v1";
+window.activeSavedXCardId = null;
+
+window.getSavedXPostsHistory = function(){
+  try {
+    var raw = window.safeGet ? window.safeGet(window.SAVED_X_POSTS_HISTORY_KEY, null) : null;
+    var list = [];
+    if(Array.isArray(raw) && raw.length > 0){
+      list = raw.filter(function(r){ return r && Array.isArray(r.selectedIds) && r.selectedIds.length > 0; });
+    } else {
+      var legacy = window.safeGet ? window.safeGet(window.SAVED_X_CARD_STORAGE_KEY, null) : null;
+      if(legacy && Array.isArray(legacy.selectedIds) && legacy.selectedIds.length > 0){
+        var fixtures = window.currentEvaluatedFixtures || [];
+        var title = window.generateAutoSavedCardTitle
+          ? window.generateAutoSavedCardTitle(fixtures, legacy.selectedIds, legacy.marketOverrides)
+          : ("Saved Card (" + legacy.selectedIds.length + " Picks)");
+        list = [{
+          id: "xcard_init_" + (legacy.savedAt || Date.now()),
+          title: title,
+          date: legacy.date || (window.selectedDate || ""),
+          selectedIds: legacy.selectedIds.map(Number),
+          marketOverrides: legacy.marketOverrides || {},
+          style: legacy.style || "hype",
+          savedAt: legacy.savedAt || Date.now()
+        }];
+        window.safeSet(window.SAVED_X_POSTS_HISTORY_KEY, list);
+      }
+    }
+    return list;
+  } catch(e){
+    return [];
+  }
+};
+
+window.generateAutoSavedCardTitle = function(fixtures, selectedIds, marketOverrides){
+  var ids = (selectedIds || []).map(Number).filter(function(n){ return Number.isFinite(n) && n > 0; });
+  if(!ids.length) return "Empty X Post Card";
+  var fMap = {};
+  (fixtures || []).forEach(function(f){ fMap[Number(f.id)] = f; });
+
+  if(ids.length === 1){
+    var m = fMap[ids[0]];
+    var mktArr = (marketOverrides && marketOverrides[ids[0]]) || [];
+    if(m){
+      if(mktArr.length > 1) return m.fav + " vs " + m.opp + " (" + mktArr.length + "-Leg Builder)";
+      if(mktArr.length === 1) return m.fav + " vs " + m.opp + " (" + mktArr[0] + ")";
+      return m.fav + " vs " + m.opp + " (Spotlight)";
+    }
+    return "Match #" + ids[0] + " Spotlight";
+  }
+
+  var names = ids.slice(0, 3).map(function(id){
+    return fMap[id] ? fMap[id].fav : ("Match #" + id);
+  });
+  var suffix = ids.length > 3 ? (" +" + (ids.length - 3)) : "";
+  return ids.length + "-Fold Slip: " + names.join(", ") + suffix;
+};
+
+window.evaluateSavedCardLiveStatus = function(fixtures, selectedIds, marketOverrides){
+  var ids = (selectedIds || []).map(Number).filter(function(n){ return Number.isFinite(n) && n > 0; });
+  if(!ids.length){
+    return { statusText: "No selections", badgeClass: "text-slate-400 bg-slate-900 border-slate-700", isLiveOrHt: false, wonCount: 0, totalCount: 0 };
+  }
+
+  var fMap = {};
+  (fixtures || []).forEach(function(f){ fMap[Number(f.id)] = f; });
+
+  var wonCount = 0;
+  var htCount = 0;
+  var liveCount = 0;
+  var ftCount = 0;
+  var totalLegs = 0;
+
+  ids.forEach(function(id){
+    var f = fMap[id];
+    if(!f) return;
+    var act = String(f.actual || "");
+    var isFT = !f.isLive && (/\((won|draw|lost)\)/i.test(act) || /^FT\b/i.test(act));
+    var isHT = /\bHT\b/i.test(act) || (!isFT && (act.indexOf("45'") !== -1 || /half/i.test(act)));
+    var isLive = !isFT && (f.isLive || /live/i.test(act) || isHT || /\d+'/.test(act));
+
+    if(isFT) ftCount++;
+    if(isHT) htCount++;
+    if(isLive) liveCount++;
+
+    var overrides = (marketOverrides && marketOverrides[id]) || null;
+    var resolved = window.getXMatchSelectedMarketsList ? window.getXMatchSelectedMarketsList(f) : { allMarkets: [], selectedMarkets: [] };
+    var pool = (resolved.allMarkets && resolved.allMarkets.length) ? resolved.allMarkets : (resolved.selectedMarkets || []);
+    var legs = (overrides && overrides.length)
+      ? pool.filter(function(x){ return overrides.indexOf(x.n) !== -1; })
+      : (resolved.selectedMarkets || []);
+
+    if(!legs.length) legs = [{ n: "Pick", w: isFT && /won/i.test(act) }];
+
+    legs.forEach(function(l){
+      totalLegs++;
+      if(l.w === true || l.won === true || (isFT && /won/i.test(act))){
+        wonCount++;
+      }
+    });
+  });
+
+  if(totalLegs === 0) totalLegs = ids.length;
+
+  if(ftCount === ids.length){
+    return {
+      statusText: "✓ " + wonCount + "/" + totalLegs + " Won (FT Complete)",
+      badgeClass: wonCount > 0 ? "text-emerald-300 bg-emerald-950/80 border-emerald-500/50" : "text-slate-300 bg-slate-900 border-slate-700",
+      isLiveOrHt: false,
+      isFt: true,
+      wonCount: wonCount,
+      totalCount: totalLegs
+    };
+  }
+
+  if(htCount > 0){
+    return {
+      statusText: "⏸️ HT (" + htCount + " at HT" + (wonCount > 0 ? (" • " + wonCount + " Landed") : " • Live") + ")",
+      badgeClass: wonCount > 0 ? "text-emerald-300 bg-emerald-950/90 border-emerald-400 font-black animate-pulse" : "text-sky-300 bg-sky-950/80 border-sky-500/50",
+      isLiveOrHt: true,
+      isFt: false,
+      wonCount: wonCount,
+      totalCount: totalLegs
+    };
+  }
+
+  if(liveCount > 0){
+    return {
+      statusText: "⏳ Live (" + liveCount + " In-Play" + (wonCount > 0 ? (" • " + wonCount + " Landed") : "") + ")",
+      badgeClass: wonCount > 0 ? "text-emerald-300 bg-emerald-950/90 border-emerald-400 font-black" : "text-sky-300 bg-sky-950/80 border-sky-500/50",
+      isLiveOrHt: true,
+      isFt: false,
+      wonCount: wonCount,
+      totalCount: totalLegs
+    };
+  }
+
+  return {
+    statusText: "🕒 Upcoming (" + ids.length + " Fixtures)",
+    badgeClass: "text-slate-300 bg-slate-900 border-slate-700",
+    isLiveOrHt: false,
+    isFt: false,
+    wonCount: 0,
+    totalCount: totalLegs
+  };
+};
+
+window.savedPostsFolderOpen = true;
+window.adminSavedPostsFolderOpen = true;
+
+window.toggleSavedPostsFolder = function(forceState){
+  if(typeof forceState === "boolean"){
+    window.savedPostsFolderOpen = forceState;
+  } else {
+    window.savedPostsFolderOpen = !window.savedPostsFolderOpen;
+  }
+  var listEl = document.getElementById("xStudioSavedHistoryList");
+  var iconEl = document.getElementById("xStudioFolderIcon");
+  var lblEl = document.getElementById("xStudioFolderToggleLabel");
+  if(listEl){
+    if(window.savedPostsFolderOpen) listEl.classList.remove("hidden");
+    else listEl.classList.add("hidden");
+  }
+  if(iconEl) iconEl.innerText = window.savedPostsFolderOpen ? "📂" : "📁";
+  if(lblEl) lblEl.innerText = window.savedPostsFolderOpen ? "▴ Hide Folder" : "▾ Open Folder";
+};
+
+window.toggleAdminSavedPostsFolder = function(forceState){
+  if(typeof forceState === "boolean"){
+    window.adminSavedPostsFolderOpen = forceState;
+  } else {
+    window.adminSavedPostsFolderOpen = !window.adminSavedPostsFolderOpen;
+  }
+  window.updateSavedXCardBadge();
+};
+
+window.openSavedPostsFolderFromAdmin = function(){
+  window.savedPostsFolderOpen = true;
+  window.openXPostStudio();
+  window.toggleSavedPostsFolder(true);
+  var folderBox = document.getElementById("xStudioSavedPostsHistoryBox");
+  if(folderBox && folderBox.scrollIntoView){
+    folderBox.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+};
+
+window.evaluateSavedCardDetailedLegs = function(fixtures, selectedIds, marketOverrides){
+  var fMap = {};
+  (fixtures || []).forEach(function(f){ fMap[Number(f.id)] = f; });
+  var results = [];
+  (selectedIds || []).forEach(function(rawId){
+    var id = Number(rawId);
+    var f = fMap[id];
+    if(!f) return;
+    var actual = String(f.actual || "").trim();
+    var lower = actual.toLowerCase();
+    var isFt = lower.includes("(won)") || lower.includes("(lost)") || lower.startsWith("ft");
+    var isLiveOrHt = !isFt && (lower.includes("ht") || lower.includes("live") || lower.includes("'") || /^\d+\s*-\s*\d+/.test(actual));
+
+    var resolved = window.getXMatchSelectedMarketsList ? window.getXMatchSelectedMarketsList(f) : { allMarkets: [], selectedMarkets: [] };
+    var pool = (resolved.allMarkets && resolved.allMarkets.length) ? resolved.allMarkets : (resolved.selectedMarkets || []);
+    var overrides = (marketOverrides && marketOverrides[id]) || null;
+    var legs = (overrides && overrides.length)
+      ? pool.filter(function(x){ return overrides.indexOf(x.n) !== -1; })
+      : (resolved.selectedMarkets || []);
+    if(!legs || !legs.length){
+      legs = [{ n: f.fav + " to Win", w: f.primaryMarketWon, liveBadge: "" }];
+    }
+
+    legs.forEach(function(leg){
+      var isWon = (leg.w === true || leg.won === true || (isFt && lower.includes("(won)") && legs.length === 1));
+      var isLost = ((leg.w === false || leg.won === false) && isFt);
+      var scoreMatch = actual.match(/(\d+)\s*-\s*(\d+)/);
+      var scoreText = scoreMatch ? (scoreMatch[1] + "-" + scoreMatch[2]) : "";
+      var shortMkt = String(leg.n || "").replace(/^Match Result:\s*/i, "");
+      var badge = leg.liveBadge || (scoreText ? ((isFt ? "FT " : (lower.includes("ht") ? "HT " : "LIVE ")) + scoreText) : "");
+      var icon = isWon ? "✅" : (isLost ? "❌" : (isLiveOrHt ? "⏳" : "🕒"));
+      var text = icon + " " + f.fav + ": " + shortMkt + (badge ? (" [" + badge + (isWon && !badge.toUpperCase().includes("WON") && !badge.toUpperCase().includes("LANDED") ? " WON" : "") + "]") : "");
+      results.push({
+        matchId: id,
+        fav: f.fav,
+        opp: f.opp,
+        market: shortMkt,
+        isWon: isWon,
+        isLost: isLost,
+        isLiveOrHt: isLiveOrHt,
+        displayLabel: text
+      });
+    });
+  });
+  return results;
+};
+
+window.saveActiveXCardSelections = function(silent, customTitle, forceNew){
+  try {
+    var dateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0,10));
+    var ids = (window.xPostSelectedIds || []).map(Number).filter(function(n){ return Number.isFinite(n) && n > 0; });
+    if(!ids.length){
+      if(!silent && window.showAppToast) window.showAppToast("⚠️ Select at least 1 match before saving");
+      return null;
+    }
+
+    var fixtures = window.currentEvaluatedFixtures || [];
+    var autoTitle = window.generateAutoSavedCardTitle(fixtures, ids, window.xPostMarketOverrides);
+    var title = (customTitle && customTitle.trim()) ? customTitle.trim() : autoTitle;
+
+    var history = window.getSavedXPostsHistory();
+    var targetId = forceNew ? null : window.activeSavedXCardId;
+    var existingIdx = targetId ? history.findIndex(function(x){ return x.id === targetId; }) : -1;
+
+    // If the user changed which matches are selected compared to the active card, save as a NEW post in the folder so old posts are never overwritten!
+    if(existingIdx !== -1 && !forceNew){
+      var prevIds = (history[existingIdx].selectedIds || []).map(Number).slice().sort().join(",");
+      var currIds = ids.slice().sort().join(",");
+      if(prevIds !== currIds){
+        existingIdx = -1;
+        targetId = null;
+      }
+    }
+
+    var record = {
+      id: (existingIdx !== -1 && targetId) ? targetId : ("xcard_" + Date.now() + "_" + Math.floor(Math.random() * 1000)),
+      title: title,
+      date: dateStr,
+      selectedIds: ids,
+      marketOverrides: JSON.parse(JSON.stringify(window.xPostMarketOverrides || {})),
+      style: window.xPostStyle || "hype",
+      savedAt: Date.now()
+    };
+
+    if(existingIdx !== -1){
+      history[existingIdx] = record;
+    } else {
+      history.unshift(record);
+    }
+    window.activeSavedXCardId = record.id;
+
+    if(history.length > 20) history = history.slice(0, 20);
+    window.safeSet(window.SAVED_X_POSTS_HISTORY_KEY, history);
+
+    // Keep legacy key mirrored
+    window.safeSet(window.SAVED_X_CARD_STORAGE_KEY, {
+      date: dateStr,
+      selectedIds: ids,
+      marketOverrides: record.marketOverrides,
+      style: window.xPostStyle || "hype",
+      savedAt: record.savedAt
+    });
+
+    window.updateSavedXCardBadge();
+    if(!silent && window.showAppToast){
+      window.showAppToast("📁 Saved to Folder: '" + record.title + "' (" + ids.length + " Picks)!");
+    }
+    return record;
+  } catch(e){
+    return null;
+  }
+};
+
+window.loadSavedXPostFromHistory = function(cardId, showToast){
+  try {
+    var history = window.getSavedXPostsHistory();
+    var card = history.find(function(x){ return x.id === cardId; });
+    if(!card || !Array.isArray(card.selectedIds) || !card.selectedIds.length){
+      if(showToast && window.showAppToast) window.showAppToast("⚠️ Could not load saved card");
+      return false;
+    }
+
+    window.activeSavedXCardId = card.id;
+    window.xPostSelectedIds = card.selectedIds.map(Number);
+    window.xPostMarketOverrides = JSON.parse(JSON.stringify(card.marketOverrides || {}));
+    if(card.style) window.xPostStyle = card.style;
+
+    if(card.date && card.date !== window.selectedDate && typeof window.selectDateTab === "function"){
+      var dateObj = window.getRollingDates ? window.getRollingDates() : { dates: [] };
+      if(dateObj.dates && dateObj.dates.indexOf(card.date) !== -1){
+        window.selectedDate = card.date;
+      }
+    }
+
+    window.syncAdminXSelectionUI();
+    window.runEngine(false);
+    window.refreshXPostStudioUI(false);
+    window.updateSavedXCardBadge();
+
+    if(showToast && window.showAppToast){
+      window.showAppToast("📂 Loaded from Folder: " + card.title + " (Live results & ✅ won ticks applied!)");
+    }
+    return true;
+  } catch(e){
+    return false;
+  }
+};
+
+window.loadSavedXCardSelections = function(force){
+  var history = window.getSavedXPostsHistory();
+  if(!history.length) return false;
+  var target = history[0];
+  if(window.activeSavedXCardId){
+    var found = history.find(function(x){ return x.id === window.activeSavedXCardId; });
+    if(found) target = found;
+  }
+  return window.loadSavedXPostFromHistory(target.id, false);
+};
+
+window.deleteSavedXPostFromHistory = function(cardId, e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  var history = window.getSavedXPostsHistory();
+  var filtered = history.filter(function(x){ return x.id !== cardId; });
+  window.safeSet(window.SAVED_X_POSTS_HISTORY_KEY, filtered);
+
+  if(window.activeSavedXCardId === cardId){
+    window.activeSavedXCardId = filtered.length > 0 ? filtered[0].id : null;
+  }
+
+  if(filtered.length === 0){
+    if(window.safeRemove) window.safeRemove(window.SAVED_X_CARD_STORAGE_KEY);
+    else localStorage.removeItem(window.SAVED_X_CARD_STORAGE_KEY);
+  } else {
+    window.safeSet(window.SAVED_X_CARD_STORAGE_KEY, filtered[0]);
+  }
+
+  window.updateSavedXCardBadge();
+  if(window.showAppToast) window.showAppToast("🗑️ Removed post from Saved Posts Folder");
+};
+
+window.clearSavedXCard = function(){
+  if(window.activeSavedXCardId){
+    window.deleteSavedXPostFromHistory(window.activeSavedXCardId);
+  } else {
+    window.clearAllSavedXPostsHistory();
+  }
+};
+
+window.clearAllSavedXPostsHistory = function(){
+  window.safeSet(window.SAVED_X_POSTS_HISTORY_KEY, []);
+  if(window.safeRemove) window.safeRemove(window.SAVED_X_CARD_STORAGE_KEY);
+  else localStorage.removeItem(window.SAVED_X_CARD_STORAGE_KEY);
+  window.activeSavedXCardId = null;
+
+  var topFive = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; }).slice(0, 5);
+  window.xPostSelectedIds = topFive.map(function(m){ return Number(m.id); });
+  window.xPostMarketOverrides = {};
+  window.updateSavedXCardBadge();
+  window.refreshXPostStudioUI();
+  if(window.showAppToast) window.showAppToast("🗑️ Emptied Saved Posts Folder");
+};
+
+window.openSavedHalfTimeXCard = function(specificCardId){
+  var history = window.getSavedXPostsHistory();
+  var cardIdToLoad = specificCardId;
+  if(!cardIdToLoad && history.length > 0){
+    cardIdToLoad = window.activeSavedXCardId || history[0].id;
+  }
+  if(cardIdToLoad){
+    window.loadSavedXPostFromHistory(cardIdToLoad, false);
+  }
+  window.openXPostStudio();
+  if(window.showAppToast){
+    window.showAppToast(cardIdToLoad ? "📂 Loaded Saved Post with Live Half-Time ✅ Ticks!" : "𝕏 Post Studio Opened");
+  }
+};
+
+window.repostSavedCardToX = function(cardId, e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  window.loadSavedXPostFromHistory(cardId, false);
+  window.postNativeToX();
+};
+
+window.updateSavedXCardBadge = function(){
+  var history = window.getSavedXPostsHistory();
+  var fixtures = window.currentEvaluatedFixtures || [];
+  var hasHistory = history.length > 0;
+  var totalSaved = history.length;
+
+  // 1. In Admin Panel Folder UI
+  var statusText = document.getElementById("adminSavedXCardStatusText");
+  var clearBtn = document.getElementById("adminClearSavedCardBtn");
+  var htBtn = document.getElementById("adminOpenSavedHtCardBtn");
+  var folderModalBtn = document.getElementById("adminOpenSavedFolderModalBtn");
+  var chipsRow = document.getElementById("adminSavedCardsChipsRow");
+  var adminFolderIcon = document.getElementById("adminFolderIcon");
+  var adminFolderChevron = document.getElementById("adminFolderChevron");
+
+  if(statusText){
+    statusText.innerText = hasHistory
+      ? (totalSaved + " Saved Post" + (totalSaved === 1 ? "" : "s") + " in Folder")
+      : ("Empty (0 Posts)");
+    statusText.className = hasHistory
+      ? "text-emerald-300 font-mono text-[9px] bg-emerald-950/90 border border-emerald-500/40 px-1.5 py-0.5 rounded font-bold"
+      : "text-slate-400 font-mono text-[9px] bg-slate-950/90 border border-slate-800 px-1.5 py-0.5 rounded";
+  }
+  if(adminFolderIcon){
+    adminFolderIcon.innerText = (hasHistory && window.adminSavedPostsFolderOpen) ? "📂" : "📁";
+  }
+  if(adminFolderChevron){
+    adminFolderChevron.innerText = window.adminSavedPostsFolderOpen ? "▴ Hide Folder" : ("▾ Open Folder (" + totalSaved + ")");
+  }
+  if(clearBtn){
+    if(hasHistory) clearBtn.classList.remove("hidden");
+    else clearBtn.classList.add("hidden");
+  }
+  if(folderModalBtn){
+    folderModalBtn.innerHTML = '<span>📁 Saved Posts Folder (' + totalSaved + ')</span>';
+  }
+  if(htBtn){
+    htBtn.innerHTML = hasHistory
+      ? ('<span>💾 Re-Post Half-Time (' + totalSaved + ' Saved)</span>')
+      : ('<span>💾 Re-Post Half-Time (Live)</span>');
+  }
+
+  if(chipsRow){
+    if(hasHistory && window.adminSavedPostsFolderOpen){
+      chipsRow.classList.remove("hidden");
+      chipsRow.innerHTML = history.map(function(card, idx){
+        var liveSt = window.evaluateSavedCardLiveStatus(fixtures, card.selectedIds, card.marketOverrides);
+        var detailedLegs = window.evaluateSavedCardDetailedLegs(fixtures, card.selectedIds, card.marketOverrides);
+        var isAct = (card.id === window.activeSavedXCardId);
+        var chipCls = isAct
+          ? "bg-emerald-950/50 border-emerald-400 text-white ring-1 ring-emerald-400/70"
+          : "bg-slate-950/90 hover:bg-slate-900 border-slate-800 text-slate-200";
+        var legsHtml = detailedLegs.map(function(leg){
+          var pillStyle = leg.isWon
+            ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/50 font-bold"
+            : (leg.isLost ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-slate-900 text-slate-300 border-slate-700");
+          return '<span class="px-1.5 py-0.5 rounded border text-[8.5px] font-mono ' + pillStyle + '">' + leg.displayLabel + '</span>';
+        }).join("");
+
+        return '<div onclick="window.openSavedHalfTimeXCard(\'' + card.id + '\')" class="p-2 rounded-xl border cursor-pointer transition space-y-1 ' + chipCls + '">' +
+          '<div class="flex items-center justify-between gap-2 flex-wrap">' +
+            '<div class="flex items-center gap-1.5 min-w-0">' +
+              '<span class="text-amber-300 font-mono font-bold text-[9.5px]">#' + (idx + 1) + '</span>' +
+              '<span class="truncate font-black text-[10px] text-white">' + card.title + '</span>' +
+            '</div>' +
+            '<div class="flex items-center gap-1.5">' +
+              '<span class="px-1.5 py-0.5 rounded border text-[8.5px] font-mono ' + liveSt.badgeClass + '">' + liveSt.statusText + '</span>' +
+              '<span class="text-[8.5px] font-bold text-emerald-300 underline">Open Live ▸</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="flex flex-wrap gap-1">' + legsHtml + '</div>' +
+        '</div>';
+      }).join("");
+    } else {
+      chipsRow.classList.add("hidden");
+      chipsRow.innerHTML = "";
+    }
+  }
+
+  // 2. In X Studio Modal Folder
+  var badge = document.getElementById("xStudioSavedHistoryCountBadge");
+  if(badge){
+    badge.innerText = totalSaved + " Saved Post" + (totalSaved === 1 ? "" : "s");
+    badge.className = totalSaved > 0
+      ? "text-[9.5px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold"
+      : "text-[9.5px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono";
+  }
+
+  var clearAllModalBtn = document.getElementById("xStudioClearAllHistoryBtn");
+  if(clearAllModalBtn){
+    if(totalSaved > 0) clearAllModalBtn.classList.remove("hidden");
+    else clearAllModalBtn.classList.add("hidden");
+  }
+
+  var historyListEl = document.getElementById("xStudioSavedHistoryList");
+  if(historyListEl){
+    if(window.savedPostsFolderOpen){
+      historyListEl.classList.remove("hidden");
+    } else {
+      historyListEl.classList.add("hidden");
+    }
+
+    if(totalSaved === 0){
+      historyListEl.innerHTML = '<div class="p-3 rounded-xl border border-slate-800 bg-slate-900/60 text-center space-y-1">' +
+        '<div class="text-[10px] text-slate-300 font-bold">📁 Your Saved Posts Folder is Empty</div>' +
+        '<div class="text-[9px] text-slate-400">When you press <b>Post Native to 𝕏</b> or <b>💾 Save to Folder</b>, your post is stored inside this folder. Click back on any saved post at Half-Time or Full-Time and won bets will be automatically ticked with <b>✅</b>!</div>' +
+      '</div>';
+    } else {
+      historyListEl.innerHTML = history.map(function(card, idx){
+        var isAct = (card.id === window.activeSavedXCardId);
+        var liveSt = window.evaluateSavedCardLiveStatus(fixtures, card.selectedIds, card.marketOverrides);
+        var detailedLegs = window.evaluateSavedCardDetailedLegs(fixtures, card.selectedIds, card.marketOverrides);
+        var dateLbl = card.date || "";
+
+        // Calculate combined odds of this saved card
+        var cardCombDec = 1;
+        var fMap = {};
+        fixtures.forEach(function(f){ fMap[Number(f.id)] = f; });
+        card.selectedIds.forEach(function(id){
+          var f = fMap[id];
+          if(!f) return;
+          var overrides = (card.marketOverrides && card.marketOverrides[id]) || null;
+          var resolved = window.getXMatchSelectedMarketsList ? window.getXMatchSelectedMarketsList(f) : { selectedMarkets: [] };
+          var legs = (overrides && overrides.length)
+            ? resolved.selectedMarkets.filter(function(x){ return overrides.indexOf(x.n) !== -1; })
+            : resolved.selectedMarkets;
+          legs.forEach(function(l){ cardCombDec *= (Number(l.odds) || 1.5); });
+        });
+
+        var cardOddsStr = window.formatOdds(cardCombDec, true);
+
+        var cardBorderCls = isAct
+          ? "bg-emerald-950/45 border-emerald-400/80 ring-2 ring-emerald-400/70 shadow-lg"
+          : "bg-slate-900/85 border-slate-800 hover:border-amber-500/50";
+
+        var activePill = isAct
+          ? '<span class="text-[8.5px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 whitespace-nowrap flex-shrink-0">OPEN IN STUDIO</span>'
+          : '<span class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 border border-amber-500/30 whitespace-nowrap flex-shrink-0">Click to Load Live</span>';
+
+        var legsBreakdownHtml = detailedLegs.map(function(leg){
+          var legCls = leg.isWon
+            ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/60 font-bold"
+            : (leg.isLost ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-slate-950/90 text-slate-300 border-slate-800");
+          return '<span class="px-2 py-0.5 rounded-lg border text-[9px] font-mono flex items-center gap-1 ' + legCls + '">' + leg.displayLabel + '</span>';
+        }).join("");
+
+        return '<div onclick="window.loadSavedXPostFromHistory(\'' + card.id + '\', true)" class="p-2.5 rounded-xl border transition space-y-2 cursor-pointer ' + cardBorderCls + '">' +
+          '<div class="flex items-center justify-between gap-2 flex-wrap">' +
+            '<div class="flex items-center gap-1.5 min-w-0">' +
+              '<span class="text-[10px] font-mono font-black text-amber-300 flex-shrink-0">📁 #' + (idx + 1) + '</span>' +
+              '<span class="text-[11px] font-black text-white truncate max-w-[190px] sm:max-w-xs">' + card.title + '</span>' +
+              activePill +
+            '</div>' +
+            '<div class="flex items-center gap-1.5 flex-shrink-0 ml-auto">' +
+              '<span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ' + liveSt.badgeClass + '">' + liveSt.statusText + '</span>' +
+              '<span class="text-[9.5px] font-mono font-black text-amber-300 bg-slate-950/90 border border-amber-500/30 px-1.5 py-0.5 rounded whitespace-nowrap">' + cardOddsStr + '</span>' +
+            '</div>' +
+          '</div>' +
+
+          '<!-- Per-leg live breakdown with ✅ ticks when bets win at half-time or full-time -->' +
+          '<div class="flex flex-wrap gap-1.5">' + legsBreakdownHtml + '</div>' +
+
+          '<div class="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-800/80 flex-wrap">' +
+            '<div class="flex items-center gap-1.5">' +
+              '<button type="button" onclick="event.stopPropagation(); window.loadSavedXPostFromHistory(\'' + card.id + '\', true)" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9.5px] cursor-pointer transition flex items-center gap-1 shadow">' +
+                '<span>📂 Load Live Card &amp; ✅ Ticks</span>' +
+              '</button>' +
+              '<button type="button" onclick="window.repostSavedCardToX(\'' + card.id + '\', event)" class="px-2.5 py-1 rounded-lg bg-black hover:bg-slate-900 text-white border border-white/30 hover:border-emerald-400 font-bold text-[9.5px] cursor-pointer transition flex items-center gap-1">' +
+                '<svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>' +
+                '<span>Re-Post Live to 𝕏</span>' +
+              '</button>' +
+            '</div>' +
+            '<div class="flex items-center gap-2">' +
+              '<span class="font-mono text-[8.5px] text-slate-400">' + dateLbl + '</span>' +
+              '<button type="button" onclick="window.deleteSavedXPostFromHistory(\'' + card.id + '\', event)" class="px-2 py-1 rounded-lg bg-slate-950 hover:bg-rose-950 text-rose-300 border border-slate-800 hover:border-rose-500/40 text-[9.5px] font-bold cursor-pointer transition" title="Delete this saved post from folder">' +
+                '<span>🗑️ Delete</span>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+    }
+  }
+};
+
+window.postNativeToX = function(){
+  // 1. Auto-save current selections into localStorage
+  window.saveActiveXCardSelections(true);
+
+  // 2. Render and save the card screenshot
+  window.saveXCardImage(false);
+
+  // 3. Get the post text
+  var ta = document.getElementById("xPostTextarea");
+  var postTxt = ta ? (ta.value || "").slice(0, window.FREE_X_CHAR_LIMIT) : "";
+
+  // 4. Copy text to clipboard
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(postTxt).catch(function(){
+      if(ta){ ta.select(); document.execCommand("copy"); }
+    });
+  } else if(ta){
+    ta.select();
+    document.execCommand("copy");
+  }
+
+  // 5. Native share or Twitter Intent
+  var canvas = window.renderXPostCanvasCard ? window.renderXPostCanvasCard() : null;
+
+  var performTwitterIntent = function(){
+    var tweetUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(postTxt);
+    var a = document.createElement("a");
+    a.href = tweetUrl;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 1000);
+  };
+
+  if(canvas && canvas.toBlob && navigator.canShare){
+    canvas.toBlob(function(blob){
+      if(blob){
+        try {
+          var dateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : "card");
+          var file = new File([blob], "BetBoy-AI-Picks-" + dateStr + ".png", { type: "image/png" });
+          if(navigator.canShare({ files: [file] })){
+            navigator.share({
+              files: [file],
+              title: "BetBoy AI Picks",
+              text: postTxt
+            }).then(function(){
+              if(window.showAppToast) window.showAppToast("💾 Saved! Shared to X with live card attached");
+            }).catch(function(){
+              performTwitterIntent();
+            });
+            return;
+          }
+        } catch(e){}
+      }
+      performTwitterIntent();
+    }, "image/png");
+  } else {
+    performTwitterIntent();
+  }
+
+  if(window.showAppToast){
+    window.showAppToast("💾 Card Saved! 𝕏 Tweet Prepared (Ready for Half-Time Re-Post)");
+  }
+};
+
 window.openXPostStudio = function(){
   if((!window.currentEvaluatedFixtures || !window.currentEvaluatedFixtures.length) && typeof window.runEngine === "function"){
     window.runEngine(false);
   }
-  if(!window.xPostSelectedIds || window.xPostSelectedIds.length === 0){
+  // Try loading saved selections from storage first!
+  var hasLoadedSaved = window.loadSavedXCardSelections(false);
+  if(!hasLoadedSaved && (!window.xPostSelectedIds || window.xPostSelectedIds.length === 0)){
     var topFive = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; }).slice(0, 5);
     window.xPostSelectedIds = topFive.map(function(m){ return Number(m.id); });
     window.runEngine(false);
@@ -7548,6 +8453,7 @@ window.openXPostStudio = function(){
     modal.style.display = "flex";
     window.refreshXPostStudioUI();
   }
+  window.updateSavedXCardBadge();
 };
 
 window.closeXPostStudio = function(){
@@ -7574,6 +8480,7 @@ window.copyXPostTextOnly = function(){
 
 // ONLY downloads the screenshot when the user presses "Copy X Post & Save Screenshot"
 window.copyXPostAndSaveScreenshot = function(){
+  window.saveActiveXCardSelections(true);
   window.saveXCardImage(false);
   var ta = document.getElementById("xPostTextarea");
   var txt = ta ? (ta.value || "").slice(0, window.FREE_X_CHAR_LIMIT) : "";
