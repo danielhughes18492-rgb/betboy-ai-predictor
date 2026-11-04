@@ -217,6 +217,25 @@
   }
 </style>
 <script>
+// ============================================================================
+// GLOBAL MASTER PAYWALL CONFIG (false = 100% Free Open Access / true = Paid VIP Mode)
+// ============================================================================
+const DEFAULT_PAYWALL_ENABLED = false;
+window.DEFAULT_PAYWALL_ENABLED = DEFAULT_PAYWALL_ENABLED;
+window.PAYWALL_STORAGE_KEY = "betboy_paywall_enabled";
+
+window.isPaywallEnabled = function() {
+  try {
+    var stored = localStorage.getItem(window.PAYWALL_STORAGE_KEY);
+    if (stored !== null && stored !== undefined && String(stored).trim() !== "") {
+      var clean = String(stored).trim().toLowerCase();
+      if (clean === "true" || clean === "1" || clean === "on") return true;
+      if (clean === "false" || clean === "0" || clean === "off") return false;
+    }
+  } catch (e) {}
+  return Boolean(DEFAULT_PAYWALL_ENABLED);
+};
+
 window.ADMIN_PIN = "18041992";
 window.APP_PASSWORD = "12341867";
 window.SESSION_TTL_MS = 10 * 60 * 1000;
@@ -579,12 +598,121 @@ window.triggerWobbleError = function() {
   }
 };
 
+window.syncPaywallUIState = function() {
+  var paywallOn = window.isPaywallEnabled();
+  var isAdm = Boolean(window.isAdmin);
+
+  // 1. Hide "Log Out" button in top nav when Paywall is OFF (unless logged in as Admin)
+  var logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    if (paywallOn || isAdm) {
+      logoutBtn.classList.remove("hidden");
+      logoutBtn.style.display = "";
+    } else {
+      logoutBtn.classList.add("hidden");
+      logoutBtn.style.display = "none";
+    }
+  }
+
+  // 2. Sync Admin Panel Paywall Master Toggle UI
+  var cb = document.getElementById("adminPaywallToggleCheckbox");
+  if (cb) cb.checked = paywallOn;
+
+  var track = document.getElementById("adminPaywallSwitchTrack");
+  var thumb = document.getElementById("adminPaywallSwitchThumb");
+  if (track) {
+    track.className = paywallOn
+      ? "w-12 h-6 rounded-full transition-colors duration-200 bg-emerald-500 border border-emerald-300/60 relative flex items-center px-0.5 shadow-inner"
+      : "w-12 h-6 rounded-full transition-colors duration-200 bg-slate-800 border border-slate-600 relative flex items-center px-0.5 shadow-inner";
+  }
+  if (thumb) {
+    thumb.className = paywallOn
+      ? "w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 translate-x-6"
+      : "w-5 h-5 rounded-full bg-amber-300 shadow-md transform transition-transform duration-200 translate-x-0";
+  }
+
+  var badge = document.getElementById("adminPaywallStatusBadge");
+  if (badge) {
+    badge.innerText = paywallOn ? "ON • PAID VIP MODE" : "OFF • 100% FREE OPEN ACCESS";
+    badge.className = paywallOn
+      ? "text-[9.5px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/50"
+      : "text-[9.5px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/50";
+  }
+
+  var storedRaw = null;
+  try { storedRaw = localStorage.getItem(window.PAYWALL_STORAGE_KEY); } catch (e) {}
+  var hasOverride = storedRaw !== null && storedRaw !== undefined && String(storedRaw).trim() !== "";
+
+  var helperNote = document.getElementById("adminPaywallHelperNote");
+  if (helperNote) {
+    helperNote.innerHTML =
+      'GitHub Pages Master Constant: <code class="text-emerald-300 font-bold select-all">const DEFAULT_PAYWALL_ENABLED = ' + Boolean(DEFAULT_PAYWALL_ENABLED) + ';</code> ' +
+      '• Active Runtime: <b class="' + (paywallOn ? 'text-emerald-300' : 'text-amber-300') + '">' + (paywallOn ? 'PAID MODE (Login/PayPal ON)' : 'FREE MODE (Bypassed)') + '</b>' +
+      (hasOverride ? ' <span class="text-sky-300">(Admin Override: ' + storedRaw + ')</span>' : ' <span class="text-slate-400">(Using Code Default)</span>') +
+      ' — For permanent GitHub Pages change, set <code class="text-amber-300 font-bold select-all">const DEFAULT_PAYWALL_ENABLED = ' + paywallOn + ';</code> at top of &lt;script&gt;.';
+  }
+};
+
+window.setPaywallEnabled = function(nextVal, fromAdminUI) {
+  var enabled = Boolean(nextVal);
+  try {
+    localStorage.setItem(window.PAYWALL_STORAGE_KEY, String(enabled));
+  } catch (e) {}
+
+  window.syncPaywallUIState();
+
+  if (typeof window.addLog === "function") {
+    window.addLog("🔒 <b>Admin Paywall Master Toggle:</b> Switched to <b>" + (enabled ? "ON (Paid VIP Mode)" : "OFF (100% Free Open Access)") + "</b> (<code>localStorage.betboy_paywall_enabled = '" + enabled + "'</code>).");
+  }
+
+  if (fromAdminUI && typeof window.showAppToast === "function") {
+    window.showAppToast(enabled
+      ? "🔒 VIP Paywall ON: Paid Login & PayPal Gate Active!"
+      : "🔓 VIP Paywall OFF: 100% Free Open Access Active!");
+  }
+};
+
+window.togglePaywallModeFromAdmin = function(explicitVal) {
+  var next = (typeof explicitVal === "boolean") ? explicitVal : !window.isPaywallEnabled();
+  window.setPaywallEnabled(next, true);
+};
+
+window.copyPaywallConfigStatus = function() {
+  var paywallOn = window.isPaywallEnabled();
+  var storedRaw = null;
+  try { storedRaw = localStorage.getItem(window.PAYWALL_STORAGE_KEY); } catch (e) {}
+  var snippet = [
+    "// BetBoy AI Paywall Master Config (top of <script> in index.html)",
+    "const DEFAULT_PAYWALL_ENABLED = " + paywallOn + "; // " + (paywallOn ? "ON = Paid VIP Login & PayPal Gate" : "OFF = 100% Free Open Access for all visitors"),
+    "// Current Runtime Status: " + (paywallOn ? "ON (Paid Mode)" : "OFF (100% Free Mode)") + " | Code Default: " + Boolean(DEFAULT_PAYWALL_ENABLED) + " | localStorage('betboy_paywall_enabled'): " + (storedRaw !== null ? storedRaw : "none")
+  ].join("\n");
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(snippet).then(function() {
+      if (window.showAppToast) window.showAppToast("📋 Copied DEFAULT_PAYWALL_ENABLED = " + paywallOn + " Config Status!");
+    }).catch(function() {
+      if (window.showAppToast) window.showAppToast("📋 Config: const DEFAULT_PAYWALL_ENABLED = " + paywallOn + ";");
+    });
+  } else if (window.showAppToast) {
+    window.showAppToast("📋 Config: const DEFAULT_PAYWALL_ENABLED = " + paywallOn + ";");
+  }
+};
+
+window.previewAuthGateFromAdmin = function() {
+  window.setPaywallEnabled(true, false);
+  window.logoutToPasswordScreen();
+};
+
 window.grantSessionAccess = function(role) {
-  document.getElementById("authGate").style.display = "none";
+  var gateEl = document.getElementById("authGate");
+  if (gateEl) gateEl.style.display = "none";
   var app = document.getElementById("appContainer");
-  app.classList.remove("hidden");
-  app.style.display = "block";
-  window.isTrial = (role === "trial");
+  if (app) {
+    app.classList.remove("hidden");
+    app.style.display = "block";
+  }
+  // Never restrict to trial mode if Paywall is OFF
+  window.isTrial = (role === "trial") && window.isPaywallEnabled();
   var tb = document.getElementById("trialModeBanner");
   if (tb) {
     if (window.isTrial) tb.classList.remove("hidden");
@@ -605,6 +733,7 @@ window.grantSessionAccess = function(role) {
     var cb2 = document.getElementById("clearLogBtn"); if (cb2) cb2.classList.add("hidden");
     var aub2 = document.getElementById("authBtn"); if (aub2) aub2.innerText = "🔒";
   }
+  window.syncPaywallUIState();
   if (typeof window.initDateTabs === "function") {
     window.initDateTabs();
   }
@@ -614,6 +743,10 @@ window.grantSessionAccess = function(role) {
 window.enterTrialMode = function() {
   var err = document.getElementById("errorMsg");
   if (err) err.style.display = "none";
+  if (!window.isPaywallEnabled()) {
+    window.grantSessionAccess("user");
+    return;
+  }
   window.grantSessionAccess("trial");
   if (typeof window.showAppToast === "function") {
     window.showAppToast("👀 Free Preview: Pick #1, Past Results & 8/16 Markets Unlocked!");
@@ -621,6 +754,10 @@ window.enterTrialMode = function() {
 };
 
 window.exitTrialToSubscribe = function() {
+  if (!window.isPaywallEnabled()) {
+    window.grantSessionAccess("user");
+    return;
+  }
   window.isTrial = false;
   var tb = document.getElementById("trialModeBanner");
   if (tb) tb.classList.add("hidden");
@@ -638,6 +775,7 @@ window.exitTrialToSubscribe = function() {
 };
 
 window.logoutToPasswordScreen = function() {
+  var wasAdmin = window.isAdmin;
   if (typeof window.closeAdminDialog === "function") window.closeAdminDialog();
   if (typeof window.closeXPostStudio === "function") window.closeXPostStudio();
   if (typeof window.closeSlipModal === "function") window.closeSlipModal();
@@ -645,10 +783,17 @@ window.logoutToPasswordScreen = function() {
   if (miniBar) miniBar.style.display = "none";
   var err = document.getElementById("errorMsg");
   if (err) err.style.display = "none";
+  document.body.classList.remove("admin-mode-active", "admin-preview-feed-active");
+  var ufs = document.getElementById("userFeedSection");
+  if (ufs) ufs.classList.remove("hidden");
   window.checkSavedSession();
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (typeof window.showAppToast === "function") {
-    window.showAppToast("🔒 Logged out to password screen");
+    if (!window.isPaywallEnabled() && wasAdmin) {
+      window.showAppToast("🔓 Exited Admin Mode (100% Free Mode Active)");
+    } else if (window.isPaywallEnabled()) {
+      window.showAppToast("🔒 Logged out to password screen");
+    }
   }
 };
 
@@ -866,6 +1011,15 @@ window.checkSavedSession = function() {
   var gate = document.getElementById("authGate");
   var app = document.getElementById("appContainer");
   var inp = document.getElementById("passInput");
+
+  // AUTOMATIC BYPASS WHEN PAYWALL IS OFF (100% FREE OPEN ACCESS MODE)
+  if (!window.isPaywallEnabled()) {
+    if (gate) gate.style.display = "none";
+    window.grantSessionAccess("user");
+    return;
+  }
+
+  // FULL RESTORATION WHEN PAYWALL IS ON (PAID VIP MODE)
   if(gate) gate.style.display = "flex";
   if(app) app.style.display = "none";
   window.rememberPassEnabled = Boolean(window.safeGet("airp_remember_pass_enabled", false));
@@ -874,11 +1028,22 @@ window.checkSavedSession = function() {
     inp.value = (window.rememberPassEnabled && window.savedPassValue) ? window.savedPassValue : "";
   }
   window.syncRememberPassUI();
+  window.syncPaywallUIState();
 };
+
+document.addEventListener("DOMContentLoaded", function() {
+  if (!window.isPaywallEnabled() && !window.isAdmin) {
+    var gate = document.getElementById("authGate");
+    if (gate) gate.style.display = "none";
+    window.grantSessionAccess("user");
+  } else {
+    window.syncPaywallUIState();
+  }
+});
 </script>
 </head>
 <body class="min-h-screen pb-16 text-sm select-none">
-<div id="authGate" style="display: flex;" class="fixed inset-0 bg-slate-950 z-50 items-center justify-center p-4 overflow-y-auto">
+<div id="authGate" style="display: none;" class="fixed inset-0 bg-slate-950 z-50 items-center justify-center p-4 overflow-y-auto">
   <div class="glass p-6 rounded-2xl w-full max-w-sm space-y-4 text-center shadow-2xl border border-emerald-500/30 relative flex flex-col justify-between my-auto" style="min-height:360px;">
     <div>
       <img src="" id="gateLogoImg" class="w-24 h-24 mx-auto rounded-full shadow-2xl mb-2.5 border border-emerald-500/40">
@@ -979,7 +1144,7 @@ window.checkSavedSession = function() {
         <option value="dec" class="bg-slate-900 text-amber-300">Dec (1.67)</option>
       </select>
     </div>
-    <button type="button" id="logoutBtn" onclick="window.logoutToPasswordScreen()" aria-label="Log Out" title="Log out and return to the password screen" class="text-[10.5px] bg-slate-900 hover:bg-rose-950/80 active:bg-rose-950 text-slate-200 hover:text-rose-200 px-2.5 py-1 rounded-lg border border-slate-700/80 hover:border-rose-500/40 font-bold cursor-pointer transition whitespace-nowrap flex-shrink-0">
+    <button type="button" id="logoutBtn" onclick="window.logoutToPasswordScreen()" aria-label="Log Out" title="Log out and return to the password screen" class="text-[10.5px] bg-slate-900 hover:bg-rose-950/80 active:bg-rose-950 text-slate-200 hover:text-rose-200 px-2.5 py-1 rounded-lg border border-slate-700/80 hover:border-rose-500/40 font-bold cursor-pointer transition whitespace-nowrap flex-shrink-0 hidden" style="display:none;">
       Log Out
     </button>
   </div>
@@ -1019,6 +1184,39 @@ window.checkSavedSession = function() {
         <button type="button" id="adminToggleFeedViewBtn" onclick="window.toggleAdminFeedPreview()" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-300 border border-sky-500/40 text-[10px] font-bold cursor-pointer transition">👁️ Preview Feed</button>
         <span id="roundStatusBadge" class="text-[10px] text-emerald-400 mono">Loading...</span>
         <button type="button" onclick="window.unlockAdmin()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950 text-rose-300 border border-rose-500/40 text-[10px] font-bold cursor-pointer transition">🔒 Exit Admin</button>
+      </div>
+    </div>
+
+    <!-- 0. PAYWALL MASTER TOGGLE (FREE OPEN ACCESS MODE vs. PAID VIP LOGIN/PAYPAL MODE) -->
+    <div id="adminPaywallMasterCard" class="bg-slate-950/95 border-2 border-amber-500/50 rounded-2xl p-3.5 space-y-2.5 shadow-lg">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <label for="adminPaywallToggleCheckbox" class="flex items-center gap-2.5 cursor-pointer select-none min-w-0 flex-1">
+          <input type="checkbox" id="adminPaywallToggleCheckbox" onchange="window.togglePaywallModeFromAdmin(this.checked)" class="sr-only">
+          <div id="adminPaywallSwitchTrack" onclick="event.preventDefault();window.togglePaywallModeFromAdmin()" role="switch" aria-label="VIP Paywall & Login Screen Toggle" class="w-12 h-6 rounded-full transition-colors duration-200 bg-slate-800 border border-slate-600 relative flex items-center px-0.5 shadow-inner flex-shrink-0 cursor-pointer">
+            <div id="adminPaywallSwitchThumb" class="w-5 h-5 rounded-full bg-amber-300 shadow-md transform transition-transform duration-200 translate-x-0"></div>
+          </div>
+          <span class="font-black text-white text-xs leading-snug">
+            🔒 VIP Paywall &amp; Login Screen (ON = Paid Mode / OFF = 100% Free Open Access)
+          </span>
+        </label>
+        <div class="flex items-center gap-1.5 flex-shrink-0 ml-auto">
+          <span id="adminPaywallStatusBadge" class="text-[9.5px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/50">OFF • 100% FREE OPEN ACCESS</span>
+        </div>
+      </div>
+
+      <div id="adminPaywallHelperNote" class="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-2 text-[9.5px] text-slate-300 font-mono leading-relaxed">
+        GitHub Pages Master Constant: <code class="text-emerald-300 font-bold select-all">const DEFAULT_PAYWALL_ENABLED = false;</code> • Active Runtime: <b class="text-amber-300">FREE MODE (Bypassed)</b>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <button type="button" id="copyPaywallConfigBtn" onclick="window.copyPaywallConfigStatus()" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] shadow cursor-pointer transition flex items-center gap-1">
+            <span>📋 Copy Config Status</span>
+          </button>
+          <button type="button" onclick="window.previewAuthGateFromAdmin()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-bold text-[10px] cursor-pointer transition flex items-center gap-1">
+            <span>👁️ Turn ON &amp; View Login Screen</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -7448,6 +7646,7 @@ window.unlockAdmin = function(){
     if(authBtnEl) authBtnEl.innerText = "🔒";
     if(typeof window.closeXPostStudio === "function") window.closeXPostStudio();
     if(typeof window.syncAdminXSelectionUI === "function") window.syncAdminXSelectionUI();
+    window.syncPaywallUIState();
     window.runEngine(false);
     window.showAppToast("🔒 Admin Mode Locked");
     return;
@@ -7487,6 +7686,7 @@ window.unlockAdmin = function(){
         gateBadge.innerText = gateMode === "conservative" ? "Selective (78%)" : (gateMode === "aggressive" ? "Aggressive (70%)" : "Balanced (75%)");
       }
 
+      window.syncPaywallUIState();
       window.updateAdminWeightsBar();
       if(typeof window.updateSavedXCardBadge === "function") window.updateSavedXCardBadge();
       window.runEngine(false);
