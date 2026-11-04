@@ -3711,7 +3711,7 @@ window.getDeterministicDrift = function(m, lockCutoffMs){
   return { text: reason, d: cumDelta, lastStep: cumDelta, block: 1 };
 };
 
-// Raw 16 Popular Betting Markets + Outright 1X2 Calculation
+// Raw 16 Popular Betting Markets + Outright 1X2 Calculation (Unified 60-Metric + 5-Pillar Engine)
 window.computeRawMarkets = function(m, fs){
   var conf = +fs || +m.base || 68, isH = m.venue === "HOME";
   var w = window.adaptiveWeights || { xgMult: 1.0, bttsMult: 1.0, cornersMult: 1.0, cardsMult: 1.0, fhMult: 1.0, handicapMult: 1.0 };
@@ -3723,8 +3723,28 @@ window.computeRawMarkets = function(m, fs){
   var hcapM = Number(w.handicapMult || 1.0);
   var lgB = {BUN:0.32,EFLC:0.28,UCL:0.24,PL:0.22,UEL:0.2,UECL:0.18,L1:0.12,L2:0.1,CHA:0.06,FL1:0.05,LL:-0.12,SA:-0.14}[m.league] || 0;
   var s = ((m.id * 37) % 20) - 10;
-  var favXg = Math.max(1.05, (1.15 + (conf - 55) * 0.032 + (isH ? 0.12 : 0) + lgB * 0.55 + s * 0.012) * xgM);
-  var oppXg = Math.max(0.48, (1.18 - (conf - 55) * 0.024 + (isH ? -0.08 : 0.1) + lgB * 0.45 - s * 0.01) * xgM);
+
+  var baseFavXg = Math.max(1.05, (1.15 + (conf - 55) * 0.032 + (isH ? 0.12 : 0) + lgB * 0.55 + s * 0.012) * xgM);
+  var baseOppXg = Math.max(0.48, (1.18 - (conf - 55) * 0.024 + (isH ? -0.08 : 0.1) + lgB * 0.45 - s * 0.01) * xgM);
+
+  var favXg = baseFavXg;
+  var oppXg = baseOppXg;
+  var cornerSetPieceBoost = 0;
+
+  if(typeof window.getBuiltinClub5PillarProfile === "function" && typeof window.calculateAdvancedMatchExpectedGoals === "function"){
+    var homeName = isH ? m.fav : m.opp;
+    var awayName = isH ? m.opp : m.fav;
+    var hProf = window.getBuiltinClub5PillarProfile(homeName, m.league || "PL", true);
+    var aProf = window.getBuiltinClub5PillarProfile(awayName, m.league || "PL", false);
+    var advXg = window.calculateAdvancedMatchExpectedGoals(hProf, aProf, { venue: "HOME", pitchDimensions: "standard", pitchSurface: "grass" });
+    var pillarFavXg = isH ? advXg.lambdaHome : advXg.lambdaAway;
+    var pillarOppXg = isH ? advXg.lambdaAway : advXg.lambdaHome;
+    // Blend 70% 60-Metric Baseline + 30% 5-Pillar Tactical/PSxG/xT Expected Goals
+    favXg = Math.max(1.02, (baseFavXg * 0.70 + pillarFavXg * 0.30));
+    oppXg = Math.max(0.45, (baseOppXg * 0.70 + pillarOppXg * 0.30));
+    cornerSetPieceBoost = ((hProf.setPieceXgFor + aProf.setPieceXgFor) - 0.75) * 6.0;
+  }
+
   var tot = favXg + oppXg, minX = Math.min(favXg, oppXg);
   var cl = function(v, lo, hi){ return Math.min(hi, Math.max(lo, v)).toFixed(1); };
   var bttsYes = parseFloat(cl((18 + minX * 42 + tot * 5.5) * bttsM, 36, 84.0));
@@ -3757,7 +3777,7 @@ window.computeRawMarkets = function(m, fs){
     winO15: cl((conf * 0.84) + (tot * 3.2), 42, 81.5),
     ah1: cl(((conf - 16.5) + (favXg - oppXg) * 7.5) * hcapM, 32, 74.5),
     fh05: cl((33 + tot * 14.5) * fhM, 48, 86.5),
-    c85: cl((44 + tot * 11.2 + (isH ? 4.5 : 2.0)) * cornM, 51, 85.5),
+    c85: cl((44 + tot * 11.2 + (isH ? 4.5 : 2.0) + cornerSetPieceBoost) * cornM, 51, 85.5),
     cards35: cl((46 + (100 - conf) * 0.42 - lgB * 12) * cardM, 44, 82.5)
   };
 };
@@ -6342,10 +6362,16 @@ window.render5PillarTelemetryPanelHtml = function(m, isUnlocked){
     '</div>';
   }).join("");
 
+  var refCards = (evalResult.environment && evalResult.environment.refereeProfile && evalResult.environment.refereeProfile.cardsPer90) || 3.8;
+  var refPens = (evalResult.environment && evalResult.environment.refereeProfile && evalResult.environment.refereeProfile.penaltiesPer90) || 0.28;
+  var activeMetricsCount = window.getActivePointCount ? window.getActivePointCount() : 60;
+  var modelVer = (window.modelState && window.modelState.version) ? window.modelState.version.toFixed(1) : "15.0";
+
   return '<div id="telemetry-box-' + m.id + '" onclick="event.stopPropagation()" class="mt-2.5 rounded-2xl overflow-hidden border border-slate-800 bg-[#06101c]/95 p-3 shadow-xl space-y-2.5">' +
-    '<div class="flex items-center justify-between gap-1">' +
-      '<div class="flex items-center gap-1.5 min-w-0">' +
-        '<span class="text-emerald-400 font-black text-[10px] uppercase tracking-wider">🧠 5-Pillar Model Telemetry & +EV Analysis</span>' +
+    '<div class="flex items-center justify-between gap-1 flex-wrap">' +
+      '<div class="flex items-center gap-1.5 min-w-0 flex-wrap">' +
+        '<span class="text-emerald-400 font-black text-[10px] uppercase tracking-wider">🧠 ' + activeMetricsCount + '-Metric + 5-Pillar Self-Evolving Telemetry (v' + modelVer + ')</span>' +
+        '<span class="text-[8.5px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono font-bold">⚡ Bayesian + Adam Calibrated</span>' +
       '</div>' +
       '<button type="button" onclick="window.copy5PillarTelemetry(' + m.id + ', event)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[8.5px] font-bold border border-slate-700/80 cursor-pointer transition flex items-center gap-1 flex-shrink-0">' +
         '<span>📋 Copy Telemetry</span>' +
@@ -6381,8 +6407,8 @@ window.render5PillarTelemetryPanelHtml = function(m, isUnlocked){
           '<span>xG/Shot ' + hm.xgPerShot + ' vs ' + am.xgPerShot + '</span>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Non-Penalty xG:</span>' +
-          '<b class="text-white">' + hm.npxGFor + ' (H) vs ' + am.npxGFor + ' (A)</b>' +
+          '<span>npxG For / Against:</span>' +
+          '<b class="text-white">' + hm.npxGFor + '/' + hm.npxGAgainst + ' vs ' + am.npxGFor + '/' + am.npxGAgainst + '</b>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
           '<span>Expected Threat (xT):</span>' +
@@ -6393,7 +6419,7 @@ window.render5PillarTelemetryPanelHtml = function(m, isUnlocked){
           '<span>' + hm.scaPer90 + ' / ' + hm.gcaPer90 + ' vs ' + am.scaPer90 + ' / ' + am.gcaPer90 + '</span>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Goalkeeper PSxG Diff:</span>' +
+          '<span>GK Post-Shot xG (PSxG):</span>' +
           '<span class="' + (hm.psxgDifferential >= 0 ? 'text-emerald-400' : 'text-rose-400') + '">' + (hm.psxgDifferential >= 0 ? '+' : '') + hm.psxgDifferential + ' vs ' + (am.psxgDifferential >= 0 ? '+' : '') + am.psxgDifferential + '</span>' +
         '</div>' +
       '</div>' +
@@ -6401,7 +6427,7 @@ window.render5PillarTelemetryPanelHtml = function(m, isUnlocked){
       // Pillar 2: Pressing & Transition Dynamics
       '<div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800/80 space-y-1">' +
         '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-sky-400 uppercase tracking-wide">' +
-          '<span>2. Pressing & Field Tilt Dynamics</span>' +
+          '<span>2. Possession, Pressing & Transitions</span>' +
           '<span>Tilt ' + hm.fieldTiltPct + '%</span>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
@@ -6409,16 +6435,16 @@ window.render5PillarTelemetryPanelHtml = function(m, isUnlocked){
           '<b class="text-white">' + hm.ppda + ' vs ' + am.ppda + ' ' + (hm.ppda < 9.0 ? '⚡ High Press' : '') + '</b>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Territory Field Tilt:</span>' +
-          '<span class="text-sky-300 font-bold">' + hm.fieldTiltPct + '% vs ' + (100 - hm.fieldTiltPct) + '%</span>' +
+          '<span>Field Tilt % (Final 3rd):</span>' +
+          '<span class="text-sky-300 font-bold">' + hm.fieldTiltPct + '% vs ' + (100 - hm.fieldTiltPct).toFixed(1) + '%</span>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Buildup Safety Under Press:</span>' +
+          '<span>Final-3rd Pressures & Conv:</span>' +
+          '<span>' + hm.finalThirdPressures + ' (' + hm.turnoverConversionPct + '%) vs ' + am.finalThirdPressures + ' (' + am.turnoverConversionPct + '%)</span>' +
+        '</div>' +
+        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
+          '<span>Build-up Completion (Press):</span>' +
           '<span>' + Math.round(hm.buildupCompletionUnderPress * 100) + '% vs ' + Math.round(am.buildupCompletionUnderPress * 100) + '%</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>High Turnover Conversion:</span>' +
-          '<span>' + hm.turnoverConversionPct + '% vs ' + am.turnoverConversionPct + '%</span>' +
         '</div>' +
       '</div>' +
 
@@ -6432,41 +6458,49 @@ window.render5PillarTelemetryPanelHtml = function(m, isUnlocked){
           '<span>Low-Block Vulnerability: </span><b class="text-amber-300 font-mono">' + Math.round(hm.lowBlockVulnerabilityIndex * 100) + '% (' + evalResult.tacticalAnalysis.lowBlockRisk + ')</b>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Transition Counter-Attack Eff:</span>' +
+          '<span>Counter-Attack Efficiency:</span>' +
           '<span class="text-white">' + Math.round(hm.counterAttackEfficiency * 100) + '% vs ' + Math.round(am.counterAttackEfficiency * 100) + '%</span>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
           '<span>Set-Piece xG (For/Against):</span>' +
-          '<span>' + hm.setPieceXgFor + ' / ' + hm.setPieceXgAgainst + ' vs ' + am.setPieceXgFor + ' / ' + am.setPieceXgAgainst + '</span>' +
+          '<span>' + hm.setPieceXgFor + '/' + hm.setPieceXgAgainst + ' vs ' + am.setPieceXgFor + '/' + am.setPieceXgAgainst + '</span>' +
+        '</div>' +
+        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
+          '<span>Width vs Half-Space Ratio:</span>' +
+          '<span>' + Math.round(hm.widthVsHalfSpaceRatio * 100) + '% Width vs ' + Math.round((1 - hm.widthVsHalfSpaceRatio) * 100) + '% Half-Space</span>' +
         '</div>' +
       '</div>' +
 
       // Pillar 4: Squad Health & Midweek Friction
       '<div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800/80 space-y-1">' +
         '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-purple-400 uppercase tracking-wide">' +
-          '<span>4. Squad Health & Fatigue Index</span>' +
+          '<span>4. Squad Health, Depth & Ref</span>' +
           '<span class="text-slate-400">' + hm.daysOfRest + 'd vs ' + am.daysOfRest + 'd Rest</span>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Midweek European Congestion:</span>' +
-          '<b class="' + (hm.midweekEuropeanFriction || am.midweekEuropeanFriction ? 'text-amber-300' : 'text-emerald-400') + '">' + (hm.midweekEuropeanFriction || am.midweekEuropeanFriction ? '⚠️ Hangover Risk' : '✓ Full Rest') + '</b>' +
+          '<span>Missing Key Players ΔxG:</span>' +
+          '<b class="' + ((hm.missingKeyPlayersDelta || 0) < 0 ? 'text-rose-400' : 'text-emerald-400') + '">' + (hm.missingKeyPlayersDelta || 0) + ' (H) / ' + (am.missingKeyPlayersDelta || 0) + ' (A)</b>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Away Travel Friction:</span>' +
-          '<span>' + am.travelDistanceKm + ' km</span>' +
+          '<span>Rotation & UEFA Friction:</span>' +
+          '<b class="' + (hm.midweekEuropeanFriction || am.midweekEuropeanFriction ? 'text-amber-300' : 'text-emerald-400') + '">' + (hm.midweekEuropeanFriction || am.midweekEuropeanFriction ? '⚠️ Midweek Load' : '✓ Optimal Rest') + ' (' + am.travelDistanceKm + 'km)</b>' +
         '</div>' +
         '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Pitch & Environmental Adaptation:</span>' +
-          '<span>Grass / Standard</span>' +
+          '<span>Referee Cards / Pen Tendency:</span>' +
+          '<span>' + refCards + ' Cards/90 • ' + refPens + ' Pen/90</span>' +
+        '</div>' +
+        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
+          '<span>1st-Goal Lead Retention:</span>' +
+          '<span class="text-emerald-300">' + hm.firstGoalRetentionRate + '% (H) vs ' + am.firstGoalRetentionRate + '% (A)</span>' +
         '</div>' +
       '</div>' +
     '</div>' +
 
-    // Pillar 5: Market Implied Probability vs Model Probability ("The Value Gap")
+    // Pillar 5: Historical Psychological, Environmental & Value Gap
     '<div class="bg-slate-950/85 p-2.5 rounded-xl border border-slate-800/90 space-y-1.5">' +
-      '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-emerald-400 uppercase tracking-wide">' +
-        '<span>5. Poisson Score Matrix & The Value Gap (+EV)</span>' +
-        '<span class="text-slate-400 font-mono">1X2: ' + sim.homeWinPct + '% - ' + sim.drawPct + '% - ' + sim.awayWinPct + '%</span>' +
+      '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-emerald-400 uppercase tracking-wide flex-wrap gap-1">' +
+        '<span>5. Bivariate Poisson Matrix, Context & Value Gap (+EV)</span>' +
+        '<span class="text-slate-400 font-mono">1X2: ' + sim.homeWinPct + '% - ' + sim.drawPct + '% - ' + sim.awayWinPct + '% | Pitch: Grass/Standard</span>' +
       '</div>' +
       '<div class="flex items-center gap-1.5 flex-wrap py-1">' +
         '<span class="text-[8.5px] text-slate-400 font-bold uppercase">Top Correct Scores:</span>' +
