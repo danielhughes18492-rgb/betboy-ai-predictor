@@ -1098,6 +1098,11 @@ document.addEventListener("DOMContentLoaded", function() {
       <p id="gateResponsibleGamblingPhrase" class="text-[10px] text-slate-300 leading-relaxed font-medium px-1">
         Please gamble responsibly. 18+ only. BetBoy AI provides statistical analysis and predictions for informational and entertainment purposes only.
       </p>
+      <div class="flex items-center justify-center gap-2 flex-wrap pt-1">
+        <button type="button" onclick="window.openAboutContactModal()" class="text-[10px] text-emerald-300 hover:text-emerald-200 underline font-semibold cursor-pointer transition">About / Contact</button>
+        <span class="text-slate-600">•</span>
+        <button type="button" onclick="window.openPrivacyTermsModal()" class="text-[10px] text-sky-300 hover:text-sky-200 underline font-semibold cursor-pointer transition">Privacy Policy &amp; Terms</button>
+      </div>
       <div class="text-[10px] text-slate-500 tracking-wide font-mono pt-1 border-t border-slate-800/60">Copyright © BetBoy 2026</div>
     </div>
     <script>
@@ -1138,6 +1143,9 @@ document.addEventListener("DOMContentLoaded", function() {
     </h1>
   </div>
   <div class="flex items-center gap-1.5 flex-shrink-0">
+    <button type="button" id="headerAboutContactBtn" onclick="window.openAboutContactModal()" class="text-[10.5px] bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-emerald-300 px-2.5 py-1 rounded-lg border border-slate-700/80 hover:border-emerald-500/40 font-bold cursor-pointer transition whitespace-nowrap">
+      About / Contact
+    </button>
     <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1">
       <select id="headerOddsFormatSelect" aria-label="Odds Format" onchange="window.setOddsFormat(this.value)" class="bg-transparent text-amber-300 font-bold text-[10.5px] outline-none cursor-pointer mono">
         <option value="frac" selected class="bg-slate-900 text-amber-300">Frac (4/6)</option>
@@ -1590,8 +1598,26 @@ document.addEventListener("DOMContentLoaded", function() {
       Please gamble responsibly. 18+ only. BetBoy AI provides statistical analysis and predictions for informational and entertainment purposes only.
     </p>
 
-    <div class="text-[10px] text-slate-500 font-mono pt-2 border-t border-slate-800/70">
-      Copyright © BetBoy 2026 • AI Results Predictor • <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-amber-300 underline">BeGambleAware.org</a> • <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-sky-300 underline">GamStop</a>
+    <!-- Compliance Navigation Links (About / Contact & Privacy Policy & Terms) -->
+    <div class="flex items-center justify-center gap-2.5 flex-wrap pt-1">
+      <button type="button" id="footerAboutContactBtn" onclick="window.openAboutContactModal()" class="bg-slate-900/90 hover:bg-slate-800 text-emerald-300 hover:text-emerald-200 border border-emerald-500/35 px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer transition shadow-sm">
+        ℹ️ About / Contact
+      </button>
+      <button type="button" id="footerPrivacyTermsBtn" onclick="window.openPrivacyTermsModal()" class="bg-slate-900/90 hover:bg-slate-800 text-sky-300 hover:text-sky-200 border border-sky-500/35 px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer transition shadow-sm">
+        🛡️ Privacy Policy &amp; Terms
+      </button>
+    </div>
+
+    <div class="text-[10px] text-slate-500 font-mono pt-2 border-t border-slate-800/70 flex items-center justify-center gap-1.5 flex-wrap">
+      <span>Copyright © BetBoy 2026 • AI Results Predictor</span>
+      <span>•</span>
+      <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-amber-300 underline">BeGambleAware.org</a>
+      <span>•</span>
+      <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-sky-300 underline">GamStop</a>
+      <span>•</span>
+      <button type="button" onclick="window.openAboutContactModal()" class="text-slate-400 hover:text-emerald-300 underline cursor-pointer">About / Contact</button>
+      <span>•</span>
+      <button type="button" onclick="window.openPrivacyTermsModal()" class="text-slate-400 hover:text-sky-300 underline cursor-pointer">Privacy Policy &amp; Terms</button>
     </div>
     <script>
       if(document.getElementById("footer18PlusImg")) document.getElementById("footer18PlusImg").src = window.make18PlusLogoUrl();
@@ -1891,6 +1917,128 @@ document.addEventListener("DOMContentLoaded", function() {
   </div>
 </div>
 
+<!-- About & Contact Compliance Modal -->
+<div id="aboutContactModal" role="dialog" aria-modal="true" aria-labelledby="aboutContactModalTitle" onclick="if(event.target===this)window.closeAboutContactModal()" style="position:fixed;inset:0;background:rgba(2,6,23,0.88);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:14px;">
+  <div class="glass w-full max-w-lg rounded-3xl p-5 sm:p-6 border border-emerald-500/40 shadow-[0_12px_48px_rgba(0,0,0,0.85)] max-h-[90vh] overflow-y-auto space-y-4 text-left select-text">
+    <div class="flex justify-between items-start border-b border-slate-800/90 pb-3 gap-2">
+      <div class="flex items-center gap-2.5">
+        <span class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-300 text-base font-black flex-shrink-0">ℹ️</span>
+        <div>
+          <h2 id="aboutContactModalTitle" class="text-white font-black text-sm sm:text-base tracking-wide">About BetBoy AI &amp; Contact</h2>
+          <p class="text-[10.5px] text-emerald-400 font-semibold">Algorithmic Football Analytics &amp; Market Insights</p>
+        </div>
+      </div>
+      <button type="button" onclick="window.closeAboutContactModal()" aria-label="Close About and Contact Modal" class="text-slate-400 hover:text-white text-2xl font-bold px-2 py-0.5 leading-none cursor-pointer">&times;</button>
+    </div>
+
+    <!-- What BetBoy AI Is -->
+    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+      <div class="text-[11px] font-black text-emerald-400 uppercase tracking-wider">What is BetBoy AI?</div>
+      <p class="text-xs text-slate-200 leading-relaxed font-medium">
+        BetBoy AI is an algorithmic football analytics and prediction tool providing data-driven match probabilities, form metrics, and market insights for UK sports fans.
+      </p>
+      <p class="text-[11px] text-slate-300 leading-relaxed">
+        Our platform evaluates fixtures across 13 UK and European competitions using a 60-metric statistical engine incorporating Non-Penalty Expected Goals (npxG), Expected Threat (xT), PPDA pressing dynamics, tactical matchup profiles, and Bivariate Poisson / Dixon-Coles probability simulations.
+      </p>
+    </div>
+
+    <!-- Informational Disclaimer -->
+    <div class="bg-amber-950/35 border border-amber-500/40 rounded-2xl p-3.5 space-y-1.5">
+      <div class="text-[11px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+        <span>⚠️ Informational &amp; Responsible Gambling Disclaimer</span>
+      </div>
+      <p id="aboutModalDisclaimerText" class="text-xs text-amber-100 leading-relaxed font-semibold">
+        "BetBoy AI provides statistical analysis and predictions for informational and entertainment purposes only. Please gamble responsibly."
+      </p>
+      <p class="text-[10.5px] text-slate-300 leading-relaxed">
+        BetBoy AI is not a bookmaker and does not accept or process wagers. Always bet within your means and strictly 18+ only. Free, confidential support is available at <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline hover:text-amber-200">BeGambleAware.org</a> and <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline hover:text-sky-200">GamStop.co.uk</a>.
+      </p>
+    </div>
+
+    <!-- Support Contact -->
+    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+      <div class="text-[11px] font-black text-sky-300 uppercase tracking-wider">Support &amp; Partnerships Contact</div>
+      <p class="text-[11px] text-slate-300 leading-relaxed">
+        For technical support, media enquiries, or affiliate compliance questions, please contact our UK support desk:
+      </p>
+      <div class="flex items-center justify-between gap-2 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 flex-wrap">
+        <a href="mailto:support@betboyai.co.uk" id="aboutSupportEmailLink" class="text-xs font-mono font-bold text-emerald-300 hover:text-emerald-200 underline">support@betboyai.co.uk</a>
+        <button type="button" onclick="window.copySupportEmail()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition">📋 Copy Email</button>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="flex items-center justify-between gap-2 pt-1">
+      <button type="button" onclick="window.closeAboutContactModal();window.openPrivacyTermsModal();" class="text-[11px] text-sky-300 hover:text-sky-200 underline font-semibold cursor-pointer">
+        View Privacy Policy &amp; Terms →
+      </button>
+      <button type="button" id="closeAboutContactModalBtn" onclick="window.closeAboutContactModal()" class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black px-5 py-2.5 rounded-xl text-xs shadow-lg transition cursor-pointer">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy Policy & Terms Compliance Modal -->
+<div id="privacyTermsModal" role="dialog" aria-modal="true" aria-labelledby="privacyTermsModalTitle" onclick="if(event.target===this)window.closePrivacyTermsModal()" style="position:fixed;inset:0;background:rgba(2,6,23,0.88);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:14px;">
+  <div class="glass w-full max-w-lg rounded-3xl p-4 sm:p-5 border border-sky-500/40 shadow-[0_12px_48px_rgba(0,0,0,0.85)] max-h-[92vh] overflow-y-auto space-y-2.5 text-left select-text">
+    <div class="flex justify-between items-start border-b border-slate-800/90 pb-2.5 gap-2">
+      <div class="flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/40 flex items-center justify-center text-sky-300 text-sm font-black flex-shrink-0">🛡️</span>
+        <div>
+          <h2 id="privacyTermsModalTitle" class="text-white font-black text-sm sm:text-base tracking-wide">Privacy Policy &amp; Terms</h2>
+          <p class="text-[10.5px] text-sky-300 font-semibold">UK Compliance, Affiliate Disclosure &amp; Terms of Use</p>
+        </div>
+      </div>
+      <button type="button" onclick="window.closePrivacyTermsModal()" aria-label="Close Privacy Policy and Terms Modal" class="text-slate-400 hover:text-white text-2xl font-bold px-2 py-0.5 leading-none cursor-pointer">&times;</button>
+    </div>
+
+    <!-- 1. Data Collection, Cookies & Local Storage -->
+    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-1">
+      <div class="text-[10.5px] font-black text-emerald-400 uppercase tracking-wider">1. Data Collection (Cookies &amp; Local Storage)</div>
+      <p class="text-[11.5px] text-slate-200 leading-relaxed">
+        BetBoy AI uses standard web cookies and browser local storage (<code class="text-emerald-300 font-mono text-[10px]">localStorage</code>) strictly to store your application preferences—such as your preferred odds format (Fractional or Decimal), competition filters, and personal betting slip calculator selections—and to maintain anonymous aggregate visitor statistics. We do not collect sensitive personal identity documents, and we never sell, rent, or trade user data to third parties.
+      </p>
+    </div>
+
+    <!-- 2. Affiliate Disclosure -->
+    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-1">
+      <div class="text-[10.5px] font-black text-sky-300 uppercase tracking-wider">2. Affiliate Disclosure (Licensed UK Bookmakers)</div>
+      <p class="text-[11.5px] text-slate-200 leading-relaxed">
+        BetBoy AI operates as an independent sports statistics and analytics publisher. This application contains affiliate links and promotional references to licensed UK bookmakers regulated by the UK Gambling Commission (UKGC). If you click through an affiliate link and register or place a bet with a partner operator, BetBoy AI may receive an affiliate commission at no additional cost to you. Our algorithmic match probabilities remain 100% independent and data-driven.
+      </p>
+    </div>
+
+    <!-- 3. Age Restriction Statement (18+ Strictly Enforced) -->
+    <div class="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-3 space-y-1">
+      <div class="text-[10.5px] font-black text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+        <span>🔞 3. Age Restriction (18+ Strictly Enforced)</span>
+      </div>
+      <p class="text-[11.5px] text-rose-100 leading-relaxed font-medium">
+        <b>18+ Strictly Enforced:</b> Access to BetBoy AI and any linked third-party bookmaker services is strictly restricted to individuals aged <b>18 years or older</b> (or the legal minimum gambling age in your jurisdiction). Underage gambling is a criminal offence. For free, confidential support or self-exclusion tools, visit <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline hover:text-amber-200">BeGambleAware.org</a> or <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline hover:text-sky-200">GamStop.co.uk</a>.
+      </p>
+    </div>
+
+    <!-- 4. Terms of Use & No Financial Advice -->
+    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-1">
+      <div class="text-[10.5px] font-black text-amber-300 uppercase tracking-wider">4. Terms of Use &amp; Informational Purpose</div>
+      <p class="text-[11.5px] text-slate-200 leading-relaxed">
+        All match probabilities, xG metrics, and market projections provided by BetBoy AI are algorithmic statistical models intended for informational and entertainment purposes only. They do not constitute financial, investment, or legal advice, and past statistical performance does not guarantee future results. Contact us anytime at <a href="mailto:support@betboyai.co.uk" class="text-emerald-300 underline">support@betboyai.co.uk</a>.
+      </p>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="flex items-center justify-between gap-2 pt-1">
+      <button type="button" onclick="window.closePrivacyTermsModal();window.openAboutContactModal();" class="text-[11px] text-emerald-300 hover:text-emerald-200 underline font-semibold cursor-pointer">
+        ← About / Contact
+      </button>
+      <button type="button" id="closePrivacyTermsModalBtn" onclick="window.closePrivacyTermsModal()" class="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-black px-5 py-2 rounded-xl text-xs shadow-lg transition cursor-pointer">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Non-Blocking Admin Action & PIN Modal -->
 <div id="adminDialogModal" style="position:fixed;inset:0;background:rgba(2,6,23,0.92);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;">
   <div class="glass p-5 rounded-2xl w-full max-w-xs space-y-3 border border-emerald-500/40 shadow-2xl text-center">
@@ -1909,6 +2057,50 @@ document.addEventListener("DOMContentLoaded", function() {
 <button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs px-3 py-2 rounded-full shadow-lg border border-emerald-400/40 cursor-pointer flex items-center gap-1">↑ Top</button>
 
 <script>
+window.openAboutContactModal = function() {
+  var privModal = document.getElementById("privacyTermsModal");
+  if (privModal) privModal.style.display = "none";
+  var modal = document.getElementById("aboutContactModal");
+  if (modal) modal.style.display = "flex";
+};
+
+window.closeAboutContactModal = function() {
+  var modal = document.getElementById("aboutContactModal");
+  if (modal) modal.style.display = "none";
+};
+
+window.openPrivacyTermsModal = function() {
+  var aboutModal = document.getElementById("aboutContactModal");
+  if (aboutModal) aboutModal.style.display = "none";
+  var modal = document.getElementById("privacyTermsModal");
+  if (modal) modal.style.display = "flex";
+};
+
+window.closePrivacyTermsModal = function() {
+  var modal = document.getElementById("privacyTermsModal");
+  if (modal) modal.style.display = "none";
+};
+
+window.copySupportEmail = function() {
+  var email = "support@betboyai.co.uk";
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(email).then(function() {
+      if (window.showAppToast) window.showAppToast("📋 Copied support@betboyai.co.uk");
+    }).catch(function() {
+      if (window.showAppToast) window.showAppToast("📧 Support: " + email);
+    });
+  } else if (window.showAppToast) {
+    window.showAppToast("📧 Support: " + email);
+  }
+};
+
+document.addEventListener("keydown", function(ev) {
+  if (ev && ev.key === "Escape") {
+    window.closeAboutContactModal();
+    window.closePrivacyTermsModal();
+  }
+});
+
 /* STATE_START */
 window.PUBLISHED_STATE={"stamp":1793230000000,"version":15.0,"injectedStats":["Metric 32: UEFA Rest-Rotation & Travel Sync (+0.3% Edge)","Metric 33: LaLiga/Serie A Low-Block Box SoT% (+0.3% Edge)","Metric 34: Bundesliga High-Line Transition Shield (+0.3% Edge)","Metric 35: Deep-Block Set-Piece xG Weight (+0.3% Edge)","Metric 36: Multi-League Press-Resistance Index (+0.3% Edge)","Metric 37: Half-Space Cutback xG Conversion (+0.3% Edge)","Metric 38: GK Sweeper-Keeper High-Line Intercepts (+0.3% Edge)","Metric 39: 75-90m Late-Sub xT Differential (+0.3% Edge)","Metric 40: Second-Ball Recovery Zone 14 Sync (+0.3% Edge)","Metric 41: Referee Foul-Tempo & Card Volatility (+0.3% Edge)","Metric 42: Counter-Press Regain 5-Sec Window (+0.3% Edge)","Metric 43: Progressive Carry Box-Penetration Rate (+0.3% Edge)","Metric 44: Under-Pressure Build-Up Pass Accuracy (+0.3% Edge)","Metric 45: Out-of-Possession Compactness Width (+0.3% Edge)","Metric 46: Cross-to-Header xG Aerial Dominance (+0.3% Edge)","Metric 47: First-Goal Lead Retention Resilience (+0.3% Edge)","Metric 48: Away Crowd Decibel & Turf Adaptation (+0.3% Edge)","Metric 49: Central Midfield Line-Breaking Passes (+0.3% Edge)","Metric 50: Expected Threat Conceded per Turn-Over (+0.3% Edge)","Metric 51: Box-Entry Pass Completion & Zone-14 Overload (+0.3% Edge)","Metric 52: Rest-Day Recovery & Squad Depth Fatigue Index (+0.3% Edge)","Metric 53: Live Post-Shot xG (PSxG) Finishing Overperformance (+0.3% Edge)","Metric 54: High-Press Regain xT Within 8-Sec Transition (+0.3% Edge)","Metric 55: Low-Block Counter-Attack Box Penetration Differential (+0.3% Edge)","Metric 56: Bivariate Dixon-Coles Low-Score Correlation (Rho Coupling) (+0.3% Edge)","Metric 57: Goalkeeper Shot-Stopping vs Post-Shot xG Differential (+0.3% Edge)","Metric 58: Midweek UEFA European Hangover & Congestion Friction (+0.3% Edge)","Metric 59: Tactical Matchup Asymmetry & System Clash Multiplier (+0.3% Edge)","Metric 60: Bayesian Self-Evolving Poisson Residual & Brier Calibration Loop (+0.3% Edge)"],"hist":[],"logs":[],"drift":{},"results":{},"lockedScores":{}};
 /* STATE_END */
