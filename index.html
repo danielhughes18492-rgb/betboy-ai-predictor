@@ -6794,6 +6794,9 @@ window.toggleCard = function(id){
     if(typeof window.drawHighlightPitchCanvas === "function"){
       window.drawHighlightPitchCanvas(id);
     }
+    if(typeof window.ensureMatchHighlightsLoadedById === "function"){
+      window.ensureMatchHighlightsLoadedById(id);
+    }
 
     el._animTimer = setTimeout(function(){
       if(window.expandedCards[id]){
@@ -7494,16 +7497,178 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     ? ' style="height:auto;max-height:none;opacity:1;" aria-hidden="false"'
     : ' style="height:0px;max-height:0px;opacity:0;" aria-hidden="true"';
 
+  var ytHighlightsHtml = window.renderYouTubeHighlightsPanelHtml ? window.renderYouTubeHighlightsPanelHtml(m) : "";
   var fivePillarsHtml = window.render5PillarTelemetryPanelHtml ? window.render5PillarTelemetryPanelHtml(m, isUnlocked) : "";
   var affiliatePickBarHtml = window.renderBackThisPickAffiliateBar
     ? window.renderBackThisPickAffiliateBar((m.fav || "Home") + " vs " + (m.opp || "Away"))
     : "";
 
   return '<div id="d-'+m.id+'" class="'+openCls+'details-panel mt-3 pt-3 border-t border-slate-800/60 text-[10px] space-y-2.5"' + inlinePanelStyle + '>' +
+    ytHighlightsHtml +
     marketsBoxHtml +
     affiliatePickBarHtml +
     fivePillarsHtml +
     (adm || "") + '</div>';
+};
+
+// ============================================================================
+// YOUTUBE DATA API V3 POST-MATCH HIGHLIGHTS INTEGRATION (FT FIXTURES)
+// ============================================================================
+window.YOUTUBE_HIGHLIGHTS_API_KEY = "AIzaSyBqHP5Mebfb0sWYnPev9h8b_d_oJ6DxBuI";
+window.ytHighlightsCache = window.safeGet ? window.safeGet("betboyai_yt_highlights_v1", {}) : {};
+window.ytHighlightsInFlight = window.ytHighlightsInFlight || {};
+
+window.getMatchHighlightCacheKey = function(homeTeam, awayTeam, league){
+  var norm = function(s){ return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); };
+  return norm(homeTeam) + "_vs_" + norm(awayTeam) + "_" + norm(league);
+};
+
+window.fetchMatchHighlights = function(homeTeam, awayTeam, league){
+  var hTeam = String(homeTeam || "").trim();
+  var aTeam = String(awayTeam || "").trim();
+  var lg = String(league || "").trim();
+  var cacheKey = window.getMatchHighlightCacheKey(hTeam, aTeam, lg);
+  var cached = window.ytHighlightsCache && window.ytHighlightsCache[cacheKey];
+  if(cached && cached.videoId){
+    return Promise.resolve(cached.videoId);
+  }
+  if(window.ytHighlightsInFlight && window.ytHighlightsInFlight[cacheKey]){
+    return window.ytHighlightsInFlight[cacheKey];
+  }
+
+  var apiUrl = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" +
+    encodeURIComponent(hTeam + " vs " + aTeam + " highlights " + lg) +
+    "&type=video&maxResults=1&key=AIzaSyBqHP5Mebfb0sWYnPev9h8b_d_oJ6DxBuI";
+
+  var req = fetch(apiUrl)
+    .then(function(res){
+      if(!res || !res.ok){
+        if(res && (res.status === 403 || res.status === 429)){
+          window._ytQuotaExceeded = true;
+        }
+        return null;
+      }
+      return res.json();
+    })
+    .then(function(data){
+      if(window.ytHighlightsInFlight) delete window.ytHighlightsInFlight[cacheKey];
+      var videoId = (data && Array.isArray(data.items) && data.items.length > 0 && data.items[0] && data.items[0].id && data.items[0].id.videoId)
+        ? String(data.items[0].id.videoId).trim()
+        : null;
+      window.ytHighlightsCache[cacheKey] = {
+        videoId: videoId || null,
+        status: videoId ? "ready" : "fallback",
+        updatedAt: Date.now()
+      };
+      if(videoId && window.safeSet){
+        window.safeSet("betboyai_yt_highlights_v1", window.ytHighlightsCache);
+      }
+      return videoId || null;
+    })
+    .catch(function(){
+      if(window.ytHighlightsInFlight) delete window.ytHighlightsInFlight[cacheKey];
+      window.ytHighlightsCache[cacheKey] = {
+        videoId: null,
+        status: "fallback",
+        updatedAt: Date.now()
+      };
+      return null;
+    });
+
+  window.ytHighlightsInFlight[cacheKey] = req;
+  return req;
+};
+
+window.renderYouTubeHighlightsPanelHtml = function(m){
+  if(!m || !window.isCompletedMatch || !window.isCompletedMatch(m)) return "";
+  var isHomeFav = m.venue === "HOME";
+  var homeTeam = isHomeFav ? m.fav : m.opp;
+  var awayTeam = isHomeFav ? m.opp : m.fav;
+  var leagueLabel = (window.getLeagueName ? window.getLeagueName(m.league) : m.league) || m.league || "";
+  var cacheKey = window.getMatchHighlightCacheKey(homeTeam, awayTeam, leagueLabel);
+  var rawCacheKey = window.getMatchHighlightCacheKey(homeTeam, awayTeam, m.league || "");
+  var cached = (window.ytHighlightsCache && (window.ytHighlightsCache[cacheKey] || window.ytHighlightsCache[rawCacheKey])) || null;
+  var videoId = (cached && cached.videoId) ? cached.videoId : null;
+  var searchQuery = homeTeam + " vs " + awayTeam + " highlights " + leagueLabel;
+  var searchUrl = "https://www.youtube.com/results?search_query=" + encodeURIComponent(searchQuery);
+
+  var playerOrFallbackHtml = "";
+  if(videoId){
+    playerOrFallbackHtml =
+      '<div class="relative w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-inner" style="aspect-ratio: 16 / 9;">' +
+        '<iframe ' +
+          'src="https://www.youtube.com/embed/' + videoId + '?rel=0&modestbranding=1" ' +
+          'title="' + homeTeam + ' vs ' + awayTeam + ' Full-Time Highlights" ' +
+          'class="w-full h-full border-0 block" ' +
+          'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+          'allowfullscreen ' +
+          'loading="lazy">' +
+        '</iframe>' +
+      '</div>' +
+      '<div class="flex items-center justify-between gap-2 pt-1 text-[9px] text-slate-400">' +
+        '<span class="truncate">' + homeTeam + ' vs ' + awayTeam + ' • Official Match Highlights</span>' +
+        '<a href="' + searchUrl + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-rose-400 hover:text-rose-300 font-bold whitespace-nowrap flex-shrink-0">Search Highlights on YouTube ↗</a>' +
+      '</div>';
+  } else {
+    playerOrFallbackHtml =
+      '<div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">' +
+        '<div class="space-y-0.5 min-w-0">' +
+          '<div class="text-[10.5px] font-extrabold text-white truncate">' + homeTeam + ' vs ' + awayTeam + ' (' + leagueLabel + ')</div>' +
+          '<div class="text-[9px] text-slate-400 leading-snug">Watch post-match goals, key chances &amp; extended full-time highlights.</div>' +
+        '</div>' +
+        '<a href="' + searchUrl + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] inline-flex items-center justify-center gap-1.5 shadow-md transition flex-shrink-0 whitespace-nowrap border border-rose-400/30">' +
+          '<span>Search Highlights on YouTube</span>' +
+          '<span>↗</span>' +
+        '</a>' +
+      '</div>';
+  }
+
+  return '<div id="yt-highlights-box-' + m.id + '" onclick="event.stopPropagation()" class="rounded-2xl overflow-hidden border border-slate-800 bg-[#07111a]/95 p-2.5 shadow-lg space-y-2">' +
+    '<div class="flex items-center justify-between gap-2">' +
+      '<span class="text-[10px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">▶ FULL-TIME HIGHLIGHTS</span>' +
+      '<span class="text-[8.5px] font-mono font-bold text-slate-400 bg-slate-900/90 border border-slate-800 px-1.5 py-0.5 rounded">FT • YouTube</span>' +
+    '</div>' +
+    playerOrFallbackHtml +
+  '</div>';
+};
+
+window.ensureMatchHighlightsLoaded = function(m){
+  if(!m || !window.isCompletedMatch || !window.isCompletedMatch(m)) return;
+  var isHomeFav = m.venue === "HOME";
+  var homeTeam = isHomeFav ? m.fav : m.opp;
+  var awayTeam = isHomeFav ? m.opp : m.fav;
+  var leagueLabel = (window.getLeagueName ? window.getLeagueName(m.league) : m.league) || m.league || "";
+  var cacheKey = window.getMatchHighlightCacheKey(homeTeam, awayTeam, leagueLabel);
+  var cached = window.ytHighlightsCache && window.ytHighlightsCache[cacheKey];
+  if(cached && (cached.videoId || (cached.status === "fallback" && (Date.now() - (cached.updatedAt || 0) < 300000)))){
+    return;
+  }
+  if(window._ytQuotaExceeded){
+    window.ytHighlightsCache[cacheKey] = { videoId: null, status: "fallback", updatedAt: Date.now() };
+    return;
+  }
+  window.fetchMatchHighlights(homeTeam, awayTeam, leagueLabel).then(function(){
+    var box = document.getElementById("yt-highlights-box-" + m.id);
+    if(box){
+      var tmp = document.createElement("div");
+      tmp.innerHTML = window.renderYouTubeHighlightsPanelHtml(m);
+      if(tmp.firstElementChild){
+        box.replaceWith(tmp.firstElementChild);
+      }
+      var detailEl = document.getElementById("d-" + m.id);
+      if(detailEl && window.expandedCards && window.expandedCards[m.id]){
+        detailEl.style.height = "auto";
+        detailEl.style.maxHeight = "none";
+      }
+    }
+  });
+};
+
+window.ensureMatchHighlightsLoadedById = function(matchId){
+  var m = window.findMatchById ? window.findMatchById(matchId) : null;
+  if(m && window.ensureMatchHighlightsLoaded){
+    window.ensureMatchHighlightsLoaded(m);
+  }
 };
 
 // Clean, Streamlined Match Card Renderer (Collapsible Match Timeline + Collapsible Both-Teams Markets inside expanded card)
@@ -7854,47 +8019,146 @@ window.runEngine = function(isForcedSync){
   var slipList = document.getElementById("topAccaSlipList");
   window.currentTopAccaSelections = [];
   if(slipList){
-    var bankerPool = capped.slice().sort(function(a,b){ return b.fs - a.fs; });
-    if(bankerPool.length < 5){
-      var seenBankerKeys = {};
-      bankerPool.forEach(function(m){
-        var hN = m.venue === "HOME" ? m.fav : m.opp;
-        var aN = m.venue === "HOME" ? m.opp : m.fav;
-        seenBankerKeys[window.normTeamKey(hN) + "_vs_" + window.normTeamKey(aN)] = true;
-      });
-      var allFallback = window.getFixturesForDateAndLeagues(window.selectedDate, window.ALL_LEAGUES);
-      allFallback.forEach(function(m){
-        var hName = m.venue === "HOME" ? m.fav : m.opp;
-        var aName = m.venue === "HOME" ? m.opp : m.fav;
-        var k = window.normTeamKey(hName) + "_vs_" + window.normTeamKey(aName);
-        if(!seenBankerKeys[k]){
-          seenBankerKeys[k] = true;
-          var pred = window.resolveMatchPrediction(m);
-          bankerPool.push(Object.assign({}, m, {
-            fs: pred.fs, driftBadge: pred.driftBadge, lockPill: pred.lockPill,
-            note: pred.note, vr: pred.vr, isLocked: pred.isLocked
-          }));
-        }
-      });
-      bankerPool.sort(function(a,b){ return b.fs - a.fs; });
+    var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
+    var storageKey = "betboyai_banker_slip_" + activeDateStr;
+    var savedSlipJson = null;
+    try {
+      savedSlipJson = localStorage.getItem(storageKey);
+    } catch(e){}
+    var savedSlipData = null;
+    if(savedSlipJson){
+      try {
+        var parsed = JSON.parse(savedSlipJson);
+        if(Array.isArray(parsed) && parsed.length >= 4) savedSlipData = parsed;
+      } catch(e2){}
     }
-    var topFive = bankerPool.slice(0, 5);
-    var topFiveMarketsList = topFive.map(function(m){
-      var mk = window.calcExtraMarkets(m, m.fs);
-      var pool = (mk && mk.L) ? mk.L : [];
-      return window.filterActivePlaceableMarkets ? window.filterActivePlaceableMarkets(pool, m, mk ? mk.liveStats : null) : pool;
-    });
-    var bankerSlipPlan = window.selectDailyBankerSlip(topFiveMarketsList, 3.50, 6.00);
-    // Pair each match with its selected market and sort strictly by highest selected market confidence (#1 highest % down to #5)
-    var sortedBankerPairs = topFive.map(function(m, idx){
-      var bestM = bankerSlipPlan.selections[idx] || null;
-      var rawConf = bestM ? parseFloat(String(bestM.p)) : NaN;
-      var confVal = Number.isFinite(rawConf) ? rawConf : Number(m.fs || 0);
-      return { m: m, bestM: bestM, confVal: confVal };
-    }).sort(function(a, b){
-      if(b.confVal !== a.confVal) return b.confVal - a.confVal;
-      return Number(b.m.fs || 0) - Number(a.m.fs || 0);
-    });
+
+    var sortedBankerPairs = [];
+    if(savedSlipData && savedSlipData.length > 0){
+      // 1. Static load from localStorage: load the exact saved 5 fixtures in their locked order
+      var allMatchesForLookup = window.getFixturesForDateAndLeagues ? window.getFixturesForDateAndLeagues(activeDateStr, window.ALL_LEAGUES) : capped;
+      sortedBankerPairs = savedSlipData.map(function(savedLeg, idx){
+        var foundMatch = null;
+        for(var mIdx = 0; mIdx < capped.length; mIdx++){
+          if(String(capped[mIdx].id) === String(savedLeg.id) || (capped[mIdx].fav === savedLeg.fav && capped[mIdx].opp === savedLeg.opp)){
+            foundMatch = capped[mIdx];
+            break;
+          }
+        }
+        if(!foundMatch && allMatchesForLookup){
+          for(var aIdx = 0; aIdx < allMatchesForLookup.length; aIdx++){
+            if(String(allMatchesForLookup[aIdx].id) === String(savedLeg.id) || (allMatchesForLookup[aIdx].fav === savedLeg.fav && allMatchesForLookup[aIdx].opp === savedLeg.opp)){
+              foundMatch = allMatchesForLookup[aIdx];
+              break;
+            }
+          }
+        }
+        var mObj = foundMatch ? Object.assign({}, foundMatch) : {
+          id: savedLeg.id,
+          fav: savedLeg.fav,
+          opp: savedLeg.opp,
+          league: savedLeg.league,
+          venue: savedLeg.venue || "HOME",
+          ko: savedLeg.ko || "15:00",
+          fs: Number(savedLeg.fs || savedLeg.confVal || 75),
+          actual: savedLeg.actual || ("🕒 KO " + (savedLeg.ko || "15:00"))
+        };
+
+        // Dynamically re-evaluate live settlement for the locked market
+        var legWon = savedLeg.won;
+        var legStatBadge = savedLeg.statBadge || '';
+        if(window.calcExtraMarkets){
+          var mk = window.calcExtraMarkets(mObj, mObj.fs || 68);
+          if(mk && mk.L){
+            var matchMkt = mk.L.find(function(x){
+              return x.n === savedLeg.market || x.n.toLowerCase().indexOf(String(savedLeg.market || '').toLowerCase()) !== -1;
+            });
+            if(matchMkt){
+              if(matchMkt.w !== null && matchMkt.w !== undefined) legWon = matchMkt.w;
+              if(matchMkt.statBadge) legStatBadge = matchMkt.statBadge;
+            }
+          }
+        }
+        var bestM = {
+          n: savedLeg.market,
+          p: String(savedLeg.pct || (savedLeg.confVal + '%')).replace('%', ''),
+          odds: Number(savedLeg.odds) || 1.5,
+          w: legWon,
+          statBadge: legStatBadge
+        };
+        return {
+          m: mObj,
+          bestM: bestM,
+          confVal: Number(savedLeg.confVal || bestM.p || mObj.fs || 75)
+        };
+      });
+    } else {
+      // 2. Initial generation: Run selection algorithm and save to localStorage
+      var bankerPool = capped.slice().sort(function(a,b){ return b.fs - a.fs; });
+      if(bankerPool.length < 5){
+        var seenBankerKeys = {};
+        bankerPool.forEach(function(m){
+          var hN = m.venue === "HOME" ? m.fav : m.opp;
+          var aN = m.venue === "HOME" ? m.opp : m.fav;
+          seenBankerKeys[window.normTeamKey(hN) + "_vs_" + window.normTeamKey(aN)] = true;
+        });
+        var allFallback = window.getFixturesForDateAndLeagues(activeDateStr, window.ALL_LEAGUES);
+        allFallback.forEach(function(m){
+          var hName = m.venue === "HOME" ? m.fav : m.opp;
+          var aName = m.venue === "HOME" ? m.opp : m.fav;
+          var k = window.normTeamKey(hName) + "_vs_" + window.normTeamKey(aName);
+          if(!seenBankerKeys[k]){
+            seenBankerKeys[k] = true;
+            var pred = window.resolveMatchPrediction(m);
+            bankerPool.push(Object.assign({}, m, {
+              fs: pred.fs, driftBadge: pred.driftBadge, lockPill: pred.lockPill,
+              note: pred.note, vr: pred.vr, isLocked: pred.isLocked
+            }));
+          }
+        });
+        bankerPool.sort(function(a,b){ return b.fs - a.fs; });
+      }
+      var topFive = bankerPool.slice(0, 5);
+      var topFiveMarketsList = topFive.map(function(m){
+        var mk = window.calcExtraMarkets(m, m.fs);
+        var pool = (mk && mk.L) ? mk.L : [];
+        return window.filterActivePlaceableMarkets ? window.filterActivePlaceableMarkets(pool, m, mk ? mk.liveStats : null) : pool;
+      });
+      var bankerSlipPlan = window.selectDailyBankerSlip(topFiveMarketsList, 3.50, 6.00);
+      // Pair each match with its selected market and sort strictly by highest selected market confidence (#1 highest % down to #5)
+      sortedBankerPairs = topFive.map(function(m, idx){
+        var bestM = bankerSlipPlan.selections[idx] || null;
+        var rawConf = bestM ? parseFloat(String(bestM.p)) : NaN;
+        var confVal = Number.isFinite(rawConf) ? rawConf : Number(m.fs || 0);
+        return { m: m, bestM: bestM, confVal: confVal };
+      }).sort(function(a, b){
+        if(b.confVal !== a.confVal) return b.confVal - a.confVal;
+        return Number(b.m.fs || 0) - Number(a.m.fs || 0);
+      });
+
+      // Save to localStorage for today's date
+      if(sortedBankerPairs.length >= 4){
+        try {
+          var serializedSlip = sortedBankerPairs.map(function(pair, idx){
+            return {
+              id: pair.m.id,
+              fav: pair.m.fav,
+              opp: pair.m.opp,
+              league: pair.m.league,
+              venue: pair.m.venue,
+              ko: pair.m.ko,
+              fs: pair.m.fs,
+              market: pair.bestM ? pair.bestM.n : '',
+              odds: pair.bestM ? pair.bestM.odds : 1.5,
+              pct: pair.bestM ? (pair.bestM.p + '%') : (pair.m.fs + '%'),
+              confVal: pair.confVal,
+              rank: idx + 1
+            };
+          });
+          localStorage.setItem(storageKey, JSON.stringify(serializedSlip));
+        } catch(eSave){}
+      }
+    }
 
     var topCombOdds = 1;
     if(sortedBankerPairs.length){
@@ -8056,7 +8320,17 @@ window.runEngine = function(isForcedSync){
     if(window.expandedCards[idKey] && typeof window.drawHighlightPitchCanvas === "function"){
       window.drawHighlightPitchCanvas(idKey);
     }
+    if(window.expandedCards[idKey] && typeof window.ensureMatchHighlightsLoadedById === "function"){
+      window.ensureMatchHighlightsLoadedById(idKey);
+    }
   });
+
+  // Trigger/cache YouTube Full-Time highlights lookup for FT fixtures
+  if(typeof window.ensureMatchHighlightsLoaded === "function"){
+    capped.filter(function(m){ return window.isCompletedMatch && window.isCompletedMatch(m); }).slice(0, 6).forEach(function(m){
+      window.ensureMatchHighlightsLoaded(m);
+    });
+  }
 
   var lc = document.getElementById("logContainer");
   if(lc) lc.innerHTML = window.logHistory.join("");
