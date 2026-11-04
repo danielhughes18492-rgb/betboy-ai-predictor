@@ -5207,6 +5207,81 @@ window.getBankerMarketSweetSpotPriority = function(marketName){
   return 15;
 };
 
+// Dynamic Market Filtering for Live 2nd-Half Matches (Never feature expired 1st-half/early markets)
+window.isExpiredFirstHalfMarket = function(marketName){
+  if(!marketName) return false;
+  var s = String(marketName).toLowerCase();
+  return /\b(1st\s*half|first\s*half|half[\s-]*time|halftime|early)\b/i.test(s) || /\bht\b/i.test(s);
+};
+
+window.isMatchInSecondHalfOrPast45 = function(m, liveStats){
+  if(!m) return false;
+
+  // Finished matches (Full Time) are not live in the second half
+  if(liveStats && liveStats.isFT) return false;
+  var actualStr = String(m.actual || '');
+  if(!m.isLive && (/\((?:won|draw|lost)\)/i.test(actualStr) || /\bFT\b/i.test(actualStr))){
+    return false;
+  }
+
+  // 1. Minute check from match or liveStats
+  var minute = Number(m.minute !== undefined ? m.minute : (m.liveMinute !== undefined ? m.liveMinute : (liveStats ? liveStats.elapsedMins : undefined)));
+  if(!Number.isFinite(minute) || minute <= 0){
+    var minMatch = (actualStr + " " + String(m.liveBadge || '')).match(/(\d+)\s*'/);
+    if(minMatch){
+      minute = parseInt(minMatch[1], 10);
+    }
+  }
+
+  // 2. Live match state detection
+  var statusUpper = String(m.status || '').toUpperCase();
+  var isLive =
+    Boolean(m.isLive) ||
+    Boolean(liveStats && liveStats.isLive) ||
+    statusUpper === 'LIVE' ||
+    statusUpper === 'IN' ||
+    statusUpper === 'IN_PLAY' ||
+    statusUpper === 'INPLAY' ||
+    /\b(live|in[\s-]*play)\b/i.test(actualStr) ||
+    /\b(live|in[\s-]*play)\b/i.test(String(m.liveBadge || '')) ||
+    (Boolean(liveStats && liveStats.hasKickedOff) && !liveStats.isFT);
+
+  // 3. Minute > 45 during live match (e.g. 46'+, 61', 63', 76')
+  if(isLive && Number.isFinite(minute) && minute > 45){
+    return true;
+  }
+
+  // 4. Explicit second-half or half-time keywords
+  var combinedText = actualStr + " " + String(m.liveBadge || '') + " " + statusUpper;
+  if(isLive && /\b(2nd\s*half|second\s*half|ht|half[\s-]*time)\b/i.test(combinedText)){
+    return true;
+  }
+
+  return false;
+};
+
+window.filterActivePlaceableMarkets = function(markets, m, liveStats){
+  if(!Array.isArray(markets) || markets.length === 0) return [];
+  var inSecondHalf = window.isMatchInSecondHalfOrPast45(m, liveStats);
+  if(!inSecondHalf){
+    return markets;
+  }
+  var filtered = markets.filter(function(item){
+    return !window.isExpiredFirstHalfMarket(item.n);
+  });
+  return filtered.length > 0 ? filtered : markets;
+};
+
+window.selectCardFeaturedBestBet = function(markets, m, liveStats){
+  if(!Array.isArray(markets) || markets.length === 0) return null;
+  var activeMarkets = window.filterActivePlaceableMarkets(markets, m, liveStats);
+  return (
+    (window.selectBankerSlipMarket ? window.selectBankerSlipMarket(activeMarkets) : null) ||
+    activeMarkets.slice().sort(function(a, b){ return Number(b.p) - Number(a.p); })[0] ||
+    null
+  );
+};
+
 window.selectBankerSlipMarket = function(markets){
   if(!Array.isArray(markets) || !markets.length) return null;
   var parseP = function(item){ return parseFloat(String(item.p).replace("%", "")) || 0; };
@@ -7466,7 +7541,9 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
   var mkCard = window.calcExtraMarkets(m, m.fs || 68);
   var liveStats = mkCard.liveStats || { hasKickedOff: false };
-  var topCardMkt = (window.selectBankerSlipMarket ? window.selectBankerSlipMarket(mkCard.L) : null) || mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0];
+  var topCardMkt = window.selectCardFeaturedBestBet
+    ? window.selectCardFeaturedBestBet(mkCard.L, m, liveStats)
+    : ((window.selectBankerSlipMarket ? window.selectBankerSlipMarket(mkCard.L) : null) || mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0]);
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
   var isBestInSlip = window.betSlip.indexOf(bestBetId) !== -1;
@@ -7804,7 +7881,8 @@ window.runEngine = function(isForcedSync){
     var topFive = bankerPool.slice(0, 5);
     var topFiveMarketsList = topFive.map(function(m){
       var mk = window.calcExtraMarkets(m, m.fs);
-      return (mk && mk.L) ? mk.L : [];
+      var pool = (mk && mk.L) ? mk.L : [];
+      return window.filterActivePlaceableMarkets ? window.filterActivePlaceableMarkets(pool, m, mk ? mk.liveStats : null) : pool;
     });
     var bankerSlipPlan = window.selectDailyBankerSlip(topFiveMarketsList, 3.50, 6.00);
     // Pair each match with its selected market and sort strictly by highest selected market confidence (#1 highest % down to #5)
