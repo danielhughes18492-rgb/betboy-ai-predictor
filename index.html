@@ -7386,7 +7386,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var outright1x2StripHtml = '<div class="mb-2.5 bg-slate-950/85 border border-slate-800/90 rounded-xl p-2">' +
     '<div class="flex items-center justify-between text-[8.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-0.5">' +
       '<span>⚽ Full-Time Result (1X2 — Both Teams)</span>' +
-      '<span>Tap to Add</span>' +
+      '<span>ODDS &amp; AI % • TAP TO ADD</span>' +
     '</div>' +
     '<div class="grid grid-cols-3 gap-1.5">' +
       '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
@@ -7419,6 +7419,11 @@ window.render31PointPanel = function(m, adm, isUnlocked){
         : "bg-slate-900/90 text-slate-400 hover:text-white border-slate-800 font-bold";
       return '<button type="button" onclick="window.setCardMarketTab(' + m.id + ', \'' + tab.k + '\', event)" class="px-2 py-1 rounded-lg border text-[9px] flex-shrink-0 cursor-pointer transition ' + cls + '">' + tab.lbl + '</button>';
     }).join("") +
+  '</div>';
+
+  var mktLegendHtml = '<div style="font-size: 10px; text-transform: uppercase; color: #9ca3af; padding: 0 8px;" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-1.5 select-none font-bold tracking-wider">' +
+    '<div class="flex items-center justify-between"><span>MARKET SELECTION</span><span>ODDS &nbsp;|&nbsp; AI PROB.</span></div>' +
+    '<div class="hidden sm:flex items-center justify-between"><span>MARKET SELECTION</span><span>ODDS &nbsp;|&nbsp; AI PROB.</span></div>' +
   '</div>';
 
   var g = filteredMarkets.map(function(x, mIdx){
@@ -7497,6 +7502,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     '<div id="markets-body-' + m.id + '" class="mt-2">' +
       outright1x2StripHtml +
       catTabsHtml +
+      mktLegendHtml +
       '<div id="mktGrid-' + m.id + '" class="grid grid-cols-1 sm:grid-cols-2 gap-2">' + g + '</div>' +
       trialCta +
     '</div>' +
@@ -7660,15 +7666,35 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
   var sampleBadge = isFreeSample ? '<span class="text-[8px] px-2 py-0.5 rounded-full font-black bg-emerald-500 text-slate-900 flex-shrink-0">🎁 FREE SAMPLE</span>' : '';
 
-  var pctDisplay = isTrLocked
-    ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-lg font-black ' + txt + ' mono leading-none trial-blur cursor-pointer" title="Subscribe to unblur">84.5%</div>'
-    : '<div class="text-lg font-black ' + txt + ' mono leading-none">' + m.fs.toFixed(1) + '%</div>';
-
   var mkCard = window.calcExtraMarkets(m, m.fs || 68);
   var liveStats = mkCard.liveStats || { hasKickedOff: false };
   var topCardMkt = window.selectCardFeaturedBestBet
     ? window.selectCardFeaturedBestBet(mkCard.L, m, liveStats)
     : ((window.selectBankerSlipMarket ? window.selectBankerSlipMarket(mkCard.L) : null) || mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0]);
+
+  var featuredProbVal = (topCardMkt && topCardMkt.p !== undefined && topCardMkt.p !== null)
+    ? parseFloat(String(topCardMkt.p).replace('%', ''))
+    : Number(m.fs || 68);
+  if(isNaN(featuredProbVal) || featuredProbVal <= 0){
+    featuredProbVal = Number(m.fs || 68);
+  }
+
+  var w = Math.min(100, Math.max(25, Math.round(featuredProbVal)));
+
+  var aiConfidenceMicroLabel = '<span style="font-size: 9px; letter-spacing: 0.05em;" class="font-bold uppercase ' + (isG ? 'text-emerald-400/90' : 'text-slate-400') + ' leading-none">AI CONFIDENCE</span>';
+
+  var pctDisplay = isTrLocked
+    ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-lg font-black ' + txt + ' mono leading-none trial-blur cursor-pointer" title="Subscribe to unblur">84.5%</div>'
+    : '<div class="text-lg font-black ' + txt + ' mono leading-none">' + featuredProbVal.toFixed(1) + '%</div>';
+
+  var marketSubLabel = isTrLocked
+    ? 'VIP Pick'
+    : (topCardMkt
+        ? (topCardMkt.n.replace(/^Match Result:\s*/i, '').replace(/to Win$/i, 'Win').replace(/\s*\([^)]*\)/g, '').trim() || 'Top AI Pick')
+        : 'Top AI Pick');
+
+  var marketSubHtml = '<span class="text-[8.5px] font-medium text-slate-400 truncate max-w-[85px] leading-tight block text-right mt-0.5" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
+
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
   var isBestInSlip = window.betSlip.indexOf(bestBetId) !== -1;
@@ -7721,8 +7747,12 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       '</div>' +
       '<div class="flex flex-col items-end justify-between flex-shrink-0 text-right space-y-1.5">' +
         statusBadge +
-        pctDisplay +
-        '<div class="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden"><div class="h-full ' + bar + ' rounded-full transition-all duration-700" style="width:' + w + '%"></div></div>' +
+        '<div class="flex flex-col items-end gap-0.5">' +
+          aiConfidenceMicroLabel +
+          pctDisplay +
+          '<div class="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1"><div class="h-full ' + bar + ' rounded-full transition-all duration-700" style="width:' + w + '%"></div></div>' +
+          marketSubHtml +
+        '</div>' +
       '</div>' +
     '</div>' +
     expandBar + window.render31PointPanel(m, adminCtrlHtml, isUnlocked) + '</div>';
