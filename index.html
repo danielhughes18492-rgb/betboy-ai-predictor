@@ -7631,17 +7631,81 @@ window.ensureMatchHighlightsLoadedById = function(matchId){
   }
 };
 
+// Single Source of Truth: Resolve exact featured best bet and displayed AI Confidence % for any match card
+window.resolveFeaturedCardDetails = function(m){
+  if(!m) return { mkCard: { L: [] }, liveStats: { hasKickedOff: false }, topCardMkt: null, featuredProbVal: 68.0 };
+  var rawFs = Number(m.fs || 68);
+  if(isNaN(rawFs) || rawFs <= 0) rawFs = 68.0;
+
+  var mkCard = window.calcExtraMarkets ? window.calcExtraMarkets(m, rawFs) : { L: [] };
+  var liveStats = (mkCard && mkCard.liveStats) ? mkCard.liveStats : { hasKickedOff: false };
+  var topCardMkt = window.selectCardFeaturedBestBet
+    ? window.selectCardFeaturedBestBet(mkCard.L, m, liveStats)
+    : ((window.selectBankerSlipMarket ? window.selectBankerSlipMarket(mkCard.L) : null) || (mkCard.L && mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0]) || null);
+
+  var featuredProbVal = (topCardMkt && topCardMkt.p !== undefined && topCardMkt.p !== null)
+    ? parseFloat(String(topCardMkt.p).replace('%', ''))
+    : rawFs;
+  if(isNaN(featuredProbVal) || featuredProbVal <= 0){
+    featuredProbVal = rawFs;
+  }
+  featuredProbVal = parseFloat(featuredProbVal.toFixed(1));
+
+  return {
+    mkCard: mkCard,
+    liveStats: liveStats,
+    topCardMkt: topCardMkt,
+    featuredProbVal: featuredProbVal
+  };
+};
+
+window.resolveFeaturedCardConfidence = function(m){
+  if(!m) return 68.0;
+  if(typeof m.displayConf === "number" && !isNaN(m.displayConf)){
+    return m.displayConf;
+  }
+  var details = window.resolveFeaturedCardDetails(m);
+  m.displayConf = details.featuredProbVal;
+  m._cachedDetails = details;
+  return details.featuredProbVal;
+};
+
+window.resolveCardConfidenceTier = function(probVal, thresholds){
+  var p = (typeof probVal === "number" && !isNaN(probVal)) ? probVal : 68.0;
+  var gThresh = (thresholds && thresholds.green) || (window.adminConfThresholds && window.adminConfThresholds.green) || 75.0;
+  var aThresh = (thresholds && thresholds.amber) || (window.adminConfThresholds && window.adminConfThresholds.amber) || 60.0;
+  if(p >= gThresh) return "green";
+  if(p >= aThresh) return "amber";
+  return "red";
+};
+
 // Clean, Streamlined Match Card Renderer (Collapsible Match Timeline + Collapsible Both-Teams Markets inside expanded card)
 window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
-  var isG = type === "green", isA = type === "amber";
-  var isUnlocked = window.isCardUnlockedInTrial(m, i, type);
+  var details = (m && m._cachedDetails && m._cachedDetails.featuredProbVal === m.displayConf)
+    ? m._cachedDetails
+    : window.resolveFeaturedCardDetails(m);
+
+  var mkCard = details.mkCard;
+  var liveStats = details.liveStats;
+  var topCardMkt = details.topCardMkt;
+  var featuredProbVal = details.featuredProbVal;
+  m.displayConf = featuredProbVal;
+
+  // Single Source of Truth for Confidence Tier & Colors:
+  // Strictly driven by the displayed AI Confidence %
+  var cardTier = window.resolveCardConfidenceTier ? window.resolveCardConfidenceTier(featuredProbVal) : (featuredProbVal >= 75.0 ? "green" : (featuredProbVal >= 60.0 ? "amber" : "red"));
+  var isG = cardTier === "green";
+  var isA = cardTier === "amber";
+  var isR = !isG && !isA;
+
+  var isUnlocked = window.isCardUnlockedInTrial(m, i, cardTier);
   var isTrLocked = !!window.isTrial && !isUnlocked;
   var isFreeSample = !!window.isTrial && isUnlocked && (m.actual || "").indexOf("KO") !== -1;
 
   var bdr = isG ? "border-l-emerald-500" : (isA ? "border-l-amber-400" : "border-l-rose-500");
   var txt = isG ? "text-emerald-400" : (isA ? "text-amber-400" : "text-rose-400");
   var bar = isG ? "bg-emerald-500" : (isA ? "bg-amber-400" : "bg-rose-500");
-  var w = Math.min(100, Math.max(25, Math.round(m.fs)));
+  var w = Math.min(100, Math.max(25, Math.round(featuredProbVal)));
   var isExp = window.expandedCards[m.id] ? " card-expanded" : "";
 
   var stLow = (m.actual || "").toLowerCase();
@@ -7660,22 +7724,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
   var sampleBadge = isFreeSample ? '<span class="text-[8px] px-2 py-0.5 rounded-full font-black bg-emerald-500 text-slate-900 flex-shrink-0">🎁 FREE SAMPLE</span>' : '';
 
-  var mkCard = window.calcExtraMarkets(m, m.fs || 68);
-  var liveStats = mkCard.liveStats || { hasKickedOff: false };
-  var topCardMkt = window.selectCardFeaturedBestBet
-    ? window.selectCardFeaturedBestBet(mkCard.L, m, liveStats)
-    : ((window.selectBankerSlipMarket ? window.selectBankerSlipMarket(mkCard.L) : null) || mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0]);
-
-  var featuredProbVal = (topCardMkt && topCardMkt.p !== undefined && topCardMkt.p !== null)
-    ? parseFloat(String(topCardMkt.p).replace('%', ''))
-    : Number(m.fs || 68);
-  if(isNaN(featuredProbVal) || featuredProbVal <= 0){
-    featuredProbVal = Number(m.fs || 68);
-  }
-
-  var w = Math.min(100, Math.max(25, Math.round(featuredProbVal)));
-
-  var aiConfidenceMicroLabel = '<span style="font-size: 9px; letter-spacing: 0.05em;" class="font-bold uppercase ' + (isG ? 'text-emerald-400/90' : 'text-slate-400') + ' leading-none">AI CONFIDENCE</span>';
+  var aiConfidenceMicroLabel = '<span style="font-size: 9px; letter-spacing: 0.05em;" class="font-bold uppercase ' + (isG ? 'text-emerald-400/90' : (isA ? 'text-amber-400/90' : 'text-rose-400/90')) + ' leading-none">AI CONFIDENCE</span>';
 
   var pctDisplay = isTrLocked
     ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-lg font-black ' + txt + ' mono leading-none trial-blur cursor-pointer" title="Subscribe to unblur">84.5%</div>'
@@ -7826,18 +7875,22 @@ window.runEngine = function(isForcedSync){
 
   var evaluated = deduped.map(function(m){
     var pred = window.resolveMatchPrediction(m);
-    return Object.assign({}, m, {
+    var item = Object.assign({}, m, {
       fs: pred.fs, driftBadge: pred.driftBadge, lockPill: pred.lockPill,
       note: pred.note, vr: pred.vr, isLocked: pred.isLocked
     });
+    // Single source of truth: pre-compute displayed confidence % from featured market
+    var conf = window.resolveFeaturedCardConfidence ? window.resolveFeaturedCardConfidence(item) : Number(item.fs || 68);
+    item.displayConf = conf;
+    return item;
   });
 
-  evaluated.sort(function(a,b){ return b.fs - a.fs; });
+  evaluated.sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
   var capped = evaluated.slice(0, window.MAX_DAILY_FIXTURES);
   window.currentEvaluatedFixtures = capped.slice();
 
   if(window.matchSortMode === "KO"){
-    capped.sort(function(a,b){ return String(a.ko||"15:00").localeCompare(String(b.ko||"15:00")) || (b.fs - a.fs); });
+    capped.sort(function(a,b){ return String(a.ko||"15:00").localeCompare(String(b.ko||"15:00")) || ((b.displayConf || b.fs) - (a.displayConf || a.fs)); });
   }
 
   // Helper: Sweet-Spot Market Priority & Selection for AI Daily High-Confidence Banker Slip
@@ -8078,7 +8131,7 @@ window.runEngine = function(isForcedSync){
       });
     } else {
       // 2. Initial generation: Run selection algorithm and save to localStorage
-      var bankerPool = capped.slice().sort(function(a,b){ return b.fs - a.fs; });
+      var bankerPool = capped.slice().sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
       if(bankerPool.length < 5){
         var seenBankerKeys = {};
         bankerPool.forEach(function(m){
@@ -8094,13 +8147,15 @@ window.runEngine = function(isForcedSync){
           if(!seenBankerKeys[k]){
             seenBankerKeys[k] = true;
             var pred = window.resolveMatchPrediction(m);
-            bankerPool.push(Object.assign({}, m, {
+            var item = Object.assign({}, m, {
               fs: pred.fs, driftBadge: pred.driftBadge, lockPill: pred.lockPill,
               note: pred.note, vr: pred.vr, isLocked: pred.isLocked
-            }));
+            });
+            item.displayConf = window.resolveFeaturedCardConfidence ? window.resolveFeaturedCardConfidence(item) : Number(item.fs || 68);
+            bankerPool.push(item);
           }
         });
-        bankerPool.sort(function(a,b){ return b.fs - a.fs; });
+        bankerPool.sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
       }
       var topFive = bankerPool.slice(0, 5);
       var topFiveMarketsList = topFive.map(function(m){
@@ -8272,10 +8327,20 @@ window.runEngine = function(isForcedSync){
   var aThresh = (window.adminConfThresholds && window.adminConfThresholds.amber) || 60.0;
   var greens = [], ambers = [], reds = [];
   capped.forEach(function(item){
-    if(item.fs >= gThresh) greens.push(item);
-    else if(item.fs >= aThresh) ambers.push(item);
+    var conf = (typeof item.displayConf === "number" && !isNaN(item.displayConf))
+      ? item.displayConf
+      : (window.resolveFeaturedCardConfidence ? window.resolveFeaturedCardConfidence(item) : Number(item.fs || 68));
+    item.displayConf = conf;
+
+    if(conf >= gThresh) greens.push(item);
+    else if(conf >= aThresh) ambers.push(item);
     else reds.push(item);
   });
+
+  // Sort order within brackets: descending from highest displayed AI Confidence to lowest (#1 is always the strongest pick)
+  greens.sort(function(a, b){ return (b.displayConf || 0) - (a.displayConf || 0); });
+  ambers.sort(function(a, b){ return (b.displayConf || 0) - (a.displayConf || 0); });
+  reds.sort(function(a, b){ return (b.displayConf || 0) - (a.displayConf || 0); });
 
   window._hasGreenSample = greens.length > 0;
 
