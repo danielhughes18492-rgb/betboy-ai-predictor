@@ -106,8 +106,9 @@
   .kpi-active-ring { outline: 2px solid #10b981 !important; background: rgba(16,185,129,0.16) !important; }
   .btn-press { transition: transform 0.16s cubic-bezier(0.16,1,0.3,1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
   .btn-press:active { transform: scale(0.96); }
-  #scrollTopFab { position:fixed; bottom:84px; right:14px; z-index:45; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; }
-  #scrollTopFab.vis { opacity:1; pointer-events:auto; transform:translateY(0); }
+  #scrollTopFab { position:fixed; bottom:84px; right:12px; z-index:45; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding: 6px 10px; font-size: 11px; }
+  #scrollTopFab.vis { opacity:0.85; pointer-events:auto; transform:translateY(0); }
+  #scrollTopFab:hover { opacity:1 !important; }
   .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
   .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
   body.admin-mode-active:not(.admin-preview-feed-active) #userFeedSection { display: none !important; }
@@ -1752,7 +1753,10 @@ document.addEventListener("DOMContentLoaded", function() {
           <span class="text-xs font-black text-amber-300 flex items-center gap-1.5">
             <span>⭐ AI Daily High-Confidence Banker Slip</span>
           </span>
-          <span id="topAccaCombinedOddsBadge" class="text-[9.5px] bg-slate-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-mono font-bold">5-Fold</span>
+          <div class="flex items-center gap-1.5">
+            <span id="topAccaCombinedOddsBadge" class="text-[9.5px] bg-slate-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-mono font-bold">5-Fold</span>
+            <button type="button" id="openBankerGraphicBtn" onclick="window.openBankerSlipGraphicModal(event)" class="text-[9.5px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40 px-2 py-0.5 rounded-md font-bold transition flex items-center gap-1 cursor-pointer">📸 Shareable Slip</button>
+          </div>
         </div>
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <button type="button" id="addTopAccaBtn" onclick="window.addDailyAccaToSlip(event)" class="text-[11px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-3.5 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 cursor-pointer transition btn-press flex items-center gap-1.5 flex-shrink-0">
@@ -2288,7 +2292,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <!-- Non-Blocking Toast Notification (Positioned at bottom:98px so it never overlaps the sticky Betting Slip Guide bar) -->
 <div id="appToastBanner" style="position:fixed;bottom:98px;left:50%;transform:translateX(-50%);z-index:10050;display:none;pointer-events:none;" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-2xl border border-emerald-300/40 whitespace-nowrap max-w-[92vw] truncate"></div>
 
-<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs px-3 py-2 rounded-full shadow-lg border border-emerald-400/40 cursor-pointer flex items-center gap-1">↑ Top</button>
+<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="bottom: 84px; padding: 6px 10px; font-size: 11px;" class="bg-emerald-600/90 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black rounded-full shadow-lg border border-emerald-400/40 cursor-pointer flex items-center gap-1">↑ Top</button>
 
 <script>
 window.openAboutContactModal = function() {
@@ -5275,14 +5279,66 @@ window.filterActivePlaceableMarkets = function(markets, m, liveStats){
   return filtered.length > 0 ? filtered : markets;
 };
 
+window.isUltraShortDoubleChance = function(name){
+  var low = String(name || "").toLowerCase();
+  return low.indexOf("/draw") !== -1 || low.indexOf("win/draw") !== -1 || low.indexOf("double chance") !== -1 || low.indexOf("(1x)") !== -1 || low.indexOf("(x2)") !== -1;
+};
+
 window.selectCardFeaturedBestBet = function(markets, m, liveStats){
   if(!Array.isArray(markets) || markets.length === 0) return null;
-  var activeMarkets = window.filterActivePlaceableMarkets(markets, m, liveStats);
-  return (
-    (window.selectBankerSlipMarket ? window.selectBankerSlipMarket(activeMarkets) : null) ||
-    activeMarkets.slice().sort(function(a, b){ return Number(b.p) - Number(a.p); })[0] ||
-    null
-  );
+  var activeMarkets = window.filterActivePlaceableMarkets ? window.filterActivePlaceableMarkets(markets, m, liveStats) : markets;
+  if(!activeMarkets.length) return null;
+
+  var parseP = function(item){ return parseFloat(String(item.p).replace("%", "")) || 0; };
+  var parseO = function(item){ return Number(item.odds) || 1.0; };
+
+  // Check if this fixture is already featured in the Daily Banker Slip
+  var bankerMkt = null;
+  if(m && m.id && window.dailyBankerSlipMarketMap && window.dailyBankerSlipMarketMap[Number(m.id)]){
+    bankerMkt = window.dailyBankerSlipMarketMap[Number(m.id)];
+  } else if(m && m.id && window._cachedDailyBankerSlipStorage && window._cachedDailyBankerSlipStorage[Number(m.id)]){
+    bankerMkt = window._cachedDailyBankerSlipStorage[Number(m.id)];
+  }
+  if(bankerMkt && bankerMkt.n){
+    var matchInActive = activeMarkets.find(function(x){
+      return x.n === bankerMkt.n || x.n.toLowerCase() === bankerMkt.n.toLowerCase();
+    });
+    if(matchInActive && parseO(matchInActive) >= 1.30 && !window.isUltraShortDoubleChance(matchInActive.n)){
+      if(parseP(matchInActive) >= 75.0) return matchInActive;
+    }
+  }
+
+  var nonOpp = activeMarkets.filter(function(item){ return item.teamSide !== "opp" && item.teamSide !== "draw"; });
+  var pool = nonOpp.length > 0 ? nonOpp : activeMarkets.slice();
+
+  // 1. Sensible backable odds (decimal >= 1.33 / fractional >= 1/3, excluding ultra-short Double Chance)
+  var sensible = pool.filter(function(item){
+    return parseO(item) >= 1.33 && !window.isUltraShortDoubleChance(item.n);
+  });
+
+  if(sensible.length > 0){
+    // Select the highest-confidence market for that match with sensible backable odds
+    return sensible.slice().sort(function(a, b){
+      var pDiff = parseP(b) - parseP(a);
+      if(Math.abs(pDiff) > 0.05) return pDiff;
+      return window.getBankerMarketSweetSpotPriority ? (window.getBankerMarketSweetSpotPriority(a.n) - window.getBankerMarketSweetSpotPriority(b.n)) : 0;
+    })[0];
+  }
+
+  // 2. Fallback: check markets with odds >= 1.25 (excluding double chance)
+  var fallback125 = pool.filter(function(item){
+    return parseO(item) >= 1.25 && !window.isUltraShortDoubleChance(item.n);
+  });
+  if(fallback125.length > 0){
+    return fallback125.slice().sort(function(a, b){
+      var pDiff = parseP(b) - parseP(a);
+      if(Math.abs(pDiff) > 0.05) return pDiff;
+      return parseO(b) - parseO(a);
+    })[0];
+  }
+
+  // 3. Fallback: any market in pool sorted by highest confidence
+  return pool.slice().sort(function(a, b){ return parseP(b) - parseP(a); })[0] || null;
 };
 
 window.selectBankerSlipMarket = function(markets){
@@ -5299,11 +5355,11 @@ window.selectBankerSlipMarket = function(markets){
     return window.getBankerMarketSweetSpotPriority(a.n) - window.getBankerMarketSweetSpotPriority(b.n);
   };
 
-  // 1. Sweet Spot: 66% <= p <= 78% (and never ultra-short < 1.25)
+  // 1. Sweet Spot: 66% <= p <= 85% (and never ultra-short < 1.25)
   var sweetAll = basePool.filter(function(item){
     var p = parseP(item);
     var o = parseO(item);
-    return p >= 66.0 && p <= 78.0 && o >= 1.25;
+    return p >= 66.0 && p <= 85.0 && o >= 1.28;
   });
   if(sweetAll.length > 0){
     var prefAll = sweetAll.filter(function(item){ return window.getBankerMarketSweetSpotPriority(item.n) < 20; });
@@ -7378,9 +7434,9 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var isA1x2Sel = window.betSlip.indexOf(m.fav + " " + aMktName) !== -1;
 
   var outright1x2StripHtml = '<div class="mb-2.5 bg-slate-950/85 border border-slate-800/90 rounded-xl p-2">' +
-    '<div class="flex items-center justify-between text-[8.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-0.5">' +
-      '<span>⚽ Full-Time Result (1X2 — Both Teams)</span>' +
-      '<span>ODDS &amp; AI % • TAP TO ADD</span>' +
+    '<div class="flex items-center justify-between gap-1 text-[8.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-0.5 whitespace-nowrap overflow-hidden">' +
+      '<span class="truncate">⚽ FULL-TIME RESULT (1X2)</span>' +
+      '<span class="flex-shrink-0 text-slate-400">ODDS &amp; AI %</span>' +
     '</div>' +
     '<div class="grid grid-cols-3 gap-1.5">' +
       '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
@@ -7804,8 +7860,8 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 window.syncAllResultColorsAndCounters = function(){
   var tiers = [
     {box:"greenResults", cnt:"greenCount", ratio:true},
-    {box:"amberResults", cnt:"amberCount", ratio:false},
-    {box:"redResults",   cnt:"redCount",   ratio:false}
+    {box:"amberResults", cnt:"amberCount", ratio:true},
+    {box:"redResults",   cnt:"redCount",   ratio:true}
   ];
   var gW = 0, gDone = 0;
   tiers.forEach(function(t){
@@ -7818,9 +7874,10 @@ window.syncAllResultColorsAndCounters = function(){
       if(txt.indexOf("(won)")!==-1){ w++; d++; }
       else if(txt.indexOf("(draw)")!==-1 || txt.indexOf("(lost)")!==-1){ d++; }
     });
-    var labelTxt = t.ratio ? (w + "/" + cards.length) : String(cards.length);
+    // Display total count before kick-off (d === 0), and only display Won/Total once at least 1 match reaches FT (d > 0)
+    var labelTxt = (d > 0 && t.ratio) ? (w + "/" + cards.length) : String(cards.length);
     if(cnt.innerText !== labelTxt) cnt.innerText = labelTxt;
-    if(t.ratio){ gW = w; gDone = d; }
+    if(t.box === "greenResults"){ gW = w; gDone = d; }
   });
   var hr = document.getElementById("sessionHitRate");
   var hrSub = document.getElementById("sessionHitRateSub");
@@ -8199,6 +8256,16 @@ window.runEngine = function(isForcedSync){
       }
     }
 
+    window.dailyBankerSlipPairs = sortedBankerPairs;
+    window.dailyBankerSlipMarketMap = {};
+    sortedBankerPairs.forEach(function(pair){
+      if(pair.m && pair.bestM){
+        window.dailyBankerSlipMarketMap[String(pair.m.id)] = pair.bestM;
+        var normKey = window.normTeamKey ? (window.normTeamKey(pair.m.fav) + "_vs_" + window.normTeamKey(pair.m.opp)) : "";
+        if(normKey) window.dailyBankerSlipMarketMap[normKey] = pair.bestM;
+      }
+    });
+
     var topCombOdds = 1;
     if(sortedBankerPairs.length){
       slipList.innerHTML = sortedBankerPairs.map(function(pair, idx){
@@ -8312,6 +8379,7 @@ window.runEngine = function(isForcedSync){
         var tenReturn = (10 * topCombOdds).toFixed(2);
         topRetBadge.innerText = "£10 Stake ➔ £" + tenReturn + " Return";
       }
+      window.dailyBankerSlipCombinedOdds = topCombOdds;
     } else {
       slipList.innerHTML = '<div class="text-slate-500 text-xs">No fixtures available for this filter.</div>';
     }
@@ -8778,24 +8846,63 @@ window.getXMatchSelectedMarketsList = function(m){
     }
   });
 
-  // If no explicit override, check if user has this fixture in their betting slip or if a market landed live!
+  // If no explicit override, check daily banker slip, active betting slip, or live landed market
   if(chosenList.length === 0){
-    // 1. Sync from user's active betting slip if present
-    var betSlipNames = [];
-    (window.betSlip || []).forEach(function(bId){
-      var d = (window.betSlipData && window.betSlipData[bId]) || (window.parseBetSelection ? window.parseBetSelection(bId) : null);
-      if(d && (d.team === m.fav || d.team === m.opp || d.opp === m.fav || d.opp === m.opp)){
-        if(d.market) betSlipNames.push(d.market);
+    // 0. Sync from Daily Banker Slip if this fixture is one of the banker slip legs
+    var bankerMarket = null;
+    if(window.dailyBankerSlipMarketMap){
+      bankerMarket = window.dailyBankerSlipMarketMap[String(m.id)];
+      if(!bankerMarket && window.normTeamKey){
+        var normK = window.normTeamKey(m.fav) + "_vs_" + window.normTeamKey(m.opp);
+        bankerMarket = window.dailyBankerSlipMarketMap[normK];
       }
-    });
-    betSlipNames.forEach(function(bsName){
-      var f = sortedM.find(function(x){
-        return x.n === bsName || x.n.toLowerCase().indexOf(bsName.toLowerCase()) !== -1 || bsName.toLowerCase().indexOf(x.n.toLowerCase()) !== -1;
+    }
+    if(!bankerMarket){
+      try {
+        var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
+        var rawBanker = localStorage.getItem("betboyai_banker_slip_" + activeDateStr);
+        if(rawBanker){
+          var parsed = JSON.parse(rawBanker);
+          if(Array.isArray(parsed)){
+            var foundLeg = parsed.find(function(l){
+              return String(l.id) === String(m.id) || (l.fav === m.fav && l.opp === m.opp);
+            });
+            if(foundLeg && foundLeg.market){
+              bankerMarket = { n: foundLeg.market, p: String(foundLeg.pct || foundLeg.confVal || '').replace('%', ''), odds: Number(foundLeg.odds) || 1.5 };
+            }
+          }
+        }
+      } catch(eBM){}
+    }
+    if(bankerMarket){
+      var fBanker = sortedM.find(function(x){
+        return x.n === bankerMarket.n || x.n.toLowerCase() === String(bankerMarket.n).toLowerCase();
       });
-      if(f && !chosenList.some(function(c){ return c.n === f.n; })){
-        chosenList.push(f);
+      if(fBanker && !chosenList.some(function(c){ return c.n === fBanker.n; })){
+        chosenList.push(fBanker);
+      } else if(!chosenList.length){
+        chosenList.push(bankerMarket);
       }
-    });
+    }
+
+    // 1. Sync from user's active betting slip if present
+    if(chosenList.length === 0){
+      var betSlipNames = [];
+      (window.betSlip || []).forEach(function(bId){
+        var d = (window.betSlipData && window.betSlipData[bId]) || (window.parseBetSelection ? window.parseBetSelection(bId) : null);
+        if(d && (d.team === m.fav || d.team === m.opp || d.opp === m.fav || d.opp === m.opp)){
+          if(d.market) betSlipNames.push(d.market);
+        }
+      });
+      betSlipNames.forEach(function(bsName){
+        var f = sortedM.find(function(x){
+          return x.n === bsName || x.n.toLowerCase().indexOf(bsName.toLowerCase()) !== -1 || bsName.toLowerCase().indexOf(x.n.toLowerCase()) !== -1;
+        });
+        if(f && !chosenList.some(function(c){ return c.n === f.n; })){
+          chosenList.push(f);
+        }
+      });
+    }
 
     // 2. If match is live / kicked off (e.g. at half time), automatically pick the market that has ALREADY COME IN LIVE (w === true)
     if(chosenList.length === 0 && mk.liveStats && mk.liveStats.hasKickedOff){
@@ -8805,9 +8912,10 @@ window.getXMatchSelectedMarketsList = function(m){
       }
     }
 
-    // 3. Fallback to top confidence market
+    // 3. Fallback to sensible high-confidence featured pick (decimal >= 1.33) rather than raw 1X double chance
     if(chosenList.length === 0){
-      var defM = sortedM[0] || { n: "Match Result: " + m.fav + " to Win", p: m.fs || 75, odds: 1.55 };
+      var featuredPick = window.selectCardFeaturedBestBet ? window.selectCardFeaturedBestBet(sortedM, m, mk ? mk.liveStats : null) : null;
+      var defM = featuredPick || sortedM[0] || { n: "Match Result: " + m.fav + " to Win", p: m.fs || 75, odds: 1.55 };
       chosenList = [defM];
     }
   }
@@ -8920,7 +9028,8 @@ window.getResolvedXSelections = function(){
     var resolved = window.getXMatchSelectedMarketsList(m);
     var selectedMarkets = resolved.selectedMarkets;
     var combMatchOdds = selectedMarkets.reduce(function(acc, item){
-      return acc * (Number(item.odds) || 1.5);
+      var exactMult = window.resolveExactOddsMultiplier ? window.resolveExactOddsMultiplier(item.odds || 1.5) : (Number(item.odds) || 1.5);
+      return acc * exactMult;
     }, 1);
     var avgMatchPct = selectedMarkets.reduce(function(acc, item){
       return acc + (parseFloat(String(item.p).replace("%","")) || 75);
@@ -9502,8 +9611,52 @@ window.applyXPresetSelections = function(preset){
       window.xPostMarketOverrides[k] = slipMarketsByMatch[k];
     });
     window.xPostSelectedIds = slipIds.length > 0 ? slipIds : fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
+  } else if(preset === "banker5" || preset === "top5"){
+    var bankerPairs = window.dailyBankerSlipPairs || [];
+    if(!bankerPairs.length){
+      try {
+        var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
+        var rawBanker = localStorage.getItem("betboyai_banker_slip_" + activeDateStr);
+        if(rawBanker){
+          var parsed = JSON.parse(rawBanker);
+          if(Array.isArray(parsed) && parsed.length >= 4){
+            bankerPairs = parsed.map(function(leg){
+              var mf = fixtures.find(function(f){ return String(f.id) === String(leg.id) || (f.fav === leg.fav && f.opp === leg.opp); });
+              return { m: mf || { id: leg.id, fav: leg.fav, opp: leg.opp, league: leg.league }, bestM: { n: leg.market, p: String(leg.pct||'').replace('%',''), odds: leg.odds } };
+            });
+          }
+        }
+      } catch(eB5){}
+    }
+    if(bankerPairs.length > 0){
+      bankerPairs.slice(0, 5).forEach(function(p){
+        if(p.m){
+          var mId = Number(p.m.id);
+          if(window.xPostSelectedIds.indexOf(mId) === -1) window.xPostSelectedIds.push(mId);
+          if(p.bestM && p.bestM.n){
+            window.xPostMarketOverrides[mId] = [p.bestM.n];
+          }
+        }
+      });
+    } else {
+      window.xPostSelectedIds = fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
+    }
   } else {
-    window.xPostSelectedIds = fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
+    // Default preset: pull from daily banker slip if available
+    var defaultPairs = window.dailyBankerSlipPairs || [];
+    if(defaultPairs && defaultPairs.length >= 4){
+      defaultPairs.slice(0, 5).forEach(function(p){
+        if(p.m){
+          var mId = Number(p.m.id);
+          if(window.xPostSelectedIds.indexOf(mId) === -1) window.xPostSelectedIds.push(mId);
+          if(p.bestM && p.bestM.n){
+            window.xPostMarketOverrides[mId] = [p.bestM.n];
+          }
+        }
+      });
+    } else {
+      window.xPostSelectedIds = fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
+    }
   }
   window.syncAdminXSelectionUI();
   window.runEngine(false);
@@ -10028,7 +10181,8 @@ window.renderXPostCanvasCard = function(){
       var lp = parseFloat(String(l.p).replace("%","")) || 75;
       sumPct += lp;
       totalPctLegs += 1;
-      combOddsDec *= (Number(l.odds) || 1.5);
+      var exactMult = window.resolveExactOddsMultiplier ? window.resolveExactOddsMultiplier(l.odds || 1.5) : (Number(l.odds) || 1.5);
+      combOddsDec *= exactMult;
     });
 
     var isMatchFT = rowFix.isFT;
@@ -10238,6 +10392,17 @@ window.renderXPostCanvasCard = function(){
   ctx.strokeStyle = "rgba(52, 211, 153, 0.55)";
   ctx.lineWidth = 2;
   ctx.stroke();
+
+  // If selections match the daily banker slip, sync combined odds and £10 return to match on-site slip exactly
+  if(window.dailyBankerSlipPairs && window.dailyBankerSlipPairs.length === count && count === 5 && !isBetBuilder){
+    var allMatched = selections.every(function(s, sIdx){
+      var bPair = window.dailyBankerSlipPairs[sIdx];
+      return bPair && bPair.m && (String(bPair.m.id) === String(s.id) || (bPair.m.fav === s.fav && bPair.m.opp === s.opp));
+    });
+    if(allMatched && window.dailyBankerSlipCombinedOdds){
+      combOddsDec = window.dailyBankerSlipCombinedOdds;
+    }
+  }
 
   var combOddsDisplay = window.formatOdds(combOddsDec, true);
   var estReturn = (10 * combOddsDec).toFixed(2);
@@ -11151,6 +11316,16 @@ window.postNativeToX = function(){
   }
 };
 
+window.openBankerSlipGraphicModal = function(ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  if(window.applyXPresetSelections){
+    window.applyXPresetSelections('banker5');
+  }
+  if(window.openXPostStudio){
+    window.openXPostStudio();
+  }
+};
+
 window.openXPostStudio = function(){
   if((!window.currentEvaluatedFixtures || !window.currentEvaluatedFixtures.length) && typeof window.runEngine === "function"){
     window.runEngine(false);
@@ -11158,9 +11333,13 @@ window.openXPostStudio = function(){
   // Try loading saved selections from storage first!
   var hasLoadedSaved = window.loadSavedXCardSelections(false);
   if(!hasLoadedSaved && (!window.xPostSelectedIds || window.xPostSelectedIds.length === 0)){
-    var topFive = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; }).slice(0, 5);
-    window.xPostSelectedIds = topFive.map(function(m){ return Number(m.id); });
-    window.runEngine(false);
+    if(window.applyXPresetSelections){
+      window.applyXPresetSelections('top5');
+    } else {
+      var topFive = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); }).slice(0, 5);
+      window.xPostSelectedIds = topFive.map(function(m){ return Number(m.id); });
+      window.runEngine(false);
+    }
   }
   var modal = document.getElementById("xPostStudioModal");
   if(modal){
