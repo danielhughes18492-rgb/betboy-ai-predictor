@@ -1847,8 +1847,6 @@ document.addEventListener("DOMContentLoaded", function() {
       <button type="button" onclick="window.openAboutContactModal()" class="text-slate-400 hover:text-emerald-300 underline cursor-pointer">About / Contact</button>
       <span>•</span>
       <button type="button" onclick="window.openPrivacyTermsModal()" class="text-slate-400 hover:text-sky-300 underline cursor-pointer">Privacy Policy &amp; Terms</button>
-      <span>•</span>
-      <span class="text-slate-400">Verification: HELLO AWIN</span>
     </div>
     <script>
       if(document.getElementById("footer18PlusImg")) document.getElementById("footer18PlusImg").src = window.make18PlusLogoUrl();
@@ -2212,11 +2210,6 @@ document.addEventListener("DOMContentLoaded", function() {
         Close
       </button>
     </div>
-
-    <!-- Affiliate Network Ownership Verification -->
-    <div class="pt-2 border-t border-slate-800/80 text-center">
-      <span class="text-[9.5px] font-mono text-slate-400 tracking-wider">Verification: HELLO AWIN</span>
-    </div>
   </div>
 </div>
 
@@ -2404,8 +2397,9 @@ window.slipStake = window.safeGet("airp_slip_stake", 10);
 window.slipBetMode = window.safeGet("airp_slip_mode", "acca");
 window.oddsFormat = "frac"; // Default to Fractional until user changes it in the select box
 window.cardMarketFilter = {};
-window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=uk&markets=h2h&apiKey=684bf55faedcee9aceacb5eb68726661";
-window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=684bf55faedcee9aceacb5eb68726661";
+window.THE_ODDS_API_KEY = "e11eb4efb73076248935e6324b405e2d";
+window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=uk&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
+window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
 window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v1", {});
 window.liveBet365OddsMap = window.liveOddsApiMap;
 window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v1", {});
