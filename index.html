@@ -1753,10 +1753,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <span class="text-xs font-black text-amber-300 flex items-center gap-1.5">
             <span>⭐ AI Daily High-Confidence Banker Slip</span>
           </span>
-          <div class="flex items-center gap-1.5">
-            <span id="topAccaCombinedOddsBadge" class="text-[9.5px] bg-slate-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-mono font-bold">5-Fold</span>
-            <button type="button" id="openBankerGraphicBtn" onclick="window.openBankerSlipGraphicModal(event)" class="text-[9.5px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40 px-2 py-0.5 rounded-md font-bold transition flex items-center gap-1 cursor-pointer">📸 Shareable Slip</button>
-          </div>
+          <span id="topAccaCombinedOddsBadge" class="text-[9.5px] bg-slate-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-mono font-bold">5-Fold</span>
         </div>
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <button type="button" id="addTopAccaBtn" onclick="window.addDailyAccaToSlip(event)" class="text-[11px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-3.5 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 cursor-pointer transition btn-press flex items-center gap-1.5 flex-shrink-0">
@@ -11313,16 +11310,6 @@ window.postNativeToX = function(){
 
   if(window.showAppToast){
     window.showAppToast("💾 Card Saved! 𝕏 Tweet Prepared (Ready for Half-Time Re-Post)");
-  }
-};
-
-window.openBankerSlipGraphicModal = function(ev){
-  if(ev && ev.stopPropagation) ev.stopPropagation();
-  if(window.applyXPresetSelections){
-    window.applyXPresetSelections('banker5');
-  }
-  if(window.openXPostStudio){
-    window.openXPostStudio();
   }
 };
 
