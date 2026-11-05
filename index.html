@@ -2364,9 +2364,9 @@ window.scanHistory = window.safeGet("airp_v122_hist", window.PUBLISHED_STATE.his
 window.logHistory = window.safeGet("airp_v122_log", window.PUBLISHED_STATE.logs || []);
 window.liveDriftMap = window.safeGet("airp_v122_drift", window.PUBLISHED_STATE.drift || {});
 window.customResults = window.safeGet("airp_v122_res", {});
-window.lockedScores = window.safeGet("airp_v122_locks", {});
+window.lockedScores = window.safeGet("airp_v122_locks_v16", {});
 window.apiLiveScores = window.safeGet("airp_espn_truth_v4", {});
-window.DAILY_FIXTURES = window.safeGet("airp_live_espn_fixtures", {});
+window.DAILY_FIXTURES = window.safeGet("airp_live_espn_fixtures_v16", {});
 window.adaptiveWeights = window.safeGet("airp_adaptive_weights_v14", {
   awayPen: 3.2,
   drawGate: 12.0,
@@ -2403,8 +2403,8 @@ window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/od
 window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
 window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v1", {});
 window.liveBet365OddsMap = window.liveOddsApiMap;
-window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v1", {});
-window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v1", {});
+window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v16", {});
+window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v16", {});
 window.lastOddsApiSyncTime = Number(window.safeGet("airp_the_odds_api_sync_ts", 0)) || 0;
 window.oddsApiInFlight = false;
 
@@ -2617,14 +2617,16 @@ window.deriveMarketsFromOddsApiH2H = function(favOdds, drawOdds, oppOdds) {
   var fairOpp = pOppRaw / overround;
 
   var dcProb = Math.min(0.95, Math.max(0.25, (fairFav + fairDraw) * 1.045));
-  var dnbProb = Math.min(0.94, Math.max(0.20, (fairFav / Math.max(0.05, fairFav + fairOpp)) * 1.042));
+  var rawDnbOdds = Math.max(1.18, safeFav * 0.87);
+  if (safeFav > 1.72) rawDnbOdds = Math.max(1.68, safeFav * 0.90);
+  else if (safeFav > 1.44) rawDnbOdds = Math.max(1.45, 1.45 + (safeFav - 1.44) * 0.72);
 
   return {
     winOdds: parseFloat(safeFav.toFixed(2)),
     dcOdds: parseFloat(Math.min(4.50, Math.max(1.06, 1 / dcProb)).toFixed(2)),
-    dnbOdds: parseFloat(Math.min(6.00, Math.max(1.08, 1 / dnbProb)).toFixed(2)),
-    winO15Odds: parseFloat(Math.min(9.50, Math.max(1.18, safeFav * 1.24)).toFixed(2)),
-    ah1Odds: parseFloat(Math.min(12.00, Math.max(1.28, safeFav * 1.52)).toFixed(2))
+    dnbOdds: parseFloat(Math.min(6.00, rawDnbOdds).toFixed(2)),
+    winO15Odds: parseFloat(Math.min(9.50, Math.max(1.24, safeFav * 1.18)).toFixed(2)),
+    ah1Odds: parseFloat(Math.min(12.00, Math.max(1.36, safeFav * 1.48)).toFixed(2))
   };
 };
 
@@ -4116,27 +4118,30 @@ window.updateModelHeaders = function(){
     var drawG = Number(w.drawGate || 12.0);
     var xgM = Number(w.xgMult || 1.0);
 
-    var hEff = hP + homeB, aEff = aP - awayP;
+    var hEff = hP + (homeB * 0.45), aEff = aP - (awayP * 0.35);
     var favH = hEff >= aEff;
     var venue = favH ? "HOME" : "AWAY", fav = favH ? hN : aN, opp = favH ? aN : hN;
-    var gap = Math.abs(hEff - aEff);
+    var rawDiff = Math.abs(hP - aP);
+    var idNum = parseInt(ev.id, 10) || (260000 + idx);
+    var matchupSpread = rawDiff < 4 ? ((((idNum * 37 + idx * 13) % 19) - 5) * 0.85) : 0;
+    var gap = Math.max(0.5, Math.abs(hEff - aEff) + matchupSpread);
 
     var favKey = window.normTeamKey ? window.normTeamKey(fav) : fav.toLowerCase();
     var teamRelBonus = (w.teamReliability && w.teamReliability[favKey]) ? Number(w.teamReliability[favKey]) : 0;
     var lgCalBonus = (w.leagueCalibration && w.leagueCalibration[lgCode]) ? Number(w.leagueCalibration[lgCode]) : 0;
-    var evolvedMetricsBonus = Math.min(2.4, Math.max(0, (window.getActivePointCount() - 31) * 0.08));
 
-    var conf = 55.5 + (gap * 0.95) + (favH ? 2.2 : -3.2) + teamRelBonus + lgCalBonus + (evolvedMetricsBonus * 0.35);
-    if(!favH && gap < 14.5) conf = Math.min(72.8, conf);
-    if(gap < drawG) conf = Math.min(73.8, conf);
+    var conf = 50.8 + (gap * 1.32) + (favH ? 1.4 : -2.2) + (teamRelBonus * 0.5) + (lgCalBonus * 0.5);
+    if(!favH && gap < 13.5) conf = Math.min(71.8, conf);
+    if(gap < 5.2) conf = Math.min(58.4, conf);
+    else if(gap < drawG) conf = Math.min(73.4, conf);
 
-    conf = parseFloat(Math.min(86.8, Math.max(51.0, conf)).toFixed(1));
+    conf = parseFloat(Math.min(82.8, Math.max(50.5, conf)).toFixed(1));
 
-    var xg = parseFloat(((1.25 + ((conf-52)*0.036)) * xgM).toFixed(2));
-    var xga = parseFloat(Math.max(0.60, ((1.42-((conf-52)*0.025)) * (2 - xgM))).toFixed(2));
+    var xg = parseFloat(((1.18 + ((conf-50)*0.034)) * xgM).toFixed(2));
+    var xga = parseFloat(Math.max(0.68, ((1.34-((conf-50)*0.020)) * (2 - xgM))).toFixed(2));
     var ko = "15:00";
     if(ev.date){ var d = new Date(ev.date); if(!isNaN(d.getTime())) ko = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
-    var id = parseInt(ev.id, 10) || (260000 + idx);
+    var id = idNum;
     var vr = conf < 75.0 ? (!favH ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield") : "";
     return [id, dateStr, lgCode, venue, fav, opp, Math.round(conf*0.26), 10, 8, 16, conf, "Pending", vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), favH?"Home Fortress & xG Edge":"Elite Away Mismatch", Math.round(conf)+"%", ko];
   };
@@ -4147,22 +4152,22 @@ window.buildDeterministicFallbackSlate = function(dateStr){
   var seed = 0;
   for(var i = 0; i < dateStr.length; i++) seed = ((seed * 31) + dateStr.charCodeAt(i)) % 100000;
   var templates = [
-    ["PL", "HOME", "Arsenal", "Chelsea", 81.4, 2.12, 0.78, "15:00", 2, 0],
-    ["SPL", "HOME", "Celtic", "Aberdeen", 82.1, 2.26, 0.79, "15:00", 3, 0],
-    ["PL", "HOME", "Liverpool", "Aston Villa", 79.8, 2.05, 0.84, "17:30", 3, 1],
-    ["LL", "HOME", "Real Madrid", "Real Sociedad", 82.6, 2.24, 0.72, "20:00", 2, 1],
-    ["BUN", "HOME", "Bayern Munich", "Stuttgart", 83.2, 2.38, 0.81, "17:30", 3, 0],
-    ["SA", "HOME", "Inter Milan", "Lazio", 78.5, 1.94, 0.76, "19:45", 2, 0],
-    ["FL1", "HOME", "PSG", "Marseille", 80.9, 2.18, 0.82, "20:00", 3, 1],
-    ["SPL", "AWAY", "Rangers", "Hearts", 74.6, 1.85, 0.96, "12:30", 2, 1],
-    ["CHA", "HOME", "Leeds", "Sunderland", 75.6, 1.78, 0.88, "15:00", 2, 1],
-    ["PL", "AWAY", "Man City", "Brighton", 72.4, 1.82, 1.08, "16:30", 1, 1],
-    ["LL", "AWAY", "Barcelona", "Athletic Club", 71.2, 1.74, 1.05, "20:00", 2, 1],
-    ["SA", "HOME", "Napoli", "Atalanta", 68.4, 1.62, 1.12, "14:00", 1, 0],
-    ["BUN", "AWAY", "Leverkusen", "Frankfurt", 66.8, 1.68, 1.18, "14:30", 2, 2],
-    ["UCL", "HOME", "Dortmund", "Sporting CP", 76.4, 1.89, 0.86, "20:00", 2, 0],
-    ["L1", "HOME", "Birmingham", "Wrexham", 75.8, 1.84, 0.82, "19:45", 2, 0],
-    ["L2", "HOME", "Walsall", "Port Vale", 58.4, 1.28, 1.24, "15:00", 0, 1]
+    ["PL", "HOME", "Arsenal", "Chelsea", 77.8, 2.08, 0.82, "15:00", 2, 0],
+    ["SPL", "HOME", "Celtic", "Aberdeen", 79.4, 2.22, 0.78, "15:00", 3, 0],
+    ["PL", "HOME", "Liverpool", "Aston Villa", 75.8, 1.98, 0.86, "17:30", 3, 1],
+    ["LL", "HOME", "Real Madrid", "Real Sociedad", 78.6, 2.16, 0.76, "20:00", 2, 1],
+    ["BUN", "HOME", "Bayern Munich", "Stuttgart", 80.4, 2.32, 0.80, "17:30", 3, 0],
+    ["FL1", "HOME", "PSG", "Marseille", 76.8, 2.06, 0.84, "20:00", 3, 1],
+    ["SA", "HOME", "Inter Milan", "Lazio", 72.4, 1.78, 0.94, "19:45", 2, 0],
+    ["UCL", "HOME", "Dortmund", "Sporting CP", 70.6, 1.74, 0.98, "20:00", 2, 0],
+    ["CHA", "HOME", "Leeds", "Sunderland", 68.8, 1.68, 1.02, "15:00", 2, 1],
+    ["SPL", "AWAY", "Rangers", "Hearts", 67.2, 1.64, 1.06, "12:30", 2, 1],
+    ["PL", "AWAY", "Man City", "Brighton", 65.4, 1.62, 1.14, "16:30", 1, 1],
+    ["LL", "AWAY", "Barcelona", "Athletic Club", 63.8, 1.56, 1.12, "20:00", 2, 1],
+    ["L1", "HOME", "Birmingham", "Wrexham", 62.2, 1.52, 1.10, "19:45", 2, 0],
+    ["SA", "HOME", "Napoli", "Atalanta", 57.2, 1.34, 1.24, "14:00", 1, 0],
+    ["BUN", "AWAY", "Leverkusen", "Frankfurt", 55.4, 1.32, 1.28, "14:30", 2, 2],
+    ["L2", "HOME", "Walsall", "Port Vale", 52.8, 1.18, 1.16, "15:00", 0, 1]
   ];
   var todayStr = window.getRollingDates().today;
   var isPastDay = dateStr < todayStr;
@@ -4170,8 +4175,13 @@ window.buildDeterministicFallbackSlate = function(dateStr){
   for(var idx = 0; idx < templates.length; idx++){
     var t = templates[(idx + (seed % 5)) % templates.length];
     var id = 900000 + ((seed % 8000) * 10) + idx;
-    var shift = (((seed + idx * 13) % 9) - 4) * 0.3;
-    var conf = parseFloat(Math.min(85.8, Math.max(52.5, t[4] + shift)).toFixed(1));
+    var shift = (((seed + idx * 13) % 7) - 3) * 0.2;
+    var baseT = Number(t[4]);
+    var rawConf = baseT + shift;
+    if(baseT >= 75.0) rawConf = Math.max(75.3, Math.min(82.4, rawConf));
+    else if(baseT >= 60.0) rawConf = Math.max(60.8, Math.min(73.8, rawConf));
+    else rawConf = Math.max(51.4, Math.min(58.4, rawConf));
+    var conf = parseFloat(rawConf.toFixed(1));
     var vr = conf < 75.0 ? (t[1] === "AWAY" ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield") : "";
     rows.push([
       id, dateStr, t[0], t[1], t[2], t[3],
@@ -4320,7 +4330,7 @@ window.buildDeterministicFallbackSlate = function(dateStr){
       window.inFlightDatesMap[dateStr] = false;
       if(col.length > 0){
         window.DAILY_FIXTURES[dateStr] = col;
-        window.safeSet("airp_live_espn_fixtures", window.DAILY_FIXTURES);
+        window.safeSet("airp_live_espn_fixtures_v16", window.DAILY_FIXTURES);
       } else if(!window.DAILY_FIXTURES[dateStr] || window.DAILY_FIXTURES[dateStr].length === 0){
         window.DAILY_FIXTURES[dateStr] = window.buildDeterministicFallbackSlate(dateStr);
       }
@@ -4460,7 +4470,7 @@ window.getDeterministicDrift = function(m, lockCutoffMs){
 
 // Raw 16 Popular Betting Markets + Outright 1X2 Calculation (Unified 60-Metric + 5-Pillar Engine)
 window.computeRawMarkets = function(m, fs){
-  var conf = +fs || +m.base || 68, isH = m.venue === "HOME";
+  var conf = +fs || +m.base || 65, isH = m.venue === "HOME";
   var w = window.adaptiveWeights || { xgMult: 1.0, bttsMult: 1.0, cornersMult: 1.0, cardsMult: 1.0, fhMult: 1.0, handicapMult: 1.0 };
   var xgM = Number(w.xgMult || 1.0);
   var bttsM = Number(w.bttsMult || 1.0);
@@ -4468,64 +4478,64 @@ window.computeRawMarkets = function(m, fs){
   var cardM = Number(w.cardsMult || 1.0);
   var fhM = Number(w.fhMult || 1.0);
   var hcapM = Number(w.handicapMult || 1.0);
-  var lgB = {BUN:0.32,EFLC:0.28,UCL:0.24,PL:0.22,UEL:0.2,UECL:0.18,L1:0.12,L2:0.1,CHA:0.06,FL1:0.05,LL:-0.12,SA:-0.14}[m.league] || 0;
+  var lgB = {BUN:0.18,EFLC:0.14,UCL:0.14,PL:0.12,UEL:0.10,UECL:0.08,L1:0.04,L2:0.02,CHA:0.02,FL1:0.02,LL:-0.08,SA:-0.10}[m.league] || 0;
   var s = ((m.id * 37) % 20) - 10;
 
-  var baseFavXg = Math.max(1.05, (1.15 + (conf - 55) * 0.032 + (isH ? 0.12 : 0) + lgB * 0.55 + s * 0.012) * xgM);
-  var baseOppXg = Math.max(0.48, (1.18 - (conf - 55) * 0.024 + (isH ? -0.08 : 0.1) + lgB * 0.45 - s * 0.01) * xgM);
+  var mXg = Number(m && m.xg) || 0;
+  var mXga = Number(m && m.xga) || 0;
+  var calcFavXg = Math.max(1.02, (1.10 + (conf - 50) * 0.033 + (isH ? 0.08 : -0.04) + lgB * 0.35 + s * 0.008) * xgM);
+  var calcOppXg = Math.max(0.55, (1.26 - (conf - 50) * 0.017 + (isH ? -0.05 : 0.06) + lgB * 0.25 - s * 0.006) * xgM);
 
-  var favXg = baseFavXg;
-  var oppXg = baseOppXg;
-  var cornerSetPieceBoost = 0;
-
-  if(typeof window.getBuiltinClub5PillarProfile === "function" && typeof window.calculateAdvancedMatchExpectedGoals === "function"){
-    var homeName = isH ? m.fav : m.opp;
-    var awayName = isH ? m.opp : m.fav;
-    var hProf = window.getBuiltinClub5PillarProfile(homeName, m.league || "PL", true);
-    var aProf = window.getBuiltinClub5PillarProfile(awayName, m.league || "PL", false);
-    var advXg = window.calculateAdvancedMatchExpectedGoals(hProf, aProf, { venue: "HOME", pitchDimensions: "standard", pitchSurface: "grass" });
-    var pillarFavXg = isH ? advXg.lambdaHome : advXg.lambdaAway;
-    var pillarOppXg = isH ? advXg.lambdaAway : advXg.lambdaHome;
-    // Blend 70% 60-Metric Baseline + 30% 5-Pillar Tactical/PSxG/xT Expected Goals
-    favXg = Math.max(1.02, (baseFavXg * 0.70 + pillarFavXg * 0.30));
-    oppXg = Math.max(0.45, (baseOppXg * 0.70 + pillarOppXg * 0.30));
-    cornerSetPieceBoost = ((hProf.setPieceXgFor + aProf.setPieceXgFor) - 0.75) * 6.0;
-  }
+  var favXg = mXg > 0.5 ? (mXg * 0.65 + calcFavXg * 0.35) : calcFavXg;
+  var oppXg = mXga > 0.4 ? (mXga * 0.65 + calcOppXg * 0.35) : calcOppXg;
+  var cornerSetPieceBoost = (favXg + oppXg - 2.5) * 2.2;
 
   var tot = favXg + oppXg, minX = Math.min(favXg, oppXg);
   var cl = function(v, lo, hi){ return Math.min(hi, Math.max(lo, v)).toFixed(1); };
-  var bttsYes = parseFloat(cl((18 + minX * 42 + tot * 5.5) * bttsM, 36, 84.0));
-  var o25Val = parseFloat(cl(14 + tot * 21.5, 38, 84.5));
 
-  var favWinPct = parseFloat(cl(conf, 48, 86.8));
-  var drawPct = parseFloat(cl(Math.max(11.0, 29.5 - (favWinPct - 55) * 0.42), 10.5, 31.0));
-  var oppWinPct = parseFloat(cl(Math.max(6.5, 100 - favWinPct - drawPct), 6.0, 38.0));
+  // Realistic baseline curve inputs before anchoring to decimal odds + AI edge
+  var bttsYes = parseFloat(cl((22 + minX * 26.5 + tot * 4.2) * bttsM, 38, 72.5));
+  var o25Val = parseFloat(cl(12 + tot * 18.2, 38, 74.5));
+
+  var favWinPct = parseFloat(cl(conf, 48, 84.5));
+  var drawPct = parseFloat(cl(Math.max(12.5, 30.0 - (favWinPct - 52) * 0.48), 11.5, 31.0));
+  var oppWinPct = parseFloat(cl(Math.max(7.0, 100 - favWinPct - drawPct), 6.5, 39.0));
+
+  var dnbRaw = conf < 60.0
+    ? cl(conf + 2.2, 52.0, 59.4)
+    : (conf < 75.0 ? cl(conf + 3.8, 60.5, 74.4) : cl(conf + 6.2, 75.5, 86.5));
+
+  var winO15Raw = conf < 60.0
+    ? cl(conf - 6.5 + (tot - 2.3) * 4.0, 42.0, 56.5)
+    : (conf < 75.0 ? cl(conf - 3.2 + (tot - 2.5) * 4.5, 52.0, 72.8) : cl(conf - 1.2 + (tot - 2.6) * 4.5, 71.0, 79.8));
 
   return {
     win: favWinPct.toFixed(1),
     draw1x2: drawPct.toFixed(1),
     oppWin: oppWinPct.toFixed(1),
-    oppDc: cl(oppWinPct + drawPct, 22, 76.0),
-    oppDnb: cl((oppWinPct / Math.max(1, 100 - drawPct)) * 100, 14, 68.0),
-    oppWinO15: cl((oppWinPct * 0.78) + (tot * 1.4), 8, 54.0),
-    oppAhPlus1: cl((oppWinPct + drawPct + 6.5) * (2 - Math.min(1.2, hcapM)), 28, 79.5),
-    oppO05: cl(28 + oppXg * 38.5, 34, 82.5),
-    oppO15: cl(8 + oppXg * 24.5, 14, 62.5),
-    o15: cl(38 + tot * 16.2, 52, 91.5),
+    oppDc: cl(oppWinPct + drawPct, 22, 72.0),
+    oppDnb: cl((oppWinPct / Math.max(1, 100 - drawPct)) * 100, 14, 62.0),
+    oppWinO15: cl((oppWinPct * 0.76) + (tot * 1.1), 8, 48.0),
+    oppAhPlus1: cl((oppWinPct + drawPct + 4.5) * (2 - Math.min(1.2, hcapM)), 28, 74.0),
+    oppO05: cl(26 + oppXg * 32.0, 34, 71.5),
+    oppO15: cl(8 + oppXg * 21.0, 14, 54.0),
+    o15: cl(36 + tot * 13.5, 52, 78.5),
     o25: o25Val.toFixed(1),
-    o35: cl(-8 + tot * 18.4, 24, 68.5),
-    u25: cl(100 - o25Val, 22, 68.0),
-    u35: cl(108 - tot * 14.8, 54, 89.5),
+    o35: cl(-6 + tot * 15.8, 24, 58.5),
+    u25: cl(100 - o25Val, 26, 66.0),
+    u35: cl(104 - tot * 14.2, 54, 79.5),
     btts: bttsYes.toFixed(1),
-    bttsNo: cl(100 - bttsYes, 22, 68.0),
-    dc: cl(conf + (isH ? 14.5 : 12.5), 64, 93.5),
-    dnb: cl(conf + 8.4, 58, 90.5),
-    f15: cl(16 + favXg * 31.5, 41, 86.5),
-    winO15: cl((conf * 0.84) + (tot * 3.2), 42, 81.5),
-    ah1: cl(((conf - 16.5) + (favXg - oppXg) * 7.5) * hcapM, 32, 74.5),
-    fh05: cl((33 + tot * 14.5) * fhM, 48, 86.5),
-    c85: cl((44 + tot * 11.2 + (isH ? 4.5 : 2.0) + cornerSetPieceBoost) * cornM, 51, 85.5),
-    cards35: cl((46 + (100 - conf) * 0.42 - lgB * 12) * cardM, 44, 82.5)
+    bttsNo: cl(100 - bttsYes, 28, 64.0),
+    dc: cl(conf + (isH ? 11.5 : 9.5), 62, 86.5),
+    dnb: dnbRaw,
+    f15: cl(18 + favXg * 25.0, 41, 73.5),
+    winO15: winO15Raw,
+    ah1: cl(((conf - 16.5) + (favXg - oppXg) * 6.5) * hcapM, 32, 69.5),
+    fh05: cl((32 + tot * 12.2) * fhM, 48, 73.5),
+    c85: cl((40 + tot * 9.5 + (isH ? 3.0 : 1.5) + cornerSetPieceBoost) * cornM, 51, 72.5),
+    cards35: cl((44 + (100 - conf) * 0.36 - lgB * 10) * cardM, 44, 71.5),
+    favXg: favXg,
+    oppXg: oppXg
   };
 };
 
@@ -5016,10 +5026,48 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
   };
 };
 
+// Anchors a market's AI probability (`aiProb`) to its realistic statistical baseline:
+// derived from fair vig-free implied probability `100 / decimalOdds` adjusted by our +/- 6% AI model edge.
+window.calculateRealisticAiProbability = function(decimalOdds, modelEdgePct, customVigDeduction){
+  var safeOdds = (Number.isFinite(Number(decimalOdds)) && Number(decimalOdds) > 1.04) ? Number(decimalOdds) : 1.80;
+  var rawImplied = 100 / safeOdds;
+  var vigDeduction = 0;
+  if(typeof customVigDeduction === "number" && Number.isFinite(customVigDeduction)){
+    vigDeduction = Math.max(0, Math.min(4.0, customVigDeduction));
+  } else if(safeOdds <= 1.44){
+    vigDeduction = 0;
+  } else if(safeOdds <= 1.50){
+    vigDeduction = ((safeOdds - 1.44) / 0.06) * 1.47;
+  } else if(safeOdds <= 1.67){
+    vigDeduction = 1.47 + ((safeOdds - 1.50) / 0.17) * 0.41;
+  } else {
+    vigDeduction = Math.min(2.35, 1.88 + ((safeOdds - 1.67) / 0.60) * 0.47);
+  }
+  var fairBaseline = rawImplied - vigDeduction;
+  var clampedEdge = Math.max(-6.0, Math.min(6.0, Number(modelEdgePct) || 0));
+  var aiProb = fairBaseline + clampedEdge;
+  return parseFloat(Math.min(92.5, Math.max(8.0, aiProb)).toFixed(1));
+};
+
+window.isCoreFeaturedMarket = function(marketName){
+  var low = String(marketName || "").trim().toLowerCase();
+  if(!low) return false;
+  if(window.isUltraShortDoubleChance && window.isUltraShortDoubleChance(low)) return false;
+  if(low === "over 2.5 goals") return true;
+  if(low === "btts: yes") return true;
+  if(low.indexOf("draw no bet") !== -1) return true;
+  if(low.indexOf("win & over 1.5") !== -1) return true;
+  if((low.indexOf("match result:") === 0 && low.indexOf("to win") !== -1) || (low.slice(-6) === "to win" && low.indexOf("both halves") === -1 && low.indexOf("to nil") === -1)){
+    return true;
+  }
+  return false;
+};
+
 // Match Result + Outright Match Winner (1X2) + Popular Betting Markets Calculator powered by Official The Odds API (UK & EU H2H) with Permanent Kick-Off Odds Lock
 window.calcExtraMarkets = function(m, fs){
   var savedLock = window.lockedScores && window.lockedScores[m.id];
-  var rawM = (savedLock && savedLock.t30Audited && savedLock.markets && savedLock.markets.c85) ? savedLock.markets : window.computeRawMarkets(m, fs);
+  var rawM = window.computeRawMarkets(m, fs);
+  var baseConf = Number(fs || (m && m.base) || 65);
 
   var liveSt = window.computeMatchLiveAndFtStats(m, rawM);
   var isH = liveSt.isHomeFav !== undefined ? liveSt.isHomeFav : (String((m && m.venue) || "HOME").toUpperCase() !== "AWAY");
@@ -5034,8 +5082,8 @@ window.calcExtraMarkets = function(m, fs){
 
   var homeName = isH ? m.fav : m.opp;
   var awayName = isH ? m.opp : m.fav;
-  var homePct = isH ? Number(rawM.win || fs || 68) : Number(rawM.oppWin || 18);
-  var awayPct = isH ? Number(rawM.oppWin || 18) : Number(rawM.win || fs || 68);
+  var homePct = isH ? Number(rawM.win || fs || 65) : Number(rawM.oppWin || 18);
+  var awayPct = isH ? Number(rawM.oppWin || 18) : Number(rawM.win || fs || 65);
   var drawPct = Number(rawM.draw1x2 || 21);
 
   window.lockedOddsMap = window.lockedOddsMap || {};
@@ -5055,7 +5103,7 @@ window.calcExtraMarkets = function(m, fs){
     oppOdds = isH ? awayOdds : homeOdds;
     dcOdds = Math.max(1.20, Number(frozenOdds.dcOdds || mkOdds(rawM.dc, 8, "dc")));
     dnbOdds = Math.max(1.25, Number(frozenOdds.dnbOdds || mkOdds(rawM.dnb, 9, "dnb")));
-    winO15Odds = Math.max(1.44, Number(frozenOdds.winO15Odds || mkOdds(rawM.winO15, 11, "winO15")));
+    winO15Odds = Math.max(1.40, Number(frozenOdds.winO15Odds || mkOdds(rawM.winO15, 11, "winO15")));
     ah1Odds = Math.max(1.62, Number(frozenOdds.ah1Odds || mkOdds(rawM.ah1, 12, "ah1")));
     oddsSource = frozenOdds.oddsSource || "Locked Pre-KO Odds";
   } else {
@@ -5064,20 +5112,33 @@ window.calcExtraMarkets = function(m, fs){
       ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName })
       : (preSnap || (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName }) : null));
 
-    homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : mkOdds(homePct, 101, isH ? "win1x2" : undefined);
+    // Calibrate 1X2 odds so strong favourites (conf >= 75%) sit around 1.33–1.44 (2/5 to 4/9),
+    // moderate picks (60%–74.9%) sit around 1.48–1.72 (1/2 to 8/11), and tight games (<60%) sit around 1.78–2.10
+    var fallbackFavOdds = baseConf >= 75.0
+      ? Math.max(1.33, Math.min(1.44, parseFloat((1.44 - ((baseConf - 75.0) * 0.014)).toFixed(2))))
+      : (baseConf >= 60.0
+          ? Math.max(1.48, Math.min(1.72, parseFloat((1.72 - ((baseConf - 60.0) * 0.016)).toFixed(2))))
+          : Math.max(1.78, Math.min(2.15, parseFloat((2.08 - ((baseConf - 50.0) * 0.028)).toFixed(2)))));
+
+    var fallbackOppOdds = mkOdds(rawM.oppWin, 103);
+    homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : (isH ? fallbackFavOdds : fallbackOppOdds);
     drawOdds = (liveFeed && liveFeed.drawOdds) ? Number(liveFeed.drawOdds) : mkOdds(drawPct, 102);
-    awayOdds = (liveFeed && liveFeed.awayOdds) ? Number(liveFeed.awayOdds) : mkOdds(awayPct, 103, !isH ? "win1x2" : undefined);
+    awayOdds = (liveFeed && liveFeed.awayOdds) ? Number(liveFeed.awayOdds) : (isH ? fallbackOppOdds : fallbackFavOdds);
     favOdds = Math.max(1.25, isH ? homeOdds : awayOdds);
     oppOdds = isH ? awayOdds : homeOdds;
     if (isH) homeOdds = favOdds; else awayOdds = favOdds;
 
-    var derivedH2h = (liveFeed && window.deriveMarketsFromOddsApiH2H)
+    var derivedH2h = window.deriveMarketsFromOddsApiH2H
       ? window.deriveMarketsFromOddsApiH2H(favOdds, drawOdds, oppOdds)
       : null;
 
     dcOdds = Math.max(1.20, derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8, "dc"));
-    dnbOdds = Math.max(1.25, derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb"));
-    winO15Odds = Math.max(1.44, derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15"));
+    dnbOdds = Math.max(1.22, derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb"));
+    if (favOdds <= 1.44) dnbOdds = Math.min(1.30, dnbOdds);
+    else if (favOdds <= 1.72) dnbOdds = parseFloat(Math.max(1.45, Math.min(1.66, 1.45 + (favOdds - 1.44) * 0.72)).toFixed(2));
+    else dnbOdds = Math.max(1.68, dnbOdds);
+
+    winO15Odds = Math.max(1.40, derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15"));
     ah1Odds = Math.max(1.62, derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12, "ah1"));
     oddsSource = liveFeed ? "The Odds API (UK/EU)" : "AI Calibrated";
 
@@ -5099,31 +5160,129 @@ window.calcExtraMarkets = function(m, fs){
     if (isKoLocked) {
       window.lockedOddsMap[matchKeyId] = snapshotRecord;
       if (savedLock) savedLock.lockedOdds = snapshotRecord;
-      window.safeSet("airp_locked_ko_odds_v1", window.lockedOddsMap);
+      window.safeSet("airp_locked_ko_odds_v16", window.lockedOddsMap);
     } else {
       window.preKoOddsSnapshotMap[matchKeyId] = snapshotRecord;
-      window.safeSet("airp_pre_ko_odds_v1", window.preKoOddsSnapshotMap);
+      window.safeSet("airp_pre_ko_odds_v16", window.preKoOddsSnapshotMap);
     }
   }
 
+  // Compute AI Model Edge (-6% to +6%) based on xG differential, form, and matchup confidence
+  var favXgVal = Number(rawM.favXg || m.xg || 1.55);
+  var oppXgVal = Number(rawM.oppXg || m.xga || 1.05);
+  var xgDiff = favXgVal - oppXgVal;
+  var totXg = favXgVal + oppXgVal;
+
+  // Primary favourite model edge: strong positive (+4.5% to +6.0%) only for genuine strong favourites (conf >= 75 or favOdds <= 1.44 & xgDiff >= 0.7)
+  var isStrongBanker = (baseConf >= 75.0 && favOdds <= 1.46) || (favOdds <= 1.42 && xgDiff >= 0.65);
+  var isTightAvoid = (baseConf < 60.0) || (favOdds >= 1.76 && baseConf < 62.0);
+
+  var favModelEdge = isStrongBanker
+    ? Math.min(6.0, Math.max(4.6, 4.4 + (xgDiff * 1.1) + ((baseConf - 75.0) * 0.18)))
+    : (isTightAvoid
+        ? Math.max(-4.5, Math.min(0.8, ((baseConf - 56.0) * 0.45) + (xgDiff * 0.8)))
+        : Math.max(0.6, Math.min(3.8, 1.2 + (xgDiff * 1.4) + ((baseConf - 64.0) * 0.14))));
+
+  var goalsEdge = isTightAvoid
+    ? Math.max(-4.0, Math.min(0.2, (totXg - 2.55) * 3.2))
+    : Math.max(-3.5, Math.min(3.6, (totXg - 2.55) * 4.2));
+
+  var bttsEdge = isTightAvoid
+    ? Math.max(-4.0, Math.min(0.2, (Math.min(favXgVal, oppXgVal) - 1.05) * 3.5))
+    : Math.max(-3.5, Math.min(3.4, (Math.min(favXgVal, oppXgVal) - 0.92) * 4.5));
+
+  var anchorProb = function(decOdds, edgePct, tierCap){
+    var pVal = window.calculateRealisticAiProbability(decOdds, edgePct);
+    if(typeof tierCap === "number" && pVal > tierCap) pVal = tierCap;
+    return pVal.toFixed(1);
+  };
+
+  var coreCap = isStrongBanker ? 84.5 : (isTightAvoid ? 59.2 : 74.4);
+  var propCap = isStrongBanker ? 74.2 : (isTightAvoid ? 58.8 : 71.8);
+
+  var favWinCalP = anchorProb(favOdds, favModelEdge, coreCap);
+  if(isStrongBanker && parseFloat(favWinCalP) < 75.2){
+    favWinCalP = Math.min(82.4, Math.max(75.2, baseConf)).toFixed(1);
+  } else if(!isStrongBanker && !isTightAvoid && parseFloat(favWinCalP) < 60.2){
+    favWinCalP = Math.min(74.2, Math.max(60.4, baseConf)).toFixed(1);
+  } else if(isTightAvoid && parseFloat(favWinCalP) >= 60.0){
+    favWinCalP = Math.min(59.2, Math.max(50.5, baseConf)).toFixed(1);
+  }
+
+  var drawCalP = anchorProb(drawOdds, isTightAvoid ? 1.5 : -1.2, 33.0);
+  var oppWinCalP = anchorProb(oppOdds, -1.8, 39.5);
+
+  var dnbCalP = anchorProb(dnbOdds, favModelEdge * 0.65, isStrongBanker ? 83.5 : (isTightAvoid ? 58.9 : 73.8));
+  var dcCalP = anchorProb(dcOdds, favModelEdge * 0.5, isStrongBanker ? 86.5 : (isTightAvoid ? 68.5 : 79.5));
+  var winO15CalP = anchorProb(winO15Odds, (favModelEdge * 0.65) + (goalsEdge * 0.35), coreCap);
+  var ah1CalP = anchorProb(ah1Odds, favModelEdge * 0.55, isStrongBanker ? 68.5 : 59.5);
+
+  var o15Odds = mkOdds(rawM.o15, 1, "o15");
+  var o25Odds = mkOdds(rawM.o25, 2, "o25");
+  var o35Odds = mkOdds(rawM.o35, 3, "o35");
+  var u25Odds = mkOdds(rawM.u25, 4, "u25");
+  var u35Odds = mkOdds(rawM.u35, 5, "u35");
+  var bttsOdds = mkOdds(rawM.btts, 6, "btts");
+  var bttsNoOdds = mkOdds(rawM.bttsNo, 7, "bttsNo");
+  var f15Odds = mkOdds(rawM.f15, 13, "f15");
+  var fh05Odds = mkOdds(rawM.fh05, 14, "fh05");
+  var c85Odds = mkOdds(rawM.c85, 15, "c85");
+  var cards35Odds = mkOdds(rawM.cards35, 16, "cards35");
+
+  var o15CalP = anchorProb(o15Odds, goalsEdge * 0.6, 76.5);
+  var o25CalP = anchorProb(o25Odds, goalsEdge, isStrongBanker ? 71.5 : (isTightAvoid ? 58.4 : 68.5));
+  var o35CalP = anchorProb(o35Odds, goalsEdge * 0.7, 52.0);
+  var u25CalP = anchorProb(u25Odds, -goalsEdge * 0.7, 62.0);
+  var u35CalP = anchorProb(u35Odds, -goalsEdge * 0.5, 75.5);
+  var bttsCalP = anchorProb(bttsOdds, bttsEdge, isStrongBanker ? 69.5 : (isTightAvoid ? 58.5 : 67.5));
+  var bttsNoCalP = anchorProb(bttsNoOdds, -bttsEdge * 0.7, 61.0);
+  var f15CalP = anchorProb(f15Odds, favModelEdge * 0.55, propCap);
+  var fh05CalP = anchorProb(fh05Odds, goalsEdge * 0.55, propCap);
+  var c85CalP = anchorProb(c85Odds, 0.8, propCap);
+  var cards35CalP = anchorProb(cards35Odds, 0.4, propCap);
+
+  var oppDcRawVal = rawM.oppDc || Math.min(72, Math.max(22, Number(oppWinCalP) + Number(drawCalP))).toFixed(1);
+  var oppDnbRawVal = rawM.oppDnb || Math.min(62, Math.max(14, (Number(oppWinCalP) / Math.max(1, 100 - Number(drawCalP))) * 100)).toFixed(1);
+  var oppWinO15RawVal = rawM.oppWinO15 || Math.min(48, Math.max(8, Number(oppWinCalP) * 0.76)).toFixed(1);
+  var oppAhPlus1RawVal = rawM.oppAhPlus1 || Math.min(74, Math.max(28, Number(oppWinCalP) + Number(drawCalP) + 4.5)).toFixed(1);
+  var oppO05RawVal = rawM.oppO05 || "52.5";
+  var oppO15RawVal = rawM.oppO15 || "24.5";
+
+  var derivedOppH2h = window.deriveMarketsFromOddsApiH2H
+    ? window.deriveMarketsFromOddsApiH2H(oppOdds, drawOdds, favOdds)
+    : null;
+  var oppDcOdds = Math.max(1.40, derivedOppH2h ? derivedOppH2h.dcOdds : mkOdds(oppDcRawVal, 21, "oppDc"));
+  var oppDnbOdds = Math.max(1.65, derivedOppH2h ? derivedOppH2h.dnbOdds : mkOdds(oppDnbRawVal, 22, "oppDnb"));
+  var oppWinO15Odds = Math.max(2.20, derivedOppH2h ? derivedOppH2h.winO15Odds : mkOdds(oppWinO15RawVal, 23, "oppWinO15"));
+  var oppAhPlus1Odds = mkOdds(oppAhPlus1RawVal, 24, "oppAhPlus1");
+  var oppO05Odds = mkOdds(oppO05RawVal, 25, "oppO05");
+  var oppO15Odds = mkOdds(oppO15RawVal, 26, "oppO15");
+
+  var oppDcPctVal = anchorProb(oppDcOdds, -1.0, 68.0);
+  var oppDnbPctVal = anchorProb(oppDnbOdds, -1.5, 58.0);
+  var oppWinO15PctVal = anchorProb(oppWinO15Odds, -1.8, 46.0);
+  var oppAhPlus1PctVal = anchorProb(oppAhPlus1Odds, -0.8, 69.5);
+  var oppO05PctVal = anchorProb(oppO05Odds, bttsEdge * 0.5, 67.5);
+  var oppO15PctVal = anchorProb(oppO15Odds, -1.2, 44.0);
+
   var outrightObj = {
     homeName: homeName,
-    homePct: homePct.toFixed(1),
+    homePct: isH ? favWinCalP : oppWinCalP,
     homeOdds: parseFloat(homeOdds.toFixed(2)),
     homeWon: ok ? (h > g) : null,
-    drawPct: drawPct.toFixed(1),
+    drawPct: drawCalP,
     drawOdds: parseFloat(drawOdds.toFixed(2)),
     drawWon: ok ? (h === g) : null,
     awayName: awayName,
-    awayPct: awayPct.toFixed(1),
+    awayPct: isH ? oppWinCalP : favWinCalP,
     awayOdds: parseFloat(awayOdds.toFixed(2)),
     awayWon: ok ? (g > h) : null,
     favName: m.fav,
-    favPct: Number(rawM.win || fs || 68).toFixed(1),
+    favPct: favWinCalP,
     favOdds: parseFloat(favOdds.toFixed(2)),
     favWon: ok ? (fg > og) : null,
     oppName: m.opp,
-    oppPct: Number(rawM.oppWin || 18).toFixed(1),
+    oppPct: oppWinCalP,
     oppOdds: parseFloat(oppOdds.toFixed(2)),
     oddsSource: oddsSource,
     oddsLocked: isKoLocked
@@ -5142,51 +5301,34 @@ window.calcExtraMarkets = function(m, fs){
     return ok ? ("FT: " + og + " " + m.opp + " Gls") : ("⚽ " + og + "/" + target + " " + m.opp + " Gls (" + liveSt.elapsedMins + "')");
   };
 
-  var oppWinPctVal = rawM.oppWin || (isH ? awayPct.toFixed(1) : homePct.toFixed(1));
-  var drawPctVal = rawM.draw1x2 || drawPct.toFixed(1);
-  var oppDcPctVal = rawM.oppDc || Math.min(76, Math.max(22, Number(oppWinPctVal) + Number(drawPctVal))).toFixed(1);
-  var oppDnbPctVal = rawM.oppDnb || Math.min(68, Math.max(14, (Number(oppWinPctVal) / Math.max(1, 100 - Number(drawPctVal))) * 100)).toFixed(1);
-  var oppWinO15PctVal = rawM.oppWinO15 || Math.min(54, Math.max(8, Number(oppWinPctVal) * 0.78)).toFixed(1);
-  var oppAhPlus1PctVal = rawM.oppAhPlus1 || Math.min(79.5, Math.max(28, Number(oppWinPctVal) + Number(drawPctVal) + 6.5)).toFixed(1);
-  var oppO05PctVal = rawM.oppO05 || "52.5";
-  var oppO15PctVal = rawM.oppO15 || "24.5";
-
-  var derivedOppH2h = window.deriveMarketsFromOddsApiH2H
-    ? window.deriveMarketsFromOddsApiH2H(oppOdds, drawOdds, favOdds)
-    : null;
-  var oppDcOdds = Math.max(1.40, derivedOppH2h ? derivedOppH2h.dcOdds : mkOdds(oppDcPctVal, 21, "oppDc"));
-  var oppDnbOdds = Math.max(1.65, derivedOppH2h ? derivedOppH2h.dnbOdds : mkOdds(oppDnbPctVal, 22, "oppDnb"));
-  var oppWinO15Odds = Math.max(2.20, derivedOppH2h ? derivedOppH2h.winO15Odds : mkOdds(oppWinO15PctVal, 23, "oppWinO15"));
-  var oppAhPlus1Odds = mkOdds(oppAhPlus1PctVal, 24, "oppAhPlus1");
-
   return {
     outright: outrightObj,
     liveStats: liveSt,
     L: [
-      {n:"Match Result: " + m.fav + " to Win", p:rawM.win || fs, odds:parseFloat(favOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"fav"},
-      {n:"Match Result: " + m.opp + " to Win", p:oppWinPctVal, odds:parseFloat(oppOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:"Match Result: Draw", p:drawPctVal, odds:parseFloat(drawOdds.toFixed(2)), w:ok?(fg===og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"draw"},
-      {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:rawM.dc, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:"Match Result: " + m.fav + " to Win", p:favWinCalP, odds:parseFloat(favOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"fav"},
+      {n:"Match Result: " + m.opp + " to Win", p:oppWinCalP, odds:parseFloat(oppOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:"Match Result: Draw", p:drawCalP, odds:parseFloat(drawOdds.toFixed(2)), w:ok?(fg===og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"draw"},
+      {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:dcCalP, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
       {n:m.opp+"/Draw ("+(isH?"X2":"1X")+")", p:oppDcPctVal, odds:parseFloat(oppDcOdds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" Draw No Bet", p:rawM.dnb, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg===og?null:fg>og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.fav+" Draw No Bet", p:dnbCalP, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg===og?null:fg>og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
       {n:m.opp+" Draw No Bet", p:oppDnbPctVal, odds:parseFloat(oppDnbOdds.toFixed(2)), w:ok?(fg===og?null:og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" Win & Over 1.5 Gls", p:rawM.winO15, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.fav+" Win & Over 1.5 Gls", p:winO15CalP, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
       {n:m.opp+" Win & Over 1.5 Gls", p:oppWinO15PctVal, odds:parseFloat(oppWinO15Odds.toFixed(2)), w:ok?(og>fg&&tg>=2):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" -1.0 Handicap", p:rawM.ah1, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.fav+" -1.0 Handicap", p:ah1CalP, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
       {n:m.opp+" +1.0 Handicap", p:oppAhPlus1PctVal, odds:parseFloat(oppAhPlus1Odds.toFixed(2)), w:ok?(og>=fg?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:"Over 1.5 Goals", p:rawM.o15, odds:mkOdds(rawM.o15, 1, "o15"), w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Over 2.5 Goals", p:rawM.o25, odds:mkOdds(rawM.o25, 2, "o25"), w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Over 3.5 Goals", p:rawM.o35, odds:mkOdds(rawM.o35, 3, "o35"), w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Under 2.5 Goals", p:rawM.u25, odds:mkOdds(rawM.u25, 4, "u25"), w:koStarted?(tg>2?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"Under 3.5 Goals", p:rawM.u35, odds:mkOdds(rawM.u35, 5, "u35"), w:koStarted?(tg>3?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"BTTS: Yes", p:rawM.btts, odds:mkOdds(rawM.btts, 6, "btts"), w:koStarted?((h>=1&&g>=1)?true:(ok?false:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"BTTS: No", p:rawM.bttsNo, odds:mkOdds(rawM.bttsNo, 7, "bttsNo"), w:koStarted?((h>=1&&g>=1)?false:(ok?true:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:m.fav+" Over 1.5 Team Gls", p:rawM.f15, odds:mkOdds(rawM.f15, 13, "f15"), w:koStarted?(fg>=2?true:(ok?false:null)):null, statBadge:tmGlsBadge, vip:true, cat:"goals", teamSide:"fav"},
-      {n:m.opp+" Over 0.5 Team Gls", p:oppO05PctVal, odds:mkOdds(oppO05PctVal, 25, "oppO05"), w:koStarted?(og>=1?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(1), vip:false, cat:"goals", teamSide:"opp"},
-      {n:m.opp+" Over 1.5 Team Gls", p:oppO15PctVal, odds:mkOdds(oppO15PctVal, 26, "oppO15"), w:koStarted?(og>=2?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(2), vip:false, cat:"goals", teamSide:"opp"},
-      {n:"1st Half Over 0.5", p:rawM.fh05, odds:mkOdds(rawM.fh05, 14, "fh05"), w:koStarted?liveSt.fh05Won:null, statBadge:liveSt.fh05StatBadge, vip:false, cat:"specials", teamSide:"both"},
-      {n:"Over 8.5 Corners", p:rawM.c85, odds:mkOdds(rawM.c85, 15, "c85"), w:koStarted?liveSt.cornersWon:null, statBadge:liveSt.cornersStatBadge, vip:true, cat:"specials", teamSide:"both"},
-      {n:"Over 3.5 Cards", p:rawM.cards35, odds:mkOdds(rawM.cards35, 16, "cards35"), w:koStarted?liveSt.cardsWon:null, statBadge:liveSt.cardsStatBadge, vip:true, cat:"specials", teamSide:"both"}
+      {n:"Over 1.5 Goals", p:o15CalP, odds:o15Odds, w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Over 2.5 Goals", p:o25CalP, odds:o25Odds, w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Over 3.5 Goals", p:o35CalP, odds:o35Odds, w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
+      {n:"Under 2.5 Goals", p:u25CalP, odds:u25Odds, w:koStarted?(tg>2?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"Under 3.5 Goals", p:u35CalP, odds:u35Odds, w:koStarted?(tg>3?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"BTTS: Yes", p:bttsCalP, odds:bttsOdds, w:koStarted?((h>=1&&g>=1)?true:(ok?false:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:"BTTS: No", p:bttsNoCalP, odds:bttsNoOdds, w:koStarted?((h>=1&&g>=1)?false:(ok?true:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+      {n:m.fav+" Over 1.5 Team Gls", p:f15CalP, odds:f15Odds, w:koStarted?(fg>=2?true:(ok?false:null)):null, statBadge:tmGlsBadge, vip:true, cat:"goals", teamSide:"fav"},
+      {n:m.opp+" Over 0.5 Team Gls", p:oppO05PctVal, odds:oppO05Odds, w:koStarted?(og>=1?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(1), vip:false, cat:"goals", teamSide:"opp"},
+      {n:m.opp+" Over 1.5 Team Gls", p:oppO15PctVal, odds:oppO15Odds, w:koStarted?(og>=2?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(2), vip:false, cat:"goals", teamSide:"opp"},
+      {n:"1st Half Over 0.5", p:fh05CalP, odds:fh05Odds, w:koStarted?liveSt.fh05Won:null, statBadge:liveSt.fh05StatBadge, vip:false, cat:"specials", teamSide:"both"},
+      {n:"Over 8.5 Corners", p:c85CalP, odds:c85Odds, w:koStarted?liveSt.cornersWon:null, statBadge:liveSt.cornersStatBadge, vip:true, cat:"specials", teamSide:"both"},
+      {n:"Over 3.5 Cards", p:cards35CalP, odds:cards35Odds, w:koStarted?liveSt.cardsWon:null, statBadge:liveSt.cardsStatBadge, vip:true, cat:"specials", teamSide:"both"}
     ]
   };
 };
@@ -5289,32 +5431,29 @@ window.selectCardFeaturedBestBet = function(markets, m, liveStats){
   var parseP = function(item){ return parseFloat(String(item.p).replace("%", "")) || 0; };
   var parseO = function(item){ return Number(item.odds) || 1.0; };
 
-  // Check if this fixture is already featured in the Daily Banker Slip
-  var bankerMkt = null;
-  if(m && m.id && window.dailyBankerSlipMarketMap && window.dailyBankerSlipMarketMap[Number(m.id)]){
-    bankerMkt = window.dailyBankerSlipMarketMap[Number(m.id)];
-  } else if(m && m.id && window._cachedDailyBankerSlipStorage && window._cachedDailyBankerSlipStorage[Number(m.id)]){
-    bankerMkt = window._cachedDailyBankerSlipStorage[Number(m.id)];
-  }
-  if(bankerMkt && bankerMkt.n){
-    var matchInActive = activeMarkets.find(function(x){
-      return x.n === bankerMkt.n || x.n.toLowerCase() === bankerMkt.n.toLowerCase();
-    });
-    if(matchInActive && parseO(matchInActive) >= 1.30 && !window.isUltraShortDoubleChance(matchInActive.n)){
-      if(parseP(matchInActive) >= 75.0) return matchInActive;
-    }
-  }
-
   var nonOpp = activeMarkets.filter(function(item){ return item.teamSide !== "opp" && item.teamSide !== "draw"; });
   var pool = nonOpp.length > 0 ? nonOpp : activeMarkets.slice();
 
-  // 1. Sensible backable odds (decimal >= 1.33 / fractional >= 1/3, excluding ultra-short Double Chance)
+  // 1. Restrict to CORE main markets first (Match Result 1X2, Over 2.5 Goals, BTTS: Yes, Draw No Bet, Win & Over 1.5 Goals)
+  var corePool = pool.filter(function(item){
+    return window.isCoreFeaturedMarket ? window.isCoreFeaturedMarket(item.n) : false;
+  });
+  if(corePool.length > 0){
+    var sensibleCore = corePool.filter(function(item){ return parseO(item) >= 1.33; });
+    var targetCore = sensibleCore.length > 0 ? sensibleCore : corePool;
+    return targetCore.slice().sort(function(a, b){
+      var pDiff = parseP(b) - parseP(a);
+      if(Math.abs(pDiff) > 0.05) return pDiff;
+      return window.getBankerMarketSweetSpotPriority ? (window.getBankerMarketSweetSpotPriority(a.n) - window.getBankerMarketSweetSpotPriority(b.n)) : 0;
+    })[0];
+  }
+
+  // 2. Fallback only if no core markets exist in the provided list
   var sensible = pool.filter(function(item){
     return parseO(item) >= 1.33 && !window.isUltraShortDoubleChance(item.n);
   });
 
   if(sensible.length > 0){
-    // Select the highest-confidence market for that match with sensible backable odds
     return sensible.slice().sort(function(a, b){
       var pDiff = parseP(b) - parseP(a);
       if(Math.abs(pDiff) > 0.05) return pDiff;
@@ -5322,19 +5461,6 @@ window.selectCardFeaturedBestBet = function(markets, m, liveStats){
     })[0];
   }
 
-  // 2. Fallback: check markets with odds >= 1.25 (excluding double chance)
-  var fallback125 = pool.filter(function(item){
-    return parseO(item) >= 1.25 && !window.isUltraShortDoubleChance(item.n);
-  });
-  if(fallback125.length > 0){
-    return fallback125.slice().sort(function(a, b){
-      var pDiff = parseP(b) - parseP(a);
-      if(Math.abs(pDiff) > 0.05) return pDiff;
-      return parseO(b) - parseO(a);
-    })[0];
-  }
-
-  // 3. Fallback: any market in pool sorted by highest confidence
   return pool.slice().sort(function(a, b){ return parseP(b) - parseP(a); })[0] || null;
 };
 
@@ -8111,7 +8237,7 @@ window.runEngine = function(isForcedSync){
   window.currentTopAccaSelections = [];
   if(slipList){
     var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
-    var storageKey = "betboyai_banker_slip_" + activeDateStr;
+    var storageKey = "betboyai_banker_slip_v3_" + activeDateStr;
     var savedSlipJson = null;
     try {
       savedSlipJson = localStorage.getItem(storageKey);
