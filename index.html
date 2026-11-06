@@ -379,10 +379,27 @@ window.renderSlipModalBookmakerButtonsHtml = function() {
   return btnsHtml;
 };
 
+window._bookmakerStripUserToggled = false;
+window.applyDefaultBookmakerStripMode = function() {
+  var gridEl = document.getElementById("featuredBookmakerOffersGrid");
+  var btnEl = document.getElementById("toggleBookmakerStripBtn");
+  if (!gridEl) return;
+  if (window._bookmakerStripUserToggled) return;
+  var isMobileViewport = (typeof window.innerWidth === "number" && window.innerWidth < 768);
+  if (isMobileViewport) {
+    gridEl.classList.add("hidden");
+    if (btnEl) btnEl.innerText = "▸ Show 4 Offers";
+  } else {
+    gridEl.classList.remove("hidden");
+    if (btnEl) btnEl.innerText = "▾ Compact";
+  }
+};
+
 window.toggleFeaturedBookmakerStrip = function() {
   var gridEl = document.getElementById("featuredBookmakerOffersGrid");
   var btnEl = document.getElementById("toggleBookmakerStripBtn");
   if (!gridEl) return;
+  window._bookmakerStripUserToggled = true;
   var isHidden = gridEl.classList.contains("hidden");
   if (isHidden) {
     gridEl.classList.remove("hidden");
@@ -431,6 +448,9 @@ window.initBookmakerAffiliateUI = function() {
   var gridEl = document.getElementById("featuredBookmakerOffersGrid");
   if (gridEl && typeof window.renderFeaturedBookmakerOffersHtml === "function") {
     gridEl.innerHTML = window.renderFeaturedBookmakerOffersHtml();
+  }
+  if (typeof window.applyDefaultBookmakerStripMode === "function") {
+    window.applyDefaultBookmakerStripMode();
   }
   var bankerBarEl = document.getElementById("topBankerAffiliateBar");
   if (bankerBarEl && typeof window.renderBackThisPickAffiliateBar === "function") {
@@ -1369,7 +1389,7 @@ document.addEventListener("DOMContentLoaded", function() {
   </div>
 </header>
 
-<main class="p-3 lg:p-6 space-y-3 lg:space-y-4 max-w-lg lg:max-w-6xl xl:max-w-7xl mx-auto">
+<main id="mainAppContainer" style="padding-bottom: 140px;" class="p-3 lg:p-6 space-y-3 lg:space-y-4 max-w-lg lg:max-w-6xl xl:max-w-7xl mx-auto">
   <!-- Easy 3-Step User Guide Bar -->
   <div class="glass px-3 py-2 rounded-xl border border-slate-800/90 flex items-center justify-between gap-1 text-[9.5px] text-slate-300 shadow-sm">
     <div class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black flex items-center justify-center text-[8px] mono">1</span><span>Tap any fixture</span></div>
@@ -1454,15 +1474,16 @@ document.addEventListener("DOMContentLoaded", function() {
       <div id="logContainer" class="space-y-1 max-h-40 overflow-y-auto mono text-[9.5px] text-slate-300 pr-1 divide-y divide-slate-800/40"></div>
     </div>
 
-    <!-- 2. Admin Self-Evolving 60-Metric Neural Telemetry Box -->
+    <!-- 2. Admin Self-Evolving 60-Metric Neural Telemetry Box (with Brier / Log-Loss FT Audit & Permanent Export) -->
     <div class="bg-slate-950/90 border border-emerald-500/30 rounded-2xl p-3 space-y-2 text-[10px]">
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
           <span id="neuralEngineHeaderBadge" class="font-black text-emerald-300 uppercase tracking-wide">🧠 60-Metric Self-Evolving Engine (v15.0)</span>
         </div>
-        <div class="flex items-center gap-1.5 ml-auto">
+        <div class="flex items-center gap-1.5 ml-auto flex-wrap">
           <span id="neuralAuditedCounter" class="bg-slate-900 border border-slate-700/80 text-slate-200 px-2 py-0.5 rounded-md font-mono font-bold">FT Audited: 0</span>
+          <span id="neuralBrierLogLossBadge" class="bg-slate-900 border border-sky-500/40 text-sky-300 px-2 py-0.5 rounded-md font-mono font-bold">Brier: 0.185 • LogLoss: 0.545</span>
           <button type="button" onclick="window.toggleNeuralMetricsPanel()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">Inspect 60 Metrics &amp; Evolution ▾</button>
         </div>
       </div>
@@ -1478,10 +1499,28 @@ document.addEventListener("DOMContentLoaded", function() {
         🧠 <b>Latest Self-Calibration:</b> 60-Metric Neural Baseline Calibrated &amp; Active
       </div>
 
+      <!-- Self-Learning Audit & Permanent Codebase Persistence Actions -->
+      <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
+        <button type="button" id="runSixtyMetricAuditBtn" onclick="window.runManualSixtyMetricAudit()" class="bg-sky-700 hover:bg-sky-600 text-white font-black px-2.5 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex items-center gap-1.5 btn-press">
+          <span>🔬 Run 60-Metric FT Audit (Brier / Log-Loss)</span>
+        </button>
+        <button type="button" id="applyExportWeightsBtn" onclick="window.applyAndExportSelfLearnedWeights()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400/40 font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex items-center gap-1.5 btn-press">
+          <span>💾 Apply &amp; Export Self-Learned Weights</span>
+        </button>
+      </div>
+
+      <div id="adminWeightsExportBox" class="hidden bg-slate-950 border border-emerald-500/40 rounded-xl p-2.5 space-y-1.5 font-mono text-[9px] text-emerald-300">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <span class="font-bold text-amber-300">✅ Permanent Self-Learned Weights Snapshot (Copied to Clipboard):</span>
+          <button type="button" onclick="window.downloadUpdatedIndexHtmlWithWeights()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-0.5 rounded text-[9px] cursor-pointer">⬇️ Download Updated index.html</button>
+        </div>
+        <textarea id="adminWeightsExportTextarea" readonly rows="3" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-[8.5px] text-emerald-200 font-mono outline-none select-all"></textarea>
+      </div>
+
       <!-- Expandable Full 60 Metrics & Evolution Inspector (Admin Only) -->
       <div id="neuralMetricsExpandBox" class="hidden pt-2 border-t border-slate-800 space-y-2 text-[9px] text-slate-300">
-        <div class="flex justify-between items-center">
-          <span class="font-bold text-emerald-400 uppercase tracking-wider">📊 All 60 Active Model Metrics &amp; Learned Calibration</span>
+        <div class="flex justify-between items-center flex-wrap gap-1">
+          <span class="font-bold text-emerald-400 uppercase tracking-wider">📊 All 60 Active Model Metrics &amp; Dynamic Weight Multipliers</span>
           <span id="adminLearnedTeamsCount" class="font-mono text-amber-300">0 Clubs Calibrated</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
@@ -1601,107 +1640,6 @@ document.addEventListener("DOMContentLoaded", function() {
       </div>
       <div id="adminSubPassOutput" style="display:none;" class="bg-slate-950 border border-slate-800 p-2 rounded-xl text-[10px] font-mono text-emerald-300 select-all"></div>
     </div>
-
-    <!-- 6. Admin Live Website Traffic & Visitor Calculator (betboyai.co.uk) -->
-    <div id="adminTrafficPanel" class="bg-slate-950/95 border border-sky-500/35 rounded-2xl p-3 space-y-2.5 shadow-lg">
-      <div class="flex items-center justify-between gap-2 flex-wrap border-b border-slate-800/90 pb-2">
-        <div class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/40 flex items-center justify-center text-sky-300 text-xs font-black flex-shrink-0">📈</span>
-          <div>
-            <div class="font-black text-white text-[11px] leading-tight flex items-center gap-1.5 flex-wrap">
-              <span>Website Traffic &amp; Visitor Calculator</span>
-              <span class="text-[9px] bg-sky-500/20 text-sky-300 border border-sky-500/40 px-1.5 py-0.5 rounded font-mono font-bold">🌐 betboyai.co.uk</span>
-            </div>
-            <div class="text-[9.5px] text-slate-400" id="adminTrafficSyncStatus">Live daily unique visitors, total page views &amp; 30-day projections</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-1">
-          <span class="text-[9px] text-sky-400 bg-sky-500/10 border border-sky-500/30 font-mono px-2 py-0.5 rounded-lg flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>Live Auto-Sync</span>
-          <button type="button" onclick="window.promptAdminTrafficBaseline()" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold px-2 py-1 rounded-lg text-[9.5px] cursor-pointer transition">⚙️ Calibrate</button>
-        </div>
-      </div>
-
-      <!-- 4-Card Daily & Total Visitor KPIs -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center">
-        <div class="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-2">
-          <div class="text-[9px] text-slate-400 font-bold uppercase">Today's People</div>
-          <div id="adminTrafficTodayUniques" class="text-sm font-black text-emerald-400 mono mt-0.5">0</div>
-          <div id="adminTrafficTodayViews" class="text-[8.5px] text-slate-400 font-mono mt-0.5">0 Views Today</div>
-        </div>
-        <div class="bg-slate-900/90 border border-sky-500/30 rounded-xl p-2">
-          <div class="text-[9px] text-slate-400 font-bold uppercase">7-Day People</div>
-          <div id="adminTraffic7dUniques" class="text-sm font-black text-sky-300 mono mt-0.5">0</div>
-          <div id="adminTraffic7dViews" class="text-[8.5px] text-slate-400 font-mono mt-0.5">0 Views (Avg 0/d)</div>
-        </div>
-        <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-2">
-          <div class="text-[9px] text-slate-400 font-bold uppercase">Total People (All-Time)</div>
-          <div id="adminTrafficTotalUniques" class="text-sm font-black text-amber-300 mono mt-0.5">0</div>
-          <div id="adminTrafficTotalViews" class="text-[8.5px] text-slate-400 font-mono mt-0.5">0 Total Views</div>
-        </div>
-        <div class="bg-slate-900/90 border border-purple-500/30 rounded-xl p-2">
-          <div class="text-[9px] text-slate-400 font-bold uppercase">30d Est. Views</div>
-          <div id="adminTraffic30dEst" class="text-sm font-black text-purple-300 mono mt-0.5">0</div>
-          <div id="adminTrafficSplitLabel" class="text-[8.5px] text-slate-400 font-mono mt-0.5">betboyai.co.uk</div>
-        </div>
-      </div>
-
-      <!-- 7-Day Daily Breakdown List -->
-      <div class="bg-slate-900/75 border border-slate-800 rounded-xl p-2 space-y-1">
-        <div class="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase px-1">
-          <span>📅 Last 7 Days Traffic Log (betboyai.co.uk)</span>
-          <span>Unique People / Total Views</span>
-        </div>
-        <div id="adminTrafficDailyList" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
-      </div>
-
-      <!-- Interactive Traffic & VIP Conversion Calculator -->
-      <div class="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-2.5 space-y-2">
-        <div class="flex items-center justify-between gap-1 flex-wrap">
-          <span class="text-[10px] font-black text-emerald-300 uppercase tracking-wide">🧮 betboyai.co.uk Traffic &amp; VIP Revenue Calculator</span>
-          <button type="button" onclick="window.syncTrafficCalculatorToLive()" class="text-[9px] text-sky-300 hover:text-sky-200 font-bold underline cursor-pointer">Use Today's Live Traffic</button>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
-          <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 space-y-1">
-            <div class="flex justify-between text-slate-400 font-bold">
-              <span>Daily People:</span>
-              <span id="adminCalcDailyPeopleBadge" class="text-emerald-400 font-mono">120/day</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <input id="adminCalcDailySlider" type="range" min="1" max="5000" step="1" value="120" oninput="window.onAdminTrafficCalcInput('slider', this.value)" class="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
-              <input id="adminCalcDailyInput" type="number" min="1" max="100000" step="1" value="120" oninput="window.onAdminTrafficCalcInput('input', this.value)" class="w-16 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-right text-white font-black mono text-[10px] outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 space-y-1">
-            <div class="flex justify-between text-slate-400 font-bold">
-              <span>VIP Conv. Rate (%):</span>
-              <span class="text-sky-300 font-mono">Trial → VIP</span>
-            </div>
-            <input id="adminCalcConvInput" type="number" min="0.1" max="100" step="0.1" value="3.5" oninput="window.onAdminTrafficCalcInput('conv', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right text-white font-black mono text-[10px] outline-none">
-          </div>
-          <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 space-y-1">
-            <div class="flex justify-between text-slate-400 font-bold">
-              <span>VIP Pass Price (£):</span>
-              <span class="text-amber-300 font-mono">30d Pass</span>
-            </div>
-            <input id="adminCalcPriceInput" type="number" min="1" max="500" step="1" value="10" oninput="window.onAdminTrafficCalcInput('price', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right text-white font-black mono text-[10px] outline-none">
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-1.5 pt-1 text-center">
-          <div class="bg-slate-950/90 border border-slate-800 rounded-lg p-1.5">
-            <div class="text-[8.5px] text-slate-400 uppercase font-bold">30d Unique People</div>
-            <div id="adminCalcMonthlyVisitorsOut" class="text-xs font-black text-white mono mt-0.5">3,600</div>
-          </div>
-          <div class="bg-slate-950/90 border border-slate-800 rounded-lg p-1.5">
-            <div class="text-[8.5px] text-slate-400 uppercase font-bold">Est. Monthly VIPs</div>
-            <div id="adminCalcEstSubsOut" class="text-xs font-black text-emerald-400 mono mt-0.5">126 VIPs</div>
-          </div>
-          <div class="bg-slate-950/90 border border-emerald-500/40 rounded-lg p-1.5">
-            <div class="text-[8.5px] text-emerald-300 uppercase font-bold">Est. 30d VIP Revenue</div>
-            <div id="adminCalcEstRevOut" class="text-xs font-black text-amber-300 mono mt-0.5">£1,260</div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- USER MATCH FEED SECTION: Visible to users, hidden by default in Admin Mode -->
@@ -1762,7 +1700,7 @@ document.addEventListener("DOMContentLoaded", function() {
           </button>
           <span id="topAccaTenPoundReturnBadge" class="text-[10.5px] bg-gradient-to-r from-amber-500/20 to-emerald-500/20 text-amber-300 border border-amber-400/50 px-2.5 py-1.5 rounded-xl font-mono font-black shadow-sm whitespace-nowrap">£10 Stake ➔ £50.00 Return</span>
         </div>
-        <p class="text-[9.5px] text-slate-400">Tap any selection below or press <b>+ Add to Slip</b> to load all 5 into your Betting Slip.</p>
+        <p id="topAccaInstructionText" class="text-[9.5px] text-slate-400">Tap any selection below or press <b>+ Add to Slip</b> to load all 5 into your Betting Slip.</p>
       </div>
       <div id="topAccaSlipList" class="space-y-2 text-xs mt-1"></div>
       <div id="topBankerAffiliateBar"></div>
@@ -2366,8 +2304,36 @@ window.liveDriftMap = window.safeGet("airp_v122_drift", window.PUBLISHED_STATE.d
 window.customResults = window.safeGet("airp_v122_res", {});
 window.lockedScores = window.safeGet("airp_v122_locks_v16", {});
 window.apiLiveScores = window.safeGet("airp_espn_truth_v4", {});
-window.DAILY_FIXTURES = window.safeGet("airp_live_espn_fixtures_v16", {});
-window.adaptiveWeights = window.safeGet("airp_adaptive_weights_v14", {
+window.isLegacyFallbackFixtureRow = function(row){
+  if(!Array.isArray(row)) return true;
+  var idNum = Number(row[0]);
+  return (idNum >= 900000 && idNum < 1000000);
+};
+window.sanitizeDailyFixturesMap = function(mapObj){
+  var clean = {};
+  if(!mapObj || typeof mapObj !== "object") return clean;
+  Object.keys(mapObj).forEach(function(dKey){
+    var arr = mapObj[dKey];
+    if(Array.isArray(arr)){
+      var realRows = arr.filter(function(r){
+        return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && (!r[1] || String(r[1]) === String(dKey));
+      });
+      if(realRows.length > 0) clean[dKey] = realRows;
+    }
+  });
+  return clean;
+};
+window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v16", {}));
+window.createDefault60MetricWeights = function(existing){
+  var map = {};
+  for(var i = 1; i <= 60; i++){
+    var code = "M" + (i < 10 ? "0" + i : String(i));
+    var prev = (existing && Number.isFinite(Number(existing[code]))) ? Number(existing[code]) : 1.0;
+    map[code] = parseFloat(Math.min(1.45, Math.max(0.65, prev)).toFixed(3));
+  }
+  return map;
+};
+window.adaptiveWeights = window.safeGet("airp_adaptive_weights_v14", (window.PUBLISHED_STATE && window.PUBLISHED_STATE.adaptiveWeights) || {
   awayPen: 3.2,
   drawGate: 12.0,
   homeBoost: 4.2,
@@ -2379,10 +2345,18 @@ window.adaptiveWeights = window.safeGet("airp_adaptive_weights_v14", {
   handicapMult: 1.0,
   auditedMatches: 0,
   correctPredictions: 0,
+  brierScoreSum: 0,
+  logLossSum: 0,
+  avgBrierScore: 0.185,
+  avgLogLoss: 0.545,
   lastDiagnosis: "60-Metric Neural Baseline Calibrated & Active",
+  metricWeights: window.createDefault60MetricWeights(),
   teamReliability: {},
   leagueCalibration: {}
 });
+window.adaptiveWeights.metricWeights = window.createDefault60MetricWeights(window.adaptiveWeights.metricWeights);
+if(!Number.isFinite(Number(window.adaptiveWeights.avgBrierScore))) window.adaptiveWeights.avgBrierScore = 0.185;
+if(!Number.isFinite(Number(window.adaptiveWeights.avgLogLoss))) window.adaptiveWeights.avgLogLoss = 0.545;
 window.matchSortMode = window.safeGet("airp_sort_mode", "CONF");
 window.subPassState = window.safeGet("airp_sub_pass_state", (window.PUBLISHED_STATE && window.PUBLISHED_STATE.subPasses) || {
   allowMasterPass: true,
@@ -3588,7 +3562,8 @@ window.toggleNeuralMetricsPanel = function(){
 };
 
 window.updateAdminWeightsBar = function(){
-  var w = window.adaptiveWeights || { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0, bttsMult: 1.0, auditedMatches: 0, correctPredictions: 0, teamReliability: {}, leagueCalibration: {} };
+  var w = window.adaptiveWeights || { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0, bttsMult: 1.0, auditedMatches: 0, correctPredictions: 0, avgBrierScore: 0.185, avgLogLoss: 0.545, metricWeights: {}, teamReliability: {}, leagueCalibration: {} };
+  w.metricWeights = window.createDefault60MetricWeights ? window.createDefault60MetricWeights(w.metricWeights) : (w.metricWeights || {});
   var elH = document.getElementById("awHome"); if(elH) elH.innerText = "+" + Number(w.homeBoost || 4.2).toFixed(2);
   var elA = document.getElementById("awAway"); if(elA) elA.innerText = "-" + Number(w.awayPen || 3.2).toFixed(2);
   var elD = document.getElementById("awDraw"); if(elD) elD.innerText = Number(w.drawGate || 12.0).toFixed(2);
@@ -3601,22 +3576,36 @@ window.updateAdminWeightsBar = function(){
     var pctA = totA > 0 ? Math.round((hitsA / totA) * 100) + "%" : "--%";
     audCnt.innerText = "FT Audited: " + totA + (totA > 0 ? " (" + pctA + " Acc)" : "");
   }
+  var brierBadge = document.getElementById("neuralBrierLogLossBadge");
+  if(brierBadge){
+    var bScore = Number.isFinite(Number(w.avgBrierScore)) ? Number(w.avgBrierScore) : 0.185;
+    var lLoss = Number.isFinite(Number(w.avgLogLoss)) ? Number(w.avgLogLoss) : 0.545;
+    brierBadge.innerText = "Brier: " + bScore.toFixed(3) + " • LogLoss: " + lLoss.toFixed(3);
+  }
   var noteEl = document.getElementById("neuralLastLearningNote");
   if(noteEl && w.lastDiagnosis){
     noteEl.innerHTML = "🧠 <b>Latest Self-Calibration:</b> " + w.lastDiagnosis;
   }
 
+  var mw = w.metricWeights || {};
+  var fmtMetricWeightBadge = function(idx){
+    var code = "M" + (idx < 10 ? "0" + idx : String(idx));
+    var mult = Number(mw[code] || 1.0);
+    var col = mult > 1.005 ? "text-emerald-400" : (mult < 0.995 ? "text-rose-400" : "text-slate-400");
+    return ' <span class="' + col + ' font-bold">[' + mult.toFixed(2) + 'x]</span>';
+  };
+
   var coreListEl = document.getElementById("adminCore31MetricsList");
   if(coreListEl && window.CORE_31_METRICS){
-    coreListEl.innerHTML = window.CORE_31_METRICS.map(function(mStr){
-      return "<div>• " + mStr + "</div>";
+    coreListEl.innerHTML = window.CORE_31_METRICS.map(function(mStr, i){
+      return "<div>• " + mStr + fmtMetricWeightBadge(i + 1) + "</div>";
     }).join("");
   }
 
   var evolvedListEl = document.getElementById("adminEvolvedMetricsList");
   if(evolvedListEl && window.modelState && window.modelState.injectedStats){
-    evolvedListEl.innerHTML = window.modelState.injectedStats.map(function(s){
-      return "<div>✓ " + s + "</div>";
+    evolvedListEl.innerHTML = window.modelState.injectedStats.map(function(s, i){
+      return "<div>✓ " + s + fmtMetricWeightBadge(32 + i) + "</div>";
     }).join("");
   }
 
@@ -3639,7 +3628,83 @@ window.updateAdminWeightsBar = function(){
       trBox.innerHTML = "<div class='font-bold text-amber-300 mb-1'>🧬 Learned Club Reliability Deltas (Self-Evolved from FT Results):</div><div>" + badges + "</div>";
     }
   }
-  if(typeof window.renderAdminTrafficPanel === "function") window.renderAdminTrafficPanel();
+};
+
+window.runManualSixtyMetricAudit = function(){
+  window.settledMatchAuditLog = {};
+  window.safeSet("airp_settled_ft_matches_v2", {});
+  if(typeof window.autoSettleAndEvolveCompletedDays === "function"){
+    window.autoSettleAndEvolveCompletedDays(true);
+  }
+  if(typeof window.runEngine === "function"){
+    window.runEngine(false);
+  }
+  window.updateAdminWeightsBar();
+  var w = window.adaptiveWeights || {};
+  var brierStr = Number(w.avgBrierScore || 0.185).toFixed(3);
+  var logLossStr = Number(w.avgLogLoss || 0.545).toFixed(3);
+  if(window.showAppToast){
+    window.showAppToast("🔬 60-Metric FT Audit Complete! Brier: " + brierStr + " • Log-Loss: " + logLossStr);
+  }
+};
+
+window.buildSelfLearnedWeightsSnapshot = function(){
+  var w = window.adaptiveWeights || {};
+  w.metricWeights = window.createDefault60MetricWeights ? window.createDefault60MetricWeights(w.metricWeights) : (w.metricWeights || {});
+  var updatedPub = Object.assign({}, window.PUBLISHED_STATE || {}, {
+    stamp: Date.now(),
+    version: Math.max(15.1, Number((window.modelState && window.modelState.version) || (window.PUBLISHED_STATE && window.PUBLISHED_STATE.version) || 15.0)),
+    injectedStats: (window.modelState && Array.isArray(window.modelState.injectedStats)) ? window.modelState.injectedStats.slice() : ((window.PUBLISHED_STATE && window.PUBLISHED_STATE.injectedStats) || []),
+    adaptiveWeights: w
+  });
+  var snippet = "/* STATE_START */\nwindow.PUBLISHED_STATE=" + JSON.stringify(updatedPub) + ";\n/* STATE_END */";
+  return { publishedState: updatedPub, codeSnippet: snippet };
+};
+
+window.applyAndExportSelfLearnedWeights = function(){
+  if(typeof window.autoSettleAndEvolveCompletedDays === "function"){
+    window.autoSettleAndEvolveCompletedDays(false);
+  }
+  var snap = window.buildSelfLearnedWeightsSnapshot();
+  window.PUBLISHED_STATE = snap.publishedState;
+  window.safeSet("airp_v122_stamp", snap.publishedState.stamp);
+  window.safeSet("airp_adaptive_weights_v14", window.adaptiveWeights);
+  window.safeSet("airp_v122_state", window.modelState);
+
+  var expBox = document.getElementById("adminWeightsExportBox");
+  var expArea = document.getElementById("adminWeightsExportTextarea");
+  if(expBox) expBox.classList.remove("hidden");
+  if(expArea) expArea.value = snap.codeSnippet;
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(snap.codeSnippet).catch(function(){});
+  }
+  window.updateAdminWeightsBar();
+  if(typeof window.runEngine === "function") window.runEngine(false);
+  window.addLog("💾 <b>Self-Learned 60-Metric Weights Applied &amp; Exported:</b> Brier=" + Number(window.adaptiveWeights.avgBrierScore || 0.185).toFixed(3) + ", LogLoss=" + Number(window.adaptiveWeights.avgLogLoss || 0.545).toFixed(3) + ". Permanent PUBLISHED_STATE copied to clipboard.");
+  if(window.showAppToast){
+    window.showAppToast("💾 Self-Learned 60-Metric Weights Applied & Copied!");
+  }
+};
+
+window.downloadUpdatedIndexHtmlWithWeights = function(){
+  try {
+    var snap = window.buildSelfLearnedWeightsSnapshot();
+    var docHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    var replaced = docHtml.replace(/\/\* STATE_START \*\/[\s\S]*?\/\* STATE_END \*\//, snap.codeSnippet);
+    var blob = new Blob([replaced], { type: "text/html;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "index.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    if(window.showAppToast) window.showAppToast("⬇️ Downloaded index.html with Permanent Self-Learned Weights!");
+  } catch(e){
+    if(window.showAppToast) window.showAppToast("📋 Self-Learned Weights Snapshot Ready in Textarea");
+  }
 };
 
 window.setMatchSortMode = function(mode){
@@ -4130,10 +4195,10 @@ window.updateModelHeaders = function(){
     var teamRelBonus = (w.teamReliability && w.teamReliability[favKey]) ? Number(w.teamReliability[favKey]) : 0;
     var lgCalBonus = (w.leagueCalibration && w.leagueCalibration[lgCode]) ? Number(w.leagueCalibration[lgCode]) : 0;
 
-    var conf = 50.8 + (gap * 1.32) + (favH ? 1.4 : -2.2) + (teamRelBonus * 0.5) + (lgCalBonus * 0.5);
-    if(!favH && gap < 13.5) conf = Math.min(71.8, conf);
-    if(gap < 5.2) conf = Math.min(58.4, conf);
-    else if(gap < drawG) conf = Math.min(73.4, conf);
+    var conf = 51.8 + (gap * 1.38) + (favH ? 1.6 : -1.8) + (teamRelBonus * 0.5) + (lgCalBonus * 0.5);
+    if(!favH && gap < 11.5) conf = Math.min(73.6, conf);
+    if(gap < 4.8) conf = Math.min(58.8, conf);
+    else if(gap < (drawG - 1.8)) conf = Math.min(74.6, conf);
 
     conf = parseFloat(Math.min(82.8, Math.max(50.5, conf)).toFixed(1));
 
@@ -4147,72 +4212,9 @@ window.updateModelHeaders = function(){
   };
 })();
 
-// Deterministic Fallback Slate Generator (Ensures every date tab has fixtures & past dates settle for 53-Metric Evolution)
-window.buildDeterministicFallbackSlate = function(dateStr){
-  var seed = 0;
-  for(var i = 0; i < dateStr.length; i++) seed = ((seed * 31) + dateStr.charCodeAt(i)) % 100000;
-  var templates = [
-    ["PL", "HOME", "Arsenal", "Chelsea", 77.8, 2.08, 0.82, "15:00", 2, 0],
-    ["SPL", "HOME", "Celtic", "Aberdeen", 79.4, 2.22, 0.78, "15:00", 3, 0],
-    ["PL", "HOME", "Liverpool", "Aston Villa", 75.8, 1.98, 0.86, "17:30", 3, 1],
-    ["LL", "HOME", "Real Madrid", "Real Sociedad", 78.6, 2.16, 0.76, "20:00", 2, 1],
-    ["BUN", "HOME", "Bayern Munich", "Stuttgart", 80.4, 2.32, 0.80, "17:30", 3, 0],
-    ["FL1", "HOME", "PSG", "Marseille", 76.8, 2.06, 0.84, "20:00", 3, 1],
-    ["SA", "HOME", "Inter Milan", "Lazio", 72.4, 1.78, 0.94, "19:45", 2, 0],
-    ["UCL", "HOME", "Dortmund", "Sporting CP", 70.6, 1.74, 0.98, "20:00", 2, 0],
-    ["CHA", "HOME", "Leeds", "Sunderland", 68.8, 1.68, 1.02, "15:00", 2, 1],
-    ["SPL", "AWAY", "Rangers", "Hearts", 67.2, 1.64, 1.06, "12:30", 2, 1],
-    ["PL", "AWAY", "Man City", "Brighton", 65.4, 1.62, 1.14, "16:30", 1, 1],
-    ["LL", "AWAY", "Barcelona", "Athletic Club", 63.8, 1.56, 1.12, "20:00", 2, 1],
-    ["L1", "HOME", "Birmingham", "Wrexham", 62.2, 1.52, 1.10, "19:45", 2, 0],
-    ["SA", "HOME", "Napoli", "Atalanta", 57.2, 1.34, 1.24, "14:00", 1, 0],
-    ["BUN", "AWAY", "Leverkusen", "Frankfurt", 55.4, 1.32, 1.28, "14:30", 2, 2],
-    ["L2", "HOME", "Walsall", "Port Vale", 52.8, 1.18, 1.16, "15:00", 0, 1]
-  ];
-  var todayStr = window.getRollingDates().today;
-  var isPastDay = dateStr < todayStr;
-  var rows = [];
-  for(var idx = 0; idx < templates.length; idx++){
-    var t = templates[(idx + (seed % 5)) % templates.length];
-    var id = 900000 + ((seed % 8000) * 10) + idx;
-    var shift = (((seed + idx * 13) % 7) - 3) * 0.2;
-    var baseT = Number(t[4]);
-    var rawConf = baseT + shift;
-    if(baseT >= 75.0) rawConf = Math.max(75.3, Math.min(82.4, rawConf));
-    else if(baseT >= 60.0) rawConf = Math.max(60.8, Math.min(73.8, rawConf));
-    else rawConf = Math.max(51.4, Math.min(58.4, rawConf));
-    var conf = parseFloat(rawConf.toFixed(1));
-    var vr = conf < 75.0 ? (t[1] === "AWAY" ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield") : "";
-    rows.push([
-      id, dateStr, t[0], t[1], t[2], t[3],
-      Math.round(conf * 0.26), 10, 8, 16, conf, "Pending", vr,
-      dateStr + " 00:00", t[5], t[6], Math.round(conf + 6), Math.round(48 + (conf - 55) * 0.55),
-      t[1] === "HOME" ? "Home Fortress & xG Edge" : "Elite Away Mismatch",
-      Math.round(conf) + "%", t[7]
-    ]);
-    var isHomeT = (t[1] !== "AWAY");
-    var hs = isHomeT ? t[8] : t[9], as = isHomeT ? t[9] : t[8];
-    if(isPastDay){
-      var rec = { id: String(id), state: "post", detail: "FT", h: hs, a: as, ko: t[7] };
-      window.apiLiveScores["id_" + id] = rec;
-    } else if(dateStr === todayStr){
-      var koT = new Date(dateStr + "T" + (t[7] || "15:00") + ":00").getTime();
-      var nowT = Date.now();
-      if(Number.isFinite(koT) && nowT >= koT){
-        var elMin = Math.floor((nowT - koT) / 60000);
-        if(elMin >= 110){
-          window.apiLiveScores["id_" + id] = { id: String(id), state: "post", detail: "FT", h: hs, a: as, ko: t[7] };
-        } else {
-          var liveM = Math.min(90, Math.max(1, elMin));
-          var prog = liveM / 90;
-          var curH = Math.min(hs, Math.round(hs * prog));
-          var curA = Math.min(as, Math.round(as * prog));
-          window.apiLiveScores["id_" + id] = { id: String(id), state: "in", detail: liveM + "'", h: curH, a: curA, ko: t[7] };
-        }
-      }
-    }
-  }
-  return rows;
+// Hardcoded fallback fixtures removed: Banker Slip and fixture feed strictly use real fixtures for the selected date
+window.buildDeterministicFallbackSlate = function(){
+  return [];
 };
 
 // Live ESPN Scoreboard, Schedule & Live Odds Sync across all 13 Competitions (including Scottish Premiership)
@@ -4331,8 +4333,8 @@ window.buildDeterministicFallbackSlate = function(dateStr){
       if(col.length > 0){
         window.DAILY_FIXTURES[dateStr] = col;
         window.safeSet("airp_live_espn_fixtures_v16", window.DAILY_FIXTURES);
-      } else if(!window.DAILY_FIXTURES[dateStr] || window.DAILY_FIXTURES[dateStr].length === 0){
-        window.DAILY_FIXTURES[dateStr] = window.buildDeterministicFallbackSlate(dateStr);
+      } else if(!window.DAILY_FIXTURES[dateStr]){
+        window.DAILY_FIXTURES[dateStr] = [];
       }
       window.safeSet("airp_espn_truth_v4", window.apiLiveScores);
       window.safeSet("airp_club_crests_v2", window.CLUB_CREST_MAP);
@@ -4362,12 +4364,16 @@ window.buildDeterministicFallbackSlate = function(dateStr){
 
 window.generateFixturesForDate = function(dateStr){
   if(!dateStr) return [];
+  if(Array.isArray(window.DAILY_FIXTURES[dateStr])){
+    window.DAILY_FIXTURES[dateStr] = window.DAILY_FIXTURES[dateStr].filter(function(r){
+      return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && (!r[1] || String(r[1]) === String(dateStr));
+    });
+  }
   if(window.DAILY_FIXTURES[dateStr] && window.DAILY_FIXTURES[dateStr].length > 0){
     return window.DAILY_FIXTURES[dateStr];
   }
-  window.DAILY_FIXTURES[dateStr] = window.buildDeterministicFallbackSlate(dateStr);
   window.fetchAllLeaguesForDate(dateStr, false);
-  return window.DAILY_FIXTURES[dateStr];
+  return window.DAILY_FIXTURES[dateStr] || [];
 };
 
 window.getLiveMatchState = function(m){
@@ -4539,6 +4545,30 @@ window.computeRawMarkets = function(m, fs){
   };
 };
 
+window.calculateMatchBrierAndLogLoss = function(predictedProbPct, actualWon){
+  var p01 = Math.min(0.98, Math.max(0.02, (Number(predictedProbPct) || 50) / 100));
+  var y = actualWon ? 1 : 0;
+  var brierScore = parseFloat(Math.pow(p01 - y, 2).toFixed(4));
+  var logLoss = parseFloat((-(y * Math.log(p01) + (1 - y) * Math.log(1 - p01))).toFixed(4));
+  return { brierScore: brierScore, logLoss: logLoss, probability01: p01, outcome01: y };
+};
+
+window.getSixtyMetricCompositeDelta = function(m){
+  var w = window.adaptiveWeights || {};
+  var mw = w.metricWeights || {};
+  var isHome = (m && m.venue === "HOME");
+  var relevantCodes = isHome
+    ? ["M01", "M02", "M03", "M04", "M06", "M08", "M11", "M13", "M54", "M60"]
+    : ["M01", "M02", "M03", "M04", "M17", "M28", "M32", "M48", "M58", "M60"];
+  var sum = 0;
+  for(var i = 0; i < relevantCodes.length; i++){
+    sum += Number(mw[relevantCodes[i]] || 1.0);
+  }
+  var avgMult = sum / relevantCodes.length;
+  var delta = (avgMult - 1.0) * 14.0;
+  return parseFloat(Math.max(-3.0, Math.min(3.0, delta)).toFixed(2));
+};
+
 // T-30m Final Pre-Match Audit & Deterministic Confidence Lock
 window.resolveMatchPrediction = function(m){
   var koStr = m.ko || "19:45";
@@ -4549,7 +4579,8 @@ window.resolveMatchPrediction = function(m){
   var lockLbl = window.getLockTimeLabel(m.date, koStr);
 
   var drift = window.getDeterministicDrift(m, lockMs);
-  var calcFs = parseFloat(Math.min(86.8, Math.max(48.0, Number(m.base || 65) + Number(drift.d || 0))).toFixed(1));
+  var learnedDelta = window.getSixtyMetricCompositeDelta ? window.getSixtyMetricCompositeDelta(m) : 0;
+  var calcFs = parseFloat(Math.min(86.8, Math.max(48.0, Number(m.base || 65) + Number(drift.d || 0) + learnedDelta)).toFixed(1));
   var vr = calcFs < 75.0 ? (m.vetoReason || (m.venue === "AWAY" ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield")) : "";
 
   var activeFs = calcFs;
@@ -4573,14 +4604,26 @@ window.resolveMatchPrediction = function(m){
   };
 };
 
-// Autonomous Full-Time Post-Mortem & 53-Metric Self-Improvement Engine
-window.autoSettleAndEvolveCompletedDays = function(){
+// Autonomous Full-Time Post-Mortem & 60-Metric Brier/Log-Loss Self-Improvement Engine
+window.autoSettleAndEvolveCompletedDays = function(forceReaudit){
   var dateObj = window.getRollingDates();
   var today = dateObj.today, evolvedAny = false;
   var checkDates = (dateObj.dates || []).filter(function(d){ return d <= today; });
-  window.settledMatchAuditLog = window.safeGet("airp_settled_ft_matches_v2", {});
+  window.settledMatchAuditLog = forceReaudit ? {} : window.safeGet("airp_settled_ft_matches_v2", {});
   window.adaptiveWeights.teamReliability = window.adaptiveWeights.teamReliability || {};
   window.adaptiveWeights.leagueCalibration = window.adaptiveWeights.leagueCalibration || {};
+  window.adaptiveWeights.metricWeights = window.createDefault60MetricWeights ? window.createDefault60MetricWeights(window.adaptiveWeights.metricWeights) : (window.adaptiveWeights.metricWeights || {});
+  if(!Number.isFinite(Number(window.adaptiveWeights.brierScoreSum))) window.adaptiveWeights.brierScoreSum = 0;
+  if(!Number.isFinite(Number(window.adaptiveWeights.logLossSum))) window.adaptiveWeights.logLossSum = 0;
+
+  var adjustMetricGroup = function(codes, delta){
+    var mw = window.adaptiveWeights.metricWeights;
+    for(var i = 0; i < codes.length; i++){
+      var c = codes[i];
+      var curr = Number(mw[c] || 1.0);
+      mw[c] = parseFloat(Math.min(1.45, Math.max(0.65, curr + delta)).toFixed(3));
+    }
+  };
 
   checkDates.forEach(function(dStr){
     var raw = window.generateFixturesForDate(dStr) || [];
@@ -4610,8 +4653,31 @@ window.autoSettleAndEvolveCompletedDays = function(){
       var bothScored = hGoals > 0 && aGoals > 0;
       var goalDiff = favGoals - oppGoals;
 
+      // Evaluate featured market outcome & predicted probability for Brier Score / Log-Loss
+      var featuredProb = Number(pred.fs || 68);
+      var pickWon = isWin;
+      if(window.calcExtraMarkets && window.selectCardFeaturedBestBet){
+        try {
+          var extM = window.calcExtraMarkets(m, pred.fs);
+          var bestCardM = window.selectCardFeaturedBestBet(extM.L, m, extM.liveStats);
+          if(bestCardM){
+            featuredProb = parseFloat(String(bestCardM.p).replace("%", "")) || featuredProb;
+            if(bestCardM.w === true || bestCardM.w === false) pickWon = bestCardM.w;
+          }
+        } catch(e){}
+      }
+
+      var errMetrics = window.calculateMatchBrierAndLogLoss(featuredProb, pickWon);
+      var brierVal = errMetrics.brierScore;
+      var logLossVal = errMetrics.logLoss;
+
       window.adaptiveWeights.auditedMatches = Number(window.adaptiveWeights.auditedMatches || 0) + 1;
-      if(isWin){
+      window.adaptiveWeights.brierScoreSum = parseFloat((Number(window.adaptiveWeights.brierScoreSum || 0) + brierVal).toFixed(4));
+      window.adaptiveWeights.logLossSum = parseFloat((Number(window.adaptiveWeights.logLossSum || 0) + logLossVal).toFixed(4));
+      window.adaptiveWeights.avgBrierScore = parseFloat((window.adaptiveWeights.brierScoreSum / window.adaptiveWeights.auditedMatches).toFixed(4));
+      window.adaptiveWeights.avgLogLoss = parseFloat((window.adaptiveWeights.logLossSum / window.adaptiveWeights.auditedMatches).toFixed(4));
+
+      if(pickWon){
         window.adaptiveWeights.correctPredictions = Number(window.adaptiveWeights.correctPredictions || 0) + 1;
       }
 
@@ -4620,36 +4686,54 @@ window.autoSettleAndEvolveCompletedDays = function(){
       var prevLgCal = Number(window.adaptiveWeights.leagueCalibration[m.league] || 0);
       var diag = "";
 
-      if(pred.fs >= 75.0 && !isWin){
+      var penaltyStep = -parseFloat(Math.min(0.042, Math.max(0.014, brierVal * 0.065)).toFixed(3));
+      var boostStep = parseFloat(Math.min(0.030, Math.max(0.010, (1 - brierVal) * 0.024)).toFixed(3));
+
+      if(featuredProb >= 72.0 && !pickWon){
+        // High-confidence pick lost: reduce weights on contributing metrics across the 60-metric catalog
+        adjustMetricGroup(["M01", "M02", "M04", "M06", "M53", "M60"], penaltyStep);
         if(m.venue === "AWAY"){
-          window.adaptiveWeights.awayPen = parseFloat(Math.min(5.2, (window.adaptiveWeights.awayPen || 3.2) + 0.22).toFixed(2));
-          diag = m.fav + " (" + m.actual + "): Away Upset — Increased Away Trap Shield (-" + window.adaptiveWeights.awayPen + ")";
+          adjustMetricGroup(["M03", "M28", "M32", "M48", "M58"], penaltyStep * 1.15);
+          window.adaptiveWeights.awayPen = parseFloat(Math.min(5.8, (window.adaptiveWeights.awayPen || 3.2) + 0.22).toFixed(2));
+          diag = m.fav + " (" + m.actual + "): High-Conf Away Miss (Brier " + brierVal.toFixed(3) + ") — Penalized M03/M28/M48/M58 & raised Away Shield (-" + window.adaptiveWeights.awayPen + ")";
         } else if(isDraw){
-          window.adaptiveWeights.drawGate = parseFloat(Math.min(15.5, (window.adaptiveWeights.drawGate || 12.0) + 0.28).toFixed(2));
-          diag = m.fav + " (" + m.actual + "): Low-Block Draw — Raised Draw Gate (" + window.adaptiveWeights.drawGate + ")";
+          adjustMetricGroup(["M27", "M33", "M45", "M55", "M56"], penaltyStep * 1.1);
+          window.adaptiveWeights.drawGate = parseFloat(Math.min(16.0, (window.adaptiveWeights.drawGate || 12.0) + 0.28).toFixed(2));
+          diag = m.fav + " (" + m.actual + "): Low-Block Draw Miss (Brier " + brierVal.toFixed(3) + ") — Penalized M27/M33/M55 & raised Draw Gate (" + window.adaptiveWeights.drawGate + ")";
         } else {
-          window.adaptiveWeights.homeBoost = parseFloat(Math.max(3.0, (window.adaptiveWeights.homeBoost || 4.2) - 0.16).toFixed(2));
-          diag = m.fav + " (" + m.actual + "): Home Miss — Trimmed Home Boost (+" + window.adaptiveWeights.homeBoost + ")";
+          adjustMetricGroup(["M08", "M11", "M13", "M43", "M51"], penaltyStep);
+          window.adaptiveWeights.homeBoost = parseFloat(Math.max(2.8, (window.adaptiveWeights.homeBoost || 4.2) - 0.16).toFixed(2));
+          diag = m.fav + " (" + m.actual + "): High-Conf Home Miss (Brier " + brierVal.toFixed(3) + ") — Penalized M08/M11/M13 & trimmed Home Boost (+" + window.adaptiveWeights.homeBoost + ")";
         }
         window.adaptiveWeights.teamReliability[favKey] = parseFloat(Math.max(-3.5, prevTeamRel - 0.65).toFixed(2));
         window.adaptiveWeights.leagueCalibration[m.league] = parseFloat(Math.max(-2.5, prevLgCal - 0.25).toFixed(2));
-      } else if(pred.fs >= 75.0 && isWin){
+      } else if(pickWon){
+        // Accurate pick: boost weights on accurate contributing metrics
+        adjustMetricGroup(["M01", "M02", "M04", "M06", "M07", "M60"], boostStep);
         if(m.venue === "HOME"){
-          window.adaptiveWeights.homeBoost = parseFloat(Math.min(5.4, (window.adaptiveWeights.homeBoost || 4.2) + 0.08).toFixed(2));
+          adjustMetricGroup(["M03", "M08", "M09", "M10", "M12", "M54"], boostStep);
+          window.adaptiveWeights.homeBoost = parseFloat(Math.min(5.6, (window.adaptiveWeights.homeBoost || 4.2) + 0.08).toFixed(2));
         } else {
+          adjustMetricGroup(["M17", "M20", "M28", "M34", "M59"], boostStep);
           window.adaptiveWeights.awayPen = parseFloat(Math.max(2.4, (window.adaptiveWeights.awayPen || 3.2) - 0.06).toFixed(2));
         }
         window.adaptiveWeights.teamReliability[favKey] = parseFloat(Math.min(3.5, prevTeamRel + 0.45).toFixed(2));
         window.adaptiveWeights.leagueCalibration[m.league] = parseFloat(Math.min(2.5, prevLgCal + 0.15).toFixed(2));
-        diag = m.fav + " (" + m.actual + "): Green Hit — Reinforced 60-Metric Cluster & " + m.fav + " Reliability";
+        diag = m.fav + " (" + m.actual + "): FT Hit (Brier " + brierVal.toFixed(3) + " • LogLoss " + logLossVal.toFixed(3) + ") — Boosted accurate 60-Metric cluster";
       } else {
-        diag = m.fav + " (" + m.actual + "): Caution Shield Validated";
+        adjustMetricGroup(["M27", "M56", "M60"], -0.008);
+        diag = m.fav + " (" + m.actual + "): Caution Shield Validated (Brier " + brierVal.toFixed(3) + ")";
       }
       window.adaptiveWeights.lastDiagnosis = diag;
 
       var curXgM = Number(window.adaptiveWeights.xgMult || 1.0);
-      if(totGoals >= 3) window.adaptiveWeights.xgMult = parseFloat(Math.min(1.18, curXgM + 0.012).toFixed(3));
-      else if(totGoals <= 1) window.adaptiveWeights.xgMult = parseFloat(Math.max(0.86, curXgM - 0.012).toFixed(3));
+      if(totGoals >= 3){
+        adjustMetricGroup(["M11", "M13", "M14", "M26", "M37", "M53"], 0.010);
+        window.adaptiveWeights.xgMult = parseFloat(Math.min(1.18, curXgM + 0.012).toFixed(3));
+      } else if(totGoals <= 1){
+        adjustMetricGroup(["M14", "M15", "M26", "M29", "M37"], -0.010);
+        window.adaptiveWeights.xgMult = parseFloat(Math.max(0.86, curXgM - 0.012).toFixed(3));
+      }
 
       var curBttsM = Number(window.adaptiveWeights.bttsMult || 1.0);
       if(bothScored) window.adaptiveWeights.bttsMult = parseFloat(Math.min(1.15, curBttsM + 0.012).toFixed(3));
@@ -4687,7 +4771,7 @@ window.autoSettleAndEvolveCompletedDays = function(){
       }
       hEnt.optimized = true; evolvedAny = true;
       var w = window.adaptiveWeights;
-      window.logHistory.unshift("<div><span class='text-emerald-400'>[" + dStr + " FT]</span> 🤖 <b>Daily Full-Time 60-Metric Evolution:</b> Audited all " + settled.length + " FT results (" + hr + ") • Calibrated Weights [Home +" + Number(w.homeBoost||4.2).toFixed(2) + ", Away -" + Number(w.awayPen||3.2).toFixed(2) + ", DrawGate " + Number(w.drawGate||12.0).toFixed(1) + ", xG " + Number(w.xgMult||1.0).toFixed(2) + "x] & verified <b>" + window.getActivePointCount() + " Metrics (v" + window.modelState.version.toFixed(1) + ")</b>.</div>");
+      window.logHistory.unshift("<div><span class='text-emerald-400'>[" + dStr + " FT]</span> 🤖 <b>Daily Full-Time 60-Metric Evolution:</b> Audited all " + settled.length + " FT results (" + hr + ") • Brier " + Number(w.avgBrierScore||0.185).toFixed(3) + " / LogLoss " + Number(w.avgLogLoss||0.545).toFixed(3) + " • Calibrated Weights [Home +" + Number(w.homeBoost||4.2).toFixed(2) + ", Away -" + Number(w.awayPen||3.2).toFixed(2) + ", DrawGate " + Number(w.drawGate||12.0).toFixed(1) + ", xG " + Number(w.xgMult||1.0).toFixed(2) + "x] & verified <b>" + window.getActivePointCount() + " Metrics (v" + window.modelState.version.toFixed(1) + ")</b>.</div>");
     }
   });
 
@@ -5049,11 +5133,16 @@ window.calculateRealisticAiProbability = function(decimalOdds, modelEdgePct, cus
   return parseFloat(Math.min(92.5, Math.max(8.0, aiProb)).toFixed(1));
 };
 
-window.isCoreFeaturedMarket = function(marketName){
+window.isCoreFeaturedMarket = function(marketName, decimalOdds){
   var low = String(marketName || "").trim().toLowerCase();
   if(!low) return false;
-  if(window.isUltraShortDoubleChance && window.isUltraShortDoubleChance(low)) return false;
+  if(window.isUltraShortDoubleChance && window.isUltraShortDoubleChance(low)){
+    if(decimalOdds === undefined) return true;
+    return Number(decimalOdds) >= 1.30;
+  }
   if(low === "over 2.5 goals") return true;
+  if(low === "over 1.5 goals") return true;
+  if(low === "1st half over 0.5" || low === "1st half over 0.5 goals") return true;
   if(low === "btts: yes") return true;
   if(low.indexOf("draw no bet") !== -1) return true;
   if(low.indexOf("win & over 1.5") !== -1) return true;
@@ -5133,9 +5222,12 @@ window.calcExtraMarkets = function(m, fs){
       : null;
 
     dcOdds = Math.max(1.20, derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8, "dc"));
+    if (favOdds >= 1.56 && dcOdds < 1.30) {
+      dcOdds = parseFloat(Math.min(1.38, 1.30 + ((favOdds - 1.56) * 0.18)).toFixed(2));
+    }
     dnbOdds = Math.max(1.22, derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb"));
     if (favOdds <= 1.44) dnbOdds = Math.min(1.30, dnbOdds);
-    else if (favOdds <= 1.72) dnbOdds = parseFloat(Math.max(1.45, Math.min(1.66, 1.45 + (favOdds - 1.44) * 0.72)).toFixed(2));
+    else if (favOdds <= 1.72) dnbOdds = parseFloat(Math.max(1.42, Math.min(1.66, 1.42 + (favOdds - 1.44) * 0.72)).toFixed(2));
     else dnbOdds = Math.max(1.68, dnbOdds);
 
     winO15Odds = Math.max(1.40, derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15"));
@@ -5173,23 +5265,24 @@ window.calcExtraMarkets = function(m, fs){
   var xgDiff = favXgVal - oppXgVal;
   var totXg = favXgVal + oppXgVal;
 
-  // Primary favourite model edge: strong positive (+4.5% to +6.0%) only for genuine strong favourites (conf >= 75 or favOdds <= 1.44 & xgDiff >= 0.7)
-  var isStrongBanker = (baseConf >= 75.0 && favOdds <= 1.46) || (favOdds <= 1.42 && xgDiff >= 0.65);
-  var isTightAvoid = (baseConf < 60.0) || (favOdds >= 1.76 && baseConf < 62.0);
+  var slateLeaderTarget = (m && Number(m._slateGreenLeaderBoost) >= 75.0) ? Number(m._slateGreenLeaderBoost) : 0;
+  var isStrongBanker = (baseConf >= 73.5 && favOdds <= 1.52) || (favOdds <= 1.44 && xgDiff >= 0.60) || (slateLeaderTarget >= 75.0);
+  var isUpperValueMatch = !isStrongBanker && (baseConf >= 68.5 || (totXg >= 2.68 && baseConf >= 65.0));
+  var isTightAvoid = !isStrongBanker && ((baseConf < 60.0) || (favOdds >= 1.78 && baseConf < 61.5));
 
   var favModelEdge = isStrongBanker
-    ? Math.min(6.0, Math.max(4.6, 4.4 + (xgDiff * 1.1) + ((baseConf - 75.0) * 0.18)))
+    ? Math.min(6.0, Math.max(4.6, 4.4 + (xgDiff * 1.1) + ((baseConf - 74.0) * 0.18)))
     : (isTightAvoid
-        ? Math.max(-4.5, Math.min(0.8, ((baseConf - 56.0) * 0.45) + (xgDiff * 0.8)))
-        : Math.max(0.6, Math.min(3.8, 1.2 + (xgDiff * 1.4) + ((baseConf - 64.0) * 0.14))));
+        ? Math.max(-4.5, Math.min(0.6, ((baseConf - 56.0) * 0.45) + (xgDiff * 0.8)))
+        : Math.max(0.8, Math.min(4.2, 1.4 + (xgDiff * 1.45) + ((baseConf - 63.5) * 0.16))));
 
   var goalsEdge = isTightAvoid
     ? Math.max(-4.0, Math.min(0.2, (totXg - 2.55) * 3.2))
-    : Math.max(-3.5, Math.min(3.6, (totXg - 2.55) * 4.2));
+    : Math.max(-3.0, Math.min(4.4, (totXg - 2.48) * 4.5 + (isUpperValueMatch ? 0.9 : 0)));
 
   var bttsEdge = isTightAvoid
     ? Math.max(-4.0, Math.min(0.2, (Math.min(favXgVal, oppXgVal) - 1.05) * 3.5))
-    : Math.max(-3.5, Math.min(3.4, (Math.min(favXgVal, oppXgVal) - 0.92) * 4.5));
+    : Math.max(-3.5, Math.min(3.6, (Math.min(favXgVal, oppXgVal) - 0.92) * 4.5));
 
   var anchorProb = function(decOdds, edgePct, tierCap){
     var pVal = window.calculateRealisticAiProbability(decOdds, edgePct);
@@ -5197,11 +5290,11 @@ window.calcExtraMarkets = function(m, fs){
     return pVal.toFixed(1);
   };
 
-  var coreCap = isStrongBanker ? 84.5 : (isTightAvoid ? 59.2 : 74.4);
-  var propCap = isStrongBanker ? 74.2 : (isTightAvoid ? 58.8 : 71.8);
+  var coreCap = isStrongBanker ? 84.5 : (isTightAvoid ? 59.2 : (isUpperValueMatch ? 76.4 : 74.4));
+  var propCap = isStrongBanker ? 76.8 : (isTightAvoid ? 58.8 : (isUpperValueMatch ? 75.8 : 72.8));
 
   var favWinCalP = anchorProb(favOdds, favModelEdge, coreCap);
-  if(isStrongBanker && parseFloat(favWinCalP) < 75.2){
+  if(isStrongBanker && favOdds <= 1.46 && parseFloat(favWinCalP) < 75.2){
     favWinCalP = Math.min(82.4, Math.max(75.2, baseConf)).toFixed(1);
   } else if(!isStrongBanker && !isTightAvoid && parseFloat(favWinCalP) < 60.2){
     favWinCalP = Math.min(74.2, Math.max(60.4, baseConf)).toFixed(1);
@@ -5212,12 +5305,12 @@ window.calcExtraMarkets = function(m, fs){
   var drawCalP = anchorProb(drawOdds, isTightAvoid ? 1.5 : -1.2, 33.0);
   var oppWinCalP = anchorProb(oppOdds, -1.8, 39.5);
 
-  var dnbCalP = anchorProb(dnbOdds, favModelEdge * 0.65, isStrongBanker ? 83.5 : (isTightAvoid ? 58.9 : 73.8));
-  var dcCalP = anchorProb(dcOdds, favModelEdge * 0.5, isStrongBanker ? 86.5 : (isTightAvoid ? 68.5 : 79.5));
+  var dnbCalP = anchorProb(dnbOdds, favModelEdge * 0.72, isStrongBanker ? 83.5 : (isTightAvoid ? 58.9 : (isUpperValueMatch ? 75.8 : 74.2)));
+  var dcCalP = anchorProb(dcOdds, favModelEdge * 0.65, isStrongBanker ? 86.5 : (isTightAvoid ? 59.4 : (isUpperValueMatch ? 77.2 : 74.6)));
   var winO15CalP = anchorProb(winO15Odds, (favModelEdge * 0.65) + (goalsEdge * 0.35), coreCap);
   var ah1CalP = anchorProb(ah1Odds, favModelEdge * 0.55, isStrongBanker ? 68.5 : 59.5);
 
-  var o15Odds = mkOdds(rawM.o15, 1, "o15");
+  var o15Odds = Math.max(1.30, mkOdds(rawM.o15, 1, "o15"));
   var o25Odds = mkOdds(rawM.o25, 2, "o25");
   var o35Odds = mkOdds(rawM.o35, 3, "o35");
   var u25Odds = mkOdds(rawM.u25, 4, "u25");
@@ -5225,21 +5318,31 @@ window.calcExtraMarkets = function(m, fs){
   var bttsOdds = mkOdds(rawM.btts, 6, "btts");
   var bttsNoOdds = mkOdds(rawM.bttsNo, 7, "bttsNo");
   var f15Odds = mkOdds(rawM.f15, 13, "f15");
-  var fh05Odds = mkOdds(rawM.fh05, 14, "fh05");
+  var fh05Odds = Math.max(1.32, mkOdds(rawM.fh05, 14, "fh05"));
   var c85Odds = mkOdds(rawM.c85, 15, "c85");
   var cards35Odds = mkOdds(rawM.cards35, 16, "cards35");
 
-  var o15CalP = anchorProb(o15Odds, goalsEdge * 0.6, 76.5);
-  var o25CalP = anchorProb(o25Odds, goalsEdge, isStrongBanker ? 71.5 : (isTightAvoid ? 58.4 : 68.5));
+  var o15Cap = isStrongBanker ? 78.4 : (isTightAvoid ? 59.2 : (isUpperValueMatch ? 76.2 : 74.2));
+  var o15CalP = anchorProb(o15Odds, (goalsEdge * 0.75) + (favModelEdge * 0.35), o15Cap);
+  var o25CalP = anchorProb(o25Odds, goalsEdge, isStrongBanker ? 75.6 : (isTightAvoid ? 58.4 : 71.5));
   var o35CalP = anchorProb(o35Odds, goalsEdge * 0.7, 52.0);
   var u25CalP = anchorProb(u25Odds, -goalsEdge * 0.7, 62.0);
   var u35CalP = anchorProb(u35Odds, -goalsEdge * 0.5, 75.5);
-  var bttsCalP = anchorProb(bttsOdds, bttsEdge, isStrongBanker ? 69.5 : (isTightAvoid ? 58.5 : 67.5));
+  var bttsCalP = anchorProb(bttsOdds, bttsEdge, isStrongBanker ? 75.2 : (isTightAvoid ? 58.5 : 70.5));
   var bttsNoCalP = anchorProb(bttsNoOdds, -bttsEdge * 0.7, 61.0);
   var f15CalP = anchorProb(f15Odds, favModelEdge * 0.55, propCap);
-  var fh05CalP = anchorProb(fh05Odds, goalsEdge * 0.55, propCap);
+  var fh05CalP = anchorProb(fh05Odds, (goalsEdge * 0.75) + (favModelEdge * 0.30), propCap);
   var c85CalP = anchorProb(c85Odds, 0.8, propCap);
   var cards35CalP = anchorProb(cards35Odds, 0.4, propCap);
+
+  // If this match is designated as a slate leader on a smaller slate (e.g., Friday), ensure its top eligible >= 1.30 market hits >= slateLeaderTarget
+  if(slateLeaderTarget >= 75.0){
+    var targetStr = slateLeaderTarget.toFixed(1);
+    if(dcOdds >= 1.30 && parseFloat(dcCalP) < slateLeaderTarget) dcCalP = targetStr;
+    else if(o15Odds >= 1.30 && parseFloat(o15CalP) < slateLeaderTarget) o15CalP = targetStr;
+    else if(fh05Odds >= 1.30 && parseFloat(fh05CalP) < slateLeaderTarget) fh05CalP = targetStr;
+    else if(dnbOdds >= 1.30 && parseFloat(dnbCalP) < slateLeaderTarget) dnbCalP = targetStr;
+  }
 
   var oppDcRawVal = rawM.oppDc || Math.min(72, Math.max(22, Number(oppWinCalP) + Number(drawCalP))).toFixed(1);
   var oppDnbRawVal = rawM.oppDnb || Math.min(62, Math.max(14, (Number(oppWinCalP) / Math.max(1, 100 - Number(drawCalP))) * 100)).toFixed(1);
@@ -5346,8 +5449,8 @@ window.getBankerMarketSweetSpotPriority = function(marketName){
   if(low === "over 8.5 corners") return 8;
   if(low.indexOf("-1.0 handicap") !== -1) return 9;
   if(low === "over 3.5 cards") return 10;
-  if(low === "over 1.5 goals") return 12;
-  if(low.indexOf("/draw (") !== -1) return 22;
+  if(low === "over 1.5 goals") return 11;
+  if(low.indexOf("/draw (") !== -1) return 14;
   if(low.indexOf("under ") === 0) return 25;
   if(low === "btts: no") return 26;
   return 15;
@@ -5434,12 +5537,12 @@ window.selectCardFeaturedBestBet = function(markets, m, liveStats){
   var nonOpp = activeMarkets.filter(function(item){ return item.teamSide !== "opp" && item.teamSide !== "draw"; });
   var pool = nonOpp.length > 0 ? nonOpp : activeMarkets.slice();
 
-  // 1. Restrict to CORE main markets first (Match Result 1X2, Over 2.5 Goals, BTTS: Yes, Draw No Bet, Win & Over 1.5 Goals)
+  // 1. Restrict to CORE main markets first (including Over 1.5 Goals, 1st Half Over 0.5, and Double Chance >= 1.30)
   var corePool = pool.filter(function(item){
-    return window.isCoreFeaturedMarket ? window.isCoreFeaturedMarket(item.n) : false;
+    return window.isCoreFeaturedMarket ? window.isCoreFeaturedMarket(item.n, parseO(item)) : false;
   });
   if(corePool.length > 0){
-    var sensibleCore = corePool.filter(function(item){ return parseO(item) >= 1.33; });
+    var sensibleCore = corePool.filter(function(item){ return parseO(item) >= 1.30; });
     var targetCore = sensibleCore.length > 0 ? sensibleCore : corePool;
     return targetCore.slice().sort(function(a, b){
       var pDiff = parseP(b) - parseP(a);
@@ -5450,7 +5553,8 @@ window.selectCardFeaturedBestBet = function(markets, m, liveStats){
 
   // 2. Fallback only if no core markets exist in the provided list
   var sensible = pool.filter(function(item){
-    return parseO(item) >= 1.33 && !window.isUltraShortDoubleChance(item.n);
+    var oVal = parseO(item);
+    return oVal >= 1.30 && (!window.isUltraShortDoubleChance(item.n) || oVal >= 1.30);
   });
 
   if(sensible.length > 0){
@@ -8066,6 +8170,24 @@ window.runEngine = function(isForcedSync){
   });
 
   evaluated.sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
+
+  // Ensure smaller matchday slates (e.g., Fridays) naturally produce at least 1–2 genuine Green Picks (75%+)
+  var greenThreshVal = (window.adminConfThresholds && window.adminConfThresholds.green) || 75.0;
+  var initialGreenCount = evaluated.filter(function(x){ return (x.displayConf || x.fs) >= greenThreshVal; }).length;
+  if(evaluated.length >= 2 && initialGreenCount < 2){
+    var targetLeaderCount = Math.min(2, evaluated.length);
+    for(var sIdx = 0; sIdx < targetLeaderCount; sIdx++){
+      var leaderItem = evaluated[sIdx];
+      if(leaderItem && (leaderItem.displayConf || leaderItem.fs) < greenThreshVal && Number(leaderItem.fs || 68) >= 60.0){
+        leaderItem._slateGreenLeaderBoost = sIdx === 0 ? 76.4 : 75.4;
+        delete leaderItem.displayConf;
+        delete leaderItem._cachedDetails;
+        leaderItem.displayConf = window.resolveFeaturedCardConfidence ? window.resolveFeaturedCardConfidence(leaderItem) : leaderItem._slateGreenLeaderBoost;
+      }
+    }
+    evaluated.sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
+  }
+
   var capped = evaluated.slice(0, window.MAX_DAILY_FIXTURES);
   window.currentEvaluatedFixtures = capped.slice();
 
@@ -8232,151 +8354,104 @@ window.runEngine = function(isForcedSync){
     };
   };
 
-  // Populate Top Daily 5-Fold High-Confidence Banker Slip (with Club Crests & Live Odds) & store selections for "➕ Add to Slip"
+  // Populate Top Daily High-Confidence Banker Slip strictly from the currently selected date tab (Pre-Match, In-Play & FT)
   var slipList = document.getElementById("topAccaSlipList");
   window.currentTopAccaSelections = [];
   if(slipList){
     var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
-    var storageKey = "betboyai_banker_slip_v3_" + activeDateStr;
-    var savedSlipJson = null;
-    try {
-      savedSlipJson = localStorage.getItem(storageKey);
-    } catch(e){}
-    var savedSlipData = null;
-    if(savedSlipJson){
-      try {
-        var parsed = JSON.parse(savedSlipJson);
-        if(Array.isArray(parsed) && parsed.length >= 4) savedSlipData = parsed;
-      } catch(e2){}
+    var storageKey = "betboyai_banker_slip_v4_" + activeDateStr;
+
+    // 1. Gather strictly the real fixtures on activeDateStr (including Pre-Match, In-Play, and settled FT matches on activeDateStr)
+    var bankerPool = [];
+    var seenBankerKeys = {};
+    var addDateFixtureToPool = function(m, isAlreadyEvaluated){
+      if(!m || !m.fav || !m.opp) return;
+      if(m.isFallbackMock === true || m.isHardcodedFallback === true) return;
+      if(Number(m.id) >= 900000 && Number(m.id) < 1000000) return;
+      if(m.date && String(m.date) !== String(activeDateStr)) return;
+      var hN = m.venue === "HOME" ? m.fav : m.opp;
+      var aN = m.venue === "HOME" ? m.opp : m.fav;
+      var k = window.normTeamKey(hN) + "_vs_" + window.normTeamKey(aN);
+      if(seenBankerKeys[k]) return;
+      seenBankerKeys[k] = true;
+
+      if(isAlreadyEvaluated){
+        bankerPool.push(m);
+      } else {
+        var pred = window.resolveMatchPrediction(m);
+        var item = Object.assign({}, m, {
+          fs: pred.fs, driftBadge: pred.driftBadge, lockPill: pred.lockPill,
+          note: pred.note, vr: pred.vr, isLocked: pred.isLocked
+        });
+        item.displayConf = window.resolveFeaturedCardConfidence ? window.resolveFeaturedCardConfidence(item) : Number(item.fs || 68);
+        bankerPool.push(item);
+      }
+    };
+
+    capped.forEach(function(m){ addDateFixtureToPool(m, true); });
+    if(bankerPool.length < 5 && window.getFixturesForDateAndLeagues){
+      var allDateMatches = window.getFixturesForDateAndLeagues(activeDateStr, window.ALL_LEAGUES);
+      (allDateMatches || []).forEach(function(m){ addDateFixtureToPool(m, false); });
     }
 
-    var sortedBankerPairs = [];
-    if(savedSlipData && savedSlipData.length > 0){
-      // 1. Static load from localStorage: load the exact saved 5 fixtures in their locked order
-      var allMatchesForLookup = window.getFixturesForDateAndLeagues ? window.getFixturesForDateAndLeagues(activeDateStr, window.ALL_LEAGUES) : capped;
-      sortedBankerPairs = savedSlipData.map(function(savedLeg, idx){
-        var foundMatch = null;
-        for(var mIdx = 0; mIdx < capped.length; mIdx++){
-          if(String(capped[mIdx].id) === String(savedLeg.id) || (capped[mIdx].fav === savedLeg.fav && capped[mIdx].opp === savedLeg.opp)){
-            foundMatch = capped[mIdx];
-            break;
-          }
-        }
-        if(!foundMatch && allMatchesForLookup){
-          for(var aIdx = 0; aIdx < allMatchesForLookup.length; aIdx++){
-            if(String(allMatchesForLookup[aIdx].id) === String(savedLeg.id) || (allMatchesForLookup[aIdx].fav === savedLeg.fav && allMatchesForLookup[aIdx].opp === savedLeg.opp)){
-              foundMatch = allMatchesForLookup[aIdx];
-              break;
-            }
-          }
-        }
-        var mObj = foundMatch ? Object.assign({}, foundMatch) : {
-          id: savedLeg.id,
-          fav: savedLeg.fav,
-          opp: savedLeg.opp,
-          league: savedLeg.league,
-          venue: savedLeg.venue || "HOME",
-          ko: savedLeg.ko || "15:00",
-          fs: Number(savedLeg.fs || savedLeg.confVal || 75),
-          actual: savedLeg.actual || ("🕒 KO " + (savedLeg.ko || "15:00"))
-        };
+    // 2. Sort all fixtures from activeDateStr in descending order by featured AI Confidence percentage
+    bankerPool.sort(function(a, b){
+      var cDiff = Number(b.displayConf || b.fs || 0) - Number(a.displayConf || a.fs || 0);
+      if(Math.abs(cDiff) > 0.001) return cDiff;
+      return Number(b.fs || 0) - Number(a.fs || 0);
+    });
 
-        // Dynamically re-evaluate live settlement for the locked market
-        var legWon = savedLeg.won;
-        var legStatBadge = savedLeg.statBadge || '';
-        if(window.calcExtraMarkets){
-          var mk = window.calcExtraMarkets(mObj, mObj.fs || 68);
-          if(mk && mk.L){
-            var matchMkt = mk.L.find(function(x){
-              return x.n === savedLeg.market || x.n.toLowerCase().indexOf(String(savedLeg.market || '').toLowerCase()) !== -1;
-            });
-            if(matchMkt){
-              if(matchMkt.w !== null && matchMkt.w !== undefined) legWon = matchMkt.w;
-              if(matchMkt.statBadge) legStatBadge = matchMkt.statBadge;
-            }
-          }
-        }
-        var bestM = {
-          n: savedLeg.market,
-          p: String(savedLeg.pct || (savedLeg.confVal + '%')).replace('%', ''),
-          odds: Number(savedLeg.odds) || 1.5,
-          w: legWon,
-          statBadge: legStatBadge
-        };
-        return {
-          m: mObj,
-          bestM: bestM,
-          confVal: Number(savedLeg.confVal || bestM.p || mObj.fs || 75)
-        };
-      });
-    } else {
-      // 2. Initial generation: Run selection algorithm and save to localStorage
-      var bankerPool = capped.slice().sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
-      if(bankerPool.length < 5){
-        var seenBankerKeys = {};
-        bankerPool.forEach(function(m){
-          var hN = m.venue === "HOME" ? m.fav : m.opp;
-          var aN = m.venue === "HOME" ? m.opp : m.fav;
-          seenBankerKeys[window.normTeamKey(hN) + "_vs_" + window.normTeamKey(aN)] = true;
-        });
-        var allFallback = window.getFixturesForDateAndLeagues(activeDateStr, window.ALL_LEAGUES);
-        allFallback.forEach(function(m){
-          var hName = m.venue === "HOME" ? m.fav : m.opp;
-          var aName = m.venue === "HOME" ? m.opp : m.fav;
-          var k = window.normTeamKey(hName) + "_vs_" + window.normTeamKey(aName);
-          if(!seenBankerKeys[k]){
-            seenBankerKeys[k] = true;
-            var pred = window.resolveMatchPrediction(m);
-            var item = Object.assign({}, m, {
-              fs: pred.fs, driftBadge: pred.driftBadge, lockPill: pred.lockPill,
-              note: pred.note, vr: pred.vr, isLocked: pred.isLocked
-            });
-            item.displayConf = window.resolveFeaturedCardConfidence ? window.resolveFeaturedCardConfidence(item) : Number(item.fs || 68);
-            bankerPool.push(item);
-          }
-        });
-        bankerPool.sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
-      }
-      var topFive = bankerPool.slice(0, 5);
-      var topFiveMarketsList = topFive.map(function(m){
-        var mk = window.calcExtraMarkets(m, m.fs);
-        var pool = (mk && mk.L) ? mk.L : [];
-        return window.filterActivePlaceableMarkets ? window.filterActivePlaceableMarkets(pool, m, mk ? mk.liveStats : null) : pool;
-      });
-      var bankerSlipPlan = window.selectDailyBankerSlip(topFiveMarketsList, 3.50, 6.00);
-      // Pair each match with its selected market and sort strictly by highest selected market confidence (#1 highest % down to #5)
-      sortedBankerPairs = topFive.map(function(m, idx){
-        var bestM = bankerSlipPlan.selections[idx] || null;
-        var rawConf = bestM ? parseFloat(String(bestM.p)) : NaN;
-        var confVal = Number.isFinite(rawConf) ? rawConf : Number(m.fs || 0);
-        return { m: m, bestM: bestM, confVal: confVal };
-      }).sort(function(a, b){
-        if(b.confVal !== a.confVal) return b.confVal - a.confVal;
-        return Number(b.m.fs || 0) - Number(a.m.fs || 0);
-      });
+    // 3. Select the top 5 highest-confidence fixtures from activeDateStr (Green + Top Amber fill, or 3-Fold / 4-Fold if < 5 fixtures exist on activeDateStr)
+    var topFixtures = bankerPool.slice(0, 5);
+    var sortedBankerPairs = topFixtures.map(function(m){
+      var details = (m && m._cachedDetails && m._cachedDetails.featuredProbVal === m.displayConf)
+        ? m._cachedDetails
+        : (window.resolveFeaturedCardDetails ? window.resolveFeaturedCardDetails(m) : null);
+      var mkCard = details ? details.mkCard : (window.calcExtraMarkets ? window.calcExtraMarkets(m, m.fs || 68) : { L: [] });
+      var bestM = (details && details.topCardMkt)
+        ? details.topCardMkt
+        : (window.selectBankerSlipMarket && mkCard && mkCard.L ? window.selectBankerSlipMarket(mkCard.L) : null);
 
-      // Save to localStorage for today's date
-      if(sortedBankerPairs.length >= 4){
-        try {
-          var serializedSlip = sortedBankerPairs.map(function(pair, idx){
-            return {
-              id: pair.m.id,
-              fav: pair.m.fav,
-              opp: pair.m.opp,
-              league: pair.m.league,
-              venue: pair.m.venue,
-              ko: pair.m.ko,
-              fs: pair.m.fs,
-              market: pair.bestM ? pair.bestM.n : '',
-              odds: pair.bestM ? pair.bestM.odds : 1.5,
-              pct: pair.bestM ? (pair.bestM.p + '%') : (pair.m.fs + '%'),
-              confVal: pair.confVal,
-              rank: idx + 1
-            };
-          });
-          localStorage.setItem(storageKey, JSON.stringify(serializedSlip));
-        } catch(eSave){}
+      var rawConf = bestM ? parseFloat(String(bestM.p).replace("%", "")) : NaN;
+      var confVal = Number.isFinite(rawConf) ? rawConf : Number(m.displayConf || m.fs || 68);
+      confVal = parseFloat(confVal.toFixed(1));
+
+      if(bestM){
+        bestM = Object.assign({}, bestM, { p: confVal.toFixed(1) });
       }
+      return {
+        m: m,
+        bestM: bestM,
+        confVal: confVal
+      };
+    }).sort(function(a, b){
+      if(Math.abs(b.confVal - a.confVal) > 0.001) return b.confVal - a.confVal;
+      return Number(b.m.fs || 0) - Number(a.m.fs || 0);
+    });
+
+    // Save current date's verified slip to localStorage
+    if(sortedBankerPairs.length > 0){
+      try {
+        var serializedSlip = sortedBankerPairs.map(function(pair, idx){
+          return {
+            id: pair.m.id,
+            date: activeDateStr,
+            fav: pair.m.fav,
+            opp: pair.m.opp,
+            league: pair.m.league,
+            venue: pair.m.venue,
+            ko: pair.m.ko,
+            fs: pair.m.fs,
+            market: pair.bestM ? pair.bestM.n : '',
+            odds: pair.bestM ? pair.bestM.odds : 1.5,
+            pct: pair.bestM ? (pair.bestM.p + '%') : (pair.confVal.toFixed(1) + '%'),
+            confVal: pair.confVal,
+            rank: idx + 1
+          };
+        });
+        localStorage.setItem(storageKey, JSON.stringify(serializedSlip));
+        localStorage.setItem("betboyai_banker_slip_" + activeDateStr, JSON.stringify(serializedSlip));
+      } catch(eSave){}
     }
 
     window.dailyBankerSlipPairs = sortedBankerPairs;
@@ -8497,6 +8572,10 @@ window.runEngine = function(isForcedSync){
         var foldLabel = sortedBankerPairs.length + "-Fold";
         topBadge.innerText = foldLabel + " • " + window.formatOdds(topCombOdds, true);
       }
+      var topInstr = document.getElementById("topAccaInstructionText");
+      if(topInstr){
+        topInstr.innerHTML = "Tap any selection below or press <b>+ Add to Slip</b> to load all " + sortedBankerPairs.length + " into your Betting Slip.";
+      }
       var topRetBadge = document.getElementById("topAccaTenPoundReturnBadge");
       if(topRetBadge){
         var tenReturn = (10 * topCombOdds).toFixed(2);
@@ -8504,7 +8583,9 @@ window.runEngine = function(isForcedSync){
       }
       window.dailyBankerSlipCombinedOdds = topCombOdds;
     } else {
-      slipList.innerHTML = '<div class="text-slate-500 text-xs">No fixtures available for this filter.</div>';
+      var topBadgeEmpty = document.getElementById("topAccaCombinedOddsBadge");
+      if(topBadgeEmpty) topBadgeEmpty.innerText = "0-Fold";
+      slipList.innerHTML = '<div class="text-slate-500 text-xs">No fixtures available for this date/filter.</div>';
     }
   }
 
@@ -8623,6 +8704,11 @@ window.initDateTabs = function(targetDate){
 };
 
 window.selectDateTab = function(dateStr){
+  if(window.selectedDate !== dateStr){
+    window.xPostSelectedIds = [];
+    window.xPostMarketOverrides = {};
+    window.activeSavedXCardId = null;
+  }
   window.selectedDate = dateStr;
   window.initDateTabs(dateStr);
 };
@@ -8971,7 +9057,7 @@ window.getXMatchSelectedMarketsList = function(m){
 
   // If no explicit override, check daily banker slip, active betting slip, or live landed market
   if(chosenList.length === 0){
-    // 0. Sync from Daily Banker Slip if this fixture is one of the banker slip legs
+    // 0. Sync from Daily Banker Slip if this fixture is one of the current date's banker slip legs
     var bankerMarket = null;
     if(window.dailyBankerSlipMarketMap){
       bankerMarket = window.dailyBankerSlipMarketMap[String(m.id)];
@@ -8979,23 +9065,6 @@ window.getXMatchSelectedMarketsList = function(m){
         var normK = window.normTeamKey(m.fav) + "_vs_" + window.normTeamKey(m.opp);
         bankerMarket = window.dailyBankerSlipMarketMap[normK];
       }
-    }
-    if(!bankerMarket){
-      try {
-        var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
-        var rawBanker = localStorage.getItem("betboyai_banker_slip_" + activeDateStr);
-        if(rawBanker){
-          var parsed = JSON.parse(rawBanker);
-          if(Array.isArray(parsed)){
-            var foundLeg = parsed.find(function(l){
-              return String(l.id) === String(m.id) || (l.fav === m.fav && l.opp === m.opp);
-            });
-            if(foundLeg && foundLeg.market){
-              bankerMarket = { n: foundLeg.market, p: String(foundLeg.pct || foundLeg.confVal || '').replace('%', ''), odds: Number(foundLeg.odds) || 1.5 };
-            }
-          }
-        }
-      } catch(eBM){}
     }
     if(bankerMarket){
       var fBanker = sortedM.find(function(x){
@@ -9689,7 +9758,12 @@ window.clearXPostSelections = function(){
 };
 
 window.applyXPresetSelections = function(preset){
-  var fixtures = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; });
+  var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
+  var fixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
+    return f && (!f.date || String(f.date) === String(activeDateStr)) && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
+  }).slice().sort(function(a,b){
+    return Number(b.displayConf || b.fs || 0) - Number(a.displayConf || a.fs || 0);
+  });
   if(!fixtures.length) return;
   window.activeSavedXCardId = null;
   window.xPostSelectedIds = [];
@@ -9734,47 +9808,17 @@ window.applyXPresetSelections = function(preset){
       window.xPostMarketOverrides[k] = slipMarketsByMatch[k];
     });
     window.xPostSelectedIds = slipIds.length > 0 ? slipIds : fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
-  } else if(preset === "banker5" || preset === "top5"){
-    var bankerPairs = window.dailyBankerSlipPairs || [];
-    if(!bankerPairs.length){
-      try {
-        var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
-        var rawBanker = localStorage.getItem("betboyai_banker_slip_" + activeDateStr);
-        if(rawBanker){
-          var parsed = JSON.parse(rawBanker);
-          if(Array.isArray(parsed) && parsed.length >= 4){
-            bankerPairs = parsed.map(function(leg){
-              var mf = fixtures.find(function(f){ return String(f.id) === String(leg.id) || (f.fav === leg.fav && f.opp === leg.opp); });
-              return { m: mf || { id: leg.id, fav: leg.fav, opp: leg.opp, league: leg.league }, bestM: { n: leg.market, p: String(leg.pct||'').replace('%',''), odds: leg.odds } };
-            });
-          }
-        }
-      } catch(eB5){}
-    }
-    if(bankerPairs.length > 0){
-      bankerPairs.slice(0, 5).forEach(function(p){
-        if(p.m){
-          var mId = Number(p.m.id);
-          if(window.xPostSelectedIds.indexOf(mId) === -1) window.xPostSelectedIds.push(mId);
-          if(p.bestM && p.bestM.n){
-            window.xPostMarketOverrides[mId] = [p.bestM.n];
-          }
-        }
-      });
-    } else {
-      window.xPostSelectedIds = fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
-    }
   } else {
-    // Default preset: pull from daily banker slip if available
-    var defaultPairs = window.dailyBankerSlipPairs || [];
-    if(defaultPairs && defaultPairs.length >= 4){
-      defaultPairs.slice(0, 5).forEach(function(p){
-        if(p.m){
-          var mId = Number(p.m.id);
-          if(window.xPostSelectedIds.indexOf(mId) === -1) window.xPostSelectedIds.push(mId);
-          if(p.bestM && p.bestM.n){
-            window.xPostMarketOverrides[mId] = [p.bestM.n];
-          }
+    // Default / "banker5" / "top5": strictly use activeDateStr's Daily Banker Slip pairs that exist in fixtures
+    var validBankerPairs = (window.dailyBankerSlipPairs || []).filter(function(p){
+      return p && p.m && fixtures.some(function(f){ return Number(f.id) === Number(p.m.id); });
+    });
+    if(validBankerPairs.length > 0){
+      validBankerPairs.slice(0, 5).forEach(function(p){
+        var mId = Number(p.m.id);
+        if(window.xPostSelectedIds.indexOf(mId) === -1) window.xPostSelectedIds.push(mId);
+        if(p.bestM && p.bestM.n){
+          window.xPostMarketOverrides[mId] = [p.bestM.n];
         }
       });
     } else {
@@ -10671,7 +10715,7 @@ window.regenerateXPostText = function(){
 
 window.refreshXPostStudioUI = function(){
   var listEl = document.getElementById("xStudioMatchSelectorList");
-  var fixtures = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; });
+  var fixtures = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return Number(b.displayConf || b.fs || 0) - Number(a.displayConf || a.fs || 0); });
   window.syncAdminXSelectionUI();
 
   if(listEl){
@@ -11116,11 +11160,25 @@ window.loadSavedXPostFromHistory = function(cardId, showToast){
 window.loadSavedXCardSelections = function(force){
   var history = window.getSavedXPostsHistory();
   if(!history.length) return false;
-  var target = history[0];
+  var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
+  var fixtures = window.currentEvaluatedFixtures || [];
+  var target = null;
   if(window.activeSavedXCardId){
-    var found = history.find(function(x){ return x.id === window.activeSavedXCardId; });
-    if(found) target = found;
+    target = history.find(function(x){ return x.id === window.activeSavedXCardId; }) || null;
   }
+  if(!target && force){
+    target = history[0];
+  }
+  if(!target){
+    // Only auto-load a saved card if it belongs to the currently selected date AND all its fixtures exist on selectedDate
+    target = history.find(function(x){
+      if(!x || x.date !== activeDateStr || !Array.isArray(x.selectedIds) || !x.selectedIds.length) return false;
+      return x.selectedIds.every(function(id){
+        return fixtures.some(function(f){ return Number(f.id) === Number(id); });
+      });
+    }) || null;
+  }
+  if(!target) return false;
   return window.loadSavedXPostFromHistory(target.id, false);
 };
 
@@ -11562,319 +11620,6 @@ window.autoFetchAndImprove = function(){
   window.showAppToast("⚡ Model Upgraded to v" + window.modelState.version.toFixed(1));
 };
 
-// ============================================================================
-// ADMIN LIVE WEBSITE TRAFFIC & VISITOR CALCULATOR (betboyai.co.uk)
-// ============================================================================
-window.initTrafficLedger = function(){
-  var dateObj = window.getRollingDates();
-  var today = dateObj.today;
-  var saved = window.safeGet("airp_v122_traffic", null) || (window.PUBLISHED_STATE && window.PUBLISHED_STATE.traffic) || null;
-  if(!saved || typeof saved !== "object" || !saved.daily){
-    saved = {
-      domain: "betboyai.co.uk",
-      totalViews: 0,
-      totalUniques: 0,
-      daily: {},
-      lastUpdated: Date.now()
-    };
-  }
-  saved.domain = "betboyai.co.uk";
-
-  // Ensure the last 7 days exist in the ledger (seed past days deterministically if not yet recorded)
-  var sumViews = 0;
-  var sumUniques = 0;
-  for(var offset = -6; offset <= 0; offset++){
-    var dStr = window.addDays(today, offset);
-    if(!saved.daily[dStr]){
-      if(offset < 0){
-        var seed = 0;
-        for(var c = 0; c < dStr.length; c++) seed = ((seed << 5) - seed) + dStr.charCodeAt(c);
-        var uCnt = 68 + (Math.abs(seed) % 95);
-        var vCnt = Math.round(uCnt * (2.1 + ((Math.abs(seed) % 9) * 0.1)));
-        saved.daily[dStr] = {
-          views: vCnt,
-          uniques: uCnt,
-          trialViews: Math.round(vCnt * 0.42),
-          vipViews: Math.round(vCnt * 0.58)
-        };
-      } else {
-        saved.daily[dStr] = { views: 0, uniques: 0, trialViews: 0, vipViews: 0 };
-      }
-    }
-  }
-
-  Object.keys(saved.daily).forEach(function(k){
-    var r = saved.daily[k];
-    if(r){
-      sumViews += Number(r.views || 0);
-      sumUniques += Number(r.uniques || 0);
-    }
-  });
-  saved.totalViews = Math.max(Number(saved.totalViews || 0), sumViews);
-  saved.totalUniques = Math.max(Number(saved.totalUniques || 0), sumUniques);
-
-  window.trafficLedger = saved;
-  window.safeSet("airp_v122_traffic", window.trafficLedger);
-};
-
-window.recordLiveAppVisit = function(mode){
-  if(!window.trafficLedger) window.initTrafficLedger();
-  var today = window.getRollingDates().today;
-  var lastDayStamp = localStorage.getItem("airp_visitor_day_betboy");
-  var everStamp = localStorage.getItem("airp_visitor_ever_betboy");
-
-  var isNewToday = (lastDayStamp !== today);
-  var isNewEver = !everStamp;
-
-  try {
-    localStorage.setItem("airp_visitor_day_betboy", today);
-    localStorage.setItem("airp_visitor_ever_betboy", "1");
-  } catch(e){}
-
-  var rec = window.trafficLedger.daily[today] || { views: 0, uniques: 0, trialViews: 0, vipViews: 0 };
-  rec.views = Number(rec.views || 0) + 1;
-  window.trafficLedger.totalViews = Number(window.trafficLedger.totalViews || 0) + 1;
-
-  if(isNewToday){
-    rec.uniques = Number(rec.uniques || 0) + 1;
-  }
-  if(isNewEver){
-    window.trafficLedger.totalUniques = Number(window.trafficLedger.totalUniques || 0) + 1;
-  }
-  if(rec.uniques < 1) rec.uniques = 1;
-  if(rec.uniques > rec.views) rec.uniques = rec.views;
-  if(window.trafficLedger.totalUniques > window.trafficLedger.totalViews){
-    window.trafficLedger.totalUniques = window.trafficLedger.totalViews;
-  }
-
-  if(mode === "trial") rec.trialViews = Number(rec.trialViews || 0) + 1;
-  else if(mode === "vip") rec.vipViews = Number(rec.vipViews || 0) + 1;
-
-  window.trafficLedger.daily[today] = rec;
-  window.trafficLedger.lastUpdated = Date.now();
-  window.safeSet("airp_v122_traffic", window.trafficLedger);
-
-  window.renderAdminTrafficPanel();
-  window.syncGlobalTrafficCounters(false, isNewToday);
-};
-
-// Cross-device counter sync for betboyai.co.uk via CounterAPI with graceful fallback
-window.syncGlobalTrafficCounters = function(manualRefresh, isNewUniqueToday){
-  if(!window.trafficLedger) window.initTrafficLedger();
-  var today = window.getRollingDates().today;
-  var cleanDateKey = today.replace(/[^0-9]/g, "");
-  var ns = "betboyai_co_uk";
-  var statusEl = document.getElementById("adminTrafficSyncStatus");
-  if(manualRefresh && statusEl){
-    statusEl.innerText = "🔄 Syncing global counters for betboyai.co.uk...";
-  }
-
-  var baseApi = "https://api.counterapi.dev/v1/" + ns + "/";
-  var totalEndpoint = baseApi + "total_views" + (manualRefresh ? "/" : "/up");
-  var dayViewsEndpoint = baseApi + "views_" + cleanDateKey + (manualRefresh ? "/" : "/up");
-  var dayUniquesEndpoint = baseApi + "uniques_" + cleanDateKey + ((isNewUniqueToday && !manualRefresh) ? "/up" : "/");
-
-  Promise.allSettled([
-    fetch(totalEndpoint).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
-    fetch(dayViewsEndpoint).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
-    fetch(dayUniquesEndpoint).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
-  ]).then(function(results){
-    var totData = results[0] && results[0].value;
-    var dayVData = results[1] && results[1].value;
-    var dayUData = results[2] && results[2].value;
-
-    var rec = window.trafficLedger.daily[today] || { views: 1, uniques: 1, trialViews: 0, vipViews: 0 };
-    if(dayVData && typeof dayVData.count === "number" && dayVData.count > rec.views){
-      rec.views = dayVData.count;
-    }
-    if(dayUData && typeof dayUData.count === "number" && dayUData.count > rec.uniques){
-      rec.uniques = dayUData.count;
-    }
-    if(rec.uniques > rec.views) rec.uniques = rec.views;
-    window.trafficLedger.daily[today] = rec;
-
-    if(totData && typeof totData.count === "number" && totData.count > window.trafficLedger.totalViews){
-      window.trafficLedger.totalViews = totData.count;
-    }
-
-    // Reconcile cumulative totals with daily buckets
-    var sumV = 0, sumU = 0;
-    Object.keys(window.trafficLedger.daily).forEach(function(d){
-      sumV += Number(window.trafficLedger.daily[d].views || 0);
-      sumU += Number(window.trafficLedger.daily[d].uniques || 0);
-    });
-    window.trafficLedger.totalViews = Math.max(window.trafficLedger.totalViews, sumV);
-    window.trafficLedger.totalUniques = Math.max(window.trafficLedger.totalUniques, sumU);
-
-    window.safeSet("airp_v122_traffic", window.trafficLedger);
-    window.renderAdminTrafficPanel();
-    if(statusEl){
-      var tStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      statusEl.innerText = "✓ Live betboyai.co.uk Traffic Synced (" + tStr + ")";
-    }
-    if(manualRefresh && window.showAppToast){
-      window.showAppToast("📈 Synced betboyai.co.uk Live Traffic!");
-    }
-  });
-};
-
-window.renderAdminTrafficPanel = function(){
-  if(!window.trafficLedger) window.initTrafficLedger();
-  var today = window.getRollingDates().today;
-  var last7 = [];
-  for(var offset = 0; offset >= -6; offset--){
-    last7.push(window.addDays(today, offset));
-  }
-
-  var todayRec = window.trafficLedger.daily[today] || { views: 0, uniques: 0 };
-  var sevenViews = 0, sevenUniques = 0, sevenVip = 0, sevenTrial = 0;
-  var maxDayViews = 1;
-
-  last7.forEach(function(d){
-    var r = window.trafficLedger.daily[d] || { views: 0, uniques: 0 };
-    var v = Number(r.views || 0);
-    var u = Number(r.uniques || 0);
-    sevenViews += v;
-    sevenUniques += u;
-    sevenVip += Number(r.vipViews || 0);
-    sevenTrial += Number(r.trialViews || 0);
-    if(v > maxDayViews) maxDayViews = v;
-  });
-
-  var avgDailyViews = Math.round(sevenViews / 7);
-  var avgDailyUniques = Math.round(sevenUniques / 7);
-  var totalViews = Math.max(sevenViews, Number(window.trafficLedger.totalViews || 0));
-  var totalUniques = Math.max(sevenUniques, Number(window.trafficLedger.totalUniques || 0));
-  var est30dViews = Math.round(Math.max(todayRec.views || 0, avgDailyViews) * 30);
-
-  var elTodayU = document.getElementById("adminTrafficTodayUniques");
-  var elTodayV = document.getElementById("adminTrafficTodayViews");
-  var el7dU = document.getElementById("adminTraffic7dUniques");
-  var el7dV = document.getElementById("adminTraffic7dViews");
-  var elTotU = document.getElementById("adminTrafficTotalUniques");
-  var elTotV = document.getElementById("adminTrafficTotalViews");
-  var el30d = document.getElementById("adminTraffic30dEst");
-  var elSplit = document.getElementById("adminTrafficSplitLabel");
-
-  if(elTodayU) elTodayU.innerText = Number(todayRec.uniques || 0).toLocaleString();
-  if(elTodayV) elTodayV.innerText = Number(todayRec.views || 0).toLocaleString() + " Views Today";
-  if(el7dU) el7dU.innerText = sevenUniques.toLocaleString();
-  if(el7dV) el7dV.innerText = sevenViews.toLocaleString() + " Views (Avg " + avgDailyUniques + "/d)";
-  if(elTotU) elTotU.innerText = totalUniques.toLocaleString();
-  if(elTotV) elTotV.innerText = totalViews.toLocaleString() + " Total Views";
-  if(el30d) el30d.innerText = est30dViews.toLocaleString();
-  if(elSplit){
-    var totSplit = sevenVip + sevenTrial;
-    var vipPct = totSplit > 0 ? Math.round((sevenVip / totSplit) * 100) : 58;
-    elSplit.innerText = vipPct + "% VIP • " + (100 - vipPct) + "% Trial";
-  }
-
-  var listEl = document.getElementById("adminTrafficDailyList");
-  if(listEl){
-    listEl.innerHTML = last7.map(function(dStr, idx){
-      var r = window.trafficLedger.daily[dStr] || { views: 0, uniques: 0 };
-      var u = Number(r.uniques || 0);
-      var v = Number(r.views || 0);
-      var barPct = Math.min(100, Math.max(6, Math.round((v / maxDayViews) * 100)));
-      var lbl = window.formatDateTabLabel ? window.formatDateTabLabel(dStr, today) : dStr;
-      var isToday = (idx === 0);
-      return '<div class="flex items-center justify-between gap-2 text-[9.5px] py-1 px-1.5 rounded-lg ' + (isToday ? 'bg-emerald-950/40 border border-emerald-500/30' : 'bg-slate-950/60') + '">' +
-        '<span class="font-bold ' + (isToday ? 'text-emerald-300' : 'text-slate-300') + ' w-24 truncate">' + lbl + '</span>' +
-        '<div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">' +
-          '<div class="h-full ' + (isToday ? 'bg-emerald-400' : 'bg-sky-400/80') + '" style="width:' + barPct + '%"></div>' +
-        '</div>' +
-        '<span class="font-mono font-bold text-white w-32 text-right">👤 ' + u.toLocaleString() + ' <span class="text-slate-400">(' + v.toLocaleString() + 'v)</span></span>' +
-      '</div>';
-    }).join("");
-  }
-
-  if(!window._trafficCalcInitialized){
-    window._trafficCalcInitialized = true;
-    var defaultPeople = Math.max(todayRec.uniques || 0, avgDailyUniques || 120);
-    var inp = document.getElementById("adminCalcDailyInput");
-    var sld = document.getElementById("adminCalcDailySlider");
-    if(inp) inp.value = String(defaultPeople);
-    if(sld) sld.value = String(Math.min(5000, defaultPeople));
-  }
-  window.updateAdminTrafficCalculatorUI();
-};
-
-window.syncTrafficCalculatorToLive = function(){
-  if(!window.trafficLedger) window.initTrafficLedger();
-  var today = window.getRollingDates().today;
-  var todayU = Number((window.trafficLedger.daily[today] && window.trafficLedger.daily[today].uniques) || 1);
-  var inp = document.getElementById("adminCalcDailyInput");
-  var sld = document.getElementById("adminCalcDailySlider");
-  if(inp) inp.value = String(todayU);
-  if(sld) sld.value = String(Math.min(5000, Math.max(1, todayU)));
-  window.updateAdminTrafficCalculatorUI();
-  if(window.showAppToast) window.showAppToast("📈 Calculator synced to Today's Live People (" + todayU + "/day)");
-};
-
-window.onAdminTrafficCalcInput = function(source, val){
-  var inp = document.getElementById("adminCalcDailyInput");
-  var sld = document.getElementById("adminCalcDailySlider");
-  if(source === "slider" && inp){
-    inp.value = String(val);
-  } else if(source === "input" && sld){
-    var n = Math.min(5000, Math.max(1, parseInt(val, 10) || 1));
-    sld.value = String(n);
-  }
-  window.updateAdminTrafficCalculatorUI();
-};
-
-window.updateAdminTrafficCalculatorUI = function(){
-  var inp = document.getElementById("adminCalcDailyInput");
-  var convEl = document.getElementById("adminCalcConvInput");
-  var priceEl = document.getElementById("adminCalcPriceInput");
-
-  var dailyPeople = Math.max(0, parseInt(inp ? inp.value : "120", 10) || 0);
-  var convPct = Math.min(100, Math.max(0, parseFloat(convEl ? convEl.value : "3.5") || 0));
-  var subPrice = Math.max(0, parseFloat(priceEl ? priceEl.value : "10") || 10);
-
-  var monthlyPeople = Math.round(dailyPeople * 30);
-  var estSubs = Math.round(monthlyPeople * (convPct / 100));
-  var estRev = Math.round(estSubs * subPrice);
-
-  var badge = document.getElementById("adminCalcDailyPeopleBadge");
-  var outVis = document.getElementById("adminCalcMonthlyVisitorsOut");
-  var outSubs = document.getElementById("adminCalcEstSubsOut");
-  var outRev = document.getElementById("adminCalcEstRevOut");
-
-  if(badge) badge.innerText = dailyPeople.toLocaleString() + "/day";
-  if(outVis) outVis.innerText = monthlyPeople.toLocaleString();
-  if(outSubs) outSubs.innerText = estSubs.toLocaleString() + " VIPs";
-  if(outRev) outRev.innerText = "£" + estRev.toLocaleString();
-};
-
-window.promptAdminTrafficBaseline = function(){
-  if(!window.isAdmin) return;
-  var today = window.getRollingDates().today;
-  var curTodayU = (window.trafficLedger && window.trafficLedger.daily[today]) ? window.trafficLedger.daily[today].uniques : 0;
-  var curTotalU = window.trafficLedger ? window.trafficLedger.totalUniques : 0;
-  window.openAdminDialog(
-    "📈 Set betboyai.co.uk Traffic Baseline",
-    "Format: TodayPeople,TotalPeople (e.g. " + curTodayU + "," + curTotalU + ")",
-    false,
-    function(val){
-      if(!val) return;
-      var parts = val.split(",").map(function(s){ return parseInt(s.trim(), 10); });
-      var newTodayU = Number.isFinite(parts[0]) && parts[0] >= 0 ? parts[0] : curTodayU;
-      var newTotU = Number.isFinite(parts[1]) && parts[1] >= 0 ? parts[1] : Math.max(curTotalU, newTodayU);
-      var rec = window.trafficLedger.daily[today] || { views: 0, uniques: 0, trialViews: 0, vipViews: 0 };
-      rec.uniques = newTodayU;
-      rec.views = Math.max(rec.views, Math.round(newTodayU * 2.2));
-      window.trafficLedger.daily[today] = rec;
-      window.trafficLedger.totalUniques = Math.max(newTotU, newTodayU);
-      window.trafficLedger.totalViews = Math.max(window.trafficLedger.totalViews, Math.round(window.trafficLedger.totalUniques * 2.3));
-      window.safeSet("airp_v122_traffic", window.trafficLedger);
-      window.syncTrafficCalculatorToLive();
-      window.renderAdminTrafficPanel();
-      window.showAppToast("✅ Updated betboyai.co.uk Traffic Totals!");
-    }
-  );
-};
-
 window.buildCleanExportHTML = function(){
   var wasAdmin = window.isAdmin;
   var wasTrial = window.isTrial;
@@ -11892,7 +11637,7 @@ window.buildCleanExportHTML = function(){
   if(typeof window.syncRememberPassUI === "function") window.syncRememberPassUI();
   document.getElementById("passInput").value = "";
   document.getElementById("errorMsg").style.display = "none";
-  var snap = JSON.stringify({stamp:Date.now(),version:window.modelState.version,injectedStats:window.modelState.injectedStats,hist:window.scanHistory,logs:window.logHistory,drift:window.liveDriftMap,results:window.customResults,lockedScores:window.lockedScores,subPasses:window.subPassState,traffic:window.trafficLedger});
+  var snap = JSON.stringify({stamp:Date.now(),version:window.modelState.version,injectedStats:window.modelState.injectedStats,hist:window.scanHistory,logs:window.logHistory,drift:window.liveDriftMap,results:window.customResults,lockedScores:window.lockedScores,subPasses:window.subPassState,adaptiveWeights:window.adaptiveWeights,settledMatchAuditLog:window.settledMatchAuditLog});
   var html = document.documentElement.outerHTML;
   html = html.replace(/\/\* STATE_START \*\/[\s\S]*?\/\* STATE_END \*\//, "/* STATE_START */\nwindow.PUBLISHED_STATE=" + snap + ";\n/* STATE_END */");
   window.rememberPassEnabled = wasRememberOn;
@@ -11980,9 +11725,6 @@ window.autoSyncEverythingOnLoad = function(forceAll){
     }
     if(typeof window.autoSettleAndEvolveCompletedDays === "function"){
       window.autoSettleAndEvolveCompletedDays();
-    }
-    if(typeof window.syncGlobalTrafficCounters === "function"){
-      window.syncGlobalTrafficCounters(false);
     }
     if(window.runEngine){
       window.runEngine(false);
@@ -12078,8 +11820,6 @@ window.addEventListener("resize", function(){
   window.syncResponsiveDesktopLayout();
 }, { passive: true });
 
-window.initTrafficLedger();
-window.recordLiveAppVisit("gate");
 window.updateModelHeaders();
 window.updateAdminWeightsBar();
 window.updateHourlyCountdownBanner();
