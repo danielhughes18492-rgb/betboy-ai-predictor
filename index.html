@@ -439,7 +439,7 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
       '<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">' +
         btnsHtml +
       '</div>' +
-      '<p class="text-[8.5px] text-slate-400 text-center font-medium tracking-wide">18+ | T&amp;Cs Apply | Commercial Partner | BeGambleAware.org</p>' +
+      '<p class="text-[8.5px] text-slate-400 text-center font-medium tracking-wide">18+ Only. Please Gamble Responsibly. | T&amp;Cs Apply | Commercial Partner | <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">BeGambleAware.org</a> | <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-emerald-300">GamCare.org.uk</a> | <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-sky-300">GamStop.co.uk</a></p>' +
     '</div>'
   );
 };
@@ -476,17 +476,29 @@ window.isAdmin = false;
 window.isTrial = false;
 window.activeTierFilter = 'ALL';
 
-// Ordered by Country: England -> Spain -> Germany -> France -> Italy -> Scotland -> Cup & European Competitions
-window.ALL_LEAGUES = ["PL","CHA","L1","L2","LL","BUN","FL1","SA","SPL","EFLC","UCL","UEL","UECL"];
+// Ordered by Country (Leagues then Domestic Cups): England (PL, CHA, L1, L2 -> FAC, EFLC) -> Spain -> Germany -> France -> Italy -> Scotland -> European Cups
+window.ALL_LEAGUES = ["PL","CHA","L1","L2","FAC","EFLC","LL","BUN","FL1","SA","SPL","UCL","UEL","UECL"];
 window.LEAGUE_NAMES = {
-  PL: "Premier League", CHA: "Championship", L1: "League One", L2: "League Two",
+  PL: "Premier League", CHA: "Championship", L1: "League One", L2: "League Two", FAC: "Emirates FA Cup", EFLC: "EFL Cup",
   LL: "La Liga", BUN: "Bundesliga", FL1: "Ligue 1", SA: "Serie A", SPL: "Scottish Premiership",
-  EFLC: "EFL Cup", UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
+  UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
 };
 window.LEAGUE_COUNTRY_TAGS = {
-  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", FAC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", EFLC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
   LL: "🇪🇸", BUN: "🇩🇪", FL1: "🇫🇷", SA: "🇮🇹", SPL: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-  EFLC: "🏆", UCL: "🏆", UEL: "🏆", UECL: "🏆"
+  UCL: "🏆", UEL: "🏆", UECL: "🏆"
+};
+window.API_FOOTBALL_LEAGUE_IDS = {
+  PL: 39, FAC: 45, CHA: 40, L1: 41, L2: 42, EFLC: 48,
+  LL: 140, BUN: 78, FL1: 61, SA: 135, SPL: 179,
+  UCL: 2, UEL: 3, UECL: 848
+};
+window.ODDS_API_SPORT_KEYS = {
+  PL: "soccer_epl", FAC: "soccer_fa_cup", CHA: "soccer_efl_champ",
+  L1: "soccer_england_league1", L2: "soccer_england_league2", EFLC: "soccer_england_efl_cup",
+  SPL: "soccer_spl", LL: "soccer_spain_la_liga", BUN: "soccer_germany_bundesliga",
+  FL1: "soccer_france_ligue_one", SA: "soccer_italy_serie_a",
+  UCL: "soccer_uefa_champs_league", UEL: "soccer_uefa_europa_league", UECL: "soccer_uefa_europa_conference_league"
 };
 
 window.selectedDate = "";
@@ -578,6 +590,20 @@ window.makeGamStopLogoUrl = function(){
     '<circle cx="238" cy="23" r="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>' +
     '<path d="M232,23 L236,27 L245,18" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
     '<text x="8" y="53" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="800" font-size="10.4" fill="#94a3b8" letter-spacing="1.6">FREE ONLINE SELF-EXCLUSION</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
+window.makeGamCareLogoUrl = function(){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="265" height="60" viewBox="0 0 265 60">' +
+    '<circle cx="24" cy="28" r="18" fill="#10b981" fill-opacity="0.16" stroke="#10b981" stroke-width="2.5"/>' +
+    '<path d="M16,28 C16,23 24,18 24,24 C24,18 32,23 32,28 C32,34 24,38 24,38 C24,38 16,34 16,28 Z" fill="#10b981"/>' +
+    '<text x="50" y="34" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="26" letter-spacing="-0.4">' +
+      '<tspan fill="#10b981">Gam</tspan>' +
+      '<tspan fill="#ffffff">Care</tspan>' +
+      '<tspan fill="#cbd5e1" font-weight="700" font-size="15">.org.uk</tspan>' +
+    '</text>' +
+    '<text x="50" y="51" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="800" font-size="9.8" fill="#94a3b8" letter-spacing="1.4">NATIONAL GAMBLING HELPLINE</text>' +
     '</svg>';
   return "data:image/svg+xml;base64," + window.btoa(svg);
 };
@@ -772,8 +798,24 @@ window.makeUeclLogo = function() {
   return "data:image/svg+xml;base64," + window.btoa(svg);
 };
 
+window.makeFaCupLogo = function() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#b91c1c" stroke="#ffffff" stroke-width="4"/>' +
+    '<path d="M26,20 C14,20 14,42 29,45" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>' +
+    '<path d="M74,20 C86,20 86,42 71,45" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>' +
+    '<path d="M28,16 H72 L65,48 C62,60 38,60 35,48 Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>' +
+    '<rect x="44" y="56" width="12" height="9" rx="2" fill="#e2e8f0"/>' +
+    '<rect x="33" y="64" width="34" height="6" rx="2.5" fill="#ffffff"/>' +
+    '<text x="50" y="38" font-family="Arial,sans-serif" font-weight="900" font-size="16" fill="#b91c1c" text-anchor="middle">FA</text>' +
+    '<text x="50" y="50" font-family="Arial,sans-serif" font-weight="900" font-size="10.5" fill="#991b1b" text-anchor="middle">CUP</text>' +
+    '<text x="50" y="88" font-family="Arial,sans-serif" font-weight="900" font-size="12.5" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">FA CUP</text>' +
+    '</svg>';
+  return "data:image/svg+xml;base64," + window.btoa(svg);
+};
+
 window.LEAGUE_FALLBACK_SVGS = {
   PL: window.makePlLogo(),
+  FAC: window.makeFaCupLogo(),
   SPL: window.makeSplLogo(),
   CHA: window.makeEflShield("#b5943b", "CHAMPIONSHIP", "9.5"),
   L1: window.makeEflShield("#8c9298", "LEAGUE ONE", "11"),
@@ -791,6 +833,7 @@ window.LEAGUE_FALLBACK_SVGS = {
 // Official High-Resolution Competition Logos (Uniformly Sized via .lg-icon & .lg-icon-sm)
 window.LEAGUE_LOGOS = window.safeGet("airp_official_league_logos_v1", {
   PL: "https://a.espncdn.com/i/leaguelogos/soccer/500/23.png",
+  FAC: "https://a.espncdn.com/i/leaguelogos/soccer/500/40.png",
   SPL: "https://a.espncdn.com/i/leaguelogos/soccer/500/45.png",
   CHA: "https://a.espncdn.com/i/leaguelogos/soccer/500/24.png",
   L1: "https://a.espncdn.com/i/leaguelogos/soccer/500/25.png",
@@ -805,6 +848,7 @@ window.LEAGUE_LOGOS = window.safeGet("airp_official_league_logos_v1", {
   UECL: "https://a.espncdn.com/i/leaguelogos/soccer/500/20296.png"
 });
 window.LEAGUE_LOGOS.SPL = window.LEAGUE_LOGOS.SPL || "https://a.espncdn.com/i/leaguelogos/soccer/500/45.png";
+window.LEAGUE_LOGOS.FAC = window.LEAGUE_LOGOS.FAC || "https://a.espncdn.com/i/leaguelogos/soccer/500/40.png";
 
 window.getLeagueLogo = function(lg, isSmall) {
   var cls = isSmall ? "lg-icon-sm" : "lg-icon";
@@ -1318,17 +1362,29 @@ document.addEventListener("DOMContentLoaded", function() {
         </span>
         <span class="text-[10px] font-bold text-amber-300 tracking-wide uppercase">Responsible Gambling</span>
       </div>
-      <div class="flex items-center justify-center gap-6 py-1">
+      <div class="flex items-center justify-center gap-4 sm:gap-6 py-1 flex-wrap">
         <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" aria-label="BeGambleAware.org" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
           <img src="" id="gateBgaLogoImg" alt="BeGambleAware.org" class="h-8 w-auto object-contain">
         </a>
-        <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" aria-label="GamStop" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
-          <img src="" id="gateGamstopLogoImg" alt="GamStop" class="h-8 w-auto object-contain">
+        <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" aria-label="GamCare.org.uk" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+          <img src="" id="gateGamcareLogoImg" alt="GamCare.org.uk" class="h-8 w-auto object-contain">
+        </a>
+        <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" aria-label="GamStop.co.uk" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+          <img src="" id="gateGamstopLogoImg" alt="GamStop.co.uk" class="h-8 w-auto object-contain">
         </a>
       </div>
       <p id="gateResponsibleGamblingPhrase" class="text-[10px] text-slate-300 leading-relaxed font-medium px-1">
         Please gamble responsibly. 18+ only. BetBoy AI provides statistical analysis and predictions for informational and entertainment purposes only.
       </p>
+      <div class="text-[9.5px] text-slate-400 font-semibold flex items-center justify-center gap-1.5 flex-wrap pt-0.5">
+        <span>18+ Only. Please Gamble Responsibly.</span>
+        <span class="text-slate-600">•</span>
+        <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-amber-300 hover:text-amber-200 underline">BeGambleAware.org</a>
+        <span class="text-slate-600">•</span>
+        <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="text-emerald-300 hover:text-emerald-200 underline">GamCare.org.uk</a>
+        <span class="text-slate-600">•</span>
+        <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-sky-300 hover:text-sky-200 underline">GamStop.co.uk</a>
+      </div>
       <div class="flex items-center justify-center gap-2 flex-wrap pt-1">
         <button type="button" onclick="window.openAboutContactModal()" class="text-[10px] text-emerald-300 hover:text-emerald-200 underline font-semibold cursor-pointer transition">About / Contact</button>
         <span class="text-slate-600">•</span>
@@ -1339,6 +1395,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <script>
       if(document.getElementById("gate18PlusImg")) document.getElementById("gate18PlusImg").src = window.make18PlusLogoUrl();
       if(document.getElementById("gateBgaLogoImg")) document.getElementById("gateBgaLogoImg").src = window.makeBeGambleAwareLogoUrl();
+      if(document.getElementById("gateGamcareLogoImg")) document.getElementById("gateGamcareLogoImg").src = window.makeGamCareLogoUrl();
       if(document.getElementById("gateGamstopLogoImg")) document.getElementById("gateGamstopLogoImg").src = window.makeGamStopLogoUrl();
     </script>
   </div>
@@ -1653,7 +1710,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="glass p-2.5 rounded-xl text-xs space-y-2">
       <div class="flex justify-between items-center px-0.5">
         <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Filter Competitions (By Country &amp; Cups)</span>
-        <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition">Clear All (13)</button>
+        <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition">Clear All (14)</button>
       </div>
       <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
         <script>
@@ -1719,7 +1776,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <span>🔥 Featured UK Bookmaker Free Bets (18+ Ad)</span>
         </h2>
         <div class="flex items-center gap-2 ml-auto">
-          <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">18+ | Commercial Partner | BeGambleAware.org</span>
+          <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">18+ | Commercial Partner | <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">BeGambleAware.org</a> | <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-emerald-300">GamCare.org.uk</a></span>
           <button type="button" id="toggleBookmakerStripBtn" onclick="window.toggleFeaturedBookmakerStrip()" class="text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">▾ Compact</button>
         </div>
       </div>
@@ -1753,12 +1810,15 @@ document.addEventListener("DOMContentLoaded", function() {
       <span class="text-[10.5px] font-extrabold text-amber-300 uppercase tracking-wider">Responsible Gambling &amp; 18+ Notice</span>
     </div>
 
-    <div class="flex items-center justify-center gap-8 py-1 flex-wrap">
+    <div class="flex items-center justify-center gap-6 sm:gap-8 py-1 flex-wrap">
       <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" aria-label="BeGambleAware.org" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
         <img src="" id="footerBgaLogoImg" alt="BeGambleAware.org" class="h-9 w-auto object-contain">
       </a>
-      <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" aria-label="GamStop" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
-        <img src="" id="footerGamstopLogoImg" alt="GamStop" class="h-9 w-auto object-contain">
+      <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" aria-label="GamCare.org.uk" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+        <img src="" id="footerGamcareLogoImg" alt="GamCare.org.uk" class="h-9 w-auto object-contain">
+      </a>
+      <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" aria-label="GamStop.co.uk" class="inline-flex items-center justify-center hover:opacity-85 active:scale-95 transition cursor-pointer">
+        <img src="" id="footerGamstopLogoImg" alt="GamStop.co.uk" class="h-9 w-auto object-contain">
       </a>
     </div>
 
@@ -1779,9 +1839,13 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="text-[10px] text-slate-500 font-mono pt-2 border-t border-slate-800/70 flex items-center justify-center gap-1.5 flex-wrap">
       <span>Copyright © BetBoy 2026 • AI Results Predictor</span>
       <span>•</span>
+      <span class="text-slate-300 font-semibold">18+ Only. Please Gamble Responsibly.</span>
+      <span>•</span>
       <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-amber-300 underline">BeGambleAware.org</a>
       <span>•</span>
-      <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-sky-300 underline">GamStop</a>
+      <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-emerald-300 underline">GamCare.org.uk</a>
+      <span>•</span>
+      <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-sky-300 underline">GamStop.co.uk</a>
       <span>•</span>
       <button type="button" onclick="window.openAboutContactModal()" class="text-slate-400 hover:text-emerald-300 underline cursor-pointer">About / Contact</button>
       <span>•</span>
@@ -1790,6 +1854,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <script>
       if(document.getElementById("footer18PlusImg")) document.getElementById("footer18PlusImg").src = window.make18PlusLogoUrl();
       if(document.getElementById("footerBgaLogoImg")) document.getElementById("footerBgaLogoImg").src = window.makeBeGambleAwareLogoUrl();
+      if(document.getElementById("footerGamcareLogoImg")) document.getElementById("footerGamcareLogoImg").src = window.makeGamCareLogoUrl();
       if(document.getElementById("footerGamstopLogoImg")) document.getElementById("footerGamstopLogoImg").src = window.makeGamStopLogoUrl();
     </script>
   </footer>
@@ -1912,7 +1977,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <span class="text-[9.5px] font-black text-amber-300 tracking-wide flex items-center gap-1">
             <span>🔥 Place This Bet &amp; Claim Free Bets:</span>
           </span>
-          <span class="text-[8px] font-semibold text-slate-400">18+ | T&amp;Cs Apply | BeGambleAware.org</span>
+          <span class="text-[8px] font-semibold text-slate-400">18+ | T&amp;Cs Apply | <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">BeGambleAware.org</a> | <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-emerald-300">GamCare.org.uk</a></span>
         </div>
         <div id="slipModalBookmakerButtons" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5"></div>
       </div>
@@ -2111,7 +2176,7 @@ document.addEventListener("DOMContentLoaded", function() {
         BetBoy AI is an algorithmic football analytics and prediction tool providing data-driven match probabilities, form metrics, and market insights for UK sports fans.
       </p>
       <p class="text-[11px] text-slate-300 leading-relaxed">
-        Our platform evaluates fixtures across 13 UK and European competitions using a 60-metric statistical engine incorporating Non-Penalty Expected Goals (npxG), Expected Threat (xT), PPDA pressing dynamics, tactical matchup profiles, and Bivariate Poisson / Dixon-Coles probability simulations.
+        Our platform evaluates fixtures across 14 UK and European competitions using a 60-metric statistical engine incorporating Non-Penalty Expected Goals (npxG), Expected Threat (xT), PPDA pressing dynamics, tactical matchup profiles, and Bivariate Poisson / Dixon-Coles probability simulations.
       </p>
     </div>
 
@@ -2124,7 +2189,7 @@ document.addEventListener("DOMContentLoaded", function() {
         "BetBoy AI provides statistical analysis and predictions for informational and entertainment purposes only. Please gamble responsibly."
       </p>
       <p class="text-[10.5px] text-slate-300 leading-relaxed">
-        BetBoy AI is not a bookmaker and does not accept or process wagers. Always bet within your means and strictly 18+ only. Free, confidential support is available at <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline hover:text-amber-200">BeGambleAware.org</a> and <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline hover:text-sky-200">GamStop.co.uk</a>.
+        BetBoy AI is not a bookmaker and does not accept or process wagers. Always bet within your means and strictly 18+ only. Please Gamble Responsibly. Free, confidential support is available at <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline hover:text-amber-200">BeGambleAware.org</a>, <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="text-emerald-300 underline hover:text-emerald-200">GamCare.org.uk</a>, and <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline hover:text-sky-200">GamStop.co.uk</a>.
       </p>
     </div>
 
@@ -2188,7 +2253,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <span>🔞 3. Age Restriction (18+ Strictly Enforced)</span>
       </div>
       <p class="text-[11.5px] text-rose-100 leading-relaxed font-medium">
-        <b>18+ Strictly Enforced:</b> Access to BetBoy AI and any linked third-party bookmaker services is strictly restricted to individuals aged <b>18 years or older</b> (or the legal minimum gambling age in your jurisdiction). Underage gambling is a criminal offence. For free, confidential support or self-exclusion tools, visit <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline hover:text-amber-200">BeGambleAware.org</a> or <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline hover:text-sky-200">GamStop.co.uk</a>.
+        <b>18+ Strictly Enforced:</b> Access to BetBoy AI and any linked third-party bookmaker services is strictly restricted to individuals aged <b>18 years or older</b> (or the legal minimum gambling age in your jurisdiction). Underage gambling is a criminal offence. For free, confidential support or self-exclusion tools, visit <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline hover:text-amber-200">BeGambleAware.org</a>, <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="text-emerald-300 underline hover:text-emerald-200">GamCare.org.uk</a>, or <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline hover:text-sky-200">GamStop.co.uk</a>.
       </p>
     </div>
 
@@ -2375,6 +2440,7 @@ window.cardMarketFilter = {};
 window.THE_ODDS_API_KEY = "e11eb4efb73076248935e6324b405e2d";
 window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=uk&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
 window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
+window.THE_ODDS_API_FA_CUP_URL = "https://api.the-odds-api.com/v4/sports/soccer_fa_cup/odds/?regions=uk&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
 window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v1", {});
 window.liveBet365OddsMap = window.liveOddsApiMap;
 window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v16", {});
@@ -2615,13 +2681,16 @@ window.fetchTheOddsApiMarkets = function(forceRefresh) {
 
   return Promise.allSettled([
     fetch(window.THE_ODDS_API_UK_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; }),
-    fetch(window.THE_ODDS_API_EU_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; })
+    fetch(window.THE_ODDS_API_EU_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; }),
+    fetch(window.THE_ODDS_API_FA_CUP_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; })
   ]).then(function(results) {
     window.oddsApiInFlight = false;
     var ukEvents = (results[0] && Array.isArray(results[0].value)) ? results[0].value : [];
     var euEvents = (results[1] && Array.isArray(results[1].value)) ? results[1].value : [];
-    if (ukEvents.length > 0 || euEvents.length > 0) {
-      window.liveOddsApiMap = window.parseTheOddsApiEvents(ukEvents, euEvents);
+    var faCupEvents = (results[2] && Array.isArray(results[2].value)) ? results[2].value : [];
+    var mergedUkEvents = ukEvents.concat(faCupEvents);
+    if (mergedUkEvents.length > 0 || euEvents.length > 0) {
+      window.liveOddsApiMap = window.parseTheOddsApiEvents(mergedUkEvents, euEvents);
       window.liveBet365OddsMap = window.liveOddsApiMap;
       window.lastOddsApiSyncTime = Date.now();
       window.safeSet("airp_the_odds_api_v1", window.liveOddsApiMap);
@@ -3960,7 +4029,7 @@ window.initPayPalSubscribeButton = function(){
 (function(){
   var B = "https://a.espncdn.com/i/teamlogos/soccer/500/";
   var map = {
-    arsenal:359,astonvilla:362,bournemouth:349,brentford:337,brighton:331,chelsea:363,crystalpalace:384,cpalace:384,palace:384,everton:368,fulham:370,ipswich:373,leicester:375,liverpool:364,mancity:382,manutd:360,manunited:360,newcastle:361,nottm:393,nottmforest:393,southampton:376,tottenham:367,spurs:367,westham:371,wolves:380,leeds:357,burnley:379,sunderland:366,sheffutd:398,sheffieldutd:398,sheffwed:399,sheffieldwed:399,middlesbrough:369,norwich:381,westbrom:383,blackburn:365,coventry:388,watford:395,swansea:318,bristolcity:333,stokecity:336,hull:306,hullcity:306,qpr:334,preston:394,millwall:391,cardiff:347,derby:374,portsmouth:385,oxford:311,plymouth:307,luton:301,birmingham:392,wrexham:352,huddersfield:335,bolton:358,reading:338,barnsley:397,charlton:372,wigan:350,blackpool:346,peterborough:343,wycombe:344,leytonorient:309,rotherham:402,stevenage:304,exeter:324,lincoln:314,stockport:341,mansfield:303,cambridge:320,northampton:353,bristolrovers:308,shrewsbury:339,burton:2567,crawley:2570,walsall:378,bradford:326,doncaster:329,portvale:342,gillingham:327,wimbledon:3802,afcwimbledon:3802,notts:323,nottscounty:323,mkdons:390,chesterfield:325,crewe:328,grimsby:330,colchester:322,salford:19947,fleetwood:3931,barrow:4040,tranmere:345,accrington:2566,newport:3933,swindon:340,morecambe:2569,carlisle:321,harrogate:20581,bromley:3822,barnet:2568,oldham:332,rochdale:339,york:3819,
+    arsenal:359,astonvilla:362,bournemouth:349,brentford:337,brighton:331,chelsea:363,crystalpalace:384,cpalace:384,palace:384,everton:368,fulham:370,ipswich:373,leicester:375,liverpool:364,mancity:382,manutd:360,manunited:360,newcastle:361,nottm:393,nottmforest:393,southampton:376,tottenham:367,spurs:367,westham:371,wolves:380,leeds:357,burnley:379,sunderland:366,sheffutd:398,sheffieldutd:398,sheffwed:399,sheffieldwed:399,middlesbrough:369,norwich:381,westbrom:383,blackburn:365,coventry:388,watford:395,swansea:318,bristolcity:333,stokecity:336,hull:306,hullcity:306,qpr:334,preston:394,millwall:391,cardiff:347,derby:374,portsmouth:385,oxford:311,plymouth:307,luton:301,birmingham:392,wrexham:352,huddersfield:335,bolton:358,reading:338,barnsley:397,charlton:372,wigan:350,blackpool:346,peterborough:343,wycombe:344,leytonorient:309,rotherham:402,stevenage:304,exeter:324,lincoln:314,stockport:341,mansfield:303,cambridge:320,northampton:353,bristolrovers:308,shrewsbury:339,burton:2567,crawley:2570,    walsall:378,bradford:326,doncaster:329,portvale:342,gillingham:327,wimbledon:3802,afcwimbledon:3802,notts:323,nottscounty:323,mkdons:390,chesterfield:325,crewe:328,grimsby:330,colchester:322,salford:19947,fleetwood:3931,barrow:4040,tranmere:345,accrington:2566,newport:3933,swindon:340,morecambe:2569,carlisle:321,harrogate:20581,bromley:3822,barnet:2568,oldham:332,rochdale:339,york:3819,southend:305,dagandred:2565,dagenham:2565,forestgreen:3932,hartlepool:313,scunthorpe:315,yeovil:317,macclesfield:316,kidderminster:312,aldershot:302,woking:3818,solihull:20582,solihullmoors:20582,borehamwood:20580,gateshead:3810,halifax:3812,maidstone:19948,tamworth:3817,altrincham:3806,eastleigh:19946,wealdstone:20583,
     celtic:256,rangers:257,hearts:259,heartofmidlothian:259,hibernian:258,hibs:258,kilmarnock:260,motherwell:262,stmirren:265,dundee:266,dundeefc:266,dundeeutd:264,dundeeunited:264,rosscounty:3805,ross:3805,stjohnstone:263,livingston:271,falkirk:267,partick:269,
     realmadrid:86,barcelona:83,atletico:1068,sociedad:89,betis:244,villarreal:102,athletic:93,athleticbilbao:93,sevilla:243,girona:9812,celta:85,celtavigo:85,getafe:2922,osasuna:97,mallorca:84,alaves:96,levante:1538,espanyol:88,valencia:94,rayo:101,rayovallecano:101,leganes:9813,valladolid:95,laspalmas:98,
     inter:110,intermilan:110,acmilan:103,milan:103,juventus:111,napoli:114,asroma:104,roma:104,lazio:112,atalanta:105,fiorentina:109,bologna:107,torino:239,udinese:118,genoa:3263,lecce:113,monza:4007,como:2572,venezia:1756,frosinone:4053,parma:115,cagliari:2925,empoli:2574,hellasverona:119,verona:119,sassuolo:3997,
@@ -4032,7 +4101,11 @@ window.cleanCrestKey = function(n){
 window.makeFallbackShieldSvg = function(n){
   var c = (n||"FC").replace(/^(FC|AFC|AS|AC|SC|SV|RC|RB)\s+/i,"").trim();
   var w = c.split(/\s+/), ini = (w.length>=2 ? w[0][0]+w[1][0] : c.slice(0,2)).toUpperCase();
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="2.5"/><text x="20" y="25.5" font-family="sans-serif" font-weight="900" font-size="14" fill="#fff" text-anchor="middle">'+ini+'</text></svg>';
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">' +
+    '<path d="M20 2 L35 8 V20 C35 29.5 28.5 35.8 20 38 C11.5 35.8 5 29.5 5 20 V8 Z" fill="#0f172a" stroke="#10b981" stroke-width="2.4"/>' +
+    '<path d="M20 5 L32 9.8 V19.5 C32 27.2 26.8 32.5 20 34.5 C13.2 32.5 8 27.2 8 19.5 V9.8 Z" fill="#1e293b" opacity="0.9"/>' +
+    '<text x="20" y="24.5" font-family="sans-serif" font-weight="900" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">'+ini+'</text>' +
+  '</svg>';
   return "data:image/svg+xml;base64," + window.btoa(svg);
 };
 
@@ -4143,18 +4216,34 @@ window.updateModelHeaders = function(){
   if(typeof window.updateAdminWeightsBar === "function") window.updateAdminWeightsBar();
 };
 
-// True Club Power Rating & 53-Metric Accurate Row Builder
+// True Club Power Rating, Divisional Tier & 60-Metric Accurate Row Builder (with FA Cup Knockout Calibration)
 (function(){
   var T1 = ["mancity","realmadrid","bayern","barcelona","psg","arsenal","liverpool","inter","leverkusen","juventus","atletico","napoli","dortmund","acmilan","milan","astonvilla","chelsea","benfica","sporting","celtic","rangers"];
-  var T2 = ["tottenham","newcastle","brighton","lazio","atalanta","asroma","roma","fiorentina","sociedad","villarreal","athletic","betis","monaco","lille","marseille","lyon","leipzig","stuttgart","frankfurt","feyenoord","ajax","psv","twente","azalkmaar","braga","porto","olympiacos","panathinaikos","galatasaray","fenerbahce","unionsg","ferencvaros","aberdeen","hearts","hibernian","kilmarnock","motherwell","stmirren","dundeeutd","leeds","burnley","sheffutd","sunderland","middlesbrough","birmingham","wrexham","huddersfield","barnet","walsall"];
-  var T4 = ["southampton","ipswich","wolves","everton","leicester","bochum","kiel","lecce","venezia","monza","frosinone","espanyol","leganes","valladolid","elversberg","angers","lehavre","montpellier","stetienne","rosscounty","stjohnstone","dundee","livingston","plymouth","cardiff","luton","qpr","portsmouth","shrewsbury","burton","cambridge","morecambe","carlisle","tranmere","accrington","newport"];
+  var T2 = ["tottenham","newcastle","brighton","lazio","atalanta","asroma","roma","fiorentina","sociedad","villarreal","athletic","betis","monaco","lille","marseille","lyon","leipzig","stuttgart","frankfurt","feyenoord","ajax","psv","twente","azalkmaar","braga","porto","olympiacos","panathinaikos","galatasaray","fenerbahce","unionsg","ferencvaros","aberdeen","hearts","hibernian","kilmarnock","motherwell","stmirren","dundeeutd","leeds","burnley","sheffutd","sunderland","middlesbrough","birmingham","wrexham","huddersfield"];
+  var T3 = ["bolton","reading","barnsley","charlton","wigan","blackpool","peterborough","wycombe","leytonorient","rotherham","stevenage","exeter","lincoln","stockport","mansfield","cambridge","northampton","bristolrovers","shrewsbury","burton","crawley","walsall","bradford","doncaster","portvale","gillingham","wimbledon","afcwimbledon","notts","nottscounty","mkdons","chesterfield","crewe","grimsby"];
+  var T4 = ["southampton","ipswich","wolves","everton","leicester","bochum","kiel","lecce","venezia","monza","frosinone","espanyol","leganes","valladolid","elversberg","angers","lehavre","montpellier","stetienne","rosscounty","stjohnstone","dundee","livingston","plymouth","cardiff","luton","qpr","portsmouth","colchester","salford","fleetwood","barrow","tranmere","accrington","newport","swindon","morecambe","carlisle","harrogate","bromley"];
+  var T5 = ["barnet","oldham","rochdale","york","southend","dagandred","dagenham","borehamwood","solihull","solihullmoors","woking","aldershot","gateshead","halifax","forestgreen","hartlepool","scunthorpe","yeovil","tamworth","maidstone","kidderminster","macclesfield","altrincham","eastleigh","wealdstone","fylde","ebbsfleet","maidenhead","braintree","boston","curzonashton","guiseley","hednesford","horsham","harborough","tonbridge","chesham","worthing","weston","slough","brackley","buxton","scarborough"];
+
+  window.getClubDivisionTier = function(name){
+    var raw = String(name || "").toLowerCase().replace(/\b(fc|afc|town|city|united|utd|athletic|wanderers|rovers|albion|county|argyle|alexandra|stanley)\b/g,"").replace(/[^a-z0-9]/g,"");
+    var k = window.normTeamKey ? window.normTeamKey(name) : raw;
+    if(T1.indexOf(k)!==-1 || T1.indexOf(raw)!==-1) return 1;
+    if(T2.indexOf(k)!==-1 || T2.indexOf(raw)!==-1) return 2;
+    if(T3.indexOf(k)!==-1 || T3.indexOf(raw)!==-1) return 3;
+    if(T5.indexOf(k)!==-1 || T5.indexOf(raw)!==-1) return 5;
+    if(T4.indexOf(k)!==-1 || T4.indexOf(raw)!==-1) return 4;
+    return 4;
+  };
 
   window.getTrueClubRating = function(name, compObj){
     var k = window.normTeamKey ? window.normTeamKey(name) : (name||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    var raw = String(name || "").toLowerCase().replace(/\b(fc|afc|town|city|united|utd|athletic|wanderers|rovers|albion|county|argyle|alexandra|stanley)\b/g,"").replace(/[^a-z0-9]/g,"");
     var pwr = 68;
-    if(T1.indexOf(k) !== -1) pwr = 88;
-    else if(T2.indexOf(k) !== -1) pwr = 78;
-    else if(T4.indexOf(k) !== -1) pwr = 56;
+    if(T1.indexOf(k) !== -1 || T1.indexOf(raw) !== -1) pwr = 88;
+    else if(T2.indexOf(k) !== -1 || T2.indexOf(raw) !== -1) pwr = 78;
+    else if(T3.indexOf(k) !== -1 || T3.indexOf(raw) !== -1) pwr = 66;
+    else if(T5.indexOf(k) !== -1 || T5.indexOf(raw) !== -1) pwr = 49;
+    else if(T4.indexOf(k) !== -1 || T4.indexOf(raw) !== -1) pwr = 56;
     try {
       var rec = (compObj && compObj.records && compObj.records[0] && compObj.records[0].summary) || "";
       var p = rec.split("-").map(Number);
@@ -4164,7 +4253,7 @@ window.updateModelHeaders = function(){
         pwr = Math.round((pwr * 0.72) + (formScore * 0.28));
       }
     } catch(e){}
-    return Math.min(93, Math.max(48, pwr));
+    return Math.min(93, Math.max(46, pwr));
   };
 
   window.buildAccurateFixtureRow = function(ev, dateStr, lgCode, idx){
@@ -4200,15 +4289,31 @@ window.updateModelHeaders = function(){
     if(gap < 4.8) conf = Math.min(58.8, conf);
     else if(gap < (drawG - 1.8)) conf = Math.min(74.6, conf);
 
-    conf = parseFloat(Math.min(82.8, Math.max(50.5, conf)).toFixed(1));
+    // 60-Metric AI Engine Calibration Modifier for Emirates FA Cup (FAC) Inter-Division Ties
+    var favTier = window.getClubDivisionTier ? window.getClubDivisionTier(fav) : 3;
+    var oppTier = window.getClubDivisionTier ? window.getClubDivisionTier(opp) : 4;
+    var tierGap = Math.max(0, oppTier - favTier);
+    var absTierGap = Math.abs(oppTier - favTier);
+    if(lgCode === "FAC"){
+      var cupEffectiveGap = Math.max(tierGap, absTierGap * 0.75);
+      conf += 1.6 + (cupEffectiveGap * 2.6);
+      if(cupEffectiveGap >= 1) conf = Math.max(75.6, conf);
+    }
 
-    var xg = parseFloat(((1.18 + ((conf-50)*0.034)) * xgM).toFixed(2));
-    var xga = parseFloat(Math.max(0.68, ((1.34-((conf-50)*0.020)) * (2 - xgM))).toFixed(2));
+    conf = parseFloat(Math.min(84.2, Math.max(50.5, conf)).toFixed(1));
+
+    var cupXgBoost = (lgCode === "FAC") ? (0.14 + Math.max(tierGap, absTierGap * 0.75) * 0.22) : 0;
+    var xg = parseFloat(((1.18 + ((conf-50)*0.034) + cupXgBoost) * xgM).toFixed(2));
+    var xga = parseFloat(Math.max(0.62, ((1.34-((conf-50)*0.020)) * (2 - xgM))).toFixed(2));
+    var favShots = Math.round((conf * 0.26) + (lgCode === "FAC" ? (1.8 + Math.max(tierGap, absTierGap) * 2.4) : 0));
     var ko = "15:00";
     if(ev.date){ var d = new Date(ev.date); if(!isNaN(d.getTime())) ko = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
     var id = idNum;
     var vr = conf < 75.0 ? (!favH ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield") : "";
-    return [id, dateStr, lgCode, venue, fav, opp, Math.round(conf*0.26), 10, 8, 16, conf, "Pending", vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), favH?"Home Fortress & xG Edge":"Elite Away Mismatch", Math.round(conf)+"%", ko];
+    var statTag = (lgCode === "FAC" && Math.max(tierGap, absTierGap) >= 1)
+      ? "FA Cup Divisional Mismatch & xG Edge"
+      : (favH ? "Home Fortress & xG Edge" : "Elite Away Mismatch");
+    return [id, dateStr, lgCode, venue, fav, opp, favShots, 10, 8, 16, conf, "Pending", vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), statTag, Math.round(conf)+"%", ko];
   };
 })();
 
@@ -4217,14 +4322,25 @@ window.buildDeterministicFallbackSlate = function(){
   return [];
 };
 
-// Live ESPN Scoreboard, Schedule & Live Odds Sync across all 13 Competitions (including Scottish Premiership)
+// Live ESPN Scoreboard, Schedule & Live Odds Sync across all 14 Competitions (including Emirates FA Cup & Scottish Premiership)
 (function(){
   window.fetchedDatesMap = {};
   window.inFlightDatesMap = {};
   var LGS = [
-    {s:"eng.1",c:"PL"},{s:"sco.1",c:"SPL"},{s:"eng.2",c:"CHA"},{s:"eng.3",c:"L1"},{s:"eng.4",c:"L2"},{s:"eng.league_cup",c:"EFLC"},
-    {s:"esp.1",c:"LL"},{s:"ita.1",c:"SA"},{s:"ger.1",c:"BUN"},{s:"fra.1",c:"FL1"},
-    {s:"uefa.champions",c:"UCL"},{s:"uefa.europa",c:"UEL"},{s:"uefa.europa.conf",c:"UECL"}
+    {s:"eng.1",c:"PL",apiFootballId:39,oddsSportKey:"soccer_epl"},
+    {s:"eng.2",c:"CHA",apiFootballId:40,oddsSportKey:"soccer_efl_champ"},
+    {s:"eng.3",c:"L1",apiFootballId:41,oddsSportKey:"soccer_england_league1"},
+    {s:"eng.4",c:"L2",apiFootballId:42,oddsSportKey:"soccer_england_league2"},
+    {s:"eng.fa",c:"FAC",apiFootballId:45,oddsSportKey:"soccer_fa_cup"},
+    {s:"eng.league_cup",c:"EFLC",apiFootballId:48,oddsSportKey:"soccer_england_efl_cup"},
+    {s:"esp.1",c:"LL",apiFootballId:140,oddsSportKey:"soccer_spain_la_liga"},
+    {s:"ger.1",c:"BUN",apiFootballId:78,oddsSportKey:"soccer_germany_bundesliga"},
+    {s:"fra.1",c:"FL1",apiFootballId:61,oddsSportKey:"soccer_france_ligue_one"},
+    {s:"ita.1",c:"SA",apiFootballId:135,oddsSportKey:"soccer_italy_serie_a"},
+    {s:"sco.1",c:"SPL",apiFootballId:179,oddsSportKey:"soccer_spl"},
+    {s:"uefa.champions",c:"UCL",apiFootballId:2,oddsSportKey:"soccer_uefa_champs_league"},
+    {s:"uefa.europa",c:"UEL",apiFootballId:3,oddsSportKey:"soccer_uefa_europa_league"},
+    {s:"uefa.europa.conf",c:"UECL",apiFootballId:848,oddsSportKey:"soccer_uefa_europa_conference_league"}
   ];
 
   window.fetchAllLeaguesForDate = function(dateStr, force){
@@ -4484,13 +4600,18 @@ window.computeRawMarkets = function(m, fs){
   var cardM = Number(w.cardsMult || 1.0);
   var fhM = Number(w.fhMult || 1.0);
   var hcapM = Number(w.handicapMult || 1.0);
-  var lgB = {BUN:0.18,EFLC:0.14,UCL:0.14,PL:0.12,UEL:0.10,UECL:0.08,L1:0.04,L2:0.02,CHA:0.02,FL1:0.02,LL:-0.08,SA:-0.10}[m.league] || 0;
+  var lgB = {BUN:0.18,FAC:0.18,EFLC:0.14,UCL:0.14,PL:0.12,UEL:0.10,UECL:0.08,L1:0.04,L2:0.02,CHA:0.02,FL1:0.02,LL:-0.08,SA:-0.10}[m.league] || 0;
   var s = ((m.id * 37) % 20) - 10;
+
+  var isFaCup = (m && m.league === "FAC");
+  var favTier = (isFaCup && window.getClubDivisionTier) ? window.getClubDivisionTier(m.fav) : 3;
+  var oppTier = (isFaCup && window.getClubDivisionTier) ? window.getClubDivisionTier(m.opp) : 3;
+  var cupGap = isFaCup ? Math.max(0, oppTier - favTier, Math.abs(oppTier - favTier) * 0.75) : 0;
 
   var mXg = Number(m && m.xg) || 0;
   var mXga = Number(m && m.xga) || 0;
-  var calcFavXg = Math.max(1.02, (1.10 + (conf - 50) * 0.033 + (isH ? 0.08 : -0.04) + lgB * 0.35 + s * 0.008) * xgM);
-  var calcOppXg = Math.max(0.55, (1.26 - (conf - 50) * 0.017 + (isH ? -0.05 : 0.06) + lgB * 0.25 - s * 0.006) * xgM);
+  var calcFavXg = Math.max(1.02, (1.10 + (conf - 50) * 0.033 + (isH ? 0.08 : -0.04) + lgB * 0.35 + s * 0.008 + (isFaCup ? (0.14 + cupGap * 0.18) : 0)) * xgM);
+  var calcOppXg = Math.max(0.55, (1.26 - (conf - 50) * 0.017 + (isH ? -0.05 : 0.06) + lgB * 0.25 - s * 0.006 + (isFaCup ? 0.05 : 0)) * xgM);
 
   var favXg = mXg > 0.5 ? (mXg * 0.65 + calcFavXg * 0.35) : calcFavXg;
   var oppXg = mXga > 0.4 ? (mXga * 0.65 + calcOppXg * 0.35) : calcOppXg;
@@ -4499,9 +4620,13 @@ window.computeRawMarkets = function(m, fs){
   var tot = favXg + oppXg, minX = Math.min(favXg, oppXg);
   var cl = function(v, lo, hi){ return Math.min(hi, Math.max(lo, v)).toFixed(1); };
 
+  var cupO15Boost = isFaCup ? (2.2 + cupGap * 0.75) : 0;
+  var cupO25Boost = isFaCup ? (2.6 + cupGap * 0.85) : 0;
+  var cupBttsBoost = isFaCup ? 1.8 : 0;
+
   // Realistic baseline curve inputs before anchoring to decimal odds + AI edge
-  var bttsYes = parseFloat(cl((22 + minX * 26.5 + tot * 4.2) * bttsM, 38, 72.5));
-  var o25Val = parseFloat(cl(12 + tot * 18.2, 38, 74.5));
+  var bttsYes = parseFloat(cl((22 + minX * 26.5 + tot * 4.2 + cupBttsBoost) * bttsM, 38, 74.5));
+  var o25Val = parseFloat(cl(12 + tot * 18.2 + cupO25Boost, 38, 76.5));
 
   var favWinPct = parseFloat(cl(conf, 48, 84.5));
   var drawPct = parseFloat(cl(Math.max(12.5, 30.0 - (favWinPct - 52) * 0.48), 11.5, 31.0));
@@ -4525,19 +4650,19 @@ window.computeRawMarkets = function(m, fs){
     oppAhPlus1: cl((oppWinPct + drawPct + 4.5) * (2 - Math.min(1.2, hcapM)), 28, 74.0),
     oppO05: cl(26 + oppXg * 32.0, 34, 71.5),
     oppO15: cl(8 + oppXg * 21.0, 14, 54.0),
-    o15: cl(36 + tot * 13.5, 52, 78.5),
+    o15: cl(36 + tot * 13.5 + cupO15Boost, 52, 79.5),
     o25: o25Val.toFixed(1),
-    o35: cl(-6 + tot * 15.8, 24, 58.5),
+    o35: cl(-6 + tot * 15.8 + (cupO25Boost * 0.5), 24, 58.5),
     u25: cl(100 - o25Val, 26, 66.0),
     u35: cl(104 - tot * 14.2, 54, 79.5),
     btts: bttsYes.toFixed(1),
     bttsNo: cl(100 - bttsYes, 28, 64.0),
     dc: cl(conf + (isH ? 11.5 : 9.5), 62, 86.5),
     dnb: dnbRaw,
-    f15: cl(18 + favXg * 25.0, 41, 73.5),
+    f15: cl(18 + favXg * 25.0, 41, 74.5),
     winO15: winO15Raw,
     ah1: cl(((conf - 16.5) + (favXg - oppXg) * 6.5) * hcapM, 32, 69.5),
-    fh05: cl((32 + tot * 12.2) * fhM, 48, 73.5),
+    fh05: cl((32 + tot * 12.2 + (cupO15Boost * 0.6)) * fhM, 48, 74.5),
     c85: cl((40 + tot * 9.5 + (isH ? 3.0 : 1.5) + cornerSetPieceBoost) * cornM, 51, 72.5),
     cards35: cl((44 + (100 - conf) * 0.36 - lgB * 10) * cardM, 44, 71.5),
     favXg: favXg,
@@ -5276,13 +5401,17 @@ window.calcExtraMarkets = function(m, fs){
         ? Math.max(-4.5, Math.min(0.6, ((baseConf - 56.0) * 0.45) + (xgDiff * 0.8)))
         : Math.max(0.8, Math.min(4.2, 1.4 + (xgDiff * 1.45) + ((baseConf - 63.5) * 0.16))));
 
+  var isFaCupTie = (m && m.league === "FAC");
+  var cupGoalEdgeBonus = isFaCupTie ? 1.35 : 0;
+  var cupBttsEdgeBonus = isFaCupTie ? 1.15 : 0;
+
   var goalsEdge = isTightAvoid
-    ? Math.max(-4.0, Math.min(0.2, (totXg - 2.55) * 3.2))
-    : Math.max(-3.0, Math.min(4.4, (totXg - 2.48) * 4.5 + (isUpperValueMatch ? 0.9 : 0)));
+    ? Math.max(-4.0, Math.min(0.8, (totXg - 2.55) * 3.2 + (cupGoalEdgeBonus * 0.5)))
+    : Math.max(-3.0, Math.min(4.8, (totXg - 2.48) * 4.5 + (isUpperValueMatch ? 0.9 : 0) + cupGoalEdgeBonus));
 
   var bttsEdge = isTightAvoid
-    ? Math.max(-4.0, Math.min(0.2, (Math.min(favXgVal, oppXgVal) - 1.05) * 3.5))
-    : Math.max(-3.5, Math.min(3.6, (Math.min(favXgVal, oppXgVal) - 0.92) * 4.5));
+    ? Math.max(-4.0, Math.min(0.6, (Math.min(favXgVal, oppXgVal) - 1.05) * 3.5 + (cupBttsEdgeBonus * 0.5)))
+    : Math.max(-3.5, Math.min(4.0, (Math.min(favXgVal, oppXgVal) - 0.92) * 4.5 + cupBttsEdgeBonus));
 
   var anchorProb = function(decOdds, edgePct, tierCap){
     var pVal = window.calculateRealisticAiProbability(decOdds, edgePct);
@@ -6352,7 +6481,7 @@ window.fetchLiveMatchHighlights = function(matchId, showToast, e){
   var m = window.findMatchById(matchId);
   if(!m) return;
   var lgSlugMap = {
-    PL:"eng.1", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
+    PL:"eng.1", FAC:"eng.fa", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
     LL:"esp.1", SA:"ita.1", BUN:"ger.1", FL1:"fra.1",
     UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf"
   };
@@ -6811,7 +6940,7 @@ window.fetchLiveMatchTimeline = function(matchId, showToast, e){
     return;
   }
   var lgSlugMap = {
-    PL:"eng.1", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
+    PL:"eng.1", FAC:"eng.fa", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
     LL:"esp.1", SA:"ita.1", BUN:"ger.1", FL1:"fra.1",
     UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf"
   };
@@ -9275,6 +9404,7 @@ window.getResolvedXSelections = function(){
 
 window.LEAGUE_HASHTAG_MAP = {
   PL: "#PremierLeague",
+  FAC: "#EmiratesFACup",
   CHA: "#EFLChampionship",
   L1: "#EFL",
   L2: "#EFL",
@@ -9858,7 +9988,7 @@ window.ensureCanvasCrestLoaded = function(teamName){
   }
   if(window._canvasSafeCrestCache[key]) return null;
 
-  var url = window.CLUB_CREST_MAP && window.CLUB_CREST_MAP[key];
+  var url = (window.CLUB_CREST_MAP && window.CLUB_CREST_MAP[key]) || (window.makeFallbackShieldSvg ? window.makeFallbackShieldSvg(teamName) : null);
   if(!url) return null;
 
   window._canvasSafeCrestCache[key] = { status: "loading", img: null };
