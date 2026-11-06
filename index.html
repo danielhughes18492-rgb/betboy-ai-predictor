@@ -2369,26 +2369,48 @@ window.liveDriftMap = window.safeGet("airp_v122_drift", window.PUBLISHED_STATE.d
 window.customResults = window.safeGet("airp_v122_res", {});
 window.lockedScores = window.safeGet("airp_v122_locks_v16", {});
 window.apiLiveScores = window.safeGet("airp_espn_truth_v4", {});
+window.isMockOrFakeFaCupFixture = function(favName, oppName, leagueCode){
+  var lg = String(leagueCode || "FAC").trim().toUpperCase();
+  if(lg !== "FAC") return false;
+  var norm = function(v){
+    return String(v || "").toLowerCase().replace(/\b(fc|afc)\b/g, " ").replace(/[^a-z0-9]/g, "");
+  };
+  var k1 = norm(favName), k2 = norm(oppName);
+  if((k1 === "oxfordcity" && (k2 === "leicester" || k2 === "leicestercity")) ||
+     ((k1 === "leicester" || k1 === "leicestercity") && k2 === "oxfordcity")){
+    return true;
+  }
+  return false;
+};
 window.isLegacyFallbackFixtureRow = function(row){
   if(!Array.isArray(row)) return true;
   var idNum = Number(row[0]);
-  return (idNum >= 900000 && idNum < 1000000);
+  if(idNum >= 900000 && idNum < 1000000) return true;
+  if(window.isMockOrFakeFaCupFixture && window.isMockOrFakeFaCupFixture(row[4], row[5], row[2])) return true;
+  return false;
 };
 window.sanitizeDailyFixturesMap = function(mapObj){
   var clean = {};
   if(!mapObj || typeof mapObj !== "object") return clean;
   Object.keys(mapObj).forEach(function(dKey){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dKey))) return;
     var arr = mapObj[dKey];
     if(Array.isArray(arr)){
       var realRows = arr.filter(function(r){
-        return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && (!r[1] || String(r[1]) === String(dKey));
+        return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && String(r[1] || "") === String(dKey);
       });
       if(realRows.length > 0) clean[dKey] = realRows;
     }
   });
   return clean;
 };
-window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v16", {}));
+try {
+  localStorage.removeItem("airp_live_espn_fixtures_v16");
+  localStorage.removeItem("airp_live_espn_fixtures_v17");
+  localStorage.removeItem("airp_club_crests_v2");
+  localStorage.removeItem("airp_club_crests_v3");
+} catch(e) {}
+window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v18", {}));
 window.createDefault60MetricWeights = function(existing){
   var map = {};
   for(var i = 1; i <= 60; i++){
@@ -4025,81 +4047,265 @@ window.initPayPalSubscribeButton = function(){
   }
 };
 
-// Comprehensive Club Crest Map across UK, Scottish & European Competitions
+// Comprehensive Club Crest Map & Smart Safe Normalization + Live TheSportsDB Async Fallback
+window.EXACT_CLUB_KEY_MAP = {
+  manchestercity: "mancity", mancity: "mancity",
+  manchesterunited: "manutd", manchesterutd: "manutd", manutd: "manutd", manunited: "manutd",
+  sheffieldwednesday: "sheffwed", sheffwednesday: "sheffwed", sheffwed: "sheffwed", sheffieldwed: "sheffwed",
+  sheffieldunited: "sheffutd", sheffunited: "sheffutd", sheffutd: "sheffutd", sheffieldutd: "sheffutd",
+  bristolrovers: "bristolrovers",
+  bristolcity: "bristolcity",
+  nottscounty: "nottscounty", notts: "nottscounty",
+  nottinghamforest: "nottmforest", nottmforest: "nottmforest", nottm: "nottmforest",
+  plymouthargyle: "plymouth", plymouth: "plymouth",
+  plymouthparkway: "plymouthparkway",
+  berkhamsted: "berkhamsted",
+  oxfordcity: "oxfordcity",
+  suttoncoldfield: "suttoncoldfield", suttoncoldfieldtown: "suttoncoldfield",
+  suttonunited: "suttonunited", suttonutd: "suttonunited",
+  tottenhamhotspur: "tottenham", tottenham: "tottenham", spurs: "tottenham",
+  newcastleunited: "newcastle", newcastleutd: "newcastle", newcastle: "newcastle",
+  westhamunited: "westham", westhamutd: "westham", westham: "westham",
+  wolverhamptonwanderers: "wolves", wolverhampton: "wolves", wolves: "wolves",
+  brightonandhovealbion: "brighton", brightonhovealbion: "brighton", brighton: "brighton",
+  crystalpalace: "palace", cpalace: "palace", palace: "palace",
+  astonvilla: "astonvilla",
+  leicestercity: "leicester", leicester: "leicester",
+  ipswichtown: "ipswich", ipswich: "ipswich",
+  leedsunited: "leeds", leedsutd: "leeds", leeds: "leeds",
+  westbromwichalbion: "westbrom", westbrom: "westbrom",
+  norwichcity: "norwich", norwich: "norwich",
+  coventrycity: "coventry", coventry: "coventry",
+  swanseacity: "swansea", swansea: "swansea",
+  stokecity: "stokecity",
+  hullcity: "hull", hull: "hull",
+  queensparkrangers: "qpr", qpr: "qpr",
+  prestonnorthend: "preston", preston: "preston",
+  cardiffcity: "cardiff", cardiff: "cardiff",
+  derbycounty: "derby", derby: "derby",
+  oxfordunited: "oxford", oxfordutd: "oxford", oxford: "oxford",
+  lutontown: "luton", luton: "luton",
+  blackburnrovers: "blackburn", blackburn: "blackburn",
+  birminghamcity: "birmingham", birmingham: "birmingham",
+  huddersfieldtown: "huddersfield", huddersfield: "huddersfield",
+  boltonwanderers: "bolton", bolton: "bolton",
+  charltonathletic: "charlton", charlton: "charlton",
+  wiganathletic: "wigan", wigan: "wigan",
+  peterboroughunited: "peterborough", peterboroughutd: "peterborough", peterborough: "peterborough",
+  wycombewanderers: "wycombe", wycombe: "wycombe",
+  leytonorient: "leytonorient",
+  rotherhamunited: "rotherham", rotherhamutd: "rotherham", rotherham: "rotherham",
+  exetercity: "exeter", exeter: "exeter",
+  lincolncity: "lincoln", lincoln: "lincoln",
+  stockportcounty: "stockport", stockport: "stockport",
+  mansfieldtown: "mansfield", mansfield: "mansfield",
+  cambridgeunited: "cambridge", cambridgeutd: "cambridge", cambridge: "cambridge",
+  cheltenhamtown: "cheltenham", cheltenham: "cheltenham",
+  northamptontown: "northampton", northampton: "northampton",
+  shrewsburytown: "shrewsbury", shrewsbury: "shrewsbury",
+  burtonalbion: "burton", burton: "burton",
+  crawleytown: "crawley", crawley: "crawley",
+  bradfordcity: "bradford", bradford: "bradford",
+  doncasterrovers: "doncaster", doncaster: "doncaster",
+  portvale: "portvale",
+  wimbledon: "afcwimbledon", afcwimbledon: "afcwimbledon",
+  miltonkeynesdons: "mkdons", mkdons: "mkdons",
+  crewealexandra: "crewe", crewe: "crewe",
+  grimsbytown: "grimsby", grimsby: "grimsby",
+  colchesterunited: "colchester", colchester: "colchester",
+  salfordcity: "salford", salford: "salford",
+  fleetwoodtown: "fleetwood", fleetwood: "fleetwood",
+  barrow: "barrow",
+  tranmererovers: "tranmere", tranmere: "tranmere",
+  accringtonstanley: "accrington", accrington: "accrington",
+  newportcounty: "newport", newport: "newport",
+  swindontown: "swindon", swindon: "swindon",
+  carlisleunited: "carlisle", carlisle: "carlisle",
+  harrogatetown: "harrogate", harrogate: "harrogate",
+  yorkcity: "york", york: "york",
+  southendunited: "southend", southend: "southend",
+  dagenhamandredbridge: "dagenham", dagandred: "dagenham", dagenham: "dagenham",
+  solihullmoors: "solihullmoors", solihull: "solihullmoors",
+  aldershottown: "aldershot", aldershot: "aldershot",
+  halifaxtown: "halifax", fchalifaxtown: "halifax", halifax: "halifax",
+  forestgreenrovers: "forestgreen", forestgreen: "forestgreen",
+  hartlepoolunited: "hartlepool", hartlepool: "hartlepool",
+  scunthorpeunited: "scunthorpe", scunthorpe: "scunthorpe",
+  yeoviltown: "yeovil", yeovil: "yeovil",
+  maidstoneunited: "maidstone", maidstone: "maidstone",
+  kidderminsterharriers: "kidderminster", kidderminster: "kidderminster",
+  doverathletic: "dover", dover: "dover",
+  afcfylde: "fylde", fylde: "fylde",
+  oldhamathletic: "oldham", oldham: "oldham",
+  parissaintgermain: "psg", parisstgermain: "psg", psg: "psg",
+  bayernmunich: "bayern", bayernmunchen: "bayern", fcbayernmunchen: "bayern", bayern: "bayern",
+  bayerleverkusen: "leverkusen", bayer04leverkusen: "leverkusen", leverkusen: "leverkusen",
+  borussiadortmund: "dortmund", dortmund: "dortmund",
+  borussiamonchengladbach: "gladbach", borussiamoenchengladbach: "gladbach", borussiamgladbach: "gladbach",
+  monchengladbach: "gladbach", moenchengladbach: "gladbach", mgladbach: "gladbach", gladbach: "gladbach",
+  hamburgersv: "hamburger", hamburgsv: "hamburger", hamburg: "hamburger", hamburger: "hamburger", hsv: "hamburger",
+  eintrachtfrankfurt: "frankfurt", frankfurt: "frankfurt",
+  rbleipzig: "leipzig", rasenballsportleipzig: "leipzig", leipzig: "leipzig",
+  vfbstuttgart: "stuttgart", stuttgart: "stuttgart",
+  werderbremen: "werderbremen", bremen: "werderbremen",
+  unionberlin: "unionberlin",
+  heidenheim: "heidenheim", heidenheim1846: "heidenheim",
+  mainz05: "mainz", mainz: "mainz",
+  hoffenheim: "hoffenheim", tsghoffenheim: "hoffenheim",
+  koln: "koln", cologne: "koln", fccologne: "koln",
+  schalke04: "schalke", schalke: "schalke",
+  stpauli: "stpauli",
+  holsteinkiel: "kiel", kiel: "kiel",
+  paderborn07: "paderborn", paderborn: "paderborn",
+  elversberg: "elversberg",
+  atleticomadrid: "atletico", atleticodemadrid: "atletico", atletico: "atletico",
+  athleticbilbao: "athletic", athleticclub: "athletic", athletic: "athletic",
+  realsociedad: "sociedad", sociedad: "sociedad",
+  realbetis: "betis", betis: "betis",
+  realmadrid: "realmadrid",
+  celtavigo: "celta", celtadevigo: "celta", celta: "celta",
+  rayovallecano: "rayovallecano", rayo: "rayovallecano",
+  deportivoalaves: "alaves", alaves: "alaves",
+  realvalladolid: "valladolid", valladolid: "valladolid",
+  laspalmas: "laspalmas",
+  racingsantander: "racingsantander",
+  internazionale: "inter", intermilan: "inter", inter: "inter",
+  acmilan: "acmilan", milan: "acmilan",
+  asroma: "asroma", roma: "asroma",
+  hellasverona: "verona", verona: "verona",
+  staderennais: "rennes", rennes: "rennes",
+  olympiquemarseille: "marseille", olympiquedemarseille: "marseille", marseille: "marseille",
+  olympiquelyonnais: "lyon", olympiquelyon: "lyon", lyon: "lyon",
+  stadebrestois: "brest", stadebrestois29: "brest", brest: "brest",
+  saintetienne: "stetienne", stetienne: "stetienne",
+  sportingcp: "sporting", sportinglisbon: "sporting", sporting: "sporting",
+  glasgowrangers: "rangers", rangers: "rangers",
+  celticfc: "celtic", celtic: "celtic",
+  heartofmidlothian: "hearts", hearts: "hearts",
+  hibernian: "hibernian", hibs: "hibernian",
+  dundeeunited: "dundeeutd", dundeeutd: "dundeeutd",
+  dundeefc: "dundee", dundee: "dundee",
+  rosscounty: "rosscounty",
+  stjohnstone: "stjohnstone",
+  stmirren: "stmirren",
+  clubbrugge: "brugge", brugge: "brugge",
+  azalkmaar: "azalkmaar",
+  feyenoordrotterdam: "feyenoord", feyenoord: "feyenoord",
+  psveindhoven: "psv", psv: "psv",
+  ajaxamsterdam: "ajax", ajax: "ajax",
+  spartaprague: "sparta", sparta: "sparta",
+  slaviaprague: "slavia", slavia: "slavia",
+  viktoriaplzen: "plzen", plzen: "plzen",
+  sturmgraz: "sturm", sturm: "sturm",
+  kobenhavn: "copenhagen", copenhagen: "copenhagen",
+  jagielloniabialystok: "jagiellonia", jagiellonia: "jagiellonia",
+  lechpoznan: "lech", lech: "lech",
+  unionstgilloise: "unionsg", unionsaintgilloise: "unionsg", unionsg: "unionsg"
+};
+
+window.smartNormalizeTeamKey = function(name){
+  var rawStr = String(name || "");
+  if(!rawStr.trim()) return "";
+  var s = rawStr
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ß/g, "ss")
+    .replace(/ø/g, "o")
+    .replace(/æ/g, "ae")
+    .replace(/œ/g, "oe")
+    .replace(/&/g, " and ")
+    .replace(/\b1\.\s*(fc|fsv)\b/g, " ")
+    .replace(/\bf\.c\.\b/g, " ")
+    .replace(/\ba\.f\.c\.\b/g, " ")
+    .replace(/\b(fc|afc|cf|sc|sv|ac|as|ud|cd|rcd|vfb|vfl|tsg|bsc|ssc|us|fsv|rc|rb|aj|ogc|losc|sk|fk|nk|kaa)\b/g, " ")
+    .replace(/[^a-z0-9]/g, "");
+  if(!s) return "";
+  if(s === "wimbledon" || s === "afcwimbledon" || /\bafc\s+wimbledon\b/i.test(rawStr)) return "afcwimbledon";
+  if(s === "milan" || s === "acmilan" || /\bac\s+milan\b/i.test(rawStr)) return "acmilan";
+  if(s === "roma" || s === "asroma" || /\bas\s+roma\b/i.test(rawStr)) return "asroma";
+  return (window.EXACT_CLUB_KEY_MAP && window.EXACT_CLUB_KEY_MAP[s]) ? window.EXACT_CLUB_KEY_MAP[s] : s;
+};
+
+window.normTeamKey = window.smartNormalizeTeamKey;
+
+window.cleanCrestKey = function(n){
+  return window.smartNormalizeTeamKey ? window.smartNormalizeTeamKey(n) : String(n || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+};
+
 (function(){
   var B = "https://a.espncdn.com/i/teamlogos/soccer/500/";
   var map = {
-    arsenal:359,astonvilla:362,bournemouth:349,brentford:337,brighton:331,chelsea:363,crystalpalace:384,cpalace:384,palace:384,everton:368,fulham:370,ipswich:373,leicester:375,liverpool:364,mancity:382,manutd:360,manunited:360,newcastle:361,nottm:393,nottmforest:393,southampton:376,tottenham:367,spurs:367,westham:371,wolves:380,leeds:357,burnley:379,sunderland:366,sheffutd:398,sheffieldutd:398,sheffwed:399,sheffieldwed:399,middlesbrough:369,norwich:381,westbrom:383,blackburn:365,coventry:388,watford:395,swansea:318,bristolcity:333,stokecity:336,hull:306,hullcity:306,qpr:334,preston:394,millwall:391,cardiff:347,derby:374,portsmouth:385,oxford:311,plymouth:307,luton:301,birmingham:392,wrexham:352,huddersfield:335,bolton:358,reading:338,barnsley:397,charlton:372,wigan:350,blackpool:346,peterborough:343,wycombe:344,leytonorient:309,rotherham:402,stevenage:304,exeter:324,lincoln:314,stockport:341,mansfield:303,cambridge:320,northampton:353,bristolrovers:308,shrewsbury:339,burton:2567,crawley:2570,    walsall:378,bradford:326,doncaster:329,portvale:342,gillingham:327,wimbledon:3802,afcwimbledon:3802,notts:323,nottscounty:323,mkdons:390,chesterfield:325,crewe:328,grimsby:330,colchester:322,salford:19947,fleetwood:3931,barrow:4040,tranmere:345,accrington:2566,newport:3933,swindon:340,morecambe:2569,carlisle:321,harrogate:20581,bromley:3822,barnet:2568,oldham:332,rochdale:339,york:3819,southend:305,dagandred:2565,dagenham:2565,forestgreen:3932,hartlepool:313,scunthorpe:315,yeovil:317,macclesfield:316,kidderminster:312,aldershot:302,woking:3818,solihull:20582,solihullmoors:20582,borehamwood:20580,gateshead:3810,halifax:3812,maidstone:19948,tamworth:3817,altrincham:3806,eastleigh:19946,wealdstone:20583,
-    celtic:256,rangers:257,hearts:259,heartofmidlothian:259,hibernian:258,hibs:258,kilmarnock:260,motherwell:262,stmirren:265,dundee:266,dundeefc:266,dundeeutd:264,dundeeunited:264,rosscounty:3805,ross:3805,stjohnstone:263,livingston:271,falkirk:267,partick:269,
-    realmadrid:86,barcelona:83,atletico:1068,sociedad:89,betis:244,villarreal:102,athletic:93,athleticbilbao:93,sevilla:243,girona:9812,celta:85,celtavigo:85,getafe:2922,osasuna:97,mallorca:84,alaves:96,levante:1538,espanyol:88,valencia:94,rayo:101,rayovallecano:101,leganes:9813,valladolid:95,laspalmas:98,
-    inter:110,intermilan:110,acmilan:103,milan:103,juventus:111,napoli:114,asroma:104,roma:104,lazio:112,atalanta:105,fiorentina:109,bologna:107,torino:239,udinese:118,genoa:3263,lecce:113,monza:4007,como:2572,venezia:1756,frosinone:4053,parma:115,cagliari:2925,empoli:2574,hellasverona:119,verona:119,sassuolo:3997,
-    bayern:132,dortmund:124,leverkusen:131,leipzig:11420,stuttgart:134,frankfurt:125,freiburg:126,hoffenheim:7911,mainz:2950,gladbach:268,unionberlin:598,werderbremen:137,wolfsburg:138,augsburg:3841,bochum:121,heidenheim:6418,stpauli:270,kiel:7910,holsteinkiel:7910,koln:122,schalke:133,hamburger:127,
-    psg:160,marseille:176,monaco:174,lille:166,lyon:167,lens:175,rennes:169,nice:2502,brest:6997,toulouse:179,strasbourg:180,auxerre:172,angers:7868,lorient:273,lehavre:3236,nantes:165,reims:3243,montpellier:274,stetienne:178,
-    benfica:1929,sporting:2250,porto:437,braga:2994,ajax:139,feyenoord:142,psv:148,twente:152,azalkmaar:140,brugge:570,unionsg:5807,anderlecht:566,gent:572,galatasaray:432,fenerbahce:436,besiktas:435,trabzonspor:438,olympiacos:434,panathinaikos:443,paok:602,salzburg:2790,sturm:2791,sparta:446,slavia:448,plzen:6457,copenhagen:561,midtjylland:6430,nordsjaelland:5781,legia:594,jagiellonia:11068,lech:593,dinamozagreb:597
+    arsenal:359,astonvilla:362,bournemouth:349,brentford:337,brighton:331,chelsea:363,crystalpalace:384,cpalace:384,palace:384,everton:368,fulham:370,ipswich:373,leicester:375,liverpool:364,mancity:382,manutd:360,manunited:360,newcastle:361,nottm:393,nottmforest:393,southampton:376,tottenham:367,spurs:367,westham:371,wolves:380,leeds:357,burnley:379,sunderland:366,sheffutd:398,sheffieldutd:398,sheffwed:399,sheffieldwed:399,middlesbrough:369,norwich:381,westbrom:383,blackburn:365,coventry:388,watford:395,swansea:318,bristolcity:333,stokecity:336,hull:306,hullcity:306,qpr:334,preston:394,millwall:391,cardiff:347,derby:374,portsmouth:385,oxford:311,plymouth:307,luton:301,birmingham:392,wrexham:352,huddersfield:335,bolton:358,reading:338,barnsley:397,charlton:372,wigan:350,blackpool:346,peterborough:342,wycombe:344,leytonorient:309,rotherham:402,stevenage:285,exeter:324,lincoln:314,stockport:400,mansfield:304,cambridge:351,cheltenham:320,northampton:353,bristolrovers:308,shrewsbury:302,burton:2567,crawley:2594,walsall:401,bradford:387,doncaster:279,portvale:348,gillingham:389,wimbledon:3802,afcwimbledon:3802,notts:340,nottscounty:340,mkdons:390,chesterfield:343,crewe:396,grimsby:386,colchester:339,salford:4703,fleetwood:3891,barrow:642,tranmere:345,accrington:2731,newport:635,swindon:341,morecambe:2569,carlisle:322,harrogate:19262,bromley:3129,barnet:280,oldham:332,rochdale:303,york:315,southend:305,dagandred:2565,dagenham:2565,forestgreen:282,hartlepool:313,scunthorpe:313,yeovil:284,macclesfield:131494,aldershot:632,woking:3818,solihull:20582,solihullmoors:20582,borehamwood:2595,gateshead:3810,halifax:312,maidstone:19948,tamworth:3817,altrincham:633,eastleigh:3897,wealdstone:3887,dover:293,guiseley:2588,suttonunited:3231,fylde:13884,
+    celtic:256,rangers:257,hearts:262,heartofmidlothian:262,hibernian:258,hibs:258,kilmarnock:260,motherwell:266,stmirren:250,dundee:261,dundeefc:261,dundeeutd:264,dundeeunited:264,rosscounty:3805,ross:3805,stjohnstone:267,livingston:271,falkirk:254,partick:269,aberdeen:263,
+    realmadrid:86,barcelona:83,atletico:1068,sociedad:89,betis:244,villarreal:102,athletic:93,athleticbilbao:93,sevilla:243,girona:9812,celta:85,celtavigo:85,getafe:2922,osasuna:97,mallorca:84,alaves:96,levante:1538,espanyol:88,valencia:94,rayo:101,rayovallecano:101,leganes:9813,valladolid:95,laspalmas:98,deportivo:90,elche:3751,malaga:99,racingsantander:87,
+    inter:110,intermilan:110,acmilan:103,milan:103,juventus:111,napoli:114,asroma:104,roma:104,lazio:112,atalanta:105,fiorentina:109,bologna:107,torino:239,udinese:118,genoa:3263,lecce:113,monza:4007,como:2572,venezia:17530,frosinone:4057,parma:115,cagliari:2925,empoli:2574,hellasverona:119,verona:119,sassuolo:3997,
+    bayern:132,dortmund:124,leverkusen:131,leipzig:11420,stuttgart:134,frankfurt:125,freiburg:126,hoffenheim:7911,mainz:2950,gladbach:268,borussiamonchengladbach:268,unionberlin:598,werderbremen:137,wolfsburg:138,augsburg:3841,bochum:121,heidenheim:6418,stpauli:270,kiel:7910,holsteinkiel:7910,koln:122,cologne:122,schalke:133,hamburger:127,hamburg:127,hamburgsv:127,hamburgersv:127,paderborn:3307,elversberg:10388,
+    psg:160,marseille:176,monaco:174,lille:166,lyon:167,lens:175,rennes:169,nice:2502,brest:6997,toulouse:179,strasbourg:180,auxerre:172,angers:7868,lorient:273,lehavre:3236,nantes:165,reims:3243,montpellier:274,stetienne:178,paris:6851,lemans:2697,troyes:170,
+    benfica:1929,sporting:2250,porto:437,braga:2994,ajax:139,feyenoord:142,psv:148,twente:152,azalkmaar:140,brugge:570,unionsg:5807,anderlecht:441,gent:3611,galatasaray:432,fenerbahce:436,besiktas:1895,trabzonspor:997,olympiacos:435,panathinaikos:443,paok:602,salzburg:2790,sturm:3746,sparta:433,slavia:494,plzen:11706,copenhagen:909,midtjylland:572,nordsjaelland:3101,legia:594,jagiellonia:11505,lech:2990,dinamozagreb:597,ferencvaros:622
   };
-  window.CLUB_CREST_MAP = window.safeGet("airp_club_crests_v2", {});
-  Object.keys(map).forEach(function(k){ window.CLUB_CREST_MAP[k] = B + map[k] + ".png"; });
-  var afcSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#dc2626" stroke="#fbbf24" stroke-width="2.5"/><text x="20" y="15" font-family="sans-serif" font-weight="900" font-size="6.5" fill="#fbbf24" text-anchor="middle">1903</text><text x="20" y="26" font-family="sans-serif" font-weight="900" font-size="11" fill="#ffffff" text-anchor="middle">AFC</text></svg>';
-  window.CLUB_CREST_MAP["aberdeen"] = "data:image/svg+xml;base64," + window.btoa(afcSvg);
+  window.CLUB_CREST_MAP = window.safeGet("airp_club_crests_v4", {});
+  Object.keys(map).forEach(function(k){
+    if(!window.CLUB_CREST_MAP[k]) window.CLUB_CREST_MAP[k] = B + map[k] + ".png";
+  });
+  Object.keys(window.EXACT_CLUB_KEY_MAP).forEach(function(aliasKey){
+    var targetKey = window.EXACT_CLUB_KEY_MAP[aliasKey];
+    if(window.CLUB_CREST_MAP[targetKey] && !window.CLUB_CREST_MAP[aliasKey]){
+      window.CLUB_CREST_MAP[aliasKey] = window.CLUB_CREST_MAP[targetKey];
+    }
+  });
+  window.TEAM_LOGOS = window.CLUB_CREST_MAP;
+
+  // Persistent + In-Memory Cache for Lower-League & FA Cup Clubs resolved via TheSportsDB
+  window.SPORTSDB_VERIFIED_BADGES = {
+    plymouthparkway: "https://r2.thesportsdb.com/images/media/team/badge/69am4a1682318191.png",
+    berkhamsted: "https://r2.thesportsdb.com/images/media/team/badge/wjnrfu1783311988.png",
+    oxfordcity: "https://r2.thesportsdb.com/images/media/team/badge/ru26hi1690091917.png",
+    hornchurch: "https://r2.thesportsdb.com/images/media/team/badge/paqydz1685997069.png",
+    afchornchurch: "https://r2.thesportsdb.com/images/media/team/badge/paqydz1685997069.png",
+    marine: "https://r2.thesportsdb.com/images/media/team/badge/3gdt7q1603574867.png",
+    rushdenanddiamonds: "https://r2.thesportsdb.com/images/media/team/badge/v5z2ay1682313898.png",
+    afcrushdenanddiamonds: "https://r2.thesportsdb.com/images/media/team/badge/v5z2ay1682313898.png",
+    worcestercity: "https://r2.thesportsdb.com/images/media/team/badge/lv883n1626192658.png",
+    kidderminster: "https://r2.thesportsdb.com/images/media/team/badge/w3lw031675965943.png",
+    kidderminsterharriers: "https://r2.thesportsdb.com/images/media/team/badge/w3lw031675965943.png",
+    harborough: "https://r2.thesportsdb.com/images/media/team/badge/tyexrx1701146532.png",
+    harboroughtown: "https://r2.thesportsdb.com/images/media/team/badge/tyexrx1701146532.png",
+    alvechurch: "https://r2.thesportsdb.com/images/media/team/badge/8lsefb1682314056.png",
+    salisbury: "https://r2.thesportsdb.com/images/media/team/badge/93wjuz1721324565.png",
+    sholing: "https://r2.thesportsdb.com/images/media/team/badge/fu98zx1729184939.png",
+    staffordrangers: "https://r2.thesportsdb.com/images/media/team/badge/3qitli1586181691.png",
+    craywanderers: "https://r2.thesportsdb.com/images/media/team/badge/1wutjn1635866370.png",
+    wimbornetown: "https://r2.thesportsdb.com/images/media/team/badge/h8km3y1709444783.png",
+    suttoncoldfield: "https://r2.thesportsdb.com/images/media/team/badge/khdqun1690088118.png",
+    suttoncoldfieldtown: "https://r2.thesportsdb.com/images/media/team/badge/khdqun1690088118.png",
+    brackleytown: "https://r2.thesportsdb.com/images/media/team/badge/qb7aha1512068030.png",
+    cheshamunited: "https://r2.thesportsdb.com/images/media/team/badge/wyc80m1682317440.png"
+  };
+
+  window.BETBOY_LOGO_CACHE = window.safeGet("betboy_logo_cache_v1", {});
+  window._sportsDbInFlight = {};
+  window._sportsDbMissing = {};
 })();
 
-window.normTeamKey = function(name){
-  var s = (name || "").toLowerCase();
-  if(s.indexOf("manchester city")!==-1 || s.indexOf("man city")!==-1) return "mancity";
-  if(s.indexOf("manchester united")!==-1 || s.indexOf("man utd")!==-1) return "manutd";
-  if(s.indexOf("sheffield wed")!==-1 || s.indexOf("sheff wed")!==-1) return "sheffwed";
-  if(s.indexOf("sheffield utd")!==-1 || s.indexOf("sheff utd")!==-1) return "sheffutd";
-  if(s.indexOf("nottingham")!==-1 || s.indexOf("nottm")!==-1) return "nottm";
-  if(s.indexOf("wolverhampton")!==-1 || s.indexOf("wolves")!==-1) return "wolves";
-  if(s.indexOf("paris")!==-1 || s.indexOf("psg")!==-1) return "psg";
-  if(s.indexOf("roma")!==-1) return "asroma";
-  if(s.indexOf("monza")!==-1) return "monza";
-  if(s.indexOf("milan")!==-1 && s.indexOf("inter")===-1) return "acmilan";
-  if(s.indexOf("inter")!==-1) return "inter";
-  if(s.indexOf("stuttgart")!==-1) return "stuttgart";
-  if(s.indexOf("leipzig")!==-1) return "leipzig";
-  if(s.indexOf("bayern")!==-1) return "bayern";
-  if(s.indexOf("leverkusen")!==-1) return "leverkusen";
-  if(s.indexOf("dortmund")!==-1) return "dortmund";
-  if(s.indexOf("atletico")!==-1 || s.indexOf("atlético")!==-1) return "atletico";
-  if(s.indexOf("alaves")!==-1 || s.indexOf("alavés")!==-1) return "alaves";
-  if(s.indexOf("sociedad")!==-1) return "sociedad";
-  if(s.indexOf("betis")!==-1) return "betis";
-  if(s.indexOf("real madrid")!==-1) return "realmadrid";
-  if(s.indexOf("sporting")!==-1) return "sporting";
-  if(s.indexOf("brugge")!==-1) return "brugge";
-  if(s.indexOf("alkmaar")!==-1) return "alkmaar";
-  if(s.indexOf("crystal palace")!==-1 || s.indexOf("c palace")!==-1) return "palace";
-  if(s.indexOf("aston villa")!==-1) return "astonvilla";
-  if(s.indexOf("panathinaikos")!==-1) return "panathinaikos";
-  if(s.indexOf("fiorentina")!==-1) return "fiorentina";
-  if(s.indexOf("heidenheim")!==-1) return "heidenheim";
-  if(s.indexOf("heart")!==-1 || s.indexOf("hearts")!==-1) return "hearts";
-  if(s.indexOf("celtic")!==-1) return "celtic";
-  if(s.indexOf("rangers")!==-1) return "rangers";
-  if(s.indexOf("aberdeen")!==-1) return "aberdeen";
-  if(s.indexOf("hibernian")!==-1 || s.indexOf("hibs")!==-1) return "hibernian";
-  if(s.indexOf("kilmarnock")!==-1) return "kilmarnock";
-  if(s.indexOf("motherwell")!==-1) return "motherwell";
-  if(s.indexOf("mirren")!==-1) return "stmirren";
-  if(s.indexOf("dundee united")!==-1 || s.indexOf("dundee utd")!==-1) return "dundeeutd";
-  if(s.indexOf("dundee")!==-1) return "dundee";
-  if(s.indexOf("ross county")!==-1) return "rosscounty";
-  if(s.indexOf("johnstone")!==-1) return "stjohnstone";
-  if(s.indexOf("lille")!==-1 || s.indexOf("losc")!==-1) return "lille";
-  if(s.indexOf("como")!==-1) return "como";
-  return s.replace(/[^a-z0-9]/g, "").slice(0, 10);
-};
-
-window.cleanCrestKey = function(n){
-  var s = (n||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if(window.normTeamKey && window.CLUB_CREST_MAP[window.normTeamKey(n)]) return window.normTeamKey(n);
-  var st = s.replace(/\b(fc|afc|sc|sv|vfb|1|ac|as|rc|ogc|us|ud|cd|cf|real|club|town|city|united|utd|athletic|wanderers|rovers|albion|county|hotspur|argyle|alexandra|stanley)\b/g,"").replace(/[^a-z0-9]/g,"");
-  return window.CLUB_CREST_MAP[st] ? st : s.replace(/[^a-z0-9]/g,"");
+window.resolveApiTeamName = function(teamObj){
+  if(!teamObj) return "Unknown";
+  var full = String(teamObj.displayName || teamObj.name || teamObj.shortDisplayName || "")
+    .replace(/\s+\b(FC|AFC)\b$/i, "")
+    .trim();
+  var shortN = String(teamObj.shortDisplayName || "")
+    .replace(/\s+\b(FC|AFC)\b$/i, "")
+    .trim();
+  if(!full) return shortN || "Unknown";
+  if(!shortN || shortN === full) return full;
+  // Never allow shortDisplayName to strip distinguishing words (e.g., "Plymouth" vs "Plymouth Parkway")
+  return full;
 };
 
 window.makeFallbackShieldSvg = function(n){
-  var c = (n||"FC").replace(/^(FC|AFC|AS|AC|SC|SV|RC|RB)\s+/i,"").trim();
+  var c = (n||"FC")
+    .replace(/^(1\.\s*FC|1\.\s*FSV|FC|AFC|AS|AC|SC|SV|RC|RB)\s+/i,"")
+    .trim();
   var w = c.split(/\s+/), ini = (w.length>=2 ? w[0][0]+w[1][0] : c.slice(0,2)).toUpperCase();
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">' +
     '<path d="M20 2 L35 8 V20 C35 29.5 28.5 35.8 20 38 C11.5 35.8 5 29.5 5 20 V8 Z" fill="#0f172a" stroke="#10b981" stroke-width="2.4"/>' +
@@ -4109,9 +4315,105 @@ window.makeFallbackShieldSvg = function(n){
   return "data:image/svg+xml;base64," + window.btoa(svg);
 };
 
+window.applyResolvedTeamCrestToDom = function(exactKey, teamName, badgeUrl){
+  if(!exactKey || !badgeUrl) return;
+  window.BETBOY_LOGO_CACHE = window.BETBOY_LOGO_CACHE || {};
+  window.BETBOY_LOGO_CACHE[exactKey] = badgeUrl;
+  if(teamName) window.BETBOY_LOGO_CACHE[teamName] = badgeUrl;
+  window.safeSet("betboy_logo_cache_v1", window.BETBOY_LOGO_CACHE);
+  try {
+    var imgs = document.querySelectorAll('img[data-team-crest="' + exactKey + '"]');
+    for(var i = 0; i < imgs.length; i++){
+      if(imgs[i].getAttribute("src") !== badgeUrl){
+        imgs[i].setAttribute("src", badgeUrl);
+      }
+    }
+  } catch(e){}
+};
+
+window.fetchTeamCrestFromSportsDB = function(teamName){
+  var rawName = String(teamName || "").trim();
+  var exactKey = window.cleanCrestKey(rawName);
+  if(!exactKey) return Promise.resolve(null);
+  if(window.TEAM_LOGOS && window.TEAM_LOGOS[exactKey]) return Promise.resolve(window.TEAM_LOGOS[exactKey]);
+  if(window.BETBOY_LOGO_CACHE && window.BETBOY_LOGO_CACHE[exactKey]) return Promise.resolve(window.BETBOY_LOGO_CACHE[exactKey]);
+  if(window._sportsDbMissing && window._sportsDbMissing[exactKey]) return Promise.resolve(null);
+  if(window._sportsDbInFlight && window._sportsDbInFlight[exactKey]) return window._sportsDbInFlight[exactKey];
+
+  var queryEndpoint = function(apiKey, q){
+    var url = "https://www.thesportsdb.com/api/v1/json/" + apiKey + "/searchteams.php?t=" + encodeURIComponent(q);
+    return fetch(url)
+      .then(function(r){ return r.ok ? r.text() : ""; })
+      .then(function(txt){
+        if(!txt) return null;
+        var d = JSON.parse(txt);
+        var tm = d && Array.isArray(d.teams) && d.teams[0] ? d.teams[0] : null;
+        return tm ? (tm.strBadge || tm.strLogo || null) : null;
+      })
+      .catch(function(){ return null; });
+  };
+
+  var strippedName = rawName
+    .replace(/^(1\.\s*FC|1\.\s*FSV|FC|AFC|CF|SC|SV|AC|AS)\s+/i, "")
+    .replace(/\s+(FC|AFC|CF|SC|SV|AC|AS)$/i, "")
+    .trim();
+
+  var p = queryEndpoint("3", rawName)
+    .then(function(badge){
+      if(badge) return badge;
+      return queryEndpoint("123", rawName);
+    })
+    .then(function(badge){
+      if(badge) return badge;
+      if(strippedName && strippedName !== rawName){
+        return queryEndpoint("3", strippedName).then(function(b2){
+          return b2 || queryEndpoint("123", strippedName);
+        });
+      }
+      return null;
+    })
+    .then(function(badge){
+      delete window._sportsDbInFlight[exactKey];
+      var finalBadge = badge || (window.SPORTSDB_VERIFIED_BADGES && window.SPORTSDB_VERIFIED_BADGES[exactKey]) || null;
+      if(finalBadge){
+        window.applyResolvedTeamCrestToDom(exactKey, rawName, finalBadge);
+        return finalBadge;
+      }
+      window._sportsDbMissing[exactKey] = true;
+      return null;
+    })
+    .catch(function(){
+      delete window._sportsDbInFlight[exactKey];
+      var backup = (window.SPORTSDB_VERIFIED_BADGES && window.SPORTSDB_VERIFIED_BADGES[exactKey]) || null;
+      if(backup){
+        window.applyResolvedTeamCrestToDom(exactKey, rawName, backup);
+        return backup;
+      }
+      return null;
+    });
+
+  window._sportsDbInFlight[exactKey] = p;
+  return p;
+};
+
 window.getClubCrestHtml = function(n){
-  var fb = window.makeFallbackShieldSvg(n), url = window.CLUB_CREST_MAP[window.cleanCrestKey(n)] || fb;
-  return '<span class="crest-box"><img src="'+url+'" onerror="this.onerror=null;this.src=\''+fb+'\'" alt="'+n+'"></span>';
+  var exactKey = window.cleanCrestKey(n);
+  var fb = window.makeFallbackShieldSvg(n);
+  var localUrl = (exactKey && window.TEAM_LOGOS && window.TEAM_LOGOS[exactKey]) ? window.TEAM_LOGOS[exactKey] : null;
+  var cachedUrl = (!localUrl && exactKey && window.BETBOY_LOGO_CACHE && window.BETBOY_LOGO_CACHE[exactKey]) ? window.BETBOY_LOGO_CACHE[exactKey] : null;
+  var verifiedSeed = (!localUrl && !cachedUrl && exactKey && window.SPORTSDB_VERIFIED_BADGES && window.SPORTSDB_VERIFIED_BADGES[exactKey]) ? window.SPORTSDB_VERIFIED_BADGES[exactKey] : null;
+  if(verifiedSeed && window.BETBOY_LOGO_CACHE && !window.BETBOY_LOGO_CACHE[exactKey]){
+    window.BETBOY_LOGO_CACHE[exactKey] = verifiedSeed;
+    window.BETBOY_LOGO_CACHE[String(n || "").trim()] = verifiedSeed;
+    window.safeSet("betboy_logo_cache_v1", window.BETBOY_LOGO_CACHE);
+    cachedUrl = verifiedSeed;
+  }
+  var url = localUrl || cachedUrl || fb;
+  if(!localUrl && !cachedUrl && exactKey){
+    window.fetchTeamCrestFromSportsDB(n);
+  }
+  var safeAlt = String(n || "").replace(/"/g, "&quot;");
+  return '<span class="crest-box"><img data-team-crest="'+exactKey+'" src="'+url+'" onerror="this.onerror=null;this.src=\''+fb+'\'" alt="'+safeAlt+'"></span>';
 };
 
 window.isCardUnlockedInTrial = function(m, idx, type){
@@ -4225,25 +4527,24 @@ window.updateModelHeaders = function(){
   var T5 = ["barnet","oldham","rochdale","york","southend","dagandred","dagenham","borehamwood","solihull","solihullmoors","woking","aldershot","gateshead","halifax","forestgreen","hartlepool","scunthorpe","yeovil","tamworth","maidstone","kidderminster","macclesfield","altrincham","eastleigh","wealdstone","fylde","ebbsfleet","maidenhead","braintree","boston","curzonashton","guiseley","hednesford","horsham","harborough","tonbridge","chesham","worthing","weston","slough","brackley","buxton","scarborough"];
 
   window.getClubDivisionTier = function(name){
-    var raw = String(name || "").toLowerCase().replace(/\b(fc|afc|town|city|united|utd|athletic|wanderers|rovers|albion|county|argyle|alexandra|stanley)\b/g,"").replace(/[^a-z0-9]/g,"");
-    var k = window.normTeamKey ? window.normTeamKey(name) : raw;
-    if(T1.indexOf(k)!==-1 || T1.indexOf(raw)!==-1) return 1;
-    if(T2.indexOf(k)!==-1 || T2.indexOf(raw)!==-1) return 2;
-    if(T3.indexOf(k)!==-1 || T3.indexOf(raw)!==-1) return 3;
-    if(T5.indexOf(k)!==-1 || T5.indexOf(raw)!==-1) return 5;
-    if(T4.indexOf(k)!==-1 || T4.indexOf(raw)!==-1) return 4;
-    return 4;
+    var k = window.normTeamKey ? window.normTeamKey(name) : String(name || "").toLowerCase().replace(/[^a-z0-9]/g,"");
+    if(!k) return 5;
+    if(T1.indexOf(k)!==-1) return 1;
+    if(T2.indexOf(k)!==-1) return 2;
+    if(T3.indexOf(k)!==-1) return 3;
+    if(T4.indexOf(k)!==-1) return 4;
+    if(T5.indexOf(k)!==-1) return 5;
+    return 5;
   };
 
   window.getTrueClubRating = function(name, compObj){
     var k = window.normTeamKey ? window.normTeamKey(name) : (name||"").toLowerCase().replace(/[^a-z0-9]/g,"");
-    var raw = String(name || "").toLowerCase().replace(/\b(fc|afc|town|city|united|utd|athletic|wanderers|rovers|albion|county|argyle|alexandra|stanley)\b/g,"").replace(/[^a-z0-9]/g,"");
-    var pwr = 68;
-    if(T1.indexOf(k) !== -1 || T1.indexOf(raw) !== -1) pwr = 88;
-    else if(T2.indexOf(k) !== -1 || T2.indexOf(raw) !== -1) pwr = 78;
-    else if(T3.indexOf(k) !== -1 || T3.indexOf(raw) !== -1) pwr = 66;
-    else if(T5.indexOf(k) !== -1 || T5.indexOf(raw) !== -1) pwr = 49;
-    else if(T4.indexOf(k) !== -1 || T4.indexOf(raw) !== -1) pwr = 56;
+    var pwr = 52;
+    if(T1.indexOf(k) !== -1) pwr = 88;
+    else if(T2.indexOf(k) !== -1) pwr = 78;
+    else if(T3.indexOf(k) !== -1) pwr = 66;
+    else if(T4.indexOf(k) !== -1) pwr = 56;
+    else if(T5.indexOf(k) !== -1) pwr = 49;
     try {
       var rec = (compObj && compObj.records && compObj.records[0] && compObj.records[0].summary) || "";
       var p = rec.split("-").map(Number);
@@ -4256,14 +4557,31 @@ window.updateModelHeaders = function(){
     return Math.min(93, Math.max(46, pwr));
   };
 
+  window.isEventOnSelectedUkDate = function(eventIsoDate, selectedDateStr){
+    var target = String(selectedDateStr || "").trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(target)) return false;
+    if(!eventIsoDate) return false;
+    var parsed = new Date(eventIsoDate);
+    if(isNaN(parsed.getTime())) return false;
+    var evUkDate = window.getCanonicalLondonDate(parsed);
+    return evUkDate === target;
+  };
+
   window.buildAccurateFixtureRow = function(ev, dateStr, lgCode, idx){
+    if(!ev || !dateStr) return null;
+    if(ev.date && !window.isEventOnSelectedUkDate(ev.date, dateStr)){
+      return null;
+    }
     var comp = ev.competitions && ev.competitions[0];
     if(!comp || !comp.competitors) return null;
     var hC = comp.competitors.find(function(c){return c.homeAway==="home";});
     var aC = comp.competitors.find(function(c){return c.homeAway==="away";});
     if(!hC || !aC) return null;
-    var hN = hC.team.shortDisplayName || hC.team.displayName || hC.team.name;
-    var aN = aC.team.shortDisplayName || aC.team.displayName || aC.team.name;
+    var hN = window.resolveApiTeamName ? window.resolveApiTeamName(hC.team) : (hC.team.displayName || hC.team.name || hC.team.shortDisplayName);
+    var aN = window.resolveApiTeamName ? window.resolveApiTeamName(aC.team) : (aC.team.displayName || aC.team.name || aC.team.shortDisplayName);
+    if(window.isMockOrFakeFaCupFixture && window.isMockOrFakeFaCupFixture(hN, aN, lgCode)){
+      return null;
+    }
     var hP = window.getTrueClubRating(hN, hC), aP = window.getTrueClubRating(aN, aC);
 
     var w = window.adaptiveWeights || { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0, teamReliability: {}, leagueCalibration: {} };
@@ -4290,8 +4608,8 @@ window.updateModelHeaders = function(){
     else if(gap < (drawG - 1.8)) conf = Math.min(74.6, conf);
 
     // 60-Metric AI Engine Calibration Modifier for Emirates FA Cup (FAC) Inter-Division Ties
-    var favTier = window.getClubDivisionTier ? window.getClubDivisionTier(fav) : 3;
-    var oppTier = window.getClubDivisionTier ? window.getClubDivisionTier(opp) : 4;
+    var favTier = window.getClubDivisionTier ? window.getClubDivisionTier(fav) : 5;
+    var oppTier = window.getClubDivisionTier ? window.getClubDivisionTier(opp) : 5;
     var tierGap = Math.max(0, oppTier - favTier);
     var absTierGap = Math.abs(oppTier - favTier);
     if(lgCode === "FAC"){
@@ -4307,7 +4625,16 @@ window.updateModelHeaders = function(){
     var xga = parseFloat(Math.max(0.62, ((1.34-((conf-50)*0.020)) * (2 - xgM))).toFixed(2));
     var favShots = Math.round((conf * 0.26) + (lgCode === "FAC" ? (1.8 + Math.max(tierGap, absTierGap) * 2.4) : 0));
     var ko = "15:00";
-    if(ev.date){ var d = new Date(ev.date); if(!isNaN(d.getTime())) ko = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+    if(ev.date){
+      var d = new Date(ev.date);
+      if(!isNaN(d.getTime())){
+        try {
+          ko = d.toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
+        } catch(e) {
+          ko = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+        }
+      }
+    }
     var id = idNum;
     var vr = conf < 75.0 ? (!favH ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield") : "";
     var statTag = (lgCode === "FAC" && Math.max(tierGap, absTierGap) >= 1)
@@ -4351,12 +4678,13 @@ window.buildDeterministicFallbackSlate = function(){
     window.fetchedDatesMap[dateStr] = now;
     window.inFlightDatesMap[dateStr] = true;
 
-    var dStr = dateStr.replace(/-/g, ""), col = [];
+    var dStr = dateStr.replace(/-/g, ""), col = [], anyFetchOk = false;
     var jobs = LGS.map(function(lg){
       return fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/"+lg.s+"/scoreboard?dates="+dStr)
         .then(function(r){return r.ok?r.json():null;})
         .then(function(d){
           if(!d) return;
+          anyFetchOk = true;
           if(d.leagues && d.leagues[0] && d.leagues[0].logos && d.leagues[0].logos[0] && d.leagues[0].logos[0].href){
             var officialLogoHref = d.leagues[0].logos[0].href;
             if(window.LEAGUE_LOGOS[lg.c] !== officialLogoHref){
@@ -4367,6 +4695,10 @@ window.buildDeterministicFallbackSlate = function(){
           }
           if(!Array.isArray(d.events)) return;
           d.events.forEach(function(ev, idx){
+            // Strict UK calendar date (YYYY-MM-DD) filter: skip any event not scheduled on dateStr
+            if(ev && ev.date && window.isEventOnSelectedUkDate && !window.isEventOnSelectedUkDate(ev.date, dateStr)){
+              return;
+            }
             var row = window.buildAccurateFixtureRow ? window.buildAccurateFixtureRow(ev, dateStr, lg.c, idx) : null;
             if(row) col.push(row);
             var comp = ev.competitions && ev.competitions[0];
@@ -4374,18 +4706,22 @@ window.buildDeterministicFallbackSlate = function(){
             var hC = comp.competitors.find(function(x){return x.homeAway==="home";});
             var aC = comp.competitors.find(function(x){return x.homeAway==="away";});
             if(!hC || !aC) return;
-            var hN = hC.team.displayName||hC.team.name, aN = aC.team.displayName||aC.team.name;
-            var hS = hC.team.shortDisplayName||hN, aS = aC.team.shortDisplayName||aN;
-            var hK = window.normTeamKey(hN), aK = window.normTeamKey(aN);
-            if(hC.team.logo){
-              window.CLUB_CREST_MAP[hK]=hC.team.logo;
-              window.CLUB_CREST_MAP[window.cleanCrestKey(hN)]=hC.team.logo;
-              window.CLUB_CREST_MAP[window.cleanCrestKey(hS)]=hC.team.logo;
+            var hN = window.resolveApiTeamName ? window.resolveApiTeamName(hC.team) : (hC.team.displayName||hC.team.name);
+            var aN = window.resolveApiTeamName ? window.resolveApiTeamName(aC.team) : (aC.team.displayName||aC.team.name);
+            if(window.isMockOrFakeFaCupFixture && window.isMockOrFakeFaCupFixture(hN, aN, lg.c)){
+              return;
             }
-            if(aC.team.logo){
+            var hK = window.normTeamKey(hN), aK = window.normTeamKey(aN);
+            // Only map API logo under the exact full club key — never under a truncated shortDisplayName
+            if(hC.team.logo && hK){
+              window.CLUB_CREST_MAP[hK]=hC.team.logo;
+            } else if(hK && (!window.CLUB_CREST_MAP || !window.CLUB_CREST_MAP[hK]) && window.fetchTeamCrestFromSportsDB){
+              window.fetchTeamCrestFromSportsDB(hN);
+            }
+            if(aC.team.logo && aK){
               window.CLUB_CREST_MAP[aK]=aC.team.logo;
-              window.CLUB_CREST_MAP[window.cleanCrestKey(aN)]=aC.team.logo;
-              window.CLUB_CREST_MAP[window.cleanCrestKey(aS)]=aC.team.logo;
+            } else if(aK && (!window.CLUB_CREST_MAP || !window.CLUB_CREST_MAP[aK]) && window.fetchTeamCrestFromSportsDB){
+              window.fetchTeamCrestFromSportsDB(aN);
             }
 
             // Extract real corners, cards, and 1st-half goals from ESPN competitor statistics/linescores when present
@@ -4421,39 +4757,34 @@ window.buildDeterministicFallbackSlate = function(){
             var dt = (ev.status&&ev.status.type&&ev.status.type.shortDetail)||"";
             var rawHScore = (hC && hC.score && typeof hC.score === "object") ? (hC.score.displayValue || hC.score.value || "0") : (hC && hC.score !== undefined ? hC.score : "0");
             var rawAScore = (aC && aC.score && typeof aC.score === "object") ? (aC.score.displayValue || aC.score.value || "0") : (aC && aC.score !== undefined ? aC.score : "0");
-            var hShortKey = window.normTeamKey(hS);
-            var aShortKey = window.normTeamKey(aS);
             var rec = {
               id:String(ev.id),
               state:st,
               detail:dt,
               h:parseInt(rawHScore,10) || 0,
               a:parseInt(rawAScore,10) || 0,
-              homeTeam:hS,
-              awayTeam:aS,
-              homeKey:hShortKey,
-              awayKey:aShortKey,
+              homeTeam:hN,
+              awayTeam:aN,
+              homeKey:hK,
+              awayKey:aK,
               ko:row?row[20]:"15:00",
               corners: totalCorn,
               cards: totalCards,
               fhGoals: fhGoalsVal
             };
             window.apiLiveScores["id_"+ev.id] = rec;
-            window.apiLiveScores[hShortKey+"_"+dateStr] = rec;
-            if(hK && hK !== hShortKey) window.apiLiveScores[hK+"_"+dateStr] = rec;
+            if(hK) window.apiLiveScores[hK+"_"+dateStr] = rec;
           });
         }).catch(function(){});
     });
     Promise.all(jobs).then(function(){
       window.inFlightDatesMap[dateStr] = false;
-      if(col.length > 0){
+      if(col.length > 0 || anyFetchOk || !window.DAILY_FIXTURES[dateStr]){
         window.DAILY_FIXTURES[dateStr] = col;
-        window.safeSet("airp_live_espn_fixtures_v16", window.DAILY_FIXTURES);
-      } else if(!window.DAILY_FIXTURES[dateStr]){
-        window.DAILY_FIXTURES[dateStr] = [];
+        window.safeSet("airp_live_espn_fixtures_v18", window.DAILY_FIXTURES);
       }
       window.safeSet("airp_espn_truth_v4", window.apiLiveScores);
-      window.safeSet("airp_club_crests_v2", window.CLUB_CREST_MAP);
+      window.safeSet("airp_club_crests_v4", window.CLUB_CREST_MAP);
       window.safeSet("airp_official_league_logos_v1", window.LEAGUE_LOGOS);
       if(typeof window.autoSettleAndEvolveCompletedDays === "function") window.autoSettleAndEvolveCompletedDays();
       if(window.selectedDate === dateStr && window._lastRenderedDate !== dateStr + "_" + (window.DAILY_FIXTURES[dateStr]||[]).length){
@@ -4482,7 +4813,7 @@ window.generateFixturesForDate = function(dateStr){
   if(!dateStr) return [];
   if(Array.isArray(window.DAILY_FIXTURES[dateStr])){
     window.DAILY_FIXTURES[dateStr] = window.DAILY_FIXTURES[dateStr].filter(function(r){
-      return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && (!r[1] || String(r[1]) === String(dateStr));
+      return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && String(r[1] || "") === String(dateStr);
     });
   }
   if(window.DAILY_FIXTURES[dateStr] && window.DAILY_FIXTURES[dateStr].length > 0){
@@ -4548,9 +4879,11 @@ window.mapRawMatch = function(x){
 };
 
 window.getFixturesForDateAndLeagues = function(dateStr, leagues){
-  if(!leagues || leagues.length === 0) return [];
+  if(!dateStr || !leagues || leagues.length === 0) return [];
   var rawList = window.generateFixturesForDate(dateStr);
-  return rawList.map(window.mapRawMatch).filter(function(f){ return leagues.indexOf(f.league) !== -1; });
+  return rawList.map(window.mapRawMatch).filter(function(f){
+    return f && String(f.date) === String(dateStr) && leagues.indexOf(f.league) !== -1;
+  });
 };
 
 window.getLockTimeLabel = function(dateStr, koStr){
@@ -6000,15 +6333,6 @@ window.CLUB_STAR_ROSTER = {
 window.getClubStarScorer = function(teamName, seedIdx){
   var k = window.normTeamKey ? window.normTeamKey(teamName) : String(teamName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   var roster = window.CLUB_STAR_ROSTER[k];
-  if(!roster){
-    var keys = Object.keys(window.CLUB_STAR_ROSTER);
-    for(var i = 0; i < keys.length; i++){
-      if(k.indexOf(keys[i]) !== -1 || keys[i].indexOf(k) !== -1){
-        roster = window.CLUB_STAR_ROSTER[keys[i]];
-        break;
-      }
-    }
-  }
   if(!roster || roster.length < 2){
     roster = [teamName + " #9", teamName + " #10", teamName + " #7", teamName + " #8", teamName + " #11"];
   }
@@ -6679,18 +7003,9 @@ window.CLUB_TIMELINE_ROSTERS = {
 };
 
 window.getClubTimelineRoster = function(teamName, seed){
-  var clean = String(teamName || "").toLowerCase()
-    .replace(/manchester united/g, "manutd")
-    .replace(/manchester city/g, "mancity")
-    .replace(/real madrid/g, "realmadrid")
-    .replace(/aston villa/g, "astonvilla")
-    .replace(/[^a-z0-9]/g, "");
-  var keys = Object.keys(window.CLUB_TIMELINE_ROSTERS);
-  for(var i=0; i<keys.length; i++){
-    var k = keys[i];
-    if(clean.indexOf(k) !== -1 || k.indexOf(clean) !== -1){
-      return window.CLUB_TIMELINE_ROSTERS[k];
-    }
+  var k = window.normTeamKey ? window.normTeamKey(teamName) : String(teamName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if(window.CLUB_TIMELINE_ROSTERS[k]){
+    return window.CLUB_TIMELINE_ROSTERS[k];
   }
   var fbStarters = [
     ["Silva M.", "Costa R.", "Fernandes J.", "Pereira A.", "Santos L.", "Gomes T.", "Dias F.", "Mendes C."],
@@ -9988,7 +10303,10 @@ window.ensureCanvasCrestLoaded = function(teamName){
   }
   if(window._canvasSafeCrestCache[key]) return null;
 
-  var url = (window.CLUB_CREST_MAP && window.CLUB_CREST_MAP[key]) || (window.makeFallbackShieldSvg ? window.makeFallbackShieldSvg(teamName) : null);
+  var url = (window.TEAM_LOGOS && window.TEAM_LOGOS[key]) ||
+    (window.BETBOY_LOGO_CACHE && window.BETBOY_LOGO_CACHE[key]) ||
+    (window.SPORTSDB_VERIFIED_BADGES && window.SPORTSDB_VERIFIED_BADGES[key]) ||
+    (window.makeFallbackShieldSvg ? window.makeFallbackShieldSvg(teamName) : null);
   if(!url) return null;
 
   window._canvasSafeCrestCache[key] = { status: "loading", img: null };
