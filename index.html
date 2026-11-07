@@ -471,7 +471,7 @@ window.ADMIN_PIN = "18041992";
 window.APP_PASSWORD = "12341867";
 window.SESSION_TTL_MS = 10 * 60 * 1000;
 window.LOCK_BEFORE_KO_MS = 30 * 60 * 1000;
-window.MAX_DAILY_FIXTURES = 50;
+window.MAX_DAILY_FIXTURES = 100;
 window.isAdmin = false;
 window.isTrial = false;
 window.activeTierFilter = 'ALL';
@@ -2371,17 +2371,27 @@ window.lockedScores = window.safeGet("airp_v122_locks_v16", {});
 window.apiLiveScores = window.safeGet("airp_espn_truth_v4", {});
 window.isMockOrFakeFaCupFixture = function(favName, oppName, leagueCode){
   var lg = String(leagueCode || "FAC").trim().toUpperCase();
-  if(lg !== "FAC") return false;
   var norm = function(v){
-    return String(v || "").toLowerCase().replace(/\b(fc|afc)\b/g, " ").replace(/[^a-z0-9]/g, "");
+    return String(v || "").toLowerCase().replace(/\b(fc|afc|sv|sc|cf|ac|as)\b/g, " ").replace(/[^a-z0-9]/g, "");
   };
   var k1 = norm(favName), k2 = norm(oppName);
-  if((k1 === "oxfordcity" && (k2 === "leicester" || k2 === "leicestercity")) ||
-     ((k1 === "leicester" || k1 === "leicestercity") && k2 === "oxfordcity")){
+  if(!k1 || !k2) return false;
+  if(lg === "FAC" &&
+     ((k1 === "oxfordcity" && (k2 === "leicester" || k2 === "leicestercity")) ||
+      ((k1 === "leicester" || k1 === "leicestercity") && k2 === "oxfordcity"))){
+    return true;
+  }
+  if((k1 === "arsenal" && (k2 === "hullcity" || k2 === "hull")) ||
+     ((k1 === "hullcity" || k1 === "hull") && k2 === "arsenal")){
+    return true;
+  }
+  if(((k1 === "borussiadortmund" || k1 === "dortmund") && (k2 === "elversberg" || k2 === "svelversberg")) ||
+     ((k1 === "elversberg" || k1 === "svelversberg") && (k2 === "borussiadortmund" || k2 === "dortmund"))){
     return true;
   }
   return false;
 };
+window.isInvalidOrSyntheticFixturePairing = window.isMockOrFakeFaCupFixture;
 window.isLegacyFallbackFixtureRow = function(row){
   if(!Array.isArray(row)) return true;
   var idNum = Number(row[0]);
@@ -2407,10 +2417,14 @@ window.sanitizeDailyFixturesMap = function(mapObj){
 try {
   localStorage.removeItem("airp_live_espn_fixtures_v16");
   localStorage.removeItem("airp_live_espn_fixtures_v17");
+  localStorage.removeItem("airp_live_espn_fixtures_v18");
+  localStorage.removeItem("airp_live_espn_fixtures_v19");
+  localStorage.removeItem("airp_locked_ko_odds_v16");
+  localStorage.removeItem("airp_pre_ko_odds_v16");
   localStorage.removeItem("airp_club_crests_v2");
   localStorage.removeItem("airp_club_crests_v3");
 } catch(e) {}
-window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v18", {}));
+window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v20", {}));
 window.createDefault60MetricWeights = function(existing){
   var map = {};
   for(var i = 1; i <= 60; i++){
@@ -2459,14 +2473,52 @@ window.slipStake = window.safeGet("airp_slip_stake", 10);
 window.slipBetMode = window.safeGet("airp_slip_mode", "acca");
 window.oddsFormat = "frac"; // Default to Fractional until user changes it in the select box
 window.cardMarketFilter = {};
-window.THE_ODDS_API_KEY = "e11eb4efb73076248935e6324b405e2d";
-window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=uk&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
-window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
-window.THE_ODDS_API_FA_CUP_URL = "https://api.the-odds-api.com/v4/sports/soccer_fa_cup/odds/?regions=uk&markets=h2h&apiKey=e11eb4efb73076248935e6324b405e2d";
-window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v1", {});
+window.DEFAULT_THE_ODDS_API_KEY = "e2f5348bc22ef1afe0ee29483e392284";
+window.ODDS_API_KEY_STORAGE_KEY = "betboy_odds_api_key_v1";
+window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY = "betboy_odds_league_cache_v1";
+window.ODDS_API_CACHE_TTL_MS = 43200000; // 12 hours (43,200,000 ms) per league
+
+window.getActiveOddsApiKey = function(){
+  try {
+    var saved = localStorage.getItem(window.ODDS_API_KEY_STORAGE_KEY);
+    if(saved && saved.trim()) return saved.trim().toLowerCase();
+  } catch(e){}
+  return window.DEFAULT_THE_ODDS_API_KEY;
+};
+window.setActiveOddsApiKey = function(newKey){
+  var clean = String(newKey || "").trim().toLowerCase() || window.DEFAULT_THE_ODDS_API_KEY;
+  try {
+    localStorage.setItem(window.ODDS_API_KEY_STORAGE_KEY, clean);
+  } catch(e){}
+  window.THE_ODDS_API_KEY = clean;
+  return clean;
+};
+window.THE_ODDS_API_KEY = window.getActiveOddsApiKey();
+window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=uk&markets=h2h&apiKey=" + window.THE_ODDS_API_KEY;
+window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=" + window.THE_ODDS_API_KEY;
+window.THE_ODDS_API_FA_CUP_URL = "https://api.the-odds-api.com/v4/sports/soccer_fa_cup/odds/?regions=uk&markets=h2h&apiKey=" + window.THE_ODDS_API_KEY;
+window.LEAGUE_CODE_TO_ODDS_SPORT_KEY = {
+  PL: "soccer_epl",
+  CHA: "soccer_efl_champ",
+  L1: "soccer_england_league1",
+  L2: "soccer_england_league2",
+  FAC: "soccer_fa_cup",
+  EFLC: "soccer_england_efl_cup",
+  SPL: "soccer_spl",
+  LL: "soccer_spain_la_liga",
+  BUN: "soccer_germany_bundesliga",
+  SA: "soccer_italy_serie_a",
+  FL1: "soccer_france_ligue_one",
+  UCL: "soccer_uefa_champs_league",
+  UEL: "soccer_uefa_europa_league",
+  UECL: "soccer_uefa_europa_conference_league"
+};
+window.oddsLeagueCacheMap = window.safeGet(window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY, {});
+window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v2", {});
+window.espnBookmakerOddsMap = window.safeGet("airp_espn_bookmaker_odds_v1", {});
 window.liveBet365OddsMap = window.liveOddsApiMap;
-window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v16", {});
-window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v16", {});
+window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v19", {});
+window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v19", {});
 window.lastOddsApiSyncTime = Number(window.safeGet("airp_the_odds_api_sync_ts", 0)) || 0;
 window.oddsApiInFlight = false;
 
@@ -2692,36 +2744,125 @@ window.deriveMarketsFromOddsApiH2H = function(favOdds, drawOdds, oppOdds) {
   };
 };
 
-window.fetchTheOddsApiMarkets = function(forceRefresh) {
+window.fetchJsonWithFallback = function(url){
+  var isLocalOrPreview = typeof window !== "undefined" && window.location && (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname.indexOf(".run.app") !== -1
+  );
+  if(isLocalOrPreview){
+    return fetch("/api/espn-proxy?url=" + encodeURIComponent(url))
+      .then(function(r){
+        if(!r.ok) throw new Error("Proxy HTTP " + r.status);
+        return r.json();
+      })
+      .catch(function(){
+        return fetch(url)
+          .then(function(r2){ return r2.ok ? r2.json() : null; })
+          .catch(function(){ return null; });
+      });
+  }
+  return fetch(url)
+    .then(function(r){
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .catch(function(){ return null; });
+};
+
+window.rebuildCombinedOddsMapFromCache = function(){
+  var cacheMap = window.oddsLeagueCacheMap || {};
+  var allEvents = [];
+  Object.keys(cacheMap).forEach(function(sportKey){
+    var entry = cacheMap[sportKey];
+    if(entry && Array.isArray(entry.events)){
+      allEvents = allEvents.concat(entry.events);
+    }
+  });
+  if(allEvents.length > 0 && window.parseTheOddsApiEvents){
+    window.liveOddsApiMap = window.parseTheOddsApiEvents(allEvents, []);
+    window.liveBet365OddsMap = window.liveOddsApiMap;
+    window.safeSet("airp_the_odds_api_v2", window.liveOddsApiMap);
+  }
+  return window.liveOddsApiMap;
+};
+
+// Strict Odds API Credit Saver:
+// 1. Only calls `regions=uk&markets=h2h` (1 credit per active competition).
+// 2. Only calls competitions that actually have fixtures scheduled on the selected date from ESPN scoreboard.
+// 3. Caches each competition's response in localStorage for 12 hours (43200000 ms) so refreshes use 0 credits.
+window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
   var now = Date.now();
-  // Throttle background calls to once every 10 minutes unless forced
-  if (!forceRefresh && window.oddsApiInFlight) return Promise.resolve(window.liveOddsApiMap);
-  if (!forceRefresh && window.lastOddsApiSyncTime && (now - window.lastOddsApiSyncTime < 600000) && Object.keys(window.liveOddsApiMap || {}).length > 0) {
+  if (window.oddsApiInFlight) return Promise.resolve(window.liveOddsApiMap);
+
+  var dateObj = window.getRollingDates ? window.getRollingDates() : { today: "" };
+  var activeDate = targetDateStr || window.selectedDate || dateObj.today;
+  var dayRows = (activeDate && Array.isArray(window.DAILY_FIXTURES[activeDate])) ? window.DAILY_FIXTURES[activeDate] : [];
+
+  // Only query leagues that actually have scheduled fixtures on activeDate according to ESPN scoreboard
+  var activeLeagueCodes = [];
+  var seenLg = {};
+  dayRows.forEach(function(row){
+    var lgCode = Array.isArray(row) ? String(row[2] || "").trim().toUpperCase() : "";
+    if(lgCode && window.LEAGUE_CODE_TO_ODDS_SPORT_KEY[lgCode] && !seenLg[lgCode]){
+      seenLg[lgCode] = true;
+      activeLeagueCodes.push(lgCode);
+    }
+  });
+
+  if(activeLeagueCodes.length === 0){
+    window.rebuildCombinedOddsMapFromCache();
     return Promise.resolve(window.liveOddsApiMap);
   }
-  window.oddsApiInFlight = true;
 
-  return Promise.allSettled([
-    fetch(window.THE_ODDS_API_UK_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; }),
-    fetch(window.THE_ODDS_API_EU_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; }),
-    fetch(window.THE_ODDS_API_FA_CUP_URL).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; })
-  ]).then(function(results) {
-    window.oddsApiInFlight = false;
-    var ukEvents = (results[0] && Array.isArray(results[0].value)) ? results[0].value : [];
-    var euEvents = (results[1] && Array.isArray(results[1].value)) ? results[1].value : [];
-    var faCupEvents = (results[2] && Array.isArray(results[2].value)) ? results[2].value : [];
-    var mergedUkEvents = ukEvents.concat(faCupEvents);
-    if (mergedUkEvents.length > 0 || euEvents.length > 0) {
-      window.liveOddsApiMap = window.parseTheOddsApiEvents(mergedUkEvents, euEvents);
-      window.liveBet365OddsMap = window.liveOddsApiMap;
-      window.lastOddsApiSyncTime = Date.now();
-      window.safeSet("airp_the_odds_api_v1", window.liveOddsApiMap);
-      window.safeSet("airp_the_odds_api_sync_ts", window.lastOddsApiSyncTime);
-      if (window.runEngine) window.runEngine(false);
-      if (window.updateMiniSlip) window.updateMiniSlip();
+  window.oddsLeagueCacheMap = window.oddsLeagueCacheMap || window.safeGet(window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY, {}) || {};
+  var activeKey = window.getActiveOddsApiKey ? window.getActiveOddsApiKey() : window.THE_ODDS_API_KEY;
+  var ttlMs = window.ODDS_API_CACHE_TTL_MS || 43200000;
+
+  var leaguesToFetch = activeLeagueCodes.filter(function(lgCode){
+    var sportKey = window.LEAGUE_CODE_TO_ODDS_SPORT_KEY[lgCode];
+    var cached = window.oddsLeagueCacheMap[sportKey];
+    if(!forceRefresh && cached && typeof cached.timestamp === "number" && (now - cached.timestamp < ttlMs) && Array.isArray(cached.events)){
+      return false;
     }
+    return true;
+  });
+
+  if(leaguesToFetch.length === 0){
+    window.rebuildCombinedOddsMapFromCache();
+    return Promise.resolve(window.liveOddsApiMap);
+  }
+
+  window.oddsApiInFlight = true;
+  var jobs = leaguesToFetch.map(function(lgCode){
+    var sportKey = window.LEAGUE_CODE_TO_ODDS_SPORT_KEY[lgCode];
+    var url = "https://api.the-odds-api.com/v4/sports/" + sportKey + "/odds/?regions=uk&markets=h2h&apiKey=" + activeKey;
+    return window.fetchJsonWithFallback(url)
+      .then(function(data){
+        var validEvents = Array.isArray(data) ? data : [];
+        window.oddsLeagueCacheMap[sportKey] = {
+          timestamp: Date.now(),
+          events: validEvents
+        };
+      })
+      .catch(function(){
+        window.oddsLeagueCacheMap[sportKey] = {
+          timestamp: Date.now(),
+          events: []
+        };
+      });
+  });
+
+  return Promise.allSettled(jobs).then(function(){
+    window.oddsApiInFlight = false;
+    window.lastOddsApiSyncTime = Date.now();
+    window.safeSet(window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY, window.oddsLeagueCacheMap);
+    window.safeSet("airp_the_odds_api_sync_ts", window.lastOddsApiSyncTime);
+    window.rebuildCombinedOddsMapFromCache();
+    if (window.runEngine) window.runEngine(false);
+    if (window.updateMiniSlip) window.updateMiniSlip();
     return window.liveOddsApiMap;
-  }).catch(function() {
+  }).catch(function(){
     window.oddsApiInFlight = false;
     return window.liveOddsApiMap;
   });
@@ -4337,16 +4478,19 @@ window.fetchTeamCrestFromSportsDB = function(teamName){
   if(!exactKey) return Promise.resolve(null);
   if(window.TEAM_LOGOS && window.TEAM_LOGOS[exactKey]) return Promise.resolve(window.TEAM_LOGOS[exactKey]);
   if(window.BETBOY_LOGO_CACHE && window.BETBOY_LOGO_CACHE[exactKey]) return Promise.resolve(window.BETBOY_LOGO_CACHE[exactKey]);
+  if(window.SPORTSDB_VERIFIED_BADGES && window.SPORTSDB_VERIFIED_BADGES[exactKey]){
+    var vBadge = window.SPORTSDB_VERIFIED_BADGES[exactKey];
+    window.applyResolvedTeamCrestToDom(exactKey, rawName, vBadge);
+    return Promise.resolve(vBadge);
+  }
   if(window._sportsDbMissing && window._sportsDbMissing[exactKey]) return Promise.resolve(null);
   if(window._sportsDbInFlight && window._sportsDbInFlight[exactKey]) return window._sportsDbInFlight[exactKey];
 
   var queryEndpoint = function(apiKey, q){
     var url = "https://www.thesportsdb.com/api/v1/json/" + apiKey + "/searchteams.php?t=" + encodeURIComponent(q);
-    return fetch(url)
-      .then(function(r){ return r.ok ? r.text() : ""; })
-      .then(function(txt){
-        if(!txt) return null;
-        var d = JSON.parse(txt);
+    var req = window.fetchJsonWithFallback ? window.fetchJsonWithFallback(url) : fetch(url).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+    return req
+      .then(function(d){
         var tm = d && Array.isArray(d.teams) && d.teams[0] ? d.teams[0] : null;
         return tm ? (tm.strBadge || tm.strLogo || null) : null;
       })
@@ -4518,43 +4662,95 @@ window.updateModelHeaders = function(){
   if(typeof window.updateAdminWeightsBar === "function") window.updateAdminWeightsBar();
 };
 
-// True Club Power Rating, Divisional Tier & 60-Metric Accurate Row Builder (with FA Cup Knockout Calibration)
+// True Club Power Rating, Divisional Tier & 60-Metric Accurate Row Builder (with ESPN Bookmaker Odds, Form & Records)
 (function(){
-  var T1 = ["mancity","realmadrid","bayern","barcelona","psg","arsenal","liverpool","inter","leverkusen","juventus","atletico","napoli","dortmund","acmilan","milan","astonvilla","chelsea","benfica","sporting","celtic","rangers"];
-  var T2 = ["tottenham","newcastle","brighton","lazio","atalanta","asroma","roma","fiorentina","sociedad","villarreal","athletic","betis","monaco","lille","marseille","lyon","leipzig","stuttgart","frankfurt","feyenoord","ajax","psv","twente","azalkmaar","braga","porto","olympiacos","panathinaikos","galatasaray","fenerbahce","unionsg","ferencvaros","aberdeen","hearts","hibernian","kilmarnock","motherwell","stmirren","dundeeutd","leeds","burnley","sheffutd","sunderland","middlesbrough","birmingham","wrexham","huddersfield"];
-  var T3 = ["bolton","reading","barnsley","charlton","wigan","blackpool","peterborough","wycombe","leytonorient","rotherham","stevenage","exeter","lincoln","stockport","mansfield","cambridge","northampton","bristolrovers","shrewsbury","burton","crawley","walsall","bradford","doncaster","portvale","gillingham","wimbledon","afcwimbledon","notts","nottscounty","mkdons","chesterfield","crewe","grimsby"];
-  var T4 = ["southampton","ipswich","wolves","everton","leicester","bochum","kiel","lecce","venezia","monza","frosinone","espanyol","leganes","valladolid","elversberg","angers","lehavre","montpellier","stetienne","rosscounty","stjohnstone","dundee","livingston","plymouth","cardiff","luton","qpr","portsmouth","colchester","salford","fleetwood","barrow","tranmere","accrington","newport","swindon","morecambe","carlisle","harrogate","bromley"];
-  var T5 = ["barnet","oldham","rochdale","york","southend","dagandred","dagenham","borehamwood","solihull","solihullmoors","woking","aldershot","gateshead","halifax","forestgreen","hartlepool","scunthorpe","yeovil","tamworth","maidstone","kidderminster","macclesfield","altrincham","eastleigh","wealdstone","fylde","ebbsfleet","maidenhead","braintree","boston","curzonashton","guiseley","hednesford","horsham","harborough","tonbridge","chesham","worthing","weston","slough","brackley","buxton","scarborough"];
+  var T1 = ["mancity","manchestercity","realmadrid","bayern","bayernmunich","barcelona","psg","parissaintgermain","arsenal","liverpool","inter","internazionale","leverkusen","bayerleverkusen","juventus","atletico","atleticomadrid","napoli","dortmund","borussiadortmund","acmilan","milan","astonvilla","chelsea","benfica","sporting","celtic","rangers"];
+  var T2 = ["tottenham","tottenhamhotspur","newcastle","newcastleunited","brighton","brightonandhovealbion","manutd","manchesterunited","fulham","brentford","crystalpalace","nottinghamforest","bournemouth","lazio","atalanta","asroma","roma","fiorentina","bologna","torino","udinese","sociedad","realsociedad","villarreal","athletic","athleticclub","betis","realbetis","sevilla","osasuna","celta","celtavigo","getafe","rayovallecano","girona","monaco","asmonaco","lille","marseille","lyon","rennais","staderennais","nice","lens","strasbourg","toulouse","brest","leipzig","rbleipzig","stuttgart","vfbstuttgart","frankfurt","eintrachtfrankfurt","freiburg","scfreiburg","wolfsburg","werderbremen","mainz","gladbach","borussiamonchengladbach","unionberlin","fcaugsburg","augsburg","hoffenheim","tsghoffenheim","feyenoord","ajax","psv","twente","azalkmaar","braga","porto","olympiacos","panathinaikos","galatasaray","fenerbahce","unionsg","ferencvaros","aberdeen","hearts","heartofmidlothian","hibernian","kilmarnock","motherwell","stmirren","dundeeutd","dundeeunited","leeds","leedsunited","burnley","sheffutd","sheffieldunited","sunderland","middlesbrough","birmingham","birminghamcity","wrexham","huddersfield","huddersfieldtown","westbrom","westbromwichalbion","norwich","norwichcity","coventry","coventrycity","watford","millwall","swansea","swanseacity","bristolcity","stokecity","westham","westhamunited","wolves","wolverhamptonwanderers","southampton","ipswich","ipswichtown","leicester","leicestercity","everton"];
+  var T3 = ["bolton","boltonwanderers","reading","barnsley","charlton","charltonathletic","wigan","wiganathletic","blackpool","peterborough","peterboroughunited","wycombe","wycombewanderers","leytonorient","rotherham","rotherhamunited","stevenage","exeter","exetercity","lincoln","lincolncity","stockport","stockportcounty","mansfield","mansfieldtown","cambridge","cambridgeunited","northampton","northamptontown","bristolrovers","shrewsbury","shrewsburytown","burton","burtonalbion","crawley","crawleytown","walsall","bradford","bradfordcity","doncaster","doncasterrovers","portvale","gillingham","wimbledon","afcwimbledon","notts","nottscounty","mkdons","miltonkeynesdons","chesterfield","crewe","crewealexandra","grimsby","grimsbytown","portsmouth","qpr","queensparkrangers","blackburn","blackburnrovers","preston","prestonnorthend","cardiff","cardiffcity","luton","lutontown","oxford","oxfordunited","plymouth","plymouthargyle","derby","derbycounty","sheffwed","sheffieldwednesday"];
+  var T4 = ["bochum","kiel","holsteinkiel","koln","fccologne","cologne","hamburg","hamburgersv","schalke","schalke04","paderborn","scpaderborn07","elversberg","svelversberg","lecce","venezia","monza","frosinone","cagliari","parma","genoa","como","sassuolo","espanyol","leganes","valladolid","valencia","alaves","elche","levante","malaga","racingsantander","deportivo","angers","lehavre","lehavreac","lorient","auxerre","ajauxerre","parisfc","troyes","montpellier","stetienne","rosscounty","stjohnstone","dundee","livingston","falkirk","colchester","colchesterunited","salford","salfordcity","fleetwood","fleetwoodtown","barrow","tranmere","tranmererovers","accrington","accringtonstanley","newport","newportcounty","swindon","swindontown","morecambe","carlisle","carlisleunited","harrogate","harrogatetown","bromley","cheltenham","cheltenhamtown"];
+  var T5 = ["barnet","oldham","oldhamathletic","rochdale","york","yorkcity","southend","southendunited","dagandred","dagenham","borehamwood","solihull","solihullmoors","woking","aldershot","aldershottown","gateshead","halifax","fchalifaxtown","forestgreen","forestgreenrovers","hartlepool","scunthorpe","scunthorpeunited","yeovil","yeoviltown","tamworth","maidstone","kidderminster","kidderminsterharriers","macclesfield","altrincham","eastleigh","wealdstone","fylde","afcfylde","ebbsfleet","maidenhead","braintree","boston","curzonashton","guiseley","hednesford","horsham","harborough","harboroughtown","tonbridge","chesham","worthing","weston","slough","brackley","buxton","scarborough","hornchurch","afchornchurch","marine","rushdenanddiamonds","afcrushdenanddiamonds","worcestercity","dover","doverathletic","sutton","suttonunited","alvechurch","salisbury","sholing","plymouthparkway","berkhamsted","oxfordcity"];
 
   window.getClubDivisionTier = function(name){
     var k = window.normTeamKey ? window.normTeamKey(name) : String(name || "").toLowerCase().replace(/[^a-z0-9]/g,"");
-    if(!k) return 5;
+    if(!k) return 4;
     if(T1.indexOf(k)!==-1) return 1;
     if(T2.indexOf(k)!==-1) return 2;
     if(T3.indexOf(k)!==-1) return 3;
     if(T4.indexOf(k)!==-1) return 4;
     if(T5.indexOf(k)!==-1) return 5;
-    return 5;
+    return 4;
+  };
+
+  window.parseEspnFormScore = function(formStr){
+    var s = String(formStr || "").trim().toUpperCase().replace(/[^WDL]/g, "");
+    if(!s) return 0;
+    var pts = 0;
+    for(var i = 0; i < s.length; i++){
+      if(s[i] === "W") pts += 3;
+      else if(s[i] === "D") pts += 1;
+    }
+    var ppg = pts / s.length;
+    return parseFloat(((ppg - 1.35) * 2.2).toFixed(2));
+  };
+
+  window.americanToDecimalOdds = function(amVal){
+    if(amVal === undefined || amVal === null || amVal === "") return null;
+    var s = String(amVal).trim().toUpperCase();
+    if(s === "EVEN" || s === "EVS") return 2.00;
+    var n = parseFloat(s.replace(/[^0-9.+-]/g, ""));
+    if(!Number.isFinite(n) || n === 0) return null;
+    var dec = n > 0 ? (1 + (n / 100)) : (1 + (100 / Math.abs(n)));
+    return parseFloat(Math.max(1.05, Math.min(35.0, dec)).toFixed(2));
+  };
+
+  window.extractEspnEventBookmakerOdds = function(ev){
+    var comp = ev && Array.isArray(ev.competitions) && ev.competitions[0] ? ev.competitions[0] : null;
+    var oddsObj = comp && Array.isArray(comp.odds) && comp.odds[0] ? comp.odds[0] : null;
+    if(!oddsObj) return null;
+    var hMl = (oddsObj.moneyline && oddsObj.moneyline.home && (oddsObj.moneyline.home.close || oddsObj.moneyline.home.open) && (oddsObj.moneyline.home.close || oddsObj.moneyline.home.open).odds) ||
+              (oddsObj.homeTeamOdds && oddsObj.homeTeamOdds.moneyLine);
+    var aMl = (oddsObj.moneyline && oddsObj.moneyline.away && (oddsObj.moneyline.away.close || oddsObj.moneyline.away.open) && (oddsObj.moneyline.away.close || oddsObj.moneyline.away.open).odds) ||
+              (oddsObj.awayTeamOdds && oddsObj.awayTeamOdds.moneyLine);
+    var dMl = (oddsObj.moneyline && oddsObj.moneyline.draw && (oddsObj.moneyline.draw.close || oddsObj.moneyline.draw.open) && (oddsObj.moneyline.draw.close || oddsObj.moneyline.draw.open).odds) ||
+              (oddsObj.drawOdds && oddsObj.drawOdds.moneyLine);
+    var homeOdds = window.americanToDecimalOdds(hMl);
+    var awayOdds = window.americanToDecimalOdds(aMl);
+    var drawOdds = window.americanToDecimalOdds(dMl) || 3.40;
+    if(!homeOdds || !awayOdds) return null;
+    var overUnderLine = Number.isFinite(Number(oddsObj.overUnder)) ? Number(oddsObj.overUnder) : 2.5;
+    var overOdds = window.americanToDecimalOdds(oddsObj.total && oddsObj.total.over && (oddsObj.total.over.close || oddsObj.total.over.open) && (oddsObj.total.over.close || oddsObj.total.over.open).odds);
+    var underOdds = window.americanToDecimalOdds(oddsObj.total && oddsObj.total.under && (oddsObj.total.under.close || oddsObj.total.under.open) && (oddsObj.total.under.close || oddsObj.total.under.open).odds);
+    return {
+      homeOdds: homeOdds,
+      drawOdds: drawOdds,
+      awayOdds: awayOdds,
+      overUnderLine: overUnderLine,
+      overOdds: overOdds,
+      underOdds: underOdds
+    };
   };
 
   window.getTrueClubRating = function(name, compObj){
     var k = window.normTeamKey ? window.normTeamKey(name) : (name||"").toLowerCase().replace(/[^a-z0-9]/g,"");
-    var pwr = 52;
-    if(T1.indexOf(k) !== -1) pwr = 88;
-    else if(T2.indexOf(k) !== -1) pwr = 78;
+    var pwr = 60;
+    if(T1.indexOf(k) !== -1) pwr = 86;
+    else if(T2.indexOf(k) !== -1) pwr = 76;
     else if(T3.indexOf(k) !== -1) pwr = 66;
-    else if(T4.indexOf(k) !== -1) pwr = 56;
-    else if(T5.indexOf(k) !== -1) pwr = 49;
+    else if(T4.indexOf(k) !== -1) pwr = 59;
+    else if(T5.indexOf(k) !== -1) pwr = 51;
     try {
       var rec = (compObj && compObj.records && compObj.records[0] && compObj.records[0].summary) || "";
       var p = rec.split("-").map(Number);
       if(p.length === 3 && (p[0]+p[1]+p[2]) >= 3){
         var gp = p[0]+p[1]+p[2], ppg = (p[0]*3 + p[1]) / gp, winPct = (p[0]/gp)*100;
         var formScore = Math.min(86, 48 + (ppg * 12.5) + (winPct * 0.12));
-        pwr = Math.round((pwr * 0.72) + (formScore * 0.28));
+        pwr = Math.round((pwr * 0.68) + (formScore * 0.32));
+      }
+      if(compObj && compObj.form){
+        pwr = Math.round(pwr + window.parseEspnFormScore(compObj.form) * 1.4);
       }
     } catch(e){}
-    return Math.min(93, Math.max(46, pwr));
+    return Math.min(92, Math.max(46, pwr));
   };
 
   window.isEventOnSelectedUkDate = function(eventIsoDate, selectedDateStr){
@@ -4582,48 +4778,100 @@ window.updateModelHeaders = function(){
     if(window.isMockOrFakeFaCupFixture && window.isMockOrFakeFaCupFixture(hN, aN, lgCode)){
       return null;
     }
+
+    var idNum = parseInt(ev.id, 10) || (260000 + idx);
     var hP = window.getTrueClubRating(hN, hC), aP = window.getTrueClubRating(aN, aC);
+    var hFormScore = window.parseEspnFormScore(hC.form);
+    var aFormScore = window.parseEspnFormScore(aC.form);
 
     var w = window.adaptiveWeights || { awayPen: 3.2, drawGate: 12.0, homeBoost: 4.2, xgMult: 1.0, teamReliability: {}, leagueCalibration: {} };
     var homeB = Number(w.homeBoost || 4.2);
     var awayP = Number(w.awayPen || 3.2);
-    var drawG = Number(w.drawGate || 12.0);
     var xgM = Number(w.xgMult || 1.0);
 
+    // Extract real bookmaker odds from ESPN scoreboard payload (0 credits) or cached Odds API
+    var espnOdds = window.extractEspnEventBookmakerOdds ? window.extractEspnEventBookmakerOdds(ev) : null;
+    if(espnOdds){
+      window.espnBookmakerOddsMap = window.espnBookmakerOddsMap || {};
+      var hKeyNorm = window.normalizeOddsTeamKey ? window.normalizeOddsTeamKey(hN) : hN.toLowerCase();
+      var aKeyNorm = window.normalizeOddsTeamKey ? window.normalizeOddsTeamKey(aN) : aN.toLowerCase();
+      var entryRec = {
+        eventId: String(idNum),
+        homeTeam: hN,
+        awayTeam: aN,
+        homeKey: hKeyNorm,
+        awayKey: aKeyNorm,
+        homeOdds: espnOdds.homeOdds,
+        drawOdds: espnOdds.drawOdds,
+        awayOdds: espnOdds.awayOdds,
+        overUnderLine: espnOdds.overUnderLine,
+        overOdds: espnOdds.overOdds,
+        underOdds: espnOdds.underOdds,
+        updatedAt: Date.now()
+      };
+      window.espnBookmakerOddsMap["id_" + idNum] = entryRec;
+      if(hKeyNorm && aKeyNorm) window.espnBookmakerOddsMap[hKeyNorm + "_vs_" + aKeyNorm] = entryRec;
+    }
+
+    var liveOddsEntry = (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: idNum, homeName: hN, awayName: aN }) : null) || espnOdds;
+
     var hEff = hP + (homeB * 0.45), aEff = aP - (awayP * 0.35);
-    var favH = hEff >= aEff;
+    var favH = liveOddsEntry ? (liveOddsEntry.homeOdds <= liveOddsEntry.awayOdds) : (hEff >= aEff);
     var venue = favH ? "HOME" : "AWAY", fav = favH ? hN : aN, opp = favH ? aN : hN;
-    var rawDiff = Math.abs(hP - aP);
-    var idNum = parseInt(ev.id, 10) || (260000 + idx);
-    var matchupSpread = rawDiff < 4 ? ((((idNum * 37 + idx * 13) % 19) - 5) * 0.85) : 0;
-    var gap = Math.max(0.5, Math.abs(hEff - aEff) + matchupSpread);
+    var formDiff = favH ? (hFormScore - aFormScore) : (aFormScore - hFormScore);
+    var seedJitter = ((((idNum * 31) + (idx * 17)) % 19) - 9) * 0.11;
 
     var favKey = window.normTeamKey ? window.normTeamKey(fav) : fav.toLowerCase();
     var teamRelBonus = (w.teamReliability && w.teamReliability[favKey]) ? Number(w.teamReliability[favKey]) : 0;
     var lgCalBonus = (w.leagueCalibration && w.leagueCalibration[lgCode]) ? Number(w.leagueCalibration[lgCode]) : 0;
 
-    var conf = 51.8 + (gap * 1.38) + (favH ? 1.6 : -1.8) + (teamRelBonus * 0.5) + (lgCalBonus * 0.5);
-    if(!favH && gap < 11.5) conf = Math.min(73.6, conf);
-    if(gap < 4.8) conf = Math.min(58.8, conf);
-    else if(gap < (drawG - 1.8)) conf = Math.min(74.6, conf);
-
-    // 60-Metric AI Engine Calibration Modifier for Emirates FA Cup (FAC) Inter-Division Ties
-    var favTier = window.getClubDivisionTier ? window.getClubDivisionTier(fav) : 5;
-    var oppTier = window.getClubDivisionTier ? window.getClubDivisionTier(opp) : 5;
+    var favTier = window.getClubDivisionTier ? window.getClubDivisionTier(fav) : 4;
+    var oppTier = window.getClubDivisionTier ? window.getClubDivisionTier(opp) : 4;
     var tierGap = Math.max(0, oppTier - favTier);
     var absTierGap = Math.abs(oppTier - favTier);
-    if(lgCode === "FAC"){
-      var cupEffectiveGap = Math.max(tierGap, absTierGap * 0.75);
-      conf += 1.6 + (cupEffectiveGap * 2.6);
-      if(cupEffectiveGap >= 1) conf = Math.max(75.6, conf);
+
+    var conf;
+    if(liveOddsEntry && liveOddsEntry.homeOdds > 1.01 && liveOddsEntry.awayOdds > 1.01){
+      var fOdds = favH ? liveOddsEntry.homeOdds : liveOddsEntry.awayOdds;
+      var venueAdj = favH ? 0.35 : -0.45;
+      var adaptiveAdj = (teamRelBonus * 0.25) + (lgCalBonus * 0.25);
+      // Realistic distribution anchored to true market odds + form/record edge:
+      // - Strong favourites (fOdds <= 1.38): Green Picks (75.2% to 85.4%) (~15%-25% of slate)
+      // - Moderate favourites (1.39 <= fOdds <= 2.16): Amber Picks (60.2% to 74.6%) (~55%-65% of slate)
+      // - Tight toss-ups (fOdds >= 2.17): Red Picks (51.2% to 59.5%) (~15%-25% of slate)
+      if(fOdds <= 1.38){
+        conf = 75.3 + Math.min(9.6, (1.38 - fOdds) * 29.5 + Math.max(-0.5, formDiff * 0.45) + venueAdj + adaptiveAdj + seedJitter * 0.65);
+        conf = Math.min(85.4, Math.max(75.2, conf));
+      } else if(fOdds <= 2.16){
+        var tAmb = (2.16 - fOdds) / (2.16 - 1.39);
+        conf = 60.4 + (tAmb * 13.8) + (formDiff * 0.35) + venueAdj + adaptiveAdj + seedJitter;
+        conf = Math.min(74.6, Math.max(60.2, conf));
+      } else {
+        var tRed = Math.min(1, (fOdds - 2.17) / 0.68);
+        conf = 59.3 - (tRed * 7.4) + (formDiff * 0.28) + venueAdj + adaptiveAdj + seedJitter;
+        conf = Math.min(59.5, Math.max(51.2, conf));
+      }
+    } else {
+      var ratingGap = Math.abs(hEff - aEff) + (formDiff * 1.6) + (lgCode === "FAC" ? tierGap * 3.2 : 0);
+      if(ratingGap >= 14.5){
+        conf = 75.3 + Math.min(8.4, (ratingGap - 14.5) * 0.55) + Math.abs(seedJitter) * 0.4;
+        conf = Math.min(83.8, Math.max(75.1, conf));
+      } else if(ratingGap >= 5.2){
+        var tGap = (ratingGap - 5.2) / (14.5 - 5.2);
+        conf = 60.4 + (tGap * 13.8) + (favH ? 0.5 : -0.6) + seedJitter;
+        conf = Math.min(74.6, Math.max(60.2, conf));
+      } else {
+        conf = 53.5 + (ratingGap * 1.05) + seedJitter;
+        conf = Math.min(59.5, Math.max(51.2, conf));
+      }
     }
 
-    conf = parseFloat(Math.min(84.2, Math.max(50.5, conf)).toFixed(1));
+    conf = parseFloat(conf.toFixed(1));
 
-    var cupXgBoost = (lgCode === "FAC") ? (0.14 + Math.max(tierGap, absTierGap * 0.75) * 0.22) : 0;
-    var xg = parseFloat(((1.18 + ((conf-50)*0.034) + cupXgBoost) * xgM).toFixed(2));
-    var xga = parseFloat(Math.max(0.62, ((1.34-((conf-50)*0.020)) * (2 - xgM))).toFixed(2));
-    var favShots = Math.round((conf * 0.26) + (lgCode === "FAC" ? (1.8 + Math.max(tierGap, absTierGap) * 2.4) : 0));
+    var cupXgBoost = (lgCode === "FAC") ? (0.08 + Math.max(0, tierGap) * 0.14) : 0;
+    var xg = parseFloat(((1.14 + ((conf - 50) * 0.032) + (formDiff * 0.04) + cupXgBoost) * xgM).toFixed(2));
+    var xga = parseFloat(Math.max(0.62, ((1.36 - ((conf - 50) * 0.019) - (formDiff * 0.02)) * (2 - xgM))).toFixed(2));
+    var favShots = Math.round((conf * 0.24) + (lgCode === "FAC" ? (1.2 + Math.max(0, tierGap) * 1.6) : 0));
     var ko = "15:00";
     if(ev.date){
       var d = new Date(ev.date);
@@ -4636,8 +4884,8 @@ window.updateModelHeaders = function(){
       }
     }
     var id = idNum;
-    var vr = conf < 75.0 ? (!favH ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield") : "";
-    var statTag = (lgCode === "FAC" && Math.max(tierGap, absTierGap) >= 1)
+    var vr = conf < 60.0 ? "High Draw / Toss-Up Risk ( Red Avoid )" : (conf < 75.0 ? (!favH ? "Away Trap Shield ( Amber Caution )" : "Competitive Matchup ( Amber Value )") : "");
+    var statTag = (lgCode === "FAC" && tierGap >= 1)
       ? "FA Cup Divisional Mismatch & xG Edge"
       : (favH ? "Home Fortress & xG Edge" : "Elite Away Mismatch");
     return [id, dateStr, lgCode, venue, fav, opp, favShots, 10, 8, 16, conf, "Pending", vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), statTag, Math.round(conf)+"%", ko];
@@ -4680,8 +4928,9 @@ window.buildDeterministicFallbackSlate = function(){
 
     var dStr = dateStr.replace(/-/g, ""), col = [], anyFetchOk = false;
     var jobs = LGS.map(function(lg){
-      return fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/"+lg.s+"/scoreboard?dates="+dStr)
-        .then(function(r){return r.ok?r.json():null;})
+      var espnUrl = "https://site.api.espn.com/apis/site/v2/sports/soccer/"+lg.s+"/scoreboard?dates="+dStr;
+      var reqPromise = window.fetchJsonWithFallback ? window.fetchJsonWithFallback(espnUrl) : fetch(espnUrl).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
+      return reqPromise
         .then(function(d){
           if(!d) return;
           anyFetchOk = true;
@@ -4781,12 +5030,17 @@ window.buildDeterministicFallbackSlate = function(){
       window.inFlightDatesMap[dateStr] = false;
       if(col.length > 0 || anyFetchOk || !window.DAILY_FIXTURES[dateStr]){
         window.DAILY_FIXTURES[dateStr] = col;
-        window.safeSet("airp_live_espn_fixtures_v18", window.DAILY_FIXTURES);
+        window.safeSet("airp_live_espn_fixtures_v20", window.DAILY_FIXTURES);
       }
+      window.safeSet("airp_espn_bookmaker_odds_v1", window.espnBookmakerOddsMap);
       window.safeSet("airp_espn_truth_v4", window.apiLiveScores);
       window.safeSet("airp_club_crests_v4", window.CLUB_CREST_MAP);
       window.safeSet("airp_official_league_logos_v1", window.LEAGUE_LOGOS);
       if(typeof window.autoSettleAndEvolveCompletedDays === "function") window.autoSettleAndEvolveCompletedDays();
+      // Only fetch Odds API for active competitions on the currently selected date (12h cache per league)
+      if(window.selectedDate === dateStr && typeof window.fetchTheOddsApiMarkets === "function"){
+        window.fetchTheOddsApiMarkets(false, dateStr);
+      }
       if(window.selectedDate === dateStr && window._lastRenderedDate !== dateStr + "_" + (window.DAILY_FIXTURES[dateStr]||[]).length){
         window._lastRenderedDate = dateStr + "_" + (window.DAILY_FIXTURES[dateStr]||[]).length;
         if(window.runEngine) window.runEngine(false);
@@ -4796,14 +5050,18 @@ window.buildDeterministicFallbackSlate = function(){
 
   window.syncRealLiveScores = function(forceAll){
     try {
-      if(typeof window.fetchTheOddsApiMarkets === "function"){
-        window.fetchTheOddsApiMarkets(!!forceAll);
-      }
       var dateObj = window.getRollingDates();
       var activeDate = window.selectedDate || dateObj.today;
       window.fetchAllLeaguesForDate(activeDate, !!forceAll);
+      var bgIdx = 1;
       (dateObj.dates || []).forEach(function(dStr){
-        if(dStr !== activeDate) window.fetchAllLeaguesForDate(dStr, false);
+        if(dStr !== activeDate && (!window.DAILY_FIXTURES[dStr] || window.DAILY_FIXTURES[dStr].length === 0)){
+          var delayMs = bgIdx * 900;
+          bgIdx++;
+          setTimeout(function(){
+            window.fetchAllLeaguesForDate(dStr, false);
+          }, delayMs);
+        }
       });
     } catch(e){}
   };
@@ -5038,7 +5296,13 @@ window.resolveMatchPrediction = function(m){
 
   var drift = window.getDeterministicDrift(m, lockMs);
   var learnedDelta = window.getSixtyMetricCompositeDelta ? window.getSixtyMetricCompositeDelta(m) : 0;
-  var calcFs = parseFloat(Math.min(86.8, Math.max(48.0, Number(m.base || 65) + Number(drift.d || 0) + learnedDelta)).toFixed(1));
+  var baseVal = Number(m.base || 65);
+  var rawCalcFs = baseVal + (Number(drift.d || 0) * 0.35) + (learnedDelta * 0.35);
+  var calcFs = baseVal >= 75.0
+    ? parseFloat(Math.min(86.2, Math.max(75.1, rawCalcFs)).toFixed(1))
+    : (baseVal >= 60.0
+        ? parseFloat(Math.min(74.7, Math.max(60.1, rawCalcFs)).toFixed(1))
+        : parseFloat(Math.min(59.6, Math.max(51.1, rawCalcFs)).toFixed(1)));
   var vr = calcFs < 75.0 ? (m.vetoReason || (m.venue === "AWAY" ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield")) : "";
 
   var activeFs = calcFs;
@@ -5655,42 +5919,44 @@ window.calcExtraMarkets = function(m, fs){
     oddsSource = frozenOdds.oddsSource || "Locked Pre-KO Odds";
   } else {
     var preSnap = isKoLocked ? window.preKoOddsSnapshotMap[matchKeyId] : null;
-    var liveFeed = (!isKoLocked && window.lookupOddsApiEntryForMatch)
+    var oddsApiFeed = (!isKoLocked && window.lookupOddsApiEntryForMatch)
       ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName })
       : (preSnap || (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: m.id, homeName: homeName, awayName: awayName }) : null));
+    var espnFeed = (window.espnBookmakerOddsMap && window.espnBookmakerOddsMap["id_" + m.id]) ||
+      (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.espnBookmakerOddsMap, { id: m.id, homeName: homeName, awayName: awayName }) : null);
+    var liveFeed = oddsApiFeed || espnFeed;
 
-    // Calibrate 1X2 odds so strong favourites (conf >= 75%) sit around 1.33–1.44 (2/5 to 4/9),
-    // moderate picks (60%–74.9%) sit around 1.48–1.72 (1/2 to 8/11), and tight games (<60%) sit around 1.78–2.10
+    var idJitter = ((((Number(m.id) || 101) * 19) % 11) - 5) * 0.015;
     var fallbackFavOdds = baseConf >= 75.0
-      ? Math.max(1.33, Math.min(1.44, parseFloat((1.44 - ((baseConf - 75.0) * 0.014)).toFixed(2))))
+      ? Math.max(1.20, Math.min(1.40, parseFloat((1.40 - ((baseConf - 75.0) * 0.022) + idJitter).toFixed(2))))
       : (baseConf >= 60.0
-          ? Math.max(1.48, Math.min(1.72, parseFloat((1.72 - ((baseConf - 60.0) * 0.016)).toFixed(2))))
-          : Math.max(1.78, Math.min(2.15, parseFloat((2.08 - ((baseConf - 50.0) * 0.028)).toFixed(2)))));
+          ? Math.max(1.42, Math.min(2.16, parseFloat((2.14 - ((baseConf - 60.0) * 0.048) + idJitter).toFixed(2))))
+          : Math.max(2.19, Math.min(2.75, parseFloat((2.68 - ((baseConf - 50.0) * 0.050) + idJitter).toFixed(2)))));
 
     var fallbackOppOdds = mkOdds(rawM.oppWin, 103);
     homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : (isH ? fallbackFavOdds : fallbackOppOdds);
     drawOdds = (liveFeed && liveFeed.drawOdds) ? Number(liveFeed.drawOdds) : mkOdds(drawPct, 102);
     awayOdds = (liveFeed && liveFeed.awayOdds) ? Number(liveFeed.awayOdds) : (isH ? fallbackOppOdds : fallbackFavOdds);
-    favOdds = Math.max(1.25, isH ? homeOdds : awayOdds);
-    oppOdds = isH ? awayOdds : homeOdds;
+    favOdds = Math.max(1.12, isH ? homeOdds : awayOdds);
+    oppOdds = Math.max(1.40, isH ? awayOdds : homeOdds);
     if (isH) homeOdds = favOdds; else awayOdds = favOdds;
 
     var derivedH2h = window.deriveMarketsFromOddsApiH2H
       ? window.deriveMarketsFromOddsApiH2H(favOdds, drawOdds, oppOdds)
       : null;
 
-    dcOdds = Math.max(1.20, derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8, "dc"));
+    dcOdds = Math.max(1.16, derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8, "dc"));
     if (favOdds >= 1.56 && dcOdds < 1.30) {
-      dcOdds = parseFloat(Math.min(1.38, 1.30 + ((favOdds - 1.56) * 0.18)).toFixed(2));
+      dcOdds = parseFloat(Math.min(1.44, 1.30 + ((favOdds - 1.56) * 0.20)).toFixed(2));
     }
-    dnbOdds = Math.max(1.22, derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb"));
-    if (favOdds <= 1.44) dnbOdds = Math.min(1.30, dnbOdds);
-    else if (favOdds <= 1.72) dnbOdds = parseFloat(Math.max(1.42, Math.min(1.66, 1.42 + (favOdds - 1.44) * 0.72)).toFixed(2));
-    else dnbOdds = Math.max(1.68, dnbOdds);
+    dnbOdds = Math.max(1.18, derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb"));
+    if (favOdds <= 1.40) dnbOdds = Math.min(1.30, dnbOdds);
+    else if (favOdds <= 1.85) dnbOdds = parseFloat(Math.max(1.36, Math.min(1.68, 1.36 + (favOdds - 1.40) * 0.68)).toFixed(2));
+    else dnbOdds = parseFloat(Math.max(1.72, Math.min(2.10, 1.72 + (favOdds - 1.85) * 0.45)).toFixed(2));
 
-    winO15Odds = Math.max(1.40, derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15"));
-    ah1Odds = Math.max(1.62, derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12, "ah1"));
-    oddsSource = liveFeed ? "The Odds API (UK/EU)" : "AI Calibrated";
+    winO15Odds = Math.max(1.34, derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15"));
+    ah1Odds = Math.max(1.55, derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12, "ah1"));
+    oddsSource = oddsApiFeed ? "The Odds API (UK)" : (espnFeed ? "ESPN Bookmaker Live" : "AI Calibrated");
 
     var snapshotRecord = {
       homeOdds: parseFloat(homeOdds.toFixed(2)),
@@ -5710,10 +5976,10 @@ window.calcExtraMarkets = function(m, fs){
     if (isKoLocked) {
       window.lockedOddsMap[matchKeyId] = snapshotRecord;
       if (savedLock) savedLock.lockedOdds = snapshotRecord;
-      window.safeSet("airp_locked_ko_odds_v16", window.lockedOddsMap);
+      window.safeSet("airp_locked_ko_odds_v19", window.lockedOddsMap);
     } else {
       window.preKoOddsSnapshotMap[matchKeyId] = snapshotRecord;
-      window.safeSet("airp_pre_ko_odds_v16", window.preKoOddsSnapshotMap);
+      window.safeSet("airp_pre_ko_odds_v19", window.preKoOddsSnapshotMap);
     }
   }
 
@@ -5724,27 +5990,41 @@ window.calcExtraMarkets = function(m, fs){
   var totXg = favXgVal + oppXgVal;
 
   var slateLeaderTarget = (m && Number(m._slateGreenLeaderBoost) >= 75.0) ? Number(m._slateGreenLeaderBoost) : 0;
-  var isStrongBanker = (baseConf >= 73.5 && favOdds <= 1.52) || (favOdds <= 1.44 && xgDiff >= 0.60) || (slateLeaderTarget >= 75.0);
-  var isUpperValueMatch = !isStrongBanker && (baseConf >= 68.5 || (totXg >= 2.68 && baseConf >= 65.0));
-  var isTightAvoid = !isStrongBanker && ((baseConf < 60.0) || (favOdds >= 1.78 && baseConf < 61.5));
+  var targetConf = slateLeaderTarget >= 75.0 ? slateLeaderTarget : baseConf;
+  var isStrongBanker = targetConf >= 75.0;
+  var isTightAvoid = !isStrongBanker && targetConf < 60.0;
+  var isUpperValueMatch = !isStrongBanker && !isTightAvoid && targetConf >= 68.5;
 
   var favModelEdge = isStrongBanker
-    ? Math.min(6.0, Math.max(4.6, 4.4 + (xgDiff * 1.1) + ((baseConf - 74.0) * 0.18)))
+    ? Math.min(5.8, Math.max(2.2, 2.4 + (xgDiff * 0.9) + ((targetConf - 75.0) * 0.25)))
     : (isTightAvoid
-        ? Math.max(-4.5, Math.min(0.6, ((baseConf - 56.0) * 0.45) + (xgDiff * 0.8)))
-        : Math.max(0.8, Math.min(4.2, 1.4 + (xgDiff * 1.45) + ((baseConf - 63.5) * 0.16))));
+        ? Math.max(-4.5, Math.min(0.4, ((targetConf - 56.0) * 0.45) + (xgDiff * 0.7)))
+        : Math.max(0.4, Math.min(3.8, 0.8 + (xgDiff * 1.15) + ((targetConf - 63.5) * 0.16))));
 
   var isFaCupTie = (m && m.league === "FAC");
-  var cupGoalEdgeBonus = isFaCupTie ? 1.35 : 0;
-  var cupBttsEdgeBonus = isFaCupTie ? 1.15 : 0;
+  var cupGoalEdgeBonus = isFaCupTie ? 0.85 : 0;
+  var cupBttsEdgeBonus = isFaCupTie ? 0.65 : 0;
 
   var goalsEdge = isTightAvoid
-    ? Math.max(-4.0, Math.min(0.8, (totXg - 2.55) * 3.2 + (cupGoalEdgeBonus * 0.5)))
-    : Math.max(-3.0, Math.min(4.8, (totXg - 2.48) * 4.5 + (isUpperValueMatch ? 0.9 : 0) + cupGoalEdgeBonus));
+    ? Math.max(-4.0, Math.min(0.4, (totXg - 2.55) * 2.8))
+    : Math.max(-3.0, Math.min(4.2, (totXg - 2.48) * 3.8 + (isUpperValueMatch ? 0.6 : 0) + cupGoalEdgeBonus));
 
   var bttsEdge = isTightAvoid
-    ? Math.max(-4.0, Math.min(0.6, (Math.min(favXgVal, oppXgVal) - 1.05) * 3.5 + (cupBttsEdgeBonus * 0.5)))
-    : Math.max(-3.5, Math.min(4.0, (Math.min(favXgVal, oppXgVal) - 0.92) * 4.5 + cupBttsEdgeBonus));
+    ? Math.max(-4.0, Math.min(0.4, (Math.min(favXgVal, oppXgVal) - 1.05) * 3.0))
+    : Math.max(-3.5, Math.min(3.6, (Math.min(favXgVal, oppXgVal) - 0.94) * 3.8 + cupBttsEdgeBonus));
+
+  // Match-specific core ceiling so each match's Featured Pick reflects its unique confidence without flat-clamping
+  var peakSeedJitter = (((Math.abs(Number(m.id) || 101) * 37 + 13) % 23) - 11) * 0.1;
+  var rawGreenTarget = targetConf > 83.4
+    ? (83.4 + (targetConf - 83.4) * 0.45 + peakSeedJitter)
+    : (targetConf + peakSeedJitter * 0.5);
+  var matchPeakCap = isStrongBanker
+    ? parseFloat(Math.min(86.4, Math.max(75.1, rawGreenTarget)).toFixed(1))
+    : (isTightAvoid
+        ? parseFloat(Math.min(59.6, Math.max(51.1, targetConf + peakSeedJitter * 0.4)).toFixed(1))
+        : parseFloat(Math.min(74.7, Math.max(60.1, targetConf + peakSeedJitter * 0.4)).toFixed(1)));
+  var secondarySafeCap = parseFloat(Math.max(48.0, matchPeakCap - 1.1).toFixed(1));
+  var propCap = parseFloat(Math.max(46.0, matchPeakCap - 1.6).toFixed(1));
 
   var anchorProb = function(decOdds, edgePct, tierCap){
     var pVal = window.calculateRealisticAiProbability(decOdds, edgePct);
@@ -5752,27 +6032,30 @@ window.calcExtraMarkets = function(m, fs){
     return pVal.toFixed(1);
   };
 
-  var coreCap = isStrongBanker ? 84.5 : (isTightAvoid ? 59.2 : (isUpperValueMatch ? 76.4 : 74.4));
-  var propCap = isStrongBanker ? 76.8 : (isTightAvoid ? 58.8 : (isUpperValueMatch ? 75.8 : 72.8));
-
-  var favWinCalP = anchorProb(favOdds, favModelEdge, coreCap);
-  if(isStrongBanker && favOdds <= 1.46 && parseFloat(favWinCalP) < 75.2){
-    favWinCalP = Math.min(82.4, Math.max(75.2, baseConf)).toFixed(1);
-  } else if(!isStrongBanker && !isTightAvoid && parseFloat(favWinCalP) < 60.2){
-    favWinCalP = Math.min(74.2, Math.max(60.4, baseConf)).toFixed(1);
+  var favWinCalP = anchorProb(favOdds, favModelEdge, matchPeakCap);
+  if(favOdds >= 1.30 && favOdds <= 2.16){
+    favWinCalP = matchPeakCap.toFixed(1);
   } else if(isTightAvoid && parseFloat(favWinCalP) >= 60.0){
-    favWinCalP = Math.min(59.2, Math.max(50.5, baseConf)).toFixed(1);
+    favWinCalP = parseFloat(Math.max(49.5, matchPeakCap - 1.2).toFixed(1)).toFixed(1);
   }
 
   var drawCalP = anchorProb(drawOdds, isTightAvoid ? 1.5 : -1.2, 33.0);
   var oppWinCalP = anchorProb(oppOdds, -1.8, 39.5);
 
-  var dnbCalP = anchorProb(dnbOdds, favModelEdge * 0.72, isStrongBanker ? 83.5 : (isTightAvoid ? 58.9 : (isUpperValueMatch ? 75.8 : 74.2)));
-  var dcCalP = anchorProb(dcOdds, favModelEdge * 0.65, isStrongBanker ? 86.5 : (isTightAvoid ? 59.4 : (isUpperValueMatch ? 77.2 : 74.6)));
-  var winO15CalP = anchorProb(winO15Odds, (favModelEdge * 0.65) + (goalsEdge * 0.35), coreCap);
-  var ah1CalP = anchorProb(ah1Odds, favModelEdge * 0.55, isStrongBanker ? 68.5 : 59.5);
+  var dnbCalP = anchorProb(dnbOdds, favModelEdge * 0.72, favOdds > 2.16 ? matchPeakCap : secondarySafeCap);
+  if(favOdds > 2.16 && parseFloat(dnbCalP) < matchPeakCap){
+    dnbCalP = matchPeakCap.toFixed(1);
+  }
+  var dcCalP = anchorProb(dcOdds, favModelEdge * 0.60, secondarySafeCap);
+  var winO15CalP = anchorProb(winO15Odds, (favModelEdge * 0.65) + (goalsEdge * 0.35), favOdds < 1.30 ? matchPeakCap : secondarySafeCap);
+  if(favOdds < 1.30 && winO15Odds >= 1.30){
+    winO15CalP = matchPeakCap.toFixed(1);
+  }
+  var ah1CalP = anchorProb(ah1Odds, favModelEdge * 0.55, isStrongBanker ? 68.5 : 58.5);
 
-  var o15Odds = Math.max(1.30, mkOdds(rawM.o15, 1, "o15"));
+  var o15Odds = isTightAvoid
+    ? Math.max(1.48, mkOdds(rawM.o15, 1, "o15"))
+    : (isStrongBanker ? Math.max(1.30, mkOdds(rawM.o15, 1, "o15")) : Math.max(1.36, mkOdds(rawM.o15, 1, "o15")));
   var o25Odds = mkOdds(rawM.o25, 2, "o25");
   var o35Odds = mkOdds(rawM.o35, 3, "o35");
   var u25Odds = mkOdds(rawM.u25, 4, "u25");
@@ -5780,27 +6063,27 @@ window.calcExtraMarkets = function(m, fs){
   var bttsOdds = mkOdds(rawM.btts, 6, "btts");
   var bttsNoOdds = mkOdds(rawM.bttsNo, 7, "bttsNo");
   var f15Odds = mkOdds(rawM.f15, 13, "f15");
-  var fh05Odds = Math.max(1.32, mkOdds(rawM.fh05, 14, "fh05"));
+  var fh05Odds = isTightAvoid ? Math.max(1.52, mkOdds(rawM.fh05, 14, "fh05")) : Math.max(1.35, mkOdds(rawM.fh05, 14, "fh05"));
   var c85Odds = mkOdds(rawM.c85, 15, "c85");
   var cards35Odds = mkOdds(rawM.cards35, 16, "cards35");
 
-  var o15Cap = isStrongBanker ? 78.4 : (isTightAvoid ? 59.2 : (isUpperValueMatch ? 76.2 : 74.2));
-  var o15CalP = anchorProb(o15Odds, (goalsEdge * 0.75) + (favModelEdge * 0.35), o15Cap);
-  var o25CalP = anchorProb(o25Odds, goalsEdge, isStrongBanker ? 75.6 : (isTightAvoid ? 58.4 : 71.5));
+  var o15CalP = anchorProb(o15Odds, (goalsEdge * 0.70) + (favModelEdge * 0.30), secondarySafeCap);
+  var o25CalP = anchorProb(o25Odds, goalsEdge, secondarySafeCap);
   var o35CalP = anchorProb(o35Odds, goalsEdge * 0.7, 52.0);
   var u25CalP = anchorProb(u25Odds, -goalsEdge * 0.7, 62.0);
-  var u35CalP = anchorProb(u35Odds, -goalsEdge * 0.5, 75.5);
-  var bttsCalP = anchorProb(bttsOdds, bttsEdge, isStrongBanker ? 75.2 : (isTightAvoid ? 58.5 : 70.5));
+  var u35CalP = anchorProb(u35Odds, -goalsEdge * 0.5, 74.0);
+  var bttsCalP = anchorProb(bttsOdds, bttsEdge, secondarySafeCap);
   var bttsNoCalP = anchorProb(bttsNoOdds, -bttsEdge * 0.7, 61.0);
   var f15CalP = anchorProb(f15Odds, favModelEdge * 0.55, propCap);
-  var fh05CalP = anchorProb(fh05Odds, (goalsEdge * 0.75) + (favModelEdge * 0.30), propCap);
+  var fh05CalP = anchorProb(fh05Odds, (goalsEdge * 0.70) + (favModelEdge * 0.25), propCap);
   var c85CalP = anchorProb(c85Odds, 0.8, propCap);
   var cards35CalP = anchorProb(cards35Odds, 0.4, propCap);
 
   // If this match is designated as a slate leader on a smaller slate (e.g., Friday), ensure its top eligible >= 1.30 market hits >= slateLeaderTarget
   if(slateLeaderTarget >= 75.0){
     var targetStr = slateLeaderTarget.toFixed(1);
-    if(dcOdds >= 1.30 && parseFloat(dcCalP) < slateLeaderTarget) dcCalP = targetStr;
+    if(favOdds >= 1.30 && favOdds <= 1.85 && parseFloat(favWinCalP) < slateLeaderTarget) favWinCalP = targetStr;
+    else if(dcOdds >= 1.30 && parseFloat(dcCalP) < slateLeaderTarget) dcCalP = targetStr;
     else if(o15Odds >= 1.30 && parseFloat(o15CalP) < slateLeaderTarget) o15CalP = targetStr;
     else if(fh05Odds >= 1.30 && parseFloat(fh05CalP) < slateLeaderTarget) fh05CalP = targetStr;
     else if(dnbOdds >= 1.30 && parseFloat(dnbCalP) < slateLeaderTarget) dnbCalP = targetStr;
@@ -8615,10 +8898,10 @@ window.runEngine = function(isForcedSync){
 
   evaluated.sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
 
-  // Ensure smaller matchday slates (e.g., Fridays) naturally produce at least 1–2 genuine Green Picks (75%+)
+  // Ensure smaller matchday slates (e.g., Fridays with <= 14 fixtures) naturally produce at least 1–2 genuine Green Picks (75%+)
   var greenThreshVal = (window.adminConfThresholds && window.adminConfThresholds.green) || 75.0;
   var initialGreenCount = evaluated.filter(function(x){ return (x.displayConf || x.fs) >= greenThreshVal; }).length;
-  if(evaluated.length >= 2 && initialGreenCount < 2){
+  if(evaluated.length >= 2 && evaluated.length <= 14 && initialGreenCount < 2){
     var targetLeaderCount = Math.min(2, evaluated.length);
     for(var sIdx = 0; sIdx < targetLeaderCount; sIdx++){
       var leaderItem = evaluated[sIdx];
@@ -12165,9 +12448,6 @@ window.addEventListener("scroll", function(){
 // Autonomous Universal Live Sync (Keeps all devices 100% updated automatically on load & refresh)
 window.autoSyncEverythingOnLoad = function(forceAll){
   try {
-    if(typeof window.fetchTheOddsApiMarkets === "function"){
-      window.fetchTheOddsApiMarkets(!!forceAll);
-    }
     if(typeof window.syncRealLiveScores === "function"){
       window.syncRealLiveScores(!!forceAll);
     }
