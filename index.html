@@ -2043,7 +2043,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="space-y-1 pt-1 border-t border-slate-800/70">
         <label for="adminOddsApiKeyInput" class="block text-[9.5px] font-bold text-slate-300">The Odds API Key (12h Per-League Cache):</label>
         <div class="flex items-center gap-1.5">
-          <input type="text" id="adminOddsApiKeyInput" placeholder="e2f5348bc22ef1afe0ee29483e392284" class="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-emerald-300 font-mono outline-none transition">
+          <input type="text" id="adminOddsApiKeyInput" placeholder="4ac360beb7e127a1a02a9b769ecaa319" class="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-emerald-300 font-mono outline-none transition">
           <button type="button" id="adminSaveOddsApiKeyBtn" onclick="window.saveAdminOddsApiKeyFromInput()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex-shrink-0">🔑 Save Key</button>
         </div>
       </div>
@@ -2965,7 +2965,8 @@ window.slipStake = window.safeGet("airp_slip_stake", 10);
 window.slipBetMode = window.safeGet("airp_slip_mode", "acca");
 window.oddsFormat = window.DEFAULT_CORE_STATE.defaultOddsFormat;
 window.cardMarketFilter = {};
-window.DEFAULT_THE_ODDS_API_KEY = "e2f5348bc22ef1afe0ee29483e392284";
+window.DEFAULT_THE_ODDS_API_KEY = "4ac360beb7e127a1a02a9b769ecaa319";
+window.EXHAUSTED_ODDS_API_KEYS = ["e2f5348bc22ef1afe0ee29483e392284"];
 window.ODDS_API_KEY_STORAGE_KEY = "betboy_odds_api_key_v1";
 window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY = "betboy_odds_league_cache_v1";
 window.ODDS_API_CACHE_TTL_MS = 43200000; // 12 hours (43,200,000 ms) per league
@@ -2973,7 +2974,14 @@ window.ODDS_API_CACHE_TTL_MS = 43200000; // 12 hours (43,200,000 ms) per league
 window.getActiveOddsApiKey = function(){
   try {
     var saved = localStorage.getItem(window.ODDS_API_KEY_STORAGE_KEY);
-    if(saved && saved.trim()) return saved.trim().toLowerCase();
+    if(saved && saved.trim()){
+      var cleanSaved = saved.trim().toLowerCase();
+      if(window.EXHAUSTED_ODDS_API_KEYS.indexOf(cleanSaved) !== -1){
+        localStorage.setItem(window.ODDS_API_KEY_STORAGE_KEY, window.DEFAULT_THE_ODDS_API_KEY);
+        return window.DEFAULT_THE_ODDS_API_KEY;
+      }
+      return cleanSaved;
+    }
   } catch(e){}
   return window.DEFAULT_THE_ODDS_API_KEY;
 };
