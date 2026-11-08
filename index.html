@@ -55,13 +55,38 @@
 <style>
   html, body {
     padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 36px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
   }
-  body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; }
+  body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 36px); }
   header.sticky, #topAppHeader {
     padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+  }
+
+  /* 1. Stop fixture cards from jittering/snapping on load */
+  .fixture-card, .match-card {
+    contain: layout paint;
+    min-height: 140px;
+  }
+
+  /* Ensure team crests and logos reserve their space immediately */
+  img {
+    height: auto;
+    shape-rendering: geometricPrecision;
+  }
+
+  /* 2. Prevent Android gesture bar and footer clipping */
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 36px);
+  }
+
+  /* 3. Reposition the floating Back-to-Top button so it clears market text */
+  .back-to-top-btn, [class*="scroll-top"] {
+    bottom: 30px !important;
+    left: 16px !important;
+    z-index: 999;
+    backdrop-filter: blur(8px);
   }
   .glass { background: linear-gradient(165deg, rgba(30, 41, 59, 0.68) 0%, rgba(15, 23, 42, 0.92) 100%) !important; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.09) !important; box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.09); transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease; }
   .glass:active { transform: scale(0.995); }
@@ -152,9 +177,9 @@
   .kpi-active-ring { outline: 2px solid #10b981 !important; background: rgba(16,185,129,0.16) !important; }
   .btn-press { transition: transform 0.16s cubic-bezier(0.16,1,0.3,1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
   .btn-press:active { transform: scale(0.96); }
-  #scrollTopFab { position:fixed; bottom:24px; left:16px; right:auto; width:36px; height:36px; z-index:45; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding:0; font-size:14px; display:flex; align-items:center; justify-content:center; }
-  #scrollTopFab.vis { opacity:0.65; pointer-events:auto; transform:translateY(0); }
-  #scrollTopFab:hover { opacity:0.95 !important; }
+  #scrollTopFab, .back-to-top-btn, [class*="scroll-top"] { position:fixed; bottom:30px !important; left:16px !important; right:auto; width:36px; height:36px; z-index:999; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding:0; font-size:14px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  #scrollTopFab.vis, .back-to-top-btn.vis, [class*="scroll-top"].vis { opacity:0.65; pointer-events:auto; transform:translateY(0); }
+  #scrollTopFab:hover, .back-to-top-btn:hover, [class*="scroll-top"]:hover { opacity:0.95 !important; }
   .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
   .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
   body.admin-mode-active:not(.admin-preview-feed-active) #userFeedSection { display: none !important; }
@@ -2647,7 +2672,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <!-- Non-Blocking Toast Notification (Positioned at bottom:98px so it never overlaps the sticky Betting Slip Guide bar) -->
 <div id="appToastBanner" style="position:fixed;bottom:98px;left:50%;transform:translateX(-50%);z-index:10050;display:none;pointer-events:none;" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-2xl border border-emerald-300/40 whitespace-nowrap max-w-[92vw] truncate"></div>
 
-<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top" aria-label="Scroll to top" style="bottom: 24px; left: 16px; right: auto; width: 36px; height: 36px;" class="bg-slate-900/80 hover:bg-emerald-600/90 active:bg-emerald-700 text-emerald-300 hover:text-white font-black rounded-full shadow-lg border border-emerald-500/40 cursor-pointer flex items-center justify-center backdrop-blur-sm">↑</button>
+<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top" aria-label="Scroll to top" style="bottom: 30px; left: 16px; right: auto; width: 36px; height: 36px;" class="back-to-top-btn scroll-top-btn bg-slate-900/80 hover:bg-emerald-600/90 active:bg-emerald-700 text-emerald-300 hover:text-white font-black rounded-full shadow-lg border border-emerald-500/40 cursor-pointer flex items-center justify-center backdrop-blur-sm">↑</button>
 
 <script>
 window.openAboutContactModal = function() {
@@ -9277,7 +9302,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     '</div>' +
   '</div>';
 
-  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer' + isExp + '">' +
+  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="fixture-card match-card glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer' + isExp + '">' +
     '<div class="flex justify-between items-start gap-3">' +
       '<div class="flex-1 min-w-0 space-y-2">' +
         '<div class="flex items-center gap-1.5 flex-wrap">' +
