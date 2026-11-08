@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "uk.co.betboyai.www.twa",
-        "sha256_cert_fingerprints": ["B6:46:D0:BE:59:E0:CA:9A:20:21:D0:71:0F:F0:72:D9:1E:E5:E0:F4:5D:6E:57:76:94:49:8B:12:2A:0D:4D:D4"]
+        "sha256_cert_fingerprints": ["EE:86:EF:5E:74:31:11:A5:8C:07:A0:D3:6D:2A:B8:04:9D:45:0E:5E:7C:48:9D:C3:6C:4D:0F:CA:7E:0E:AA:8F"]
       }
     }]
