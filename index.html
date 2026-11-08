@@ -581,10 +581,34 @@ window.LEAGUE_NAMES = {
   LL: "La Liga", BUN: "Bundesliga", FL1: "Ligue 1", SA: "Serie A", SPL: "Scottish Premiership",
   UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
 };
+// Clean Inline SVG Country/Confederation Flags (100% ASCII-safe, zero Unicode flag emojis)
+window.ENGLAND_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="England"><rect width="24" height="16" fill="#ffffff"/><rect x="10" y="0" width="4" height="16" fill="#ce1124"/><rect x="0" y="6" width="24" height="4" fill="#ce1124"/></svg>';
+window.SCOTLAND_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="Scotland"><rect width="24" height="16" fill="#005eb8"/><path d="M0,0 L24,16 M24,0 L0,16" stroke="#ffffff" stroke-width="3.2"/></svg>';
+window.SPAIN_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="Spain"><rect width="24" height="16" fill="#aa151b"/><rect y="4" width="24" height="8" fill="#f1bf00"/></svg>';
+window.GERMANY_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="Germany"><rect width="24" height="5.33" fill="#000000"/><rect y="5.33" width="24" height="5.34" fill="#dd0000"/><rect y="10.67" width="24" height="5.33" fill="#ffce00"/></svg>';
+window.FRANCE_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="France"><rect width="8" height="16" fill="#002395"/><rect x="8" width="8" height="16" fill="#ffffff"/><rect x="16" width="8" height="16" fill="#ed2939"/></svg>';
+window.ITALY_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="Italy"><rect width="8" height="16" fill="#009246"/><rect x="8" width="8" height="16" fill="#ffffff"/><rect x="16" width="8" height="16" fill="#ce2b37"/></svg>';
+window.UEFA_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="UEFA"><rect width="24" height="16" fill="#003399"/><circle cx="12" cy="8" r="4.8" fill="none" stroke="#ffcc00" stroke-width="1.3" stroke-dasharray="1.1 1.42"/></svg>';
+
 window.LEAGUE_COUNTRY_TAGS = {
-  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", FAC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", EFLC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-  LL: "🇪🇸", BUN: "🇩🇪", FL1: "🇫🇷", SA: "🇮🇹", SPL: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-  UCL: "🏆", UEL: "🏆", UECL: "🏆"
+  PL: window.ENGLAND_FLAG_SVG,
+  CHA: window.ENGLAND_FLAG_SVG,
+  L1: window.ENGLAND_FLAG_SVG,
+  L2: window.ENGLAND_FLAG_SVG,
+  FAC: window.ENGLAND_FLAG_SVG,
+  EFLC: window.ENGLAND_FLAG_SVG,
+  LL: window.SPAIN_FLAG_SVG,
+  BUN: window.GERMANY_FLAG_SVG,
+  FL1: window.FRANCE_FLAG_SVG,
+  SA: window.ITALY_FLAG_SVG,
+  SPL: window.SCOTLAND_FLAG_SVG,
+  UCL: window.UEFA_FLAG_SVG,
+  UEL: window.UEFA_FLAG_SVG,
+  UECL: window.UEFA_FLAG_SVG
+};
+
+window.getLeagueCountryFlagHtml = function(code) {
+  return (window.LEAGUE_COUNTRY_TAGS && window.LEAGUE_COUNTRY_TAGS[code]) || window.ENGLAND_FLAG_SVG;
 };
 window.API_FOOTBALL_LEAGUE_IDS = {
   PL: 39, FAC: 45, CHA: 40, L1: 41, L2: 42, EFLC: 48,
@@ -1967,19 +1991,19 @@ document.addEventListener("DOMContentLoaded", function() {
       <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
         <script>
           document.write(window.ALL_LEAGUES.map(function(code){
-            var cTag = (window.LEAGUE_COUNTRY_TAGS && window.LEAGUE_COUNTRY_TAGS[code]) ? '<span class="text-[10px] opacity-85">' + window.LEAGUE_COUNTRY_TAGS[code] + '</span>' : '';
-            return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500">' + cTag + '<span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span>' + window.getLeagueName(code) + '</span></label>';
+            var cTag = window.getLeagueCountryFlagHtml ? window.getLeagueCountryFlagHtml(code) : '';
+            return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500"><span class="inline-flex items-center flex-shrink-0">' + cTag + '</span><span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span class="whitespace-nowrap">' + window.getLeagueName(code) + '</span></label>';
           }).join(""));
         </script>
       </div>
     </div>
 
-    <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Strike Rate) -->
+    <!-- 4-Box KPI Summary Grid (Green Picks, Amber Picks, Red Picks, Strike Rate) -->
     <div class="grid gap-1.5 text-center grid-cols-4">
       <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">0/0</div><div id="greenCountSub" class="text-[8.5px] text-emerald-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
       <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5 leading-tight">0</div><div id="amberCountSub" class="text-[8.5px] text-amber-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
       <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5 leading-tight">0</div><div id="redCountSub" class="text-[8.5px] text-rose-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Strike Rate</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">In-Play</div><div id="sessionHitRateSub" class="text-[8.5px] text-slate-400 font-semibold leading-none mt-0.5">Settles at FT</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div id="strikeRateBoxTitle" class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Strike Rate</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono mt-0.5 leading-tight whitespace-nowrap">In-Play</div><div id="sessionHitRateSub" class="text-[8.5px] text-slate-400 font-semibold leading-none mt-0.5 whitespace-nowrap">Settles at FT</div></div>
     </div>
 
     <!-- User Quick-Sort Bar -->
@@ -2320,7 +2344,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <button type="button" onclick="window.applyXPresetSelections('builder3')" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/50 font-black px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🛠️ #1 Bet Builder (3x)</button>
         <button type="button" onclick="window.applyXPresetSelections('single')" class="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🎯 #1 Single Spotlight</button>
         <button type="button" onclick="window.applyXPresetSelections('greens3')" class="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🟢 Top 3 Greens</button>
-        <button type="button" onclick="window.applyXPresetSelections('spl')" class="bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scottish Prem</button>
+        <button type="button" onclick="window.applyXPresetSelections('spl')" class="bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition inline-flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0" aria-label="Scotland"><rect width="24" height="16" fill="#005eb8"/><path d="M0,0 L24,16 M24,0 L0,16" stroke="#ffffff" stroke-width="3.2"/></svg><span>Scottish Prem</span></button>
         <button type="button" onclick="window.applyXPresetSelections('slip')" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🧾 From Betting Slip</button>
         <button type="button" onclick="window.clearXPostSelections()" class="bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🗑️ Clear</button>
       </div>
