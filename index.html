@@ -2,14 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BetBoy AI">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="BetBoy AI">
-<meta name="theme-color" content="#070b14">
+<meta name="theme-color" content="#0a0f1d">
+<meta name="description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
+<meta property="og:title" content="BetBoy AI Predictor">
+<meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
+<link rel="manifest" id="pwaManifestLink" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -403,7 +411,7 @@ window.renderFeaturedBookmakerOffersHtml = function() {
           '<p class="text-[10.5px] font-extrabold text-emerald-300 leading-snug">' + p.offerText + '</p>' +
         '</div>' +
         '<div class="space-y-1 pt-0.5">' +
-          '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-bookmaker-cta="' + key + '" class="w-full py-1 px-2 rounded-lg font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow transition hover:opacity-95 cursor-pointer text-center" style="background-color:' + accent + '; color:' + btnTextColor + ';">' +
+          '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-bookmaker-cta="' + key + '" class="w-full py-1 px-2 rounded-lg font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow transition hover:opacity-95 cursor-pointer text-center" style="background-color:' + accent + '; color:' + btnTextColor + ';">' +
             '<span>' + p.ctaText + '</span>' +
             '<span>↗</span>' +
           '</a>' +
@@ -443,7 +451,7 @@ window.renderSlipModalBookmakerButtonsHtml = function() {
     var spanClass = isTopFeatured ? "col-span-2 sm:col-span-4 py-2 px-3" : "px-2 py-1.5";
     var titleLabel = isTopFeatured ? ("Place Bet at " + p.name) : String(p.name).toUpperCase();
     btnsHtml +=
-      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-slip-bookmaker-btn="' + key + '" onclick="window.onSlipBookmakerClick(\'' + key + '\', event)" class="' + spanClass + ' rounded-lg flex items-center justify-center gap-2 shadow transition hover:opacity-95 cursor-pointer text-left min-w-0" style="background-color:' + brandBg + '; color:' + brandText + '; border:' + (isTopFeatured ? '1.5px solid #38bdf8' : ('1px solid ' + accent + '99')) + ';">' +
+      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-slip-bookmaker-btn="' + key + '" onclick="window.onSlipBookmakerClick(\'' + key + '\', event)" class="' + spanClass + ' rounded-lg flex items-center justify-center gap-2 shadow transition hover:opacity-95 cursor-pointer text-left min-w-0" style="background-color:' + brandBg + '; color:' + brandText + '; border:' + (isTopFeatured ? '1.5px solid #38bdf8' : ('1px solid ' + accent + '99')) + ';">' +
         '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="20" height="20" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[20px] h-[20px] rounded object-contain flex-shrink-0" />' +
         '<div class="flex flex-col min-w-0 leading-tight">' +
           '<span class="font-black ' + (isTopFeatured ? 'text-[11px]' : 'text-[9.5px]') + ' uppercase tracking-wider flex items-center gap-1"><span>' + titleLabel + '</span> <span class="text-[9px] opacity-90">↗</span></span>' +
@@ -502,7 +510,7 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
     var btnLabel = (i === 0 || key === "betfred") ? ("Place Bet at " + p.name + " ↗") : ("Back on " + p.name + " ↗");
     var colSpanClass = (i === 0 || key === "betfred") ? "col-span-2 sm:col-span-1" : "";
     btnsHtml +=
-      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-affiliate-pick-btn="' + key + '" onclick="event.stopPropagation()" class="' + colSpanClass + ' px-2.5 py-2 rounded-xl hover:brightness-110 text-[10px] font-extrabold text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer text-center" style="background-color:#111927; border:1.5px solid ' + accent + '; color:#ffffff;">' +
+      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-affiliate-pick-btn="' + key + '" onclick="event.stopPropagation()" class="' + colSpanClass + ' px-2.5 py-2 rounded-xl hover:brightness-110 text-[10px] font-extrabold text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer text-center" style="background-color:#111927; border:1.5px solid ' + accent + '; color:#ffffff;">' +
         '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="22" height="22" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[22px] h-[22px] rounded-md object-contain flex-shrink-0 p-0.5" style="background-color:' + brandBg + '; border:1px solid ' + accent + '66;" />' +
         '<span class="text-[10px] font-extrabold text-white tracking-tight">' + btnLabel + '</span>' +
       '</a>';
@@ -574,7 +582,7 @@ window.LEAGUE_NAMES = {
   UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
 };
 window.LEAGUE_COUNTRY_TAGS = {
-  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "������󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", FAC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", EFLC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", FAC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", EFLC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
   LL: "🇪🇸", BUN: "🇩🇪", FL1: "🇫🇷", SA: "🇮🇹", SPL: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
   UCL: "🏆", UEL: "🏆", UECL: "🏆"
 };
@@ -701,52 +709,171 @@ window.makeGamCareLogoUrl = function(){
 window._betBoyLogoCanvasImg = new Image();
 window._betBoyLogoCanvasImg.src = window.getBetBoyLogoUrl();
 
-// Setup Home Screen App Icons for iOS & Android
+// Setup Home Screen App Icons, Web App Manifest, Service Worker & Native Install Prompt for iOS & Android
+window.PWA_MANIFEST_CONFIG = {
+  id: "/",
+  name: "BetBoy AI: Football Predictions",
+  short_name: "BetBoy AI",
+  description: "BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor across 14 UK & European Competitions.",
+  start_url: "/",
+  scope: "/",
+  display: "standalone",
+  orientation: "portrait",
+  background_color: "#0a0f1d",
+  theme_color: "#0a0f1d",
+  icons: [
+    { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+    { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    { src: "/pwa-maskable-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }
+  ]
+};
+
+window.deferredPwaInstallPrompt = null;
+
+window.isStandalonePwaMode = function(){
+  try {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    if (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) return true;
+    if (window.navigator && window.navigator.standalone === true) return true;
+    if (typeof document !== "undefined" && document.referrer && document.referrer.indexOf("android-app://") === 0) return true;
+  } catch(e){}
+  return false;
+};
+
+window.isIosSafariDevice = function(){
+  try {
+    var ua = (window.navigator && window.navigator.userAgent) ? window.navigator.userAgent.toLowerCase() : "";
+    return /iphone|ipad|ipod/.test(ua) || (ua.indexOf("macintosh") !== -1 && "ontouchend" in document);
+  } catch(e){}
+  return false;
+};
+
+window.isLocalPreviewProtocol = function(){
+  try {
+    var proto = (window.location && window.location.protocol) ? String(window.location.protocol).toLowerCase() : "";
+    return proto === "content:" || proto === "file:";
+  } catch(e){}
+  return false;
+};
+
+window.syncPwaInstallButtonVisibility = function(){
+  var banner = document.getElementById("pwaInstallBannerStrip");
+  var isStandalone = window.isStandalonePwaMode();
+  if(banner){
+    if(isStandalone){
+      banner.classList.add("hidden");
+      banner.style.display = "none";
+    } else {
+      banner.classList.remove("hidden");
+      banner.style.display = "flex";
+    }
+  }
+};
+
+window.openPwaInstallModal = function(){
+  var modal = document.getElementById("pwaInstallGuideModal");
+  if(!modal) return;
+  var iosSec = document.getElementById("pwaModalIosSteps");
+  var andSec = document.getElementById("pwaModalAndroidSteps");
+  var localPreviewBox = document.getElementById("pwaModalLocalPreviewNotice");
+  var isIos = window.isIosSafariDevice();
+  var isLocalPreview = window.isLocalPreviewProtocol();
+  if(localPreviewBox){
+    if(isLocalPreview){
+      localPreviewBox.classList.remove("border-slate-800/80");
+      localPreviewBox.classList.add("border-amber-400/80", "ring-1", "ring-amber-400/40", "bg-amber-950/40");
+    } else {
+      localPreviewBox.classList.remove("border-amber-400/80", "ring-1", "ring-amber-400/40", "bg-amber-950/40");
+      localPreviewBox.classList.add("border-slate-800/80");
+    }
+  }
+  if(iosSec && andSec){
+    if(isIos){
+      iosSec.classList.remove("border-slate-800");
+      iosSec.classList.add("border-amber-400/60", "ring-1", "ring-amber-400/30");
+    } else {
+      andSec.classList.remove("border-slate-800");
+      andSec.classList.add("border-emerald-400/60", "ring-1", "ring-emerald-400/30");
+    }
+  }
+  modal.style.display = "flex";
+};
+
+window.closePwaInstallModal = function(){
+  var modal = document.getElementById("pwaInstallGuideModal");
+  if(modal) modal.style.display = "none";
+};
+
+window.handleInstallAppClick = function(){
+  if(window.isStandalonePwaMode()){
+    window.syncPwaInstallButtonVisibility();
+    return;
+  }
+  if(window.deferredPwaInstallPrompt && typeof window.deferredPwaInstallPrompt.prompt === "function"){
+    var promptEvent = window.deferredPwaInstallPrompt;
+    promptEvent.prompt();
+    if(promptEvent.userChoice && typeof promptEvent.userChoice.then === "function"){
+      promptEvent.userChoice.then(function(choiceResult){
+        if(choiceResult && choiceResult.outcome === "accepted"){
+          window.deferredPwaInstallPrompt = null;
+          window.syncPwaInstallButtonVisibility();
+          if(window.showAppToast) window.showAppToast("📲 BetBoy AI Installed to Home Screen!");
+        }
+      }).catch(function(){});
+    }
+    return;
+  }
+  window.openPwaInstallModal();
+};
+
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  window.deferredPwaInstallPrompt = e;
+  window.syncPwaInstallButtonVisibility();
+});
+
+window.addEventListener("appinstalled", function(){
+  window.deferredPwaInstallPrompt = null;
+  window.syncPwaInstallButtonVisibility();
+  window.closePwaInstallModal();
+  if(window.showAppToast) window.showAppToast("✅ BetBoy AI Installed! Launch from your Home Screen.");
+});
+
+try {
+  if(window.matchMedia){
+    var standaloneMql = window.matchMedia('(display-mode: standalone)');
+    if(standaloneMql && typeof standaloneMql.addEventListener === "function"){
+      standaloneMql.addEventListener("change", function(){
+        window.syncPwaInstallButtonVisibility();
+      });
+    }
+  }
+} catch(e){}
+
 window.setupHomeScreenAppIcons = function(){
-  var svgUrl = window.getBetBoyLogoUrl();
-  var addHeadLink = function(rel, href, sizes, type){
-    var el = document.querySelector('link[rel="' + rel + '"]');
-    if(!el){ el = document.createElement("link"); el.rel = rel; document.head.appendChild(el); }
-    el.href = href;
-    if(sizes) el.setAttribute("sizes", sizes);
-    if(type) el.setAttribute("type", type);
-  };
-  addHeadLink("icon", svgUrl, "any", "image/svg+xml");
-  addHeadLink("apple-touch-icon", svgUrl, "180x180");
-
-  var img = new Image();
-  img.onload = function(){
-    try {
-      var c512 = document.createElement("canvas"); c512.width = 512; c512.height = 512;
-      c512.getContext("2d").drawImage(img, 0, 0, 512, 512);
-      var png512 = c512.toDataURL("image/png");
-
-      var c192 = document.createElement("canvas"); c192.width = 192; c192.height = 192;
-      c192.getContext("2d").drawImage(img, 0, 0, 192, 192);
-      var png192 = c192.toDataURL("image/png");
-
-      addHeadLink("apple-touch-icon", png192, "192x192", "image/png");
-      addHeadLink("icon", png192, "192x192", "image/png");
-
-      var manifestObj = {
-        name: "BetBoy AI Predictor",
-        short_name: "BetBoy AI",
-        description: "BetBoy AI Football Results & Market Predictor",
-        start_url: window.location.href.split("#")[0],
-        display: "standalone",
-        background_color: "#070b14",
-        theme_color: "#070b14",
-        icons: [
-          { src: png192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-          { src: png512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
-        ]
-      };
-      addHeadLink("manifest", "data:application/manifest+json;charset=utf-8," + encodeURIComponent(JSON.stringify(manifestObj)));
-    } catch(e){}
-  };
-  img.src = svgUrl;
+  var manifestLink = document.getElementById("pwaManifestLink") || document.querySelector('link[rel="manifest"]');
+  if(!manifestLink){
+    manifestLink = document.createElement("link");
+    manifestLink.id = "pwaManifestLink";
+    manifestLink.rel = "manifest";
+    manifestLink.href = "/manifest.json";
+    document.head.appendChild(manifestLink);
+  }
+  // Only fall back to embedded data URI manifest if opened directly via file:// protocol
+  if(window.location && window.location.protocol === "file:"){
+    manifestLink.href = "data:application/manifest+json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.PWA_MANIFEST_CONFIG));
+  }
+  if("serviceWorker" in navigator && window.location && (window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function(){});
+    });
+  }
 };
 window.setupHomeScreenAppIcons();
+document.addEventListener("DOMContentLoaded", function(){
+  window.syncPwaInstallButtonVisibility();
+});
 
 window.makePlLogo = function() {
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
@@ -1546,6 +1673,16 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black flex items-center justify-center text-[8px] mono">3</span><span>Enter stake for returns</span></div>
   </div>
 
+  <!-- Sleek Compact PWA Install App Banner Strip (Directly Below 1-2-3 Instruction Pill Bar) -->
+  <button type="button" id="pwaInstallBannerStrip" onclick="window.handleInstallAppClick()" title="Install BetBoy AI as a standalone full-screen app on Android or iOS" class="w-full bg-gradient-to-r from-emerald-500/20 via-emerald-500/15 to-amber-500/20 hover:from-emerald-500/30 hover:to-amber-500/30 border border-emerald-400/50 px-3 py-2 rounded-xl flex items-center justify-between gap-2 shadow-md cursor-pointer transition btn-press">
+    <span class="text-[11px] sm:text-xs font-black text-white flex items-center gap-1.5 text-left leading-tight">
+      <span>📲</span>
+      <span>Install Free BetBoy AI App <span class="text-emerald-300 font-bold">(Full-Screen Mode)</span></span>
+    </span>
+    <span class="text-[10px] bg-gradient-to-r from-emerald-500 to-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 shadow-sm">Install ▸</span>
+  </button>
+  <script>if(typeof window.syncPwaInstallButtonVisibility === "function") window.syncPwaInstallButtonVisibility();</script>
+
   <!-- Free Trial Preview Banner with £3.99/mo Early-Bird Upgrade Button -->
   <div id="trialModeBanner" class="bg-gradient-to-r from-amber-500/20 via-emerald-500/15 to-sky-500/20 border border-amber-400/50 p-3 rounded-xl flex items-center justify-between gap-2 shadow-lg hidden">
     <div class="text-left">
@@ -1837,12 +1974,12 @@ document.addEventListener("DOMContentLoaded", function() {
       </div>
     </div>
 
-    <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Green Pick Win %) -->
+    <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Strike Rate) -->
     <div class="grid gap-1.5 text-center grid-cols-4">
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">0/0</div><div id="greenCountSub" class="text-[8.5px] text-emerald-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5 leading-tight">0</div><div id="amberCountSub" class="text-[8.5px] text-amber-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5 leading-tight">0</div><div id="redCountSub" class="text-[8.5px] text-rose-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold">Green Pick Win %</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">In-Play</div><div id="sessionHitRateSub" class="text-[8.5px] text-slate-400 font-semibold leading-none mt-0.5">Settles at FT</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">0/0</div><div id="greenCountSub" class="text-[8.5px] text-emerald-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5 leading-tight">0</div><div id="amberCountSub" class="text-[8.5px] text-amber-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5 leading-tight">0</div><div id="redCountSub" class="text-[8.5px] text-rose-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Strike Rate</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">In-Play</div><div id="sessionHitRateSub" class="text-[8.5px] text-slate-400 font-semibold leading-none mt-0.5">Settles at FT</div></div>
     </div>
 
     <!-- User Quick-Sort Bar -->
@@ -2392,6 +2529,58 @@ document.addEventListener("DOMContentLoaded", function() {
   </div>
 </div>
 
+<!-- iOS & Android PWA Quick Install Modal -->
+<div id="pwaInstallGuideModal" onclick="if(event.target===this)window.closePwaInstallModal()" style="display:none;" class="fixed inset-0 z-[10020] bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+  <div class="glass max-w-md w-full rounded-2xl border border-emerald-500/40 p-5 space-y-4 shadow-2xl text-left relative">
+    <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div class="flex items-center gap-2.5">
+        <img src="/pwa-192x192.png" alt="BetBoy AI App Icon" class="w-10 h-10 rounded-xl border border-emerald-500/40 shadow-md">
+        <div>
+          <h3 class="text-sm font-black text-white leading-tight">📲 Install BetBoy AI App</h3>
+          <p class="text-[10.5px] text-emerald-300 font-semibold">Full-Screen Standalone Home Screen App</p>
+        </div>
+      </div>
+      <button type="button" onclick="window.closePwaInstallModal()" aria-label="Close Install Guide" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-black text-sm flex items-center justify-center border border-slate-700 cursor-pointer">×</button>
+    </div>
+
+    <div class="space-y-3 text-xs">
+      <!-- Local content:// or file:// Preview Notice -->
+      <div id="pwaModalLocalPreviewNotice" class="bg-slate-950/90 border border-slate-800/80 rounded-xl p-3 text-[11px] text-amber-200 leading-relaxed">
+        To install the app to your home screen, please open <a href="https://www.betboyai.co.uk" target="_blank" rel="noopener noreferrer" class="text-emerald-300 font-black underline">https://www.betboyai.co.uk</a> in Chrome and tap the 3-dot menu (⋮) -&gt; Add to Home screen.
+      </div>
+
+      <!-- iPhone / iPad (iOS Safari) Instructions -->
+      <div id="pwaModalIosSteps" class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 space-y-2">
+        <div class="font-black text-amber-300 text-[11.5px] flex items-center justify-between">
+          <span>🍎 iPhone &amp; iPad (Safari)</span>
+          <span class="text-[9.5px] bg-amber-500/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-bold">iOS Quick Setup</span>
+        </div>
+        <ol class="space-y-1.5 text-[11px] text-slate-200 list-decimal list-inside leading-relaxed">
+          <li>Tap the <b class="text-white">Share</b> button <span class="inline-block bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[10px] font-mono text-sky-300">📤 Share</span> in Safari's toolbar.</li>
+          <li>Scroll down and tap <b class="text-emerald-300">➕ Add to Home Screen</b>.</li>
+          <li>Tap <b class="text-white">Add</b> in the top-right corner to launch <b class="text-emerald-300">BetBoy AI</b> in full-screen standalone mode.</li>
+        </ol>
+      </div>
+
+      <!-- Android / Chrome Instructions -->
+      <div id="pwaModalAndroidSteps" class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 space-y-2">
+        <div class="font-black text-emerald-300 text-[11.5px] flex items-center justify-between">
+          <span>🤖 Android / Google Chrome</span>
+          <span class="text-[9.5px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full font-bold">1-Tap Install</span>
+        </div>
+        <ol class="space-y-1.5 text-[11px] text-slate-200 list-decimal list-inside leading-relaxed">
+          <li>Tap the Chrome menu icon <span class="inline-block bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[10px] font-mono text-emerald-300">⋮</span> in the top-right corner.</li>
+          <li>Tap <b class="text-emerald-300">📲 Install app</b> or <b class="text-emerald-300">Add to Home screen</b>.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="pt-1 flex justify-end">
+      <button type="button" onclick="window.closePwaInstallModal()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-2.5 rounded-xl text-xs shadow-lg cursor-pointer transition">Got It</button>
+    </div>
+  </div>
+</div>
+
 <!-- Non-Blocking Toast Notification (Positioned at bottom:98px so it never overlaps the sticky Betting Slip Guide bar) -->
 <div id="appToastBanner" style="position:fixed;bottom:98px;left:50%;transform:translateX(-50%);z-index:10050;display:none;pointer-events:none;" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-2xl border border-emerald-300/40 whitespace-nowrap max-w-[92vw] truncate"></div>
 
@@ -2439,6 +2628,7 @@ document.addEventListener("keydown", function(ev) {
   if (ev && ev.key === "Escape") {
     window.closeAboutContactModal();
     window.closePrivacyTermsModal();
+    if (typeof window.closePwaInstallModal === "function") window.closePwaInstallModal();
   }
 });
 
