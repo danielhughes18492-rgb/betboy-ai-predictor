@@ -2735,31 +2735,157 @@ document.addEventListener("keydown", function(ev) {
 window.PUBLISHED_STATE={"stamp":1793230000000,"version":15.0,"injectedStats":["Metric 32: UEFA Rest-Rotation & Travel Sync (+0.3% Edge)","Metric 33: LaLiga/Serie A Low-Block Box SoT% (+0.3% Edge)","Metric 34: Bundesliga High-Line Transition Shield (+0.3% Edge)","Metric 35: Deep-Block Set-Piece xG Weight (+0.3% Edge)","Metric 36: Multi-League Press-Resistance Index (+0.3% Edge)","Metric 37: Half-Space Cutback xG Conversion (+0.3% Edge)","Metric 38: GK Sweeper-Keeper High-Line Intercepts (+0.3% Edge)","Metric 39: 75-90m Late-Sub xT Differential (+0.3% Edge)","Metric 40: Second-Ball Recovery Zone 14 Sync (+0.3% Edge)","Metric 41: Referee Foul-Tempo & Card Volatility (+0.3% Edge)","Metric 42: Counter-Press Regain 5-Sec Window (+0.3% Edge)","Metric 43: Progressive Carry Box-Penetration Rate (+0.3% Edge)","Metric 44: Under-Pressure Build-Up Pass Accuracy (+0.3% Edge)","Metric 45: Out-of-Possession Compactness Width (+0.3% Edge)","Metric 46: Cross-to-Header xG Aerial Dominance (+0.3% Edge)","Metric 47: First-Goal Lead Retention Resilience (+0.3% Edge)","Metric 48: Away Crowd Decibel & Turf Adaptation (+0.3% Edge)","Metric 49: Central Midfield Line-Breaking Passes (+0.3% Edge)","Metric 50: Expected Threat Conceded per Turn-Over (+0.3% Edge)","Metric 51: Box-Entry Pass Completion & Zone-14 Overload (+0.3% Edge)","Metric 52: Rest-Day Recovery & Squad Depth Fatigue Index (+0.3% Edge)","Metric 53: Live Post-Shot xG (PSxG) Finishing Overperformance (+0.3% Edge)","Metric 54: High-Press Regain xT Within 8-Sec Transition (+0.3% Edge)","Metric 55: Low-Block Counter-Attack Box Penetration Differential (+0.3% Edge)","Metric 56: Bivariate Dixon-Coles Low-Score Correlation (Rho Coupling) (+0.3% Edge)","Metric 57: Goalkeeper Shot-Stopping vs Post-Shot xG Differential (+0.3% Edge)","Metric 58: Midweek UEFA European Hangover & Congestion Friction (+0.3% Edge)","Metric 59: Tactical Matchup Asymmetry & System Clash Multiplier (+0.3% Edge)","Metric 60: Bayesian Self-Evolving Poisson Residual & Brier Calibration Loop (+0.3% Edge)"],"hist":[],"logs":[],"drift":{},"results":{},"lockedScores":{}};
 /* STATE_END */
 
-var savedStamp = parseInt(window.safeGet("airp_v122_stamp", 0), 10);
-if(window.PUBLISHED_STATE.stamp > savedStamp){
-  window.safeSet("airp_v122_stamp", window.PUBLISHED_STATE.stamp);
-  var existingState = window.safeGet("airp_v122_state", null);
-  var mergedStats = window.PUBLISHED_STATE.injectedStats.slice();
-  if(existingState && Array.isArray(existingState.injectedStats)){
-    existingState.injectedStats.forEach(function(st){
-      if(mergedStats.indexOf(st) === -1) mergedStats.push(st);
-    });
+window.createDefault60MetricWeights = function(){
+  var map = {};
+  for(var i = 1; i <= 60; i++){
+    var code = "M" + (i < 10 ? "0" + i : String(i));
+    map[code] = 1.0;
   }
-  var mergedVer = existingState && existingState.version > window.PUBLISHED_STATE.version ? existingState.version : window.PUBLISHED_STATE.version;
-  window.safeSet("airp_v122_state", {version: mergedVer, injectedStats: mergedStats});
-}
+  return map;
+};
 
-window.modelState = window.safeGet("airp_v122_state", {version: window.PUBLISHED_STATE.version, injectedStats: window.PUBLISHED_STATE.injectedStats});
-if(!window.modelState.injectedStats || window.modelState.injectedStats.length < 29){
-  window.modelState.injectedStats = window.PUBLISHED_STATE.injectedStats.slice();
-  if(window.modelState.version < 15.0) window.modelState.version = 15.0;
-  window.safeSet("airp_v122_state", window.modelState);
-}
+// Hardcoded Explicit Default Core State (Identical across all devices, Incognito & iOS/Android wrappers)
+window.UNIFORM_STARTUP_SCHEMA_KEY = "betboy_uniform_state_schema_v22";
+window.DEFAULT_CORE_STATE = Object.freeze({
+  schemaVersion: "v22.0-uniform",
+  modelVersion: 15.0,
+  defaultCompetitions: (window.ALL_LEAGUES || ["PL","CHA","L1","L2","LL","BUN","FL1","SA","SPL","FAC","EFLC","UCL","UEL","UECL"]).slice(),
+  defaultSortMode: "CONF",
+  defaultOddsFormat: "frac",
+  defaultTierFilter: "ALL",
+  defaultConfThresholds: Object.freeze({ mode: "balanced", green: 75.0, amber: 60.0 }),
+  defaultAdaptiveWeights: Object.freeze({
+    awayPen: 3.2,
+    drawGate: 12.0,
+    homeBoost: 4.2,
+    xgMult: 1.0,
+    bttsMult: 1.0,
+    cornersMult: 1.0,
+    cardsMult: 1.0,
+    fhMult: 1.0,
+    handicapMult: 1.0,
+    auditedMatches: 0,
+    correctPredictions: 0,
+    brierScoreSum: 0,
+    logLossSum: 0,
+    avgBrierScore: 0.185,
+    avgLogLoss: 0.545,
+    lastDiagnosis: "60-Metric Neural Baseline Calibrated & Active"
+  })
+});
+
+window.RESIDUAL_STORAGE_KEYS_TO_PURGE = [
+  "airp_adaptive_weights_v14",
+  "airp_settled_ft_matches_v2",
+  "airp_v122_locks_v16",
+  "airp_v122_res",
+  "airp_v122_drift",
+  "airp_conf_gate",
+  "airp_sort_mode",
+  "airp_league_filters",
+  "airp_active_tier",
+  "airp_locked_ko_odds_v1",
+  "airp_locked_ko_odds_v16",
+  "airp_locked_ko_odds_v19",
+  "airp_locked_ko_odds_v21",
+  "airp_pre_ko_odds_v1",
+  "airp_pre_ko_odds_v16",
+  "airp_pre_ko_odds_v19",
+  "airp_pre_ko_odds_v21",
+  "airp_live_espn_fixtures_v16",
+  "airp_live_espn_fixtures_v17",
+  "airp_live_espn_fixtures_v18",
+  "airp_live_espn_fixtures_v19",
+  "airp_live_espn_fixtures_v20",
+  "airp_club_crests_v2",
+  "airp_club_crests_v3"
+];
+
+window.buildFreshBaselineWeights = function(){
+  var base = window.DEFAULT_CORE_STATE.defaultAdaptiveWeights;
+  return {
+    awayPen: base.awayPen,
+    drawGate: base.drawGate,
+    homeBoost: base.homeBoost,
+    xgMult: base.xgMult,
+    bttsMult: base.bttsMult,
+    cornersMult: base.cornersMult,
+    cardsMult: base.cardsMult,
+    fhMult: base.fhMult,
+    handicapMult: base.handicapMult,
+    auditedMatches: base.auditedMatches,
+    correctPredictions: base.correctPredictions,
+    brierScoreSum: base.brierScoreSum,
+    logLossSum: base.logLossSum,
+    avgBrierScore: base.avgBrierScore,
+    avgLogLoss: base.avgLogLoss,
+    lastDiagnosis: base.lastDiagnosis,
+    metricWeights: window.createDefault60MetricWeights(),
+    teamReliability: {},
+    leagueCalibration: {}
+  };
+};
+
+window.enforceUniformDefaultStartupState = function(){
+  // 1. Purge residual localStorage filter, weight, and lock states so every device starts clean
+  try {
+    window.RESIDUAL_STORAGE_KEYS_TO_PURGE.forEach(function(k){
+      localStorage.removeItem(k);
+    });
+    localStorage.setItem(window.UNIFORM_STARTUP_SCHEMA_KEY, window.DEFAULT_CORE_STATE.schemaVersion);
+  } catch(e){}
+
+  // 2. Hardcode explicit default core state variables in memory (never rely on browser-cached state)
+  window.modelState = {
+    version: window.DEFAULT_CORE_STATE.modelVersion,
+    injectedStats: window.PUBLISHED_STATE.injectedStats.slice()
+  };
+  window.adaptiveWeights = window.buildFreshBaselineWeights();
+  window.adminConfThresholds = {
+    mode: window.DEFAULT_CORE_STATE.defaultConfThresholds.mode,
+    green: window.DEFAULT_CORE_STATE.defaultConfThresholds.green,
+    amber: window.DEFAULT_CORE_STATE.defaultConfThresholds.amber
+  };
+  window.activeCompetitions = window.DEFAULT_CORE_STATE.defaultCompetitions.slice();
+  window.matchSortMode = window.DEFAULT_CORE_STATE.defaultSortMode;
+  window.oddsFormat = window.DEFAULT_CORE_STATE.defaultOddsFormat;
+  window.activeTierFilter = window.DEFAULT_CORE_STATE.defaultTierFilter;
+  window.liveDriftMap = {};
+  window.customResults = {};
+  window.lockedScores = {};
+  window.lockedOddsMap = {};
+  window.preKoOddsSnapshotMap = {};
+
+  // 3. Synchronize DOM controls (competition checkboxes, sort buttons, odds selector, PWA banner)
+  if(typeof document !== "undefined"){
+    var leagueBoxes = Array.from(document.querySelectorAll("#leagueFilters input[type='checkbox']"));
+    if(leagueBoxes.length > 0){
+      leagueBoxes.forEach(function(cb){
+        cb.checked = window.activeCompetitions.indexOf(cb.value) !== -1;
+      });
+    }
+    var toggleBtn = document.getElementById("toggleLeaguesBtn");
+    if(toggleBtn){
+      toggleBtn.innerText = "Clear All (" + window.activeCompetitions.length + ")";
+    }
+    var oddsSelect = document.getElementById("headerOddsFormatSelect");
+    if(oddsSelect){
+      oddsSelect.value = window.oddsFormat;
+    }
+    var searchInp = document.getElementById("teamSearchInput");
+    if(searchInp){
+      searchInp.value = "";
+    }
+  }
+  if(typeof window.syncPwaInstallButtonVisibility === "function"){
+    window.syncPwaInstallButtonVisibility();
+  }
+  return window.DEFAULT_CORE_STATE;
+};
+
+window.enforceUniformDefaultStartupState();
 window.scanHistory = window.safeGet("airp_v122_hist", window.PUBLISHED_STATE.hist || []);
 window.logHistory = window.safeGet("airp_v122_log", window.PUBLISHED_STATE.logs || []);
-window.liveDriftMap = window.safeGet("airp_v122_drift", window.PUBLISHED_STATE.drift || {});
-window.customResults = window.safeGet("airp_v122_res", {});
-window.lockedScores = window.safeGet("airp_v122_locks_v16", {});
 window.apiLiveScores = window.safeGet("airp_espn_truth_v4", {});
 window.isMockOrFakeFaCupFixture = function(favName, oppName, leagueCode){
   var lg = String(leagueCode || "FAC").trim().toUpperCase();
@@ -2824,54 +2950,7 @@ window.sanitizeDailyFixturesMap = function(mapObj){
   });
   return clean;
 };
-try {
-  localStorage.removeItem("airp_live_espn_fixtures_v16");
-  localStorage.removeItem("airp_live_espn_fixtures_v17");
-  localStorage.removeItem("airp_live_espn_fixtures_v18");
-  localStorage.removeItem("airp_live_espn_fixtures_v19");
-  localStorage.removeItem("airp_live_espn_fixtures_v20");
-  localStorage.removeItem("airp_locked_ko_odds_v16");
-  localStorage.removeItem("airp_pre_ko_odds_v16");
-  localStorage.removeItem("airp_locked_ko_odds_v19");
-  localStorage.removeItem("airp_pre_ko_odds_v19");
-  localStorage.removeItem("airp_club_crests_v2");
-  localStorage.removeItem("airp_club_crests_v3");
-} catch(e) {}
 window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v21", {}));
-window.createDefault60MetricWeights = function(existing){
-  var map = {};
-  for(var i = 1; i <= 60; i++){
-    var code = "M" + (i < 10 ? "0" + i : String(i));
-    var prev = (existing && Number.isFinite(Number(existing[code]))) ? Number(existing[code]) : 1.0;
-    map[code] = parseFloat(Math.min(1.45, Math.max(0.65, prev)).toFixed(3));
-  }
-  return map;
-};
-window.adaptiveWeights = window.safeGet("airp_adaptive_weights_v14", (window.PUBLISHED_STATE && window.PUBLISHED_STATE.adaptiveWeights) || {
-  awayPen: 3.2,
-  drawGate: 12.0,
-  homeBoost: 4.2,
-  xgMult: 1.0,
-  bttsMult: 1.0,
-  cornersMult: 1.0,
-  cardsMult: 1.0,
-  fhMult: 1.0,
-  handicapMult: 1.0,
-  auditedMatches: 0,
-  correctPredictions: 0,
-  brierScoreSum: 0,
-  logLossSum: 0,
-  avgBrierScore: 0.185,
-  avgLogLoss: 0.545,
-  lastDiagnosis: "60-Metric Neural Baseline Calibrated & Active",
-  metricWeights: window.createDefault60MetricWeights(),
-  teamReliability: {},
-  leagueCalibration: {}
-});
-window.adaptiveWeights.metricWeights = window.createDefault60MetricWeights(window.adaptiveWeights.metricWeights);
-if(!Number.isFinite(Number(window.adaptiveWeights.avgBrierScore))) window.adaptiveWeights.avgBrierScore = 0.185;
-if(!Number.isFinite(Number(window.adaptiveWeights.avgLogLoss))) window.adaptiveWeights.avgLogLoss = 0.545;
-window.matchSortMode = window.safeGet("airp_sort_mode", "CONF");
 window.subPassState = window.safeGet("airp_sub_pass_state", (window.PUBLISHED_STATE && window.PUBLISHED_STATE.subPasses) || {
   allowMasterPass: true,
   revoked: [],
@@ -2884,7 +2963,7 @@ window.betSlip = [];
 window.betSlipData = {};
 window.slipStake = window.safeGet("airp_slip_stake", 10);
 window.slipBetMode = window.safeGet("airp_slip_mode", "acca");
-window.oddsFormat = "frac"; // Default to Fractional until user changes it in the select box
+window.oddsFormat = window.DEFAULT_CORE_STATE.defaultOddsFormat;
 window.cardMarketFilter = {};
 window.DEFAULT_THE_ODDS_API_KEY = "e2f5348bc22ef1afe0ee29483e392284";
 window.ODDS_API_KEY_STORAGE_KEY = "betboy_odds_api_key_v1";
@@ -2930,8 +3009,8 @@ window.oddsLeagueCacheMap = window.safeGet(window.ODDS_API_LEAGUE_CACHE_STORAGE_
 window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v2", {});
 window.espnBookmakerOddsMap = window.safeGet("airp_espn_bookmaker_odds_v1", {});
 window.liveBet365OddsMap = window.liveOddsApiMap;
-window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v21", {});
-window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v21", {});
+window.lockedOddsMap = {};
+window.preKoOddsSnapshotMap = {};
 window.lastOddsApiSyncTime = Number(window.safeGet("airp_the_odds_api_sync_ts", 0)) || 0;
 window.oddsApiInFlight = false;
 
@@ -4488,12 +4567,11 @@ window.confirmRevokePass = function(){
 // ============================================================================
 // BENEFICIAL ADMIN CONTROLS: Confidence Gate, Weights Reset, Odds Locking & Cache
 // ============================================================================
-window.adminConfThresholds = window.adminConfThresholds || (function(){
-  var saved = window.safeGet("airp_conf_gate", "balanced");
-  if(saved === "conservative") return { mode: "conservative", green: 78.0, amber: 65.0 };
-  if(saved === "aggressive") return { mode: "aggressive", green: 70.0, amber: 55.0 };
-  return { mode: "balanced", green: 75.0, amber: 60.0 };
-})();
+window.adminConfThresholds = {
+  mode: window.DEFAULT_CORE_STATE.defaultConfThresholds.mode,
+  green: window.DEFAULT_CORE_STATE.defaultConfThresholds.green,
+  amber: window.DEFAULT_CORE_STATE.defaultConfThresholds.amber
+};
 
 window.setAdminConfidenceGate = function(level){
   if(!window.isAdmin) return;
@@ -4506,7 +4584,6 @@ window.setAdminConfidenceGate = function(level){
     level = "balanced";
   }
   window.adminConfThresholds = { mode: level, green: g, amber: a };
-  window.safeSet("airp_conf_gate", level);
 
   ["balanced", "conservative", "aggressive"].forEach(function(k){
     var btn = document.getElementById("adminGateBtn-" + k);
@@ -5620,7 +5697,7 @@ window.getDeterministicDrift = function(m, lockCutoffMs){
 // Raw 16 Popular Betting Markets + Outright 1X2 Calculation (Unified 60-Metric + 5-Pillar Engine)
 window.computeRawMarkets = function(m, fs){
   var conf = +fs || +m.base || 65, isH = m.venue === "HOME";
-  var w = window.adaptiveWeights || { xgMult: 1.0, bttsMult: 1.0, cornersMult: 1.0, cardsMult: 1.0, fhMult: 1.0, handicapMult: 1.0 };
+  var w = (window.DEFAULT_CORE_STATE && window.DEFAULT_CORE_STATE.defaultAdaptiveWeights) || { xgMult: 1.0, bttsMult: 1.0, cornersMult: 1.0, cardsMult: 1.0, fhMult: 1.0, handicapMult: 1.0 };
   var xgM = Number(w.xgMult || 1.0);
   var bttsM = Number(w.bttsMult || 1.0);
   var cornM = Number(w.cornersMult || 1.0);
@@ -5705,20 +5782,9 @@ window.calculateMatchBrierAndLogLoss = function(predictedProbPct, actualWon){
   return { brierScore: brierScore, logLoss: logLoss, probability01: p01, outcome01: y };
 };
 
-window.getSixtyMetricCompositeDelta = function(m){
-  var w = window.adaptiveWeights || {};
-  var mw = w.metricWeights || {};
-  var isHome = (m && m.venue === "HOME");
-  var relevantCodes = isHome
-    ? ["M01", "M02", "M03", "M04", "M06", "M08", "M11", "M13", "M54", "M60"]
-    : ["M01", "M02", "M03", "M04", "M17", "M28", "M32", "M48", "M58", "M60"];
-  var sum = 0;
-  for(var i = 0; i < relevantCodes.length; i++){
-    sum += Number(mw[relevantCodes[i]] || 1.0);
-  }
-  var avgMult = sum / relevantCodes.length;
-  var delta = (avgMult - 1.0) * 14.0;
-  return parseFloat(Math.max(-3.0, Math.min(3.0, delta)).toFixed(2));
+window.getSixtyMetricCompositeDelta = function(){
+  // Keep core match confidence 100% deterministic across all devices & Incognito sessions
+  return 0;
 };
 
 // T-30m Final Pre-Match Audit & Deterministic Confidence Lock
@@ -5934,9 +6000,6 @@ window.autoSettleAndEvolveCompletedDays = function(forceReaudit){
   });
 
   if(evolvedAny){
-    window.safeSet("airp_settled_ft_matches_v2", window.settledMatchAuditLog);
-    window.safeSet("airp_adaptive_weights_v14", window.adaptiveWeights);
-    window.safeSet("airp_v122_state", window.modelState);
     window.safeSet("airp_v122_hist", window.scanHistory);
     window.safeSet("airp_v122_log", window.logHistory);
   }
@@ -13107,6 +13170,7 @@ window.syncResponsiveDesktopLayout = function(){
   return profile;
 };
 
+window.enforceUniformDefaultStartupState();
 window.syncResponsiveDesktopLayout();
 window.addEventListener("resize", function(){
   window.syncResponsiveDesktopLayout();
@@ -13134,6 +13198,7 @@ document.addEventListener("visibilitychange", function(){
   }
 });
 window.addEventListener("load", function(){
+  window.enforceUniformDefaultStartupState();
   window.syncResponsiveDesktopLayout();
   window.autoSyncEverythingOnLoad(true);
   if(typeof window.initPayPalSubscribeButton === "function") window.initPayPalSubscribeButton();
