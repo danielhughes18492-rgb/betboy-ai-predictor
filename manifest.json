@@ -1,6 +1,6 @@
 {
-  "background_color": "#0a0f1d",
-  "description": "BetBoy AI Football Results, Multi-Market Acca Engine &amp;amp;amp; Live Betting Slip Predictor",
+  "background_color": "#000000",
+  "description": "BetBoy AI Football Results, Multi-Market Acca Engine &amp;amp;amp;amp; Live Betting Slip Predictor",
   "dir": "ltr",
   "display": "standalone",
   "name": "BetBoy AI",
@@ -8,7 +8,7 @@
   "scope": "/",
   "short_name": "BetBoy AI",
   "start_url": "/",
-  "theme_color": "#0a0f1d",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "https://www.betboyai.co.uk/icon.svg",
