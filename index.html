@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BetBoy AI">
@@ -13,8 +13,29 @@
 <meta property="og:title" content="BetBoy AI Predictor">
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
-<link rel="manifest" href="/manifest.json">
-<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="manifest" href='data:application/manifest+json,{
+  "name": "BetBoy AI: Football Predictions",
+  "short_name": "BetBoy AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0a0f1d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://www.betboyai.co.uk/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://www.betboyai.co.uk/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}'>
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
@@ -32,7 +53,16 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script id="paypalSdkScript" src="https://www.paypal.com/sdk/js?client-id=BAADksjqqj_-OlL0WyIWeLi-OsBQitWr5HEZIwiAolAd8jaIc6iADWKnMud_yHL1-NrR2HiQJoIn4u475E&vault=true&intent=subscription" data-sdk-integration-source="button-factory"></script>
 <style>
+  html, body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
   body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; }
+  header.sticky, #topAppHeader {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+  }
   .glass { background: linear-gradient(165deg, rgba(30, 41, 59, 0.68) 0%, rgba(15, 23, 42, 0.92) 100%) !important; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.09) !important; box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.09); transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease; }
   .glass:active { transform: scale(0.995); }
   .mono { font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-variant-numeric: tabular-nums; }
@@ -743,21 +773,26 @@ window._betBoyLogoCanvasImg.src = window.getBetBoyLogoUrl();
 
 // Setup Home Screen App Icons, Web App Manifest, Service Worker & Native Install Prompt for iOS & Android
 window.PWA_MANIFEST_CONFIG = {
-  id: "/",
-  name: "BetBoy AI: Football Predictions",
-  short_name: "BetBoy AI",
-  description: "AI-driven football match predictions, 60-metric analysis, and live UK bookmaker odds.",
-  start_url: "/",
-  scope: "/",
-  display: "standalone",
-  orientation: "portrait",
-  background_color: "#0a0f1d",
-  theme_color: "#0a0f1d",
-  icons: [
-    { src: "favicon.ico", sizes: "64x64 32x32 24x24 16x16", type: "image/x-icon" },
-    { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-    { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-    { src: "/pwa-maskable-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
+  "name": "BetBoy AI: Football Predictions",
+  "short_name": "BetBoy AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0a0f1d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://www.betboyai.co.uk/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://www.betboyai.co.uk/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 };
 
@@ -889,12 +924,8 @@ window.setupHomeScreenAppIcons = function(){
     manifestLink = document.createElement("link");
     manifestLink.id = "pwaManifestLink";
     manifestLink.rel = "manifest";
-    manifestLink.href = "/manifest.json";
+    manifestLink.href = "data:application/manifest+json," + JSON.stringify(window.PWA_MANIFEST_CONFIG);
     document.head.appendChild(manifestLink);
-  }
-  // Only fall back to embedded data URI manifest if opened directly via file:// protocol
-  if(window.location && window.location.protocol === "file:"){
-    manifestLink.href = "data:application/manifest+json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.PWA_MANIFEST_CONFIG));
   }
   if("serviceWorker" in navigator && window.location && (window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")){
     window.addEventListener("load", function(){
@@ -1669,7 +1700,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 <!-- Clean Streamlined Top Header -->
-<header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-3 py-2 flex justify-between items-center gap-2 shadow-lg">
+<header id="topAppHeader" style="padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;" class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-3 py-2 flex justify-between items-center gap-2 shadow-lg">
   <div id="headerBrandLogoBtn" onclick="window.handleAdminLogoTap(event)" role="button" tabindex="0" aria-label="BetBoy AI Logo" class="flex items-center gap-2 min-w-0 cursor-pointer select-none active:scale-95 transition-transform">
     <img src="" id="headerLogoImg" class="w-8 h-8 rounded-full shadow-md border border-emerald-500/40 flex-shrink-0 pointer-events-none">
     <script>document.getElementById("headerLogoImg").src = window.getBetBoyLogoUrl();</script>
