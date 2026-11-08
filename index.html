@@ -106,9 +106,9 @@
   .kpi-active-ring { outline: 2px solid #10b981 !important; background: rgba(16,185,129,0.16) !important; }
   .btn-press { transition: transform 0.16s cubic-bezier(0.16,1,0.3,1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
   .btn-press:active { transform: scale(0.96); }
-  #scrollTopFab { position:fixed; bottom:84px; right:12px; z-index:45; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding: 6px 10px; font-size: 11px; }
-  #scrollTopFab.vis { opacity:0.85; pointer-events:auto; transform:translateY(0); }
-  #scrollTopFab:hover { opacity:1 !important; }
+  #scrollTopFab { position:fixed; bottom:24px; left:16px; right:auto; width:36px; height:36px; z-index:45; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding:0; font-size:14px; display:flex; align-items:center; justify-content:center; }
+  #scrollTopFab.vis { opacity:0.65; pointer-events:auto; transform:translateY(0); }
+  #scrollTopFab:hover { opacity:0.95 !important; }
   .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
   .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
   body.admin-mode-active:not(.admin-preview-feed-active) #userFeedSection { display: none !important; }
@@ -240,7 +240,32 @@ window.isPaywallEnabled = function() {
 // ============================================================================
 // MASTER AFFILIATE BOOKMAKER PARTNERS CONFIG (Easy-to-edit UKGC tracking links)
 // ============================================================================
+window.BETFRED_AFFILIATE_URL_STORAGE_KEY = "betboy_betfred_affiliate_url_v1";
+window.DEFAULT_BETFRED_AFFILIATE_URL = "https://www.betfred.com";
+
+window.getActiveBetfredAffiliateUrl = function() {
+  try {
+    var saved = localStorage.getItem(window.BETFRED_AFFILIATE_URL_STORAGE_KEY);
+    if (saved && String(saved).trim() && /^https?:\/\//i.test(String(saved).trim())) {
+      return String(saved).trim();
+    }
+  } catch (e) {}
+  return window.DEFAULT_BETFRED_AFFILIATE_URL;
+};
+
 const BOOKMAKER_PARTNERS = {
+  betfred: {
+    name: "Betfred",
+    offerText: "Bet £10 Get £50 in Free Bets",
+    ctaText: "Bet £10 Get £50",
+    url: window.getActiveBetfredAffiliateUrl(),
+    terms: "18+ New UK customers only. Register, deposit with Debit Card, and place first bet £10+ at Evens (2.0)+ on Sports within 7 days to get £50 in Free Bets. T&Cs apply. BeGambleAware.org | GamCare.org.uk",
+    accentColor: "#00529b",
+    logoUrl: "https://www.google.com/s2/favicons?domain=betfred.com&sz=128",
+    brandBg: "#002b5c",
+    brandBadgeBg: "#002b5c",
+    brandText: "#ffffff"
+  },
   midnite: {
     name: "Midnite",
     offerText: "Bet £10 Get £20 in Free Bets + 50 Free Spins",
@@ -292,14 +317,54 @@ const BOOKMAKER_PARTNERS = {
 };
 window.BOOKMAKER_PARTNERS = BOOKMAKER_PARTNERS;
 
+window.setActiveBetfredAffiliateUrl = function(newUrl) {
+  var raw = String(newUrl || "").trim();
+  var resolved = (raw && /^https?:\/\//i.test(raw)) ? raw : window.DEFAULT_BETFRED_AFFILIATE_URL;
+  try {
+    localStorage.setItem(window.BETFRED_AFFILIATE_URL_STORAGE_KEY, resolved);
+  } catch (e) {}
+  if (window.BOOKMAKER_PARTNERS && window.BOOKMAKER_PARTNERS.betfred) {
+    window.BOOKMAKER_PARTNERS.betfred.url = resolved;
+  }
+  if (typeof window.initBookmakerAffiliateUI === "function") {
+    window.initBookmakerAffiliateUI();
+  }
+  return resolved;
+};
+
+window.saveAdminBetfredAffiliateUrl = function() {
+  var inp = document.getElementById("adminBetfredAffiliateUrlInput");
+  var val = inp ? inp.value : "";
+  var savedUrl = window.setActiveBetfredAffiliateUrl(val);
+  if (inp) inp.value = savedUrl;
+  var statusEl = document.getElementById("adminBetfredUrlSavedBadge");
+  if (statusEl) {
+    statusEl.innerText = "✓ Saved & Active";
+    statusEl.className = "text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded";
+  }
+  if (typeof window.showAppToast === "function") {
+    window.showAppToast("✅ Betfred Affiliate URL saved: " + savedUrl);
+  }
+};
+
+window.saveAdminOddsApiKeyFromInput = function() {
+  var inp = document.getElementById("adminOddsApiKeyInput");
+  if (!inp || typeof window.setActiveOddsApiKey !== "function") return;
+  var savedKey = window.setActiveOddsApiKey(inp.value);
+  inp.value = savedKey;
+  if (typeof window.showAppToast === "function") {
+    window.showAppToast("✅ The Odds API Key updated in localStorage");
+  }
+};
+
 window.makeBookmakerFallbackSvg = function(key) {
   var partners = window.BOOKMAKER_PARTNERS || BOOKMAKER_PARTNERS || {};
   var k = String(key || "").toLowerCase();
-  var p = partners[k] || partners.midnite || {};
+  var p = partners[k] || partners.betfred || partners.midnite || {};
   var bg = p.brandBg || p.brandBadgeBg || "#0a0f0d";
   var txt = p.brandText || p.accentColor || "#00ff66";
   var stroke = p.accentColor || txt;
-  var label = k === "midnite" ? "M" : k === "betmgm" ? "MGM" : k === "betfair" ? "BF" : k === "ladbrokes" ? "L" : String(p.name || "UK").slice(0, 2).toUpperCase();
+  var label = k === "betfred" ? "BF" : k === "midnite" ? "M" : k === "betmgm" ? "MGM" : k === "betfair" ? "BF" : k === "ladbrokes" ? "L" : String(p.name || "UK").slice(0, 2).toUpperCase();
   var fontSize = label.length >= 3 ? 28 : label.length === 2 ? 36 : 46;
   var svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' +
@@ -311,6 +376,9 @@ window.makeBookmakerFallbackSvg = function(key) {
 
 window.renderFeaturedBookmakerOffersHtml = function() {
   var partners = window.BOOKMAKER_PARTNERS || BOOKMAKER_PARTNERS || {};
+  if (partners.betfred && typeof window.getActiveBetfredAffiliateUrl === "function") {
+    partners.betfred.url = window.getActiveBetfredAffiliateUrl();
+  }
   var keys = Object.keys(partners);
   var cardsHtml = "";
   for (var i = 0; i < keys.length; i++) {
@@ -321,7 +389,7 @@ window.renderFeaturedBookmakerOffersHtml = function() {
     var brandBg = p.brandBg || p.brandBadgeBg || "#0f172a";
     var brandText = p.brandText || "#ffffff";
     var logoUrl = p.logoUrl || window.makeBookmakerFallbackSvg(key);
-    var btnTextColor = (key === "ladbrokes" || accent.toLowerCase() === "#e41e26") ? "#ffffff" : "#050b14";
+    var btnTextColor = (key === "betfred" || key === "ladbrokes" || accent.toLowerCase() === "#e41e26" || accent.toLowerCase() === "#00529b") ? "#ffffff" : "#050b14";
     cardsHtml +=
       '<div data-bookmaker-card="' + key + '" class="bg-slate-950/95 rounded-xl p-2.5 border border-slate-800/90 flex flex-col justify-between gap-1.5 shadow-md hover:border-slate-700 transition flex-shrink-0 w-[236px] sm:w-[250px] lg:w-auto lg:flex-1 snap-start" style="border-top: 3px solid ' + accent + ';">' +
         '<div class="space-y-1.5">' +
@@ -330,12 +398,12 @@ window.renderFeaturedBookmakerOffersHtml = function() {
               '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="32" height="32" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-8 h-8 rounded-lg object-contain flex-shrink-0 p-0.5 shadow-sm" style="background-color:' + brandBg + '; border:1px solid ' + accent + '66;" />' +
               '<span data-bookmaker-badge="' + key + '" class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase tracking-wider shadow-sm truncate" style="background-color:' + brandBg + '; color:' + brandText + '; border:1px solid ' + accent + '66;">' + p.name + '</span>' +
             '</div>' +
-            '<span class="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800 flex-shrink-0">18+ UK</span>' +
+            '<span class="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800 flex-shrink-0">' + (i === 0 ? '★ #1 UK PICK' : '18+ UK') + '</span>' +
           '</div>' +
           '<p class="text-[10.5px] font-extrabold text-emerald-300 leading-snug">' + p.offerText + '</p>' +
         '</div>' +
         '<div class="space-y-1 pt-0.5">' +
-          '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" class="w-full py-1 px-2 rounded-lg font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow transition hover:opacity-95 cursor-pointer text-center" style="background-color:' + accent + '; color:' + btnTextColor + ';">' +
+          '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-bookmaker-cta="' + key + '" class="w-full py-1 px-2 rounded-lg font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow transition hover:opacity-95 cursor-pointer text-center" style="background-color:' + accent + '; color:' + btnTextColor + ';">' +
             '<span>' + p.ctaText + '</span>' +
             '<span>↗</span>' +
           '</a>' +
@@ -347,6 +415,7 @@ window.renderFeaturedBookmakerOffersHtml = function() {
 };
 
 window.BOOKMAKER_SLIP_HOOKS = {
+  betfred: "Bet £10 Get £50 in Free Bets",
   midnite: "Bet £10 Get £20 Free",
   betmgm: "Bet £10 Get £40 Free",
   betfair: "Bet £10 Get £50 Free",
@@ -355,6 +424,9 @@ window.BOOKMAKER_SLIP_HOOKS = {
 
 window.renderSlipModalBookmakerButtonsHtml = function() {
   var partners = window.BOOKMAKER_PARTNERS || BOOKMAKER_PARTNERS || {};
+  if (partners.betfred && typeof window.getActiveBetfredAffiliateUrl === "function") {
+    partners.betfred.url = window.getActiveBetfredAffiliateUrl();
+  }
   var hooks = window.BOOKMAKER_SLIP_HOOKS || {};
   var keys = Object.keys(partners);
   var btnsHtml = "";
@@ -367,12 +439,15 @@ window.renderSlipModalBookmakerButtonsHtml = function() {
     var brandText = p.brandText || "#ffffff";
     var logoUrl = p.logoUrl || window.makeBookmakerFallbackSvg(key);
     var hookSubtext = hooks[key] || p.ctaText || p.offerText || "";
+    var isTopFeatured = (i === 0 || key === "betfred");
+    var spanClass = isTopFeatured ? "col-span-2 sm:col-span-4 py-2 px-3" : "px-2 py-1.5";
+    var titleLabel = isTopFeatured ? ("Place Bet at " + p.name) : String(p.name).toUpperCase();
     btnsHtml +=
-      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-slip-bookmaker-btn="' + key + '" onclick="window.onSlipBookmakerClick(\'' + key + '\', event)" class="px-2 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow transition hover:opacity-95 cursor-pointer text-left min-w-0" style="background-color:' + brandBg + '; color:' + brandText + '; border:1px solid ' + accent + '99;">' +
-        '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="18" height="18" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[18px] h-[18px] rounded object-contain flex-shrink-0" />' +
+      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-slip-bookmaker-btn="' + key + '" onclick="window.onSlipBookmakerClick(\'' + key + '\', event)" class="' + spanClass + ' rounded-lg flex items-center justify-center gap-2 shadow transition hover:opacity-95 cursor-pointer text-left min-w-0" style="background-color:' + brandBg + '; color:' + brandText + '; border:' + (isTopFeatured ? '1.5px solid #38bdf8' : ('1px solid ' + accent + '99')) + ';">' +
+        '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="20" height="20" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[20px] h-[20px] rounded object-contain flex-shrink-0" />' +
         '<div class="flex flex-col min-w-0 leading-tight">' +
-          '<span class="font-black text-[9.5px] uppercase tracking-wider truncate flex items-center gap-0.5"><span>' + String(p.name).toUpperCase() + '</span> <span class="text-[9px] opacity-90">↗</span></span>' +
-          '<span class="text-[8px] font-bold opacity-90 truncate" data-slip-bookmaker-hook="' + key + '">' + hookSubtext + '</span>' +
+          '<span class="font-black ' + (isTopFeatured ? 'text-[11px]' : 'text-[9.5px]') + ' uppercase tracking-wider flex items-center gap-1"><span>' + titleLabel + '</span> <span class="text-[9px] opacity-90">↗</span></span>' +
+          '<span class="' + (isTopFeatured ? 'text-[9px] text-emerald-300' : 'text-[8px] opacity-90') + ' font-bold" data-slip-bookmaker-hook="' + key + '">' + hookSubtext + '</span>' +
         '</div>' +
       '</a>';
   }
@@ -388,7 +463,7 @@ window.applyDefaultBookmakerStripMode = function() {
   var isMobileViewport = (typeof window.innerWidth === "number" && window.innerWidth < 768);
   if (isMobileViewport) {
     gridEl.classList.add("hidden");
-    if (btnEl) btnEl.innerText = "▸ Show 4 Offers";
+    if (btnEl) btnEl.innerText = "▸ Show 5 Offers";
   } else {
     gridEl.classList.remove("hidden");
     if (btnEl) btnEl.innerText = "▾ Compact";
@@ -406,12 +481,15 @@ window.toggleFeaturedBookmakerStrip = function() {
     if (btnEl) btnEl.innerText = "▾ Compact";
   } else {
     gridEl.classList.add("hidden");
-    if (btnEl) btnEl.innerText = "▸ Show 4 Offers";
+    if (btnEl) btnEl.innerText = "▸ Show 5 Offers";
   }
 };
 
 window.renderBackThisPickAffiliateBar = function(contextLabel) {
   var partners = window.BOOKMAKER_PARTNERS || BOOKMAKER_PARTNERS || {};
+  if (partners.betfred && typeof window.getActiveBetfredAffiliateUrl === "function") {
+    partners.betfred.url = window.getActiveBetfredAffiliateUrl();
+  }
   var keys = Object.keys(partners);
   var btnsHtml = "";
   for (var i = 0; i < keys.length; i++) {
@@ -421,11 +499,12 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
     var accent = p.accentColor || "#10b981";
     var brandBg = p.brandBg || p.brandBadgeBg || "#0f172a";
     var logoUrl = p.logoUrl || window.makeBookmakerFallbackSvg(key);
-    var btnLabel = key === "midnite" ? ("Place Bet at " + p.name + " ↗") : ("Back on " + p.name + " ↗");
+    var btnLabel = (i === 0 || key === "betfred") ? ("Place Bet at " + p.name + " ↗") : ("Back on " + p.name + " ↗");
+    var colSpanClass = (i === 0 || key === "betfred") ? "col-span-2 sm:col-span-1" : "";
     btnsHtml +=
-      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-affiliate-pick-btn="' + key + '" onclick="event.stopPropagation()" class="px-2.5 py-2 rounded-xl hover:brightness-110 text-[10px] font-extrabold text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer text-center" style="background-color:#111927; border:1.5px solid ' + accent + '; color:#ffffff;">' +
+      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer sponsored" data-affiliate-pick-btn="' + key + '" onclick="event.stopPropagation()" class="' + colSpanClass + ' px-2.5 py-2 rounded-xl hover:brightness-110 text-[10px] font-extrabold text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer text-center" style="background-color:#111927; border:1.5px solid ' + accent + '; color:#ffffff;">' +
         '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="22" height="22" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[22px] h-[22px] rounded-md object-contain flex-shrink-0 p-0.5" style="background-color:' + brandBg + '; border:1px solid ' + accent + '66;" />' +
-        '<span class="text-[10px] font-extrabold text-white tracking-tight truncate">' + btnLabel + '</span>' +
+        '<span class="text-[10px] font-extrabold text-white tracking-tight">' + btnLabel + '</span>' +
       '</a>';
   }
   return (
@@ -436,7 +515,7 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
         '</span>' +
         (contextLabel ? '<span class="text-[8.5px] font-bold text-slate-400 truncate max-w-[200px]">' + contextLabel + '</span>' : '') +
       '</div>' +
-      '<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">' +
+      '<div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">' +
         btnsHtml +
       '</div>' +
       '<p class="text-[8.5px] text-slate-400 text-center font-medium tracking-wide">18+ Only. Please Gamble Responsibly. | T&amp;Cs Apply | Commercial Partner | <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">BeGambleAware.org</a> | <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-emerald-300">GamCare.org.uk</a> | <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-sky-300">GamStop.co.uk</a></p>' +
@@ -445,6 +524,9 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
 };
 
 window.initBookmakerAffiliateUI = function() {
+  if (window.BOOKMAKER_PARTNERS && window.BOOKMAKER_PARTNERS.betfred && typeof window.getActiveBetfredAffiliateUrl === "function") {
+    window.BOOKMAKER_PARTNERS.betfred.url = window.getActiveBetfredAffiliateUrl();
+  }
   var gridEl = document.getElementById("featuredBookmakerOffersGrid");
   if (gridEl && typeof window.renderFeaturedBookmakerOffersHtml === "function") {
     gridEl.innerHTML = window.renderFeaturedBookmakerOffersHtml();
@@ -459,6 +541,14 @@ window.initBookmakerAffiliateUI = function() {
   var slipModalBtnsEl = document.getElementById("slipModalBookmakerButtons");
   if (slipModalBtnsEl && typeof window.renderSlipModalBookmakerButtonsHtml === "function") {
     slipModalBtnsEl.innerHTML = window.renderSlipModalBookmakerButtonsHtml();
+  }
+  var betfredInp = document.getElementById("adminBetfredAffiliateUrlInput");
+  if (betfredInp && typeof window.getActiveBetfredAffiliateUrl === "function") {
+    betfredInp.value = window.getActiveBetfredAffiliateUrl();
+  }
+  var oddsKeyInp = document.getElementById("adminOddsApiKeyInput");
+  if (oddsKeyInp && typeof window.getActiveOddsApiKey === "function") {
+    oddsKeyInp.value = window.getActiveOddsApiKey();
   }
 };
 document.addEventListener("DOMContentLoaded", function() {
@@ -484,7 +574,7 @@ window.LEAGUE_NAMES = {
   UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
 };
 window.LEAGUE_COUNTRY_TAGS = {
-  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", FAC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", EFLC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  PL: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", CHA: "������󠁧󠁢󠁥󠁮󠁧󠁿", L1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", L2: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", FAC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", EFLC: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
   LL: "🇪🇸", BUN: "🇩🇪", FL1: "🇫🇷", SA: "🇮🇹", SPL: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
   UCL: "🏆", UEL: "🏆", UECL: "🏆"
 };
@@ -1697,6 +1787,31 @@ document.addEventListener("DOMContentLoaded", function() {
       </div>
       <div id="adminSubPassOutput" style="display:none;" class="bg-slate-950 border border-slate-800 p-2 rounded-xl text-[10px] font-mono text-emerald-300 select-all"></div>
     </div>
+
+    <!-- 6. Betfred #1 Affiliate Tracking URL & Odds API Key Manager (Persisted in localStorage) -->
+    <div id="adminAffiliateConfigBox" class="bg-slate-950/90 border border-sky-500/40 rounded-2xl p-3 space-y-2.5 text-[10px]">
+      <div class="flex justify-between items-center gap-2 flex-wrap border-b border-slate-800/80 pb-1.5">
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">🔗</span>
+          <span class="font-extrabold text-white text-[11px]">Betfred #1 Affiliate URL &amp; Live Odds API Key</span>
+        </div>
+        <span id="adminBetfredUrlSavedBadge" class="text-[9px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 px-1.5 py-0.5 rounded">Persisted in localStorage</span>
+      </div>
+      <div class="space-y-1">
+        <label for="adminBetfredAffiliateUrlInput" class="block text-[9.5px] font-bold text-slate-300">Betfred Affiliate Tracking URL (#1 Featured Bookmaker &amp; Bet Slip Top CTA):</label>
+        <div class="flex items-center gap-1.5">
+          <input type="url" id="adminBetfredAffiliateUrlInput" placeholder="https://www.betfred.com" class="flex-1 bg-slate-900 border border-slate-700 focus:border-sky-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-white font-mono outline-none transition">
+          <button type="button" id="adminSaveBetfredUrlBtn" onclick="window.saveAdminBetfredAffiliateUrl()" class="bg-sky-600 hover:bg-sky-500 text-white font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex-shrink-0">💾 Save URL</button>
+        </div>
+      </div>
+      <div class="space-y-1 pt-1 border-t border-slate-800/70">
+        <label for="adminOddsApiKeyInput" class="block text-[9.5px] font-bold text-slate-300">The Odds API Key (12h Per-League Cache):</label>
+        <div class="flex items-center gap-1.5">
+          <input type="text" id="adminOddsApiKeyInput" placeholder="e2f5348bc22ef1afe0ee29483e392284" class="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-emerald-300 font-mono outline-none transition">
+          <button type="button" id="adminSaveOddsApiKeyBtn" onclick="window.saveAdminOddsApiKeyFromInput()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex-shrink-0">🔑 Save Key</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- USER MATCH FEED SECTION: Visible to users, hidden by default in Admin Mode -->
@@ -1722,12 +1837,12 @@ document.addEventListener("DOMContentLoaded", function() {
       </div>
     </div>
 
-    <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Success Rate) -->
+    <!-- 4-Box KPI Summary Grid (Green, Amber, Red, Green Pick Win %) -->
     <div class="grid gap-1.5 text-center grid-cols-4">
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5">0/0</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5">0</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5">0</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold">Success Rate</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">In-Play</div><div id="sessionHitRateSub" class="text-[8.5px] text-slate-400 font-semibold leading-none mt-0.5">Settles at FT</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">0/0</div><div id="greenCountSub" class="text-[8.5px] text-emerald-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5 leading-tight">0</div><div id="amberCountSub" class="text-[8.5px] text-amber-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5 leading-tight">0</div><div id="redCountSub" class="text-[8.5px] text-rose-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div class="text-[10px] text-slate-400 font-semibold">Green Pick Win %</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">In-Play</div><div id="sessionHitRateSub" class="text-[8.5px] text-slate-400 font-semibold leading-none mt-0.5">Settles at FT</div></div>
     </div>
 
     <!-- User Quick-Sort Bar -->
@@ -1780,7 +1895,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <button type="button" id="toggleBookmakerStripBtn" onclick="window.toggleFeaturedBookmakerStrip()" class="text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">▾ Compact</button>
         </div>
       </div>
-      <div id="featuredBookmakerOffersGrid" class="flex lg:grid lg:grid-cols-4 gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-0.5 scroll-smooth"></div>
+      <div id="featuredBookmakerOffersGrid" class="flex lg:grid lg:grid-cols-5 gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-0.5 scroll-smooth"></div>
     </section>
 
     <!-- Green, Amber & Red Fixture Tiers -->
@@ -1836,20 +1951,8 @@ document.addEventListener("DOMContentLoaded", function() {
       </button>
     </div>
 
-    <div class="text-[10px] text-slate-500 font-mono pt-2 border-t border-slate-800/70 flex items-center justify-center gap-1.5 flex-wrap">
-      <span>Copyright © BetBoy 2026 • AI Results Predictor</span>
-      <span>•</span>
-      <span class="text-slate-300 font-semibold">18+ Only. Please Gamble Responsibly.</span>
-      <span>•</span>
-      <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-amber-300 underline">BeGambleAware.org</a>
-      <span>•</span>
-      <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-emerald-300 underline">GamCare.org.uk</a>
-      <span>•</span>
-      <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-sky-300 underline">GamStop.co.uk</a>
-      <span>•</span>
-      <button type="button" onclick="window.openAboutContactModal()" class="text-slate-400 hover:text-emerald-300 underline cursor-pointer">About / Contact</button>
-      <span>•</span>
-      <button type="button" onclick="window.openPrivacyTermsModal()" class="text-slate-400 hover:text-sky-300 underline cursor-pointer">Privacy Policy &amp; Terms</button>
+    <div class="text-[10px] text-slate-400 font-mono pt-2 border-t border-slate-800/70 flex items-center justify-center gap-1.5 flex-wrap">
+      <span>Copyright © BetBoy 2026 • AI Results Predictor • 18+ Only. Please Gamble Responsibly.</span>
     </div>
     <script>
       if(document.getElementById("footer18PlusImg")) document.getElementById("footer18PlusImg").src = window.make18PlusLogoUrl();
@@ -2292,7 +2395,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <!-- Non-Blocking Toast Notification (Positioned at bottom:98px so it never overlaps the sticky Betting Slip Guide bar) -->
 <div id="appToastBanner" style="position:fixed;bottom:98px;left:50%;transform:translateX(-50%);z-index:10050;display:none;pointer-events:none;" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-2xl border border-emerald-300/40 whitespace-nowrap max-w-[92vw] truncate"></div>
 
-<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="bottom: 84px; padding: 6px 10px; font-size: 11px;" class="bg-emerald-600/90 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black rounded-full shadow-lg border border-emerald-400/40 cursor-pointer flex items-center gap-1">↑ Top</button>
+<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top" aria-label="Scroll to top" style="bottom: 24px; left: 16px; right: auto; width: 36px; height: 36px;" class="bg-slate-900/80 hover:bg-emerald-600/90 active:bg-emerald-700 text-emerald-300 hover:text-white font-black rounded-full shadow-lg border border-emerald-500/40 cursor-pointer flex items-center justify-center backdrop-blur-sm">↑</button>
 
 <script>
 window.openAboutContactModal = function() {
@@ -2402,12 +2505,30 @@ window.isLegacyFallbackFixtureRow = function(row){
 window.sanitizeDailyFixturesMap = function(mapObj){
   var clean = {};
   if(!mapObj || typeof mapObj !== "object") return clean;
+  var normClub = function(v){
+    return String(v || "").toLowerCase().replace(/\b(fc|afc|sv|sc|cf|ac|as)\b/g, " ").replace(/[^a-z0-9]/g, "");
+  };
   Object.keys(mapObj).forEach(function(dKey){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dKey))) return;
     var arr = mapObj[dKey];
     if(Array.isArray(arr)){
-      var realRows = arr.filter(function(r){
-        return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && String(r[1] || "") === String(dKey);
+      var seenIds = {};
+      var seenPairs = {};
+      var seenClubs = {};
+      var realRows = [];
+      arr.forEach(function(r){
+        if(!Array.isArray(r) || window.isLegacyFallbackFixtureRow(r) || String(r[1] || "") !== String(dKey)) return;
+        var idKey = String(r[0] || "");
+        var k1 = normClub(r[4]);
+        var k2 = normClub(r[5]);
+        if(!k1 || !k2 || k1 === k2) return;
+        var pairKey = [k1, k2].sort().join("_vs_");
+        if((idKey && seenIds[idKey]) || seenPairs[pairKey] || seenClubs[k1] || seenClubs[k2]) return;
+        if(idKey) seenIds[idKey] = true;
+        seenPairs[pairKey] = true;
+        seenClubs[k1] = true;
+        seenClubs[k2] = true;
+        realRows.push(r);
       });
       if(realRows.length > 0) clean[dKey] = realRows;
     }
@@ -2419,12 +2540,15 @@ try {
   localStorage.removeItem("airp_live_espn_fixtures_v17");
   localStorage.removeItem("airp_live_espn_fixtures_v18");
   localStorage.removeItem("airp_live_espn_fixtures_v19");
+  localStorage.removeItem("airp_live_espn_fixtures_v20");
   localStorage.removeItem("airp_locked_ko_odds_v16");
   localStorage.removeItem("airp_pre_ko_odds_v16");
+  localStorage.removeItem("airp_locked_ko_odds_v19");
+  localStorage.removeItem("airp_pre_ko_odds_v19");
   localStorage.removeItem("airp_club_crests_v2");
   localStorage.removeItem("airp_club_crests_v3");
 } catch(e) {}
-window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v20", {}));
+window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v21", {}));
 window.createDefault60MetricWeights = function(existing){
   var map = {};
   for(var i = 1; i <= 60; i++){
@@ -2517,8 +2641,8 @@ window.oddsLeagueCacheMap = window.safeGet(window.ODDS_API_LEAGUE_CACHE_STORAGE_
 window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v2", {});
 window.espnBookmakerOddsMap = window.safeGet("airp_espn_bookmaker_odds_v1", {});
 window.liveBet365OddsMap = window.liveOddsApiMap;
-window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v19", {});
-window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v19", {});
+window.lockedOddsMap = window.safeGet("airp_locked_ko_odds_v21", {});
+window.preKoOddsSnapshotMap = window.safeGet("airp_pre_ko_odds_v21", {});
 window.lastOddsApiSyncTime = Number(window.safeGet("airp_the_odds_api_sync_ts", 0)) || 0;
 window.oddsApiInFlight = false;
 
@@ -2728,19 +2852,23 @@ window.deriveMarketsFromOddsApiH2H = function(favOdds, drawOdds, oppOdds) {
 
   var fairFav = pFavRaw / overround;
   var fairDraw = pDrawRaw / overround;
-  var fairOpp = pOppRaw / overround;
 
-  var dcProb = Math.min(0.95, Math.max(0.25, (fairFav + fairDraw) * 1.045));
-  var rawDnbOdds = Math.max(1.18, safeFav * 0.87);
-  if (safeFav > 1.72) rawDnbOdds = Math.max(1.68, safeFav * 0.90);
-  else if (safeFav > 1.44) rawDnbOdds = Math.max(1.45, 1.45 + (safeFav - 1.44) * 0.72);
+  var dcProb = Math.min(0.95, Math.max(0.25, (fairFav + fairDraw) * 1.048));
+  var dnbProb = Math.min(0.93, Math.max(fairFav + 0.03, (fairFav / Math.max(0.12, 1 - fairDraw)) * 1.045));
+  var rawDcOdds = Math.min(4.20, Math.max(1.06, 1 / dcProb));
+  var rawDnbOdds = Math.min(5.50, Math.max(1.10, 1 / dnbProb));
+  if (rawDnbOdds >= safeFav - 0.04) rawDnbOdds = Math.max(1.08, safeFav - 0.12);
+  if (rawDcOdds >= rawDnbOdds - 0.03) rawDcOdds = Math.max(1.05, rawDnbOdds - 0.08);
+
+  var rawWinO15Odds = Math.min(9.50, Math.max(safeFav + 0.16, safeFav * 1.21));
+  var rawAh1Odds = Math.min(12.00, Math.max(rawWinO15Odds + 0.26, safeFav * 1.54));
 
   return {
     winOdds: parseFloat(safeFav.toFixed(2)),
-    dcOdds: parseFloat(Math.min(4.50, Math.max(1.06, 1 / dcProb)).toFixed(2)),
-    dnbOdds: parseFloat(Math.min(6.00, rawDnbOdds).toFixed(2)),
-    winO15Odds: parseFloat(Math.min(9.50, Math.max(1.24, safeFav * 1.18)).toFixed(2)),
-    ah1Odds: parseFloat(Math.min(12.00, Math.max(1.36, safeFav * 1.48)).toFixed(2))
+    dcOdds: parseFloat(rawDcOdds.toFixed(2)),
+    dnbOdds: parseFloat(rawDnbOdds.toFixed(2)),
+    winO15Odds: parseFloat(rawWinO15Odds.toFixed(2)),
+    ah1Odds: parseFloat(rawAh1Odds.toFixed(2))
   };
 };
 
@@ -2869,10 +2997,11 @@ window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
 };
 
 window.UK_FRACTION_LADDER = [
-  [1, 10], [1, 9], [1, 8], [1, 7], [1, 6], [1, 5], [2, 9], [1, 4], [2, 7], [3, 10],
-  [1, 3], [4, 11], [2, 5], [4, 9], [1, 2], [8, 15], [4, 7], [3, 5], [8, 13], [4, 6],
-  [7, 10], [8, 11], [3, 4], [4, 5], [5, 6], [9, 10], [10, 11], [1, 1], [21, 20], [11, 10], [23, 20], [6, 5],
-  [5, 4], [13, 10], [11, 8], [7, 5], [6, 4], [8, 5], [13, 8], [7, 4], [9, 5], [15, 8],
+  [1, 12], [1, 10], [1, 9], [1, 8], [1, 7], [1, 6], [2, 11], [1, 5], [2, 9], [1, 4], [2, 7], [3, 10],
+  [1, 3], [7, 20], [4, 11], [3, 8], [2, 5], [5, 12], [4, 9], [5, 11], [6, 13], [7, 15], [10, 21],
+  [1, 2], [8, 15], [5, 9], [4, 7], [7, 12], [3, 5], [8, 13], [9, 14], [4, 6], [11, 16],
+  [7, 10], [8, 11], [3, 4], [13, 17], [4, 5], [5, 6], [17, 20], [7, 8], [9, 10], [10, 11], [19, 20],
+  [1, 1], [21, 20], [11, 10], [23, 20], [6, 5], [5, 4], [13, 10], [11, 8], [7, 5], [6, 4], [8, 5], [13, 8], [7, 4], [9, 5], [15, 8],
   [2, 1], [21, 10], [9, 4], [12, 5], [5, 2], [13, 5], [11, 4], [14, 5], [3, 1], [16, 5],
   [10, 3], [7, 2], [4, 1], [9, 2], [5, 1], [11, 2], [6, 1], [13, 2], [7, 1], [15, 2],
   [8, 1], [9, 1], [10, 1], [11, 1], [12, 1], [14, 1], [16, 1], [20, 1], [25, 1], [33, 1]
@@ -3091,21 +3220,21 @@ window.resolveMarketOddsCurveSpec = function(marketType) {
 
 window.calculateLiveOddsFromPct = function(pct, seed, marketType) {
   var num = typeof pct === "string" ? parseFloat(pct.replace("%", "")) : Number(pct);
-  var validPct = (Number.isFinite(num) && num > 0) ? Math.min(95, Math.max(8, num)) : 65;
-  var micro = (((Math.abs(Number(seed) || 0) % 7) - 3) * 0.01);
+  var validPct = (Number.isFinite(num) && num > 0) ? Math.min(95.5, Math.max(6.0, num)) : 65.0;
+  var seedVal = Math.abs(Number(seed) || 0);
+  var overround = 1.048 + ((seedVal % 11) * 0.0018);
+  var micro = (((seedVal * 13 + 7) % 15) - 7) * 0.008;
 
+  // Convert exact probability + realistic bookmaker overround into distinct decimal odds
+  var exactImplied = (100.0 / (validPct * overround)) + micro;
   var curve = window.resolveMarketOddsCurveSpec ? window.resolveMarketOddsCurveSpec(marketType) : null;
   if (curve) {
-    var clampedP = Math.min(curve.maxPct, Math.max(curve.minPct, validPct));
-    var spanP = Math.max(1, curve.maxPct - curve.minPct);
-    var t = (curve.maxPct - clampedP) / spanP;
-    var curved = curve.minOdds + t * (curve.maxOdds - curve.minOdds) + micro;
-    var bounded = Math.min(curve.maxOdds, Math.max(curve.minOdds, curved));
-    return parseFloat(bounded.toFixed(2));
+    var minBound = Math.max(1.06, curve.minOdds - 0.14);
+    var maxBound = Math.min(15.0, curve.maxOdds + 0.45);
+    return parseFloat(Math.min(maxBound, Math.max(minBound, exactImplied)).toFixed(2));
   }
 
-  var raw = (100 / (validPct * 1.042)) + micro;
-  return parseFloat(Math.min(15.0, Math.max(1.22, raw)).toFixed(2));
+  return parseFloat(Math.min(15.0, Math.max(1.08, exactImplied)).toFixed(2));
 };
 
 window.syncLiveOddsNow = function(showToastFlag) {
@@ -4949,7 +5078,9 @@ window.buildDeterministicFallbackSlate = function(){
               return;
             }
             var row = window.buildAccurateFixtureRow ? window.buildAccurateFixtureRow(ev, dateStr, lg.c, idx) : null;
-            if(row) col.push(row);
+            if(row){
+              col.push(row);
+            }
             var comp = ev.competitions && ev.competitions[0];
             if(!comp || !comp.competitors) return;
             var hC = comp.competitors.find(function(x){return x.homeAway==="home";});
@@ -5028,9 +5159,25 @@ window.buildDeterministicFallbackSlate = function(){
     });
     Promise.all(jobs).then(function(){
       window.inFlightDatesMap[dateStr] = false;
-      if(col.length > 0 || anyFetchOk || !window.DAILY_FIXTURES[dateStr]){
-        window.DAILY_FIXTURES[dateStr] = col;
-        window.safeSet("airp_live_espn_fixtures_v20", window.DAILY_FIXTURES);
+      var dedupedCol = [];
+      var seenIds = {}, seenPairs = {}, seenClubs = {};
+      col.forEach(function(r){
+        if(!Array.isArray(r)) return;
+        var idK = String(r[0] || "");
+        var c1 = window.normTeamKey ? window.normTeamKey(r[4]) : String(r[4] || "").toLowerCase();
+        var c2 = window.normTeamKey ? window.normTeamKey(r[5]) : String(r[5] || "").toLowerCase();
+        if(!c1 || !c2 || c1 === c2) return;
+        var pairK = [c1, c2].sort().join("_vs_");
+        if((idK && seenIds[idK]) || seenPairs[pairK] || seenClubs[c1] || seenClubs[c2]) return;
+        if(idK) seenIds[idK] = true;
+        seenPairs[pairK] = true;
+        seenClubs[c1] = true;
+        seenClubs[c2] = true;
+        dedupedCol.push(r);
+      });
+      if(dedupedCol.length > 0 || anyFetchOk || !window.DAILY_FIXTURES[dateStr]){
+        window.DAILY_FIXTURES[dateStr] = dedupedCol;
+        window.safeSet("airp_live_espn_fixtures_v21", window.DAILY_FIXTURES);
       }
       window.safeSet("airp_espn_bookmaker_odds_v1", window.espnBookmakerOddsMap);
       window.safeSet("airp_espn_truth_v4", window.apiLiveScores);
@@ -5926,12 +6073,10 @@ window.calcExtraMarkets = function(m, fs){
       (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.espnBookmakerOddsMap, { id: m.id, homeName: homeName, awayName: awayName }) : null);
     var liveFeed = oddsApiFeed || espnFeed;
 
-    var idJitter = ((((Number(m.id) || 101) * 19) % 11) - 5) * 0.015;
-    var fallbackFavOdds = baseConf >= 75.0
-      ? Math.max(1.20, Math.min(1.40, parseFloat((1.40 - ((baseConf - 75.0) * 0.022) + idJitter).toFixed(2))))
-      : (baseConf >= 60.0
-          ? Math.max(1.42, Math.min(2.16, parseFloat((2.14 - ((baseConf - 60.0) * 0.048) + idJitter).toFixed(2))))
-          : Math.max(2.19, Math.min(2.75, parseFloat((2.68 - ((baseConf - 50.0) * 0.050) + idJitter).toFixed(2)))));
+    var idSeed = Math.abs(Number(m.id) || 101);
+    var idJitter = (((idSeed * 19 + 7) % 17) - 8) * 0.012;
+    var overroundMargin = 1.048 + ((idSeed % 9) * 0.002);
+    var fallbackFavOdds = parseFloat(Math.max(1.14, Math.min(2.85, (100.0 / (Math.max(36.0, Math.min(86.5, baseConf)) * overroundMargin)) + idJitter)).toFixed(2));
 
     var fallbackOppOdds = mkOdds(rawM.oppWin, 103);
     homeOdds = (liveFeed && liveFeed.homeOdds) ? Number(liveFeed.homeOdds) : (isH ? fallbackFavOdds : fallbackOppOdds);
@@ -5945,42 +6090,11 @@ window.calcExtraMarkets = function(m, fs){
       ? window.deriveMarketsFromOddsApiH2H(favOdds, drawOdds, oppOdds)
       : null;
 
-    dcOdds = Math.max(1.16, derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8, "dc"));
-    if (favOdds >= 1.56 && dcOdds < 1.30) {
-      dcOdds = parseFloat(Math.min(1.44, 1.30 + ((favOdds - 1.56) * 0.20)).toFixed(2));
-    }
-    dnbOdds = Math.max(1.18, derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb"));
-    if (favOdds <= 1.40) dnbOdds = Math.min(1.30, dnbOdds);
-    else if (favOdds <= 1.85) dnbOdds = parseFloat(Math.max(1.36, Math.min(1.68, 1.36 + (favOdds - 1.40) * 0.68)).toFixed(2));
-    else dnbOdds = parseFloat(Math.max(1.72, Math.min(2.10, 1.72 + (favOdds - 1.85) * 0.45)).toFixed(2));
-
-    winO15Odds = Math.max(1.34, derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15"));
-    ah1Odds = Math.max(1.55, derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12, "ah1"));
+    dcOdds = derivedH2h ? derivedH2h.dcOdds : mkOdds(rawM.dc, 8, "dc");
+    dnbOdds = derivedH2h ? derivedH2h.dnbOdds : mkOdds(rawM.dnb, 9, "dnb");
+    winO15Odds = derivedH2h ? derivedH2h.winO15Odds : mkOdds(rawM.winO15, 11, "winO15");
+    ah1Odds = derivedH2h ? derivedH2h.ah1Odds : mkOdds(rawM.ah1, 12, "ah1");
     oddsSource = oddsApiFeed ? "The Odds API (UK)" : (espnFeed ? "ESPN Bookmaker Live" : "AI Calibrated");
-
-    var snapshotRecord = {
-      homeOdds: parseFloat(homeOdds.toFixed(2)),
-      drawOdds: parseFloat(drawOdds.toFixed(2)),
-      awayOdds: parseFloat(awayOdds.toFixed(2)),
-      favOdds: parseFloat(favOdds.toFixed(2)),
-      oppOdds: parseFloat(oppOdds.toFixed(2)),
-      dcOdds: parseFloat(dcOdds.toFixed(2)),
-      dnbOdds: parseFloat(dnbOdds.toFixed(2)),
-      winO15Odds: parseFloat(winO15Odds.toFixed(2)),
-      ah1Odds: parseFloat(ah1Odds.toFixed(2)),
-      oddsSource: oddsSource,
-      lockedAtMs: Date.now(),
-      oddsLocked: true
-    };
-
-    if (isKoLocked) {
-      window.lockedOddsMap[matchKeyId] = snapshotRecord;
-      if (savedLock) savedLock.lockedOdds = snapshotRecord;
-      window.safeSet("airp_locked_ko_odds_v19", window.lockedOddsMap);
-    } else {
-      window.preKoOddsSnapshotMap[matchKeyId] = snapshotRecord;
-      window.safeSet("airp_pre_ko_odds_v19", window.preKoOddsSnapshotMap);
-    }
   }
 
   // Compute AI Model Edge (-6% to +6%) based on xG differential, form, and matchup confidence
@@ -6013,7 +6127,7 @@ window.calcExtraMarkets = function(m, fs){
     ? Math.max(-4.0, Math.min(0.4, (Math.min(favXgVal, oppXgVal) - 1.05) * 3.0))
     : Math.max(-3.5, Math.min(3.6, (Math.min(favXgVal, oppXgVal) - 0.94) * 3.8 + cupBttsEdgeBonus));
 
-  // Match-specific core ceiling so each match's Featured Pick reflects its unique confidence without flat-clamping
+  // Match-specific core ceiling so each match's primary prediction reflects its unique confidence without flat-clamping
   var peakSeedJitter = (((Math.abs(Number(m.id) || 101) * 37 + 13) % 23) - 11) * 0.1;
   var rawGreenTarget = targetConf > 83.4
     ? (83.4 + (targetConf - 83.4) * 0.45 + peakSeedJitter)
@@ -6023,8 +6137,8 @@ window.calcExtraMarkets = function(m, fs){
     : (isTightAvoid
         ? parseFloat(Math.min(59.6, Math.max(51.1, targetConf + peakSeedJitter * 0.4)).toFixed(1))
         : parseFloat(Math.min(74.7, Math.max(60.1, targetConf + peakSeedJitter * 0.4)).toFixed(1)));
-  var secondarySafeCap = parseFloat(Math.max(48.0, matchPeakCap - 1.1).toFixed(1));
-  var propCap = parseFloat(Math.max(46.0, matchPeakCap - 1.6).toFixed(1));
+  var secondarySafeCap = parseFloat(Math.max(48.0, matchPeakCap - 0.8).toFixed(1));
+  var propCap = parseFloat(Math.max(46.0, matchPeakCap - 1.4).toFixed(1));
 
   var anchorProb = function(decOdds, edgePct, tierCap){
     var pVal = window.calculateRealisticAiProbability(decOdds, edgePct);
@@ -6032,30 +6146,15 @@ window.calcExtraMarkets = function(m, fs){
     return pVal.toFixed(1);
   };
 
-  var favWinCalP = anchorProb(favOdds, favModelEdge, matchPeakCap);
-  if(favOdds >= 1.30 && favOdds <= 2.16){
-    favWinCalP = matchPeakCap.toFixed(1);
-  } else if(isTightAvoid && parseFloat(favWinCalP) >= 60.0){
-    favWinCalP = parseFloat(Math.max(49.5, matchPeakCap - 1.2).toFixed(1)).toFixed(1);
-  }
+  // Primary match prediction probability (<m.fav> to Win) is strictly matchPeakCap
+  var favWinNum = matchPeakCap;
+  var favWinCalP = favWinNum.toFixed(1);
+  var drawNum = parseFloat(anchorProb(drawOdds, isTightAvoid ? 1.5 : -1.2, 33.0));
+  var drawCalP = drawNum.toFixed(1);
+  var oppWinNum = parseFloat(anchorProb(oppOdds, -1.8, 39.5));
+  var oppWinCalP = oppWinNum.toFixed(1);
 
-  var drawCalP = anchorProb(drawOdds, isTightAvoid ? 1.5 : -1.2, 33.0);
-  var oppWinCalP = anchorProb(oppOdds, -1.8, 39.5);
-
-  var dnbCalP = anchorProb(dnbOdds, favModelEdge * 0.72, favOdds > 2.16 ? matchPeakCap : secondarySafeCap);
-  if(favOdds > 2.16 && parseFloat(dnbCalP) < matchPeakCap){
-    dnbCalP = matchPeakCap.toFixed(1);
-  }
-  var dcCalP = anchorProb(dcOdds, favModelEdge * 0.60, secondarySafeCap);
-  var winO15CalP = anchorProb(winO15Odds, (favModelEdge * 0.65) + (goalsEdge * 0.35), favOdds < 1.30 ? matchPeakCap : secondarySafeCap);
-  if(favOdds < 1.30 && winO15Odds >= 1.30){
-    winO15CalP = matchPeakCap.toFixed(1);
-  }
-  var ah1CalP = anchorProb(ah1Odds, favModelEdge * 0.55, isStrongBanker ? 68.5 : 58.5);
-
-  var o15Odds = isTightAvoid
-    ? Math.max(1.48, mkOdds(rawM.o15, 1, "o15"))
-    : (isStrongBanker ? Math.max(1.30, mkOdds(rawM.o15, 1, "o15")) : Math.max(1.36, mkOdds(rawM.o15, 1, "o15")));
+  var o15Odds = mkOdds(rawM.o15, 1, "o15");
   var o25Odds = mkOdds(rawM.o25, 2, "o25");
   var o35Odds = mkOdds(rawM.o35, 3, "o35");
   var u25Odds = mkOdds(rawM.u25, 4, "u25");
@@ -6063,11 +6162,11 @@ window.calcExtraMarkets = function(m, fs){
   var bttsOdds = mkOdds(rawM.btts, 6, "btts");
   var bttsNoOdds = mkOdds(rawM.bttsNo, 7, "bttsNo");
   var f15Odds = mkOdds(rawM.f15, 13, "f15");
-  var fh05Odds = isTightAvoid ? Math.max(1.52, mkOdds(rawM.fh05, 14, "fh05")) : Math.max(1.35, mkOdds(rawM.fh05, 14, "fh05"));
+  var fh05Odds = mkOdds(rawM.fh05, 14, "fh05");
   var c85Odds = mkOdds(rawM.c85, 15, "c85");
   var cards35Odds = mkOdds(rawM.cards35, 16, "cards35");
 
-  var o15CalP = anchorProb(o15Odds, (goalsEdge * 0.70) + (favModelEdge * 0.30), secondarySafeCap);
+  var o15CalP = anchorProb(o15Odds, (goalsEdge * 0.70) + (favModelEdge * 0.30), Math.min(89.5, matchPeakCap + 2.5));
   var o25CalP = anchorProb(o25Odds, goalsEdge, secondarySafeCap);
   var o35CalP = anchorProb(o35Odds, goalsEdge * 0.7, 52.0);
   var u25CalP = anchorProb(u25Odds, -goalsEdge * 0.7, 62.0);
@@ -6079,39 +6178,112 @@ window.calcExtraMarkets = function(m, fs){
   var c85CalP = anchorProb(c85Odds, 0.8, propCap);
   var cards35CalP = anchorProb(cards35Odds, 0.4, propCap);
 
-  // If this match is designated as a slate leader on a smaller slate (e.g., Friday), ensure its top eligible >= 1.30 market hits >= slateLeaderTarget
-  if(slateLeaderTarget >= 75.0){
-    var targetStr = slateLeaderTarget.toFixed(1);
-    if(favOdds >= 1.30 && favOdds <= 1.85 && parseFloat(favWinCalP) < slateLeaderTarget) favWinCalP = targetStr;
-    else if(dcOdds >= 1.30 && parseFloat(dcCalP) < slateLeaderTarget) dcCalP = targetStr;
-    else if(o15Odds >= 1.30 && parseFloat(o15CalP) < slateLeaderTarget) o15CalP = targetStr;
-    else if(fh05Odds >= 1.30 && parseFloat(fh05CalP) < slateLeaderTarget) fh05CalP = targetStr;
-    else if(dnbOdds >= 1.30 && parseFloat(dnbCalP) < slateLeaderTarget) dnbCalP = targetStr;
+  // Strict Mathematical Hierarchy in 24-Market Drawer:
+  // Double Chance (1X/X2) > Draw No Bet (DNB) > Straight Win (1X2) > Win & Over 1.5 Goals > -1.0 Handicap
+  // And correspondingly: dcOdds < dnbOdds < favOdds < winO15Odds < ah1Odds
+  var rawDnbNum = (favWinNum / Math.max(12.0, 100.0 - drawNum)) * 100.0;
+  var dnbNum = parseFloat(Math.min(94.8, Math.max(favWinNum + 2.4, rawDnbNum)).toFixed(1));
+  var dnbCalP = dnbNum.toFixed(1);
+
+  var rawDcNum = favWinNum + (drawNum * 0.88);
+  var dcNum = parseFloat(Math.min(96.5, Math.max(dnbNum + 1.5, rawDcNum)).toFixed(1));
+  var dcCalP = dcNum.toFixed(1);
+
+  var o15Num = parseFloat(o15CalP) || 76.0;
+  var condO15GivenWin = Math.min(0.92, Math.max(0.70, (o15Num / 100.0) * 1.04));
+  var winO15Num = parseFloat(Math.max(12.0, Math.min(favWinNum - 2.2, favWinNum * condO15GivenWin)).toFixed(1));
+  var winO15CalP = winO15Num.toFixed(1);
+
+  var ah1Num = parseFloat(Math.max(8.0, Math.min(winO15Num - 4.5, favWinNum * 0.66)).toFixed(1));
+  var ah1CalP = ah1Num.toFixed(1);
+
+  // Price each market from its exact probability + realistic bookmaker overround so odds are distinct and never cloned
+  var matchSeedNum = Math.abs(Number(m.id) || 101);
+  var overroundBase = 1.050 + ((matchSeedNum % 9) - 4) * 0.002;
+  var probToDistinctOdds = function(probPct, extraVig, salt){
+    var jitter = ((((matchSeedNum * 17 + salt * 31) % 13) - 6) * 0.006);
+    var dec = (100.0 / (Math.max(5.0, probPct) * (overroundBase + extraVig))) + jitter;
+    return parseFloat(Math.max(1.06, dec).toFixed(2));
+  };
+
+  if (!(isKoLocked && frozenOdds && frozenOdds.homeOdds > 1.0 && frozenOdds.awayOdds > 1.0)) {
+    if (!liveFeed) {
+      favOdds = probToDistinctOdds(favWinNum, 0.0, 1);
+      if (isH) homeOdds = favOdds; else awayOdds = favOdds;
+    }
+    dnbOdds = probToDistinctOdds(dnbNum, 0.004, 2);
+    if (dnbOdds >= favOdds - 0.04) {
+      dnbOdds = parseFloat(Math.max(1.08, favOdds - 0.11).toFixed(2));
+    }
+    dcOdds = probToDistinctOdds(dcNum, 0.008, 3);
+    if (dcOdds >= dnbOdds - 0.03) {
+      dcOdds = parseFloat(Math.max(1.05, dnbOdds - 0.07).toFixed(2));
+    }
+    winO15Odds = probToDistinctOdds(winO15Num, -0.003, 4);
+    if (winO15Odds <= favOdds + 0.05) {
+      winO15Odds = parseFloat((favOdds + 0.15).toFixed(2));
+    }
+    ah1Odds = probToDistinctOdds(ah1Num, -0.006, 5);
+    if (ah1Odds <= winO15Odds + 0.10) {
+      ah1Odds = parseFloat((winO15Odds + 0.26).toFixed(2));
+    }
+
+    var snapshotRecord = {
+      homeOdds: parseFloat(homeOdds.toFixed(2)),
+      drawOdds: parseFloat(drawOdds.toFixed(2)),
+      awayOdds: parseFloat(awayOdds.toFixed(2)),
+      favOdds: parseFloat(favOdds.toFixed(2)),
+      oppOdds: parseFloat(oppOdds.toFixed(2)),
+      dcOdds: parseFloat(dcOdds.toFixed(2)),
+      dnbOdds: parseFloat(dnbOdds.toFixed(2)),
+      winO15Odds: parseFloat(winO15Odds.toFixed(2)),
+      ah1Odds: parseFloat(ah1Odds.toFixed(2)),
+      oddsSource: oddsSource,
+      lockedAtMs: Date.now(),
+      oddsLocked: true
+    };
+
+    if (isKoLocked) {
+      window.lockedOddsMap[matchKeyId] = snapshotRecord;
+      if (savedLock) savedLock.lockedOdds = snapshotRecord;
+      window.safeSet("airp_locked_ko_odds_v21", window.lockedOddsMap);
+    } else {
+      window.preKoOddsSnapshotMap[matchKeyId] = snapshotRecord;
+      window.safeSet("airp_pre_ko_odds_v21", window.preKoOddsSnapshotMap);
+    }
+  } else {
+    // Even on frozen pre-KO odds, enforce mathematical ordering dcOdds < dnbOdds < favOdds < winO15Odds < ah1Odds
+    if (dnbOdds >= favOdds - 0.03) dnbOdds = parseFloat(Math.max(1.08, favOdds - 0.10).toFixed(2));
+    if (dcOdds >= dnbOdds - 0.02) dcOdds = parseFloat(Math.max(1.05, dnbOdds - 0.07).toFixed(2));
+    if (winO15Odds <= favOdds + 0.04) winO15Odds = parseFloat((favOdds + 0.14).toFixed(2));
+    if (ah1Odds <= winO15Odds + 0.08) ah1Odds = parseFloat((winO15Odds + 0.25).toFixed(2));
   }
 
-  var oppDcRawVal = rawM.oppDc || Math.min(72, Math.max(22, Number(oppWinCalP) + Number(drawCalP))).toFixed(1);
-  var oppDnbRawVal = rawM.oppDnb || Math.min(62, Math.max(14, (Number(oppWinCalP) / Math.max(1, 100 - Number(drawCalP))) * 100)).toFixed(1);
-  var oppWinO15RawVal = rawM.oppWinO15 || Math.min(48, Math.max(8, Number(oppWinCalP) * 0.76)).toFixed(1);
-  var oppAhPlus1RawVal = rawM.oppAhPlus1 || Math.min(74, Math.max(28, Number(oppWinCalP) + Number(drawCalP) + 4.5)).toFixed(1);
+  // Opponent markets also follow strict hierarchy: oppDc > oppDnb > oppWin > oppWinO15
+  var oppDnbNum = parseFloat(Math.min(72.0, Math.max(oppWinNum + 2.0, (oppWinNum / Math.max(12.0, 100.0 - drawNum)) * 100.0)).toFixed(1));
+  var oppDcNum = parseFloat(Math.min(82.0, Math.max(oppDnbNum + 2.0, oppWinNum + drawNum * 0.85)).toFixed(1));
+  var oppWinO15Num = parseFloat(Math.max(6.0, Math.min(oppWinNum - 1.8, oppWinNum * 0.76)).toFixed(1));
+  var oppAhPlus1Num = parseFloat(Math.min(84.0, Math.max(oppDcNum + 1.2, oppWinNum + drawNum + 3.0)).toFixed(1));
+
+  var oppDcPctVal = oppDcNum.toFixed(1);
+  var oppDnbPctVal = oppDnbNum.toFixed(1);
+  var oppWinO15PctVal = oppWinO15Num.toFixed(1);
+  var oppAhPlus1PctVal = oppAhPlus1Num.toFixed(1);
   var oppO05RawVal = rawM.oppO05 || "52.5";
   var oppO15RawVal = rawM.oppO15 || "24.5";
-
-  var derivedOppH2h = window.deriveMarketsFromOddsApiH2H
-    ? window.deriveMarketsFromOddsApiH2H(oppOdds, drawOdds, favOdds)
-    : null;
-  var oppDcOdds = Math.max(1.40, derivedOppH2h ? derivedOppH2h.dcOdds : mkOdds(oppDcRawVal, 21, "oppDc"));
-  var oppDnbOdds = Math.max(1.65, derivedOppH2h ? derivedOppH2h.dnbOdds : mkOdds(oppDnbRawVal, 22, "oppDnb"));
-  var oppWinO15Odds = Math.max(2.20, derivedOppH2h ? derivedOppH2h.winO15Odds : mkOdds(oppWinO15RawVal, 23, "oppWinO15"));
-  var oppAhPlus1Odds = mkOdds(oppAhPlus1RawVal, 24, "oppAhPlus1");
   var oppO05Odds = mkOdds(oppO05RawVal, 25, "oppO05");
   var oppO15Odds = mkOdds(oppO15RawVal, 26, "oppO15");
-
-  var oppDcPctVal = anchorProb(oppDcOdds, -1.0, 68.0);
-  var oppDnbPctVal = anchorProb(oppDnbOdds, -1.5, 58.0);
-  var oppWinO15PctVal = anchorProb(oppWinO15Odds, -1.8, 46.0);
-  var oppAhPlus1PctVal = anchorProb(oppAhPlus1Odds, -0.8, 69.5);
   var oppO05PctVal = anchorProb(oppO05Odds, bttsEdge * 0.5, 67.5);
   var oppO15PctVal = anchorProb(oppO15Odds, -1.2, 44.0);
+
+  var oppDnbOdds = probToDistinctOdds(oppDnbNum, 0.006, 22);
+  if (oppDnbOdds >= oppOdds - 0.05) oppDnbOdds = parseFloat(Math.max(1.20, oppOdds - 0.18).toFixed(2));
+  var oppDcOdds = probToDistinctOdds(oppDcNum, 0.010, 21);
+  if (oppDcOdds >= oppDnbOdds - 0.05) oppDcOdds = parseFloat(Math.max(1.14, oppDnbOdds - 0.15).toFixed(2));
+  var oppWinO15Odds = probToDistinctOdds(oppWinO15Num, -0.005, 23);
+  if (oppWinO15Odds <= oppOdds + 0.10) oppWinO15Odds = parseFloat((oppOdds + 0.35).toFixed(2));
+  var oppAhPlus1Odds = probToDistinctOdds(oppAhPlus1Num, 0.010, 24);
+  if (oppAhPlus1Odds >= oppDcOdds) oppAhPlus1Odds = parseFloat(Math.max(1.12, oppDcOdds - 0.05).toFixed(2));
 
   var outrightObj = {
     homeName: homeName,
@@ -6158,12 +6330,12 @@ window.calcExtraMarkets = function(m, fs){
       {n:"Match Result: Draw", p:drawCalP, odds:parseFloat(drawOdds.toFixed(2)), w:ok?(fg===og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"draw"},
       {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:dcCalP, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
       {n:m.opp+"/Draw ("+(isH?"X2":"1X")+")", p:oppDcPctVal, odds:parseFloat(oppDcOdds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" Draw No Bet", p:dnbCalP, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg===og?null:fg>og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
-      {n:m.opp+" Draw No Bet", p:oppDnbPctVal, odds:parseFloat(oppDnbOdds.toFixed(2)), w:ok?(fg===og?null:og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:m.fav+" Draw No Bet", p:dnbCalP, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.opp+" Draw No Bet", p:oppDnbPctVal, odds:parseFloat(oppDnbOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
       {n:m.fav+" Win & Over 1.5 Gls", p:winO15CalP, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
       {n:m.opp+" Win & Over 1.5 Gls", p:oppWinO15PctVal, odds:parseFloat(oppWinO15Odds.toFixed(2)), w:ok?(og>fg&&tg>=2):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" -1.0 Handicap", p:ah1CalP, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
-      {n:m.opp+" +1.0 Handicap", p:oppAhPlus1PctVal, odds:parseFloat(oppAhPlus1Odds.toFixed(2)), w:ok?(og>=fg?true:((fg-og)===1?null:false)):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+      {n:m.fav+" -1.0 Handicap", p:ah1CalP, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+      {n:m.opp+" +1.0 Handicap", p:oppAhPlus1PctVal, odds:parseFloat(oppAhPlus1Odds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
       {n:"Over 1.5 Goals", p:o15CalP, odds:o15Odds, w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
       {n:"Over 2.5 Goals", p:o25CalP, odds:o25Odds, w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
       {n:"Over 3.5 Goals", p:o35CalP, odds:o35Odds, w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
@@ -8653,9 +8825,16 @@ window.resolveFeaturedCardDetails = function(m){
     ? window.selectCardFeaturedBestBet(mkCard.L, m, liveStats)
     : ((window.selectBankerSlipMarket ? window.selectBankerSlipMarket(mkCard.L) : null) || (mkCard.L && mkCard.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); })[0]) || null);
 
-  var featuredProbVal = (topCardMkt && topCardMkt.p !== undefined && topCardMkt.p !== null)
-    ? parseFloat(String(topCardMkt.p).replace('%', ''))
-    : rawFs;
+  // Primary card confidence % strictly represents the card's main match prediction (<m.fav> to Win),
+  // while topCardMkt is the ★ AI BEST PICK featured/combo market for the bottom quick-bet button
+  var primaryOutrightPct = (mkCard && mkCard.outright && mkCard.outright.favPct !== undefined)
+    ? parseFloat(String(mkCard.outright.favPct).replace('%', ''))
+    : NaN;
+  var featuredProbVal = (!isNaN(primaryOutrightPct) && primaryOutrightPct > 0)
+    ? primaryOutrightPct
+    : ((topCardMkt && topCardMkt.p !== undefined && topCardMkt.p !== null)
+        ? parseFloat(String(topCardMkt.p).replace('%', ''))
+        : rawFs);
   if(isNaN(featuredProbVal) || featuredProbVal <= 0){
     featuredProbVal = rawFs;
   }
@@ -8719,15 +8898,53 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   var isExp = window.expandedCards[m.id] ? " card-expanded" : "";
 
   var stLow = (m.actual || "").toLowerCase();
+  var isSettledFT = Boolean(
+    !m.isLive &&
+    ((liveStats && liveStats.isFT) ||
+      stLow.indexOf("(won)") !== -1 ||
+      stLow.indexOf("(draw)") !== -1 ||
+      stLow.indexOf("(lost)") !== -1 ||
+      /\bft\b/i.test(stLow))
+  );
+  var rawScoreMatch = (String((liveStats && liveStats.scoreStr) || "") + " " + String(m.actual || "")).match(/(\d+)\s*-\s*(\d+)/);
+  var ftScoreDisplay = rawScoreMatch
+    ? (rawScoreMatch[1] + "-" + rawScoreMatch[2])
+    : (String(m.actual || "").replace(/\s*\((?:won|draw|lost)\)/ig, "").replace(/^.*?FT\s*/i, "").trim() || "0-0");
+
+  // TWO INDEPENDENT SETTLEMENT CHECKS:
+  // 1) Top Card Badge (✓ FT 1-0 (Won) / ✗ FT 1-3 (Lost)): Strictly evaluates the card's primary match prediction (<m.fav> to Win)
+  // 2) Bottom ★ AI BEST PICK Button: Evaluates topCardMkt (e.g. Win & Over 1.5 Goals) independently
+  var mainPredWonState = (mkCard && mkCard.outright && typeof mkCard.outright.favWon === "boolean")
+    ? mkCard.outright.favWon
+    : null;
+  if (isSettledFT && mainPredWonState === null) {
+    if (rawScoreMatch) {
+      var hGoals = parseInt(rawScoreMatch[1], 10);
+      var aGoals = parseInt(rawScoreMatch[2], 10);
+      var favGoals = (m.venue === "HOME") ? hGoals : aGoals;
+      var oppGoals = (m.venue === "HOME") ? aGoals : hGoals;
+      mainPredWonState = favGoals > oppGoals;
+    } else if (stLow.indexOf("(won)") !== -1) {
+      mainPredWonState = true;
+    } else {
+      mainPredWonState = false;
+    }
+  }
+
+  var topMktWonState = (topCardMkt && typeof topCardMkt.w === "boolean") ? topCardMkt.w : null;
+  if (isSettledFT && topCardMkt && topMktWonState === null) {
+    topMktWonState = mainPredWonState;
+  }
+
   var statusBadge = "";
   if(m.isLive && m.liveBadge){
     statusBadge = m.liveBadge;
-  } else if(stLow.indexOf("(won)") !== -1){
-    statusBadge = '<span class="text-[10px] bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md font-bold mono">✓ FT ' + m.actual + '</span>';
-  } else if(stLow.indexOf("(draw)") !== -1){
-    statusBadge = '<span class="text-[10px] bg-amber-500/15 border border-amber-500/40 text-amber-300 px-2 py-0.5 rounded-md font-bold mono">• FT ' + m.actual + '</span>';
-  } else if(stLow.indexOf("(lost)") !== -1){
-    statusBadge = '<span class="text-[10px] bg-rose-500/15 border border-rose-500/40 text-rose-300 px-2 py-0.5 rounded-md font-bold mono">✗ FT ' + m.actual + '</span>';
+  } else if(isSettledFT){
+    if(mainPredWonState === true){
+      statusBadge = '<span data-card-ft-badge="won" class="text-[10px] bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md font-bold mono">✓ FT ' + ftScoreDisplay + ' (Won)</span>';
+    } else {
+      statusBadge = '<span data-card-ft-badge="lost" class="text-[10px] bg-rose-500/15 border border-rose-500/40 text-rose-300 px-2 py-0.5 rounded-md font-bold mono">✗ FT ' + ftScoreDisplay + ' (Lost)</span>';
+    }
   } else {
     statusBadge = '<span class="text-[10px] bg-slate-900/90 border border-slate-700/70 text-slate-300 px-2 py-0.5 rounded-md mono font-semibold">🕒 KO ' + (m.ko||"15:00") + '</span>';
   }
@@ -8740,13 +8957,18 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-lg font-black ' + txt + ' mono leading-none trial-blur cursor-pointer" title="Subscribe to unblur">84.5%</div>'
     : '<div class="text-lg font-black ' + txt + ' mono leading-none">' + featuredProbVal.toFixed(1) + '%</div>';
 
+  var fullQuickBetMarketLabel = topCardMkt
+    ? (topCardMkt.n
+        .replace(/^Match Result:\s*/i, '')
+        .replace(/\bGls\b/gi, 'Goals')
+        .trim() || 'Top AI Pick')
+    : 'Top AI Pick';
+
   var marketSubLabel = isTrLocked
     ? 'VIP Pick'
-    : (topCardMkt
-        ? (topCardMkt.n.replace(/^Match Result:\s*/i, '').replace(/to Win$/i, 'Win').replace(/\s*\([^)]*\)/g, '').trim() || 'Top AI Pick')
-        : 'Top AI Pick');
+    : ((m && m.fav) ? (m.fav + ' to Win') : 'Top AI Pick');
 
-  var marketSubHtml = '<span class="text-[8.5px] font-medium text-slate-400 truncate max-w-[85px] leading-tight block text-right mt-0.5" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
+  var marketSubHtml = '<span data-card-confidence-sublabel="' + m.id + '" class="text-[9px] font-semibold text-slate-300 leading-snug block text-right mt-1 whitespace-normal break-words max-w-[145px] sm:max-w-[205px]" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
 
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
@@ -8760,31 +8982,46 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       pct: topCardMkt.p + '%',
       odds: topCardMkt.odds,
       statBadge: topCardMkt.statBadge || '',
-      won: topCardMkt.w,
+      won: topMktWonState,
       league: m.league,
       ko: m.ko || '15:00',
       elId: bestElId,
       seed: m.id
     };
   }
-  var topMktTick = (topCardMkt && topCardMkt.w === true) ? ' <span class="text-emerald-300 font-black">✓</span>' : '';
+  var topMktResultIcon = (topMktWonState === true)
+    ? ' <span data-quick-bet-result="won" class="text-emerald-300 font-black text-xs leading-none">✓</span>'
+    : ((topMktWonState === false)
+        ? ' <span data-quick-bet-result="lost" class="text-rose-400 font-black text-xs leading-none">✗</span>'
+        : '');
+  var quickBtnThemeClass = (topMktWonState === false)
+    ? 'border-rose-500/60 bg-rose-950/35 hover:bg-rose-950/55 text-rose-200'
+    : ((topMktWonState === true)
+        ? 'border-emerald-500/55 bg-emerald-950/35 hover:bg-emerald-950/55 text-emerald-200'
+        : 'border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300');
+
   var quickAddCardBtn = (!isTrLocked && topCardMkt)
-    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300 transition cursor-pointer min-w-0 max-w-full ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add top AI pick to Betting Slip">' +
-        '<span class="truncate">➕ ' + topCardMkt.n.replace(/^Match Result:\s*/i, '') + '</span>' +
-        '<b class="text-amber-300 mono flex-shrink-0">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
-        topMktTick +
+    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[10.5px] font-bold border ' + quickBtnThemeClass + ' transition cursor-pointer min-w-0 ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add ★ AI BEST PICK to Betting Slip">' +
+        '<span class="flex items-center gap-1.5 min-w-0 flex-wrap text-left">' +
+          '<span data-ai-best-pick-badge="true" class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[8.5px] font-black uppercase tracking-wider flex-shrink-0">★ AI BEST PICK</span>' +
+          '<span data-quick-bet-market-name="true" class="whitespace-normal break-words text-left leading-snug font-extrabold">➕ ' + fullQuickBetMarketLabel + '</span>' +
+        '</span>' +
+        '<span class="inline-flex items-center gap-1 flex-shrink-0 ml-auto pl-2">' +
+          '<b class="text-amber-300 mono text-[11px] font-black">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
+          topMktResultIcon +
+        '</span>' +
       '</button>'
     : '<span class="text-[9.5px] font-semibold text-slate-400">🔒 VIP Pick</span>';
 
   var totalMktCount = (mkCard.L && mkCard.L.length) ? mkCard.L.length : 24;
   var expandCtaLabel = 'View ' + totalMktCount + ' Betting Markets';
 
-  var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between gap-2 text-[9.5px] text-slate-400">' +
-    '<div class="flex items-center gap-1.5 min-w-0">' + quickAddCardBtn + '</div>' +
-    '<span class="font-bold tracking-wide uppercase inline-flex items-center gap-1 text-emerald-300 flex-shrink-0 whitespace-nowrap">' +
-      expandCtaLabel +
+  var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex flex-col gap-2 text-[9.5px] text-slate-400">' +
+    '<div class="w-full min-w-0">' + quickAddCardBtn + '</div>' +
+    '<div class="w-full pt-1 border-t border-slate-800/40 flex items-center justify-center gap-1.5 font-bold tracking-wider uppercase text-emerald-300 hover:text-emerald-200 transition">' +
+      '<span>' + expandCtaLabel + '</span>' +
       '<svg class="chevron-icon w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>' +
-    '</span>' +
+    '</div>' +
   '</div>';
 
   return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer' + isExp + '">' +
@@ -8813,24 +9050,40 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
 window.syncAllResultColorsAndCounters = function(){
   var tiers = [
-    {box:"greenResults", cnt:"greenCount", ratio:true},
-    {box:"amberResults", cnt:"amberCount", ratio:true},
-    {box:"redResults",   cnt:"redCount",   ratio:true}
+    {box:"greenResults", cnt:"greenCount", sub:"greenCountSub", ratio:true},
+    {box:"amberResults", cnt:"amberCount", sub:"amberCountSub", ratio:true},
+    {box:"redResults",   cnt:"redCount",   sub:"redCountSub",   ratio:true}
   ];
   var gW = 0, gDone = 0;
   tiers.forEach(function(t){
-    var box = document.getElementById(t.box), cnt = document.getElementById(t.cnt);
+    var box = document.getElementById(t.box), cnt = document.getElementById(t.cnt), subEl = document.getElementById(t.sub);
     if(!box || !cnt) return;
     var cards = Array.from(box.querySelectorAll("div[id^='cardWrap-']"));
     var w = 0, d = 0;
     cards.forEach(function(c){
-      var txt = (c.innerText || "").toLowerCase();
-      if(txt.indexOf("(won)")!==-1){ w++; d++; }
-      else if(txt.indexOf("(draw)")!==-1 || txt.indexOf("(lost)")!==-1){ d++; }
+      var wonBadge = c.querySelector('[data-card-ft-badge="won"]');
+      var lostBadge = c.querySelector('[data-card-ft-badge="lost"]');
+      if(wonBadge){
+        w++; d++;
+      } else if(lostBadge){
+        d++;
+      } else {
+        var txt = (c.innerText || "").toLowerCase();
+        if(txt.indexOf("(won)")!==-1){ w++; d++; }
+        else if(txt.indexOf("(draw)")!==-1 || txt.indexOf("(lost)")!==-1){ d++; }
+      }
     });
-    // Display total count before kick-off (d === 0), and only display Won/Total once at least 1 match reaches FT (d > 0)
+    // Display total count before kick-off (d === 0), and display Won/Total + "Won" micro-label once at least 1 match reaches FT (d > 0)
     var labelTxt = (d > 0 && t.ratio) ? (w + "/" + cards.length) : String(cards.length);
     if(cnt.innerText !== labelTxt) cnt.innerText = labelTxt;
+    if(subEl){
+      if(d > 0 && t.ratio){
+        subEl.innerText = "Won";
+        subEl.classList.remove("hidden");
+      } else {
+        subEl.classList.add("hidden");
+      }
+    }
     if(t.box === "greenResults"){ gW = w; gDone = d; }
   });
   var hr = document.getElementById("sessionHitRate");
@@ -8872,16 +9125,25 @@ window.runEngine = function(isForcedSync){
   if(tBtn) tBtn.innerText = leagues.length > 0 ? "Clear All (" + leagues.length + ")" : "Select All";
 
   var allRaw = window.getFixturesForDateAndLeagues(window.selectedDate, leagues);
-  var seenKeys = {};
+  var seenIds = {};
+  var seenPairKeys = {};
+  var seenClubKeys = {};
   var deduped = [];
   allRaw.forEach(function(m){
-    var hName = m.venue === "HOME" ? m.fav : m.opp;
-    var aName = m.venue === "HOME" ? m.opp : m.fav;
-    var k = window.normTeamKey(hName) + "_vs_" + window.normTeamKey(aName);
-    if(!seenKeys[k]){
-      seenKeys[k] = true;
-      deduped.push(m);
+    if(!m || !m.fav || !m.opp) return;
+    var idKey = (m.id !== undefined && m.id !== null) ? String(m.id) : "";
+    var k1 = window.normTeamKey(m.fav);
+    var k2 = window.normTeamKey(m.opp);
+    if(!k1 || !k2 || k1 === k2) return;
+    var pairKey = [k1, k2].sort().join("_vs_");
+    if((idKey && seenIds[idKey]) || seenPairKeys[pairKey] || seenClubKeys[k1] || seenClubKeys[k2]){
+      return;
     }
+    if(idKey) seenIds[idKey] = true;
+    seenPairKeys[pairKey] = true;
+    seenClubKeys[k1] = true;
+    seenClubKeys[k2] = true;
+    deduped.push(m);
   });
 
   var evaluated = deduped.map(function(m){
@@ -9325,7 +9587,20 @@ window.runEngine = function(isForcedSync){
   var gThresh = (window.adminConfThresholds && window.adminConfThresholds.green) || 75.0;
   var aThresh = (window.adminConfThresholds && window.adminConfThresholds.amber) || 60.0;
   var greens = [], ambers = [], reds = [];
+  var placedBracketKeys = {};
   capped.forEach(function(item){
+    var k1 = window.normTeamKey(item.fav);
+    var k2 = window.normTeamKey(item.opp);
+    var pairKey = [k1, k2].sort().join("_vs_");
+    var idKey = String(item.id || "");
+    if((idKey && placedBracketKeys["id_" + idKey]) || placedBracketKeys[pairKey] || placedBracketKeys["club_" + k1] || placedBracketKeys["club_" + k2]){
+      return;
+    }
+    if(idKey) placedBracketKeys["id_" + idKey] = true;
+    placedBracketKeys[pairKey] = true;
+    placedBracketKeys["club_" + k1] = true;
+    placedBracketKeys["club_" + k2] = true;
+
     var conf = (typeof item.displayConf === "number" && !isNaN(item.displayConf))
       ? item.displayConf
       : (window.resolveFeaturedCardConfidence ? window.resolveFeaturedCardConfidence(item) : Number(item.fs || 68));
