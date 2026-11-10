@@ -11690,7 +11690,7 @@ export function buildFlashscoreHighlightsCardConfig(params: {
 // ============================================================================
 
 export const GLOBAL_NATIVE_APP_LOCKDOWN_CSS =
-  'html, body { overscroll-behavior-y: none; overflow-x: hidden; }';
+  'html { overscroll-behavior-y: none; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; } body { overflow-x: clip; overflow-y: visible; touch-action: pan-y; }';
 
 /**
  * Ensures background Service Worker updates, controllerchange events, and

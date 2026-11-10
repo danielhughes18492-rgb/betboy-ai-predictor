@@ -1,6 +1,14 @@
-html, body {
+html {
   overscroll-behavior-y: none;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  overflow-x: clip;
+  overflow-y: visible;
+  touch-action: pan-y;
 }
 
 #greenResults,

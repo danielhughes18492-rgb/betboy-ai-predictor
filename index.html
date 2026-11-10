@@ -180,15 +180,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script src="https://cdn.tailwindcss.com"></script>
 <script id="paypalSdkScript" src="https://www.paypal.com/sdk/js?client-id=BAADksjqqj_-OlL0WyIWeLi-OsBQitWr5HEZIwiAolAd8jaIc6iADWKnMud_yHL1-NrR2HiQJoIn4u475E&vault=true&intent=subscription" data-sdk-integration-source="button-factory"></script>
 <style>
-  html, body {
+  html {
     overscroll-behavior-y: none;
     overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  html, body {
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 36px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
   }
-  body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 36px); overscroll-behavior-y: none; overflow-x: hidden; }
+  body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 36px); overflow-x: clip; overflow-y: visible; touch-action: pan-y; }
   header.sticky, #topAppHeader {
     padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
   }
