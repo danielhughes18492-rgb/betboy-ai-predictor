@@ -53,14 +53,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta name="betboy-build-version" content="20261110-04">
+<meta name="betboy-build-version" content="20261110-v3">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261110-04';
-    var SW_SCRIPT_URL = '/sw.js?v=20261110-04';
+    var CURRENT_BUILD_VERSION = '20261110-v3';
+    var SW_SCRIPT_URL = '/sw.js?v=20261110-v3';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -221,7 +221,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       var registerAndCheckSw = function() {
         navigator.serviceWorker
-          .register('/sw.js?v=20261110-04', { updateViaCache: 'none' })
+          .register('/sw.js?v=20261110-v3', { updateViaCache: 'none' })
           .then(function(registration) {
             window._swRegistration = registration;
             try { registration.update().catch(function() {}); } catch (e) {}
@@ -234,7 +234,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               var newWorker = registration.installing;
               if (!newWorker) return;
               newWorker.addEventListener('statechange', function() {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (newWorker.state === 'installed' && hadControllerOnBoot) {
                   try { newWorker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
                   window.purgeAllBrowserCachesAndReload('installed_' + CURRENT_BUILD_VERSION, false);
                 }
@@ -257,6 +257,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           window.checkIosSafariSwUpdate();
           window.checkLiveAppVersionAndUpdate();
         }
+      });
+
+      window.addEventListener('focus', function() {
+        window.checkIosSafariSwUpdate();
+        window.checkLiveAppVersionAndUpdate();
       });
 
       window.addEventListener('pageshow', function(event) {
@@ -2301,7 +2306,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="space-y-1 pt-1 border-t border-slate-800/70">
         <label for="adminOddsApiKeyInput" class="block text-[9.5px] font-bold text-slate-300">The Odds API Key (12h Per-League Cache):</label>
         <div class="flex items-center gap-1.5">
-          <input type="text" id="adminOddsApiKeyInput" placeholder="4ac360beb7e127a1a02a9b769ecaa319" class="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-emerald-300 font-mono outline-none transition">
+          <input type="text" id="adminOddsApiKeyInput" placeholder="a62ab0985455e5bba4ffbe015b26fec1" class="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-emerald-300 font-mono outline-none transition">
           <button type="button" id="adminSaveOddsApiKeyBtn" onclick="window.saveAdminOddsApiKeyFromInput()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex-shrink-0">🔑 Save Key</button>
         </div>
       </div>
@@ -3281,8 +3286,8 @@ window.slipStake = window.safeGet("airp_slip_stake", 10);
 window.slipBetMode = window.safeGet("airp_slip_mode", "acca");
 window.oddsFormat = window.DEFAULT_CORE_STATE.defaultOddsFormat;
 window.cardMarketFilter = {};
-window.DEFAULT_THE_ODDS_API_KEY = "4ac360beb7e127a1a02a9b769ecaa319";
-window.EXHAUSTED_ODDS_API_KEYS = ["e2f5348bc22ef1afe0ee29483e392284"];
+window.DEFAULT_THE_ODDS_API_KEY = "a62ab0985455e5bba4ffbe015b26fec1";
+window.EXHAUSTED_ODDS_API_KEYS = ["e2f5348bc22ef1afe0ee29483e392284", "4ac360beb7e127a1a02a9b769ecaa319"];
 window.ODDS_API_KEY_STORAGE_KEY = "betboy_odds_api_key_v1";
 window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY = "betboy_odds_league_cache_v1";
 window.ODDS_API_CACHE_TTL_MS = 43200000; // 12 hours (43,200,000 ms) per league
@@ -3294,6 +3299,7 @@ window.getActiveOddsApiKey = function(){
       var cleanSaved = saved.trim().toLowerCase();
       if(window.EXHAUSTED_ODDS_API_KEYS.indexOf(cleanSaved) !== -1){
         localStorage.setItem(window.ODDS_API_KEY_STORAGE_KEY, window.DEFAULT_THE_ODDS_API_KEY);
+        try { localStorage.removeItem(window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY); } catch(eRm){}
         return window.DEFAULT_THE_ODDS_API_KEY;
       }
       return cleanSaved;
@@ -6152,7 +6158,7 @@ window.getActiveApiFootballKey = function() {
   if (window.API_FOOTBALL_KEY && String(window.API_FOOTBALL_KEY).trim()) {
     return String(window.API_FOOTBALL_KEY).trim();
   }
-  return (window.getActiveOddsApiKey ? window.getActiveOddsApiKey() : window.DEFAULT_THE_ODDS_API_KEY) || "4ac360beb7e127a1a02a9b769ecaa319";
+  return (window.getActiveOddsApiKey ? window.getActiveOddsApiKey() : window.DEFAULT_THE_ODDS_API_KEY) || "a62ab0985455e5bba4ffbe015b26fec1";
 };
 
 window.resolveStandingsZoneIndicator = function(description, rank, totalTeams, compCode) {
