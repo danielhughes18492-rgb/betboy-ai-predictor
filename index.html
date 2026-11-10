@@ -53,14 +53,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta name="betboy-build-version" content="betboy-ai-v2026-11-10-live-v16">
+<meta name="betboy-build-version" content="20261110-02">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = 'betboy-ai-v2026-11-10-live-v16';
+    var CURRENT_BUILD_VERSION = '20261110-02';
+    var SW_SCRIPT_URL = '/sw.js?v=20261110-02';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
+    window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
     window._betboyReloadingNow = false;
 
     window.purgeAllBrowserCachesAndReload = function(reasonTag) {
@@ -136,7 +138,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       var registerAndCheckSw = function() {
         navigator.serviceWorker
-          .register('/sw.js', { updateViaCache: 'none' })
+          .register('/sw.js?v=20261110-02', { updateViaCache: 'none' })
           .then(function(registration) {
             window._swRegistration = registration;
             try { registration.update().catch(function() {}); } catch (e) {}
@@ -151,7 +153,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               newWorker.addEventListener('statechange', function() {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   try { newWorker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
-                  window.purgeAllBrowserCachesAndReload('installed_' + Date.now());
+                  window.purgeAllBrowserCachesAndReload('installed_' + CURRENT_BUILD_VERSION);
                 }
               });
             });
