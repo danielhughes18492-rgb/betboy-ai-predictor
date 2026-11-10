@@ -545,12 +545,19 @@ window.isPaywallEnabled = function() {
 // MASTER AFFILIATE BOOKMAKER PARTNERS CONFIG (Easy-to-edit UKGC tracking links)
 // ============================================================================
 window.BETFRED_AFFILIATE_URL_STORAGE_KEY = "betboy_betfred_affiliate_url_v1";
-window.DEFAULT_BETFRED_AFFILIATE_URL = "https://www.betfred.com";
+window.DEFAULT_BETFRED_AFFILIATE_URL = "https://betting.partners/link/198/115?cid=57";
+window.DEFAULT_VIRGIN_BET_AFFILIATE_URL = "https://betting.partners/link/198/160?cid=57";
+window.DEFAULT_BET_VICTOR_AFFILIATE_URL = "https://betting.partners/link/198/121?cid=57";
 
 window.getActiveBetfredAffiliateUrl = function() {
   try {
     var saved = localStorage.getItem(window.BETFRED_AFFILIATE_URL_STORAGE_KEY);
-    if (saved && String(saved).trim() && /^https?:\/\//i.test(String(saved).trim())) {
+    if (
+      saved &&
+      String(saved).trim() &&
+      /^https?:\/\//i.test(String(saved).trim()) &&
+      String(saved).trim().replace(/\/+$/, "").toLowerCase() !== "https://www.betfred.com"
+    ) {
       return String(saved).trim();
     }
   } catch (e) {}
@@ -570,52 +577,28 @@ const BOOKMAKER_PARTNERS = {
     brandBadgeBg: "#002b5c",
     brandText: "#ffffff"
   },
-  midnite: {
-    name: "Midnite",
-    offerText: "Bet £10 Get £20 in Free Bets + 50 Free Spins",
-    ctaText: "Claim Offer",
-    url: "https://www.midnite.com",
-    terms: "18+ New UK customers. Bet £10 on accas (4+ legs, min odds 3/1) within 14 days to get £20 in Free Bets. T&Cs apply. BeGambleAware.org",
-    accentColor: "#00ff66",
-    logoUrl: "https://www.google.com/s2/favicons?domain=midnite.com&sz=128",
-    brandBg: "#0a0f0d",
-    brandBadgeBg: "#0a0f0d",
-    brandText: "#00ff66"
+  virginbet: {
+    name: "Virgin Bet",
+    offerText: "Bet £10 Get £20 in Free Bets",
+    ctaText: "Bet £10 Get £20",
+    url: window.DEFAULT_VIRGIN_BET_AFFILIATE_URL,
+    terms: "18+ New UK members only. £10+ min deposit & bet on sportsbook within 14 days at 1.5 (1/2) min odds to get 2x £10 Free Bets. 7-day expiry. T&Cs apply. BeGambleAware.org | GamCare.org.uk",
+    accentColor: "#e10a0a",
+    logoUrl: "https://www.google.com/s2/favicons?domain=virginbet.com&sz=128",
+    brandBg: "#990000",
+    brandBadgeBg: "#990000",
+    brandText: "#ffffff"
   },
-  betmgm: {
-    name: "BetMGM",
-    offerText: "Bet £10 Get £40 in Free Bets",
-    ctaText: "Bet £10 Get £40",
-    url: "https://www.betmgm.co.uk",
-    terms: "18+ New cust only. 7 days to opt in & bet £10 (odds 1/1+) to get 4x £10 Free Bets. 7 day expiry. T&Cs apply. BeGambleAware.org",
-    accentColor: "#d4af37",
-    logoUrl: "https://www.google.com/s2/favicons?domain=betmgm.co.uk&sz=128",
-    brandBg: "#1a1608",
-    brandBadgeBg: "#1a1608",
-    brandText: "#d4af37"
-  },
-  betfair: {
-    name: "Betfair",
-    offerText: "Bet £10 Get £50 in Free Bet Builders",
-    ctaText: "Claim £50 Free",
-    url: "https://www.betfair.com",
-    terms: "18+ New Customer offer. Place a min £10 bet on Sportsbook at min odds EVS (2.0) to get £50 in Free Bet Builders. T&Cs apply. BeGambleAware.org",
-    accentColor: "#ffb80c",
-    logoUrl: "https://www.google.com/s2/favicons?domain=betfair.com&sz=128",
-    brandBg: "#ffb80c",
-    brandBadgeBg: "#ffb80c",
-    brandText: "#000000"
-  },
-  ladbrokes: {
-    name: "Ladbrokes",
-    offerText: "Bet £5 Get £20 in Free Bets",
-    ctaText: "Get £20 Free",
-    url: "https://www.ladbrokes.com",
-    terms: "18+ New UK+IRE Customers only. Certain deposit methods & bet types excl. Min first £5 bet at odds 1/2+ to get 4x £5 free bets. T&Cs apply. BeGambleAware.org",
-    accentColor: "#e41e26",
-    logoUrl: "https://www.google.com/s2/favicons?domain=ladbrokes.com&sz=128",
-    brandBg: "#e41e26",
-    brandBadgeBg: "#e41e26",
+  betvictor: {
+    name: "Bet Victor",
+    offerText: "Bet £10 Get £30 in Free Bets",
+    ctaText: "Bet £10 Get £30",
+    url: window.DEFAULT_BET_VICTOR_AFFILIATE_URL,
+    terms: "18+ New customers only. Opt in, bet £10+ on any football market at min 1/1 (2.00) odds within 7 days of registration. Get £30 in Free Bets. T&Cs apply. BeGambleAware.org | GamCare.org.uk",
+    accentColor: "#00a8e8",
+    logoUrl: "https://www.google.com/s2/favicons?domain=betvictor.com&sz=128",
+    brandBg: "#0a192f",
+    brandBadgeBg: "#0a192f",
     brandText: "#ffffff"
   }
 };
@@ -664,11 +647,11 @@ window.saveAdminOddsApiKeyFromInput = function() {
 window.makeBookmakerFallbackSvg = function(key) {
   var partners = window.BOOKMAKER_PARTNERS || BOOKMAKER_PARTNERS || {};
   var k = String(key || "").toLowerCase();
-  var p = partners[k] || partners.betfred || partners.midnite || {};
+  var p = partners[k] || partners.betfred || partners.virginbet || {};
   var bg = p.brandBg || p.brandBadgeBg || "#0a0f0d";
-  var txt = p.brandText || p.accentColor || "#00ff66";
+  var txt = p.brandText || p.accentColor || "#ffffff";
   var stroke = p.accentColor || txt;
-  var label = k === "betfred" ? "BF" : k === "midnite" ? "M" : k === "betmgm" ? "MGM" : k === "betfair" ? "BF" : k === "ladbrokes" ? "L" : String(p.name || "UK").slice(0, 2).toUpperCase();
+  var label = k === "betfred" ? "BF" : k === "virginbet" ? "VB" : k === "betvictor" ? "BV" : String(p.name || "UK").slice(0, 2).toUpperCase();
   var fontSize = label.length >= 3 ? 28 : label.length === 2 ? 36 : 46;
   var svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' +
@@ -683,31 +666,38 @@ window.renderFeaturedBookmakerOffersHtml = function() {
   if (partners.betfred && typeof window.getActiveBetfredAffiliateUrl === "function") {
     partners.betfred.url = window.getActiveBetfredAffiliateUrl();
   }
-  var keys = Object.keys(partners);
+  var keys = ["betfred", "virginbet", "betvictor"];
   var cardsHtml = "";
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     var p = partners[key];
     if (!p) continue;
+    var isPrimaryFeatured = (i === 0 || key === "betfred");
     var accent = p.accentColor || "#10b981";
     var brandBg = p.brandBg || p.brandBadgeBg || "#0f172a";
     var brandText = p.brandText || "#ffffff";
     var logoUrl = p.logoUrl || window.makeBookmakerFallbackSvg(key);
-    var btnTextColor = (key === "betfred" || key === "ladbrokes" || accent.toLowerCase() === "#e41e26" || accent.toLowerCase() === "#00529b") ? "#ffffff" : "#050b14";
+    var btnTextColor = "#ffffff";
+    var cardHighlightClass = isPrimaryFeatured
+      ? "bg-gradient-to-b from-sky-950/60 via-slate-950/95 to-slate-950/95 ring-1 ring-sky-400/50 border-sky-500/50 shadow-lg"
+      : "bg-slate-950/95 border-slate-800/90 shadow-md";
+    var badgeHtml = isPrimaryFeatured
+      ? '<span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/40 flex-shrink-0">★ #1 UK PICK</span>'
+      : '<span class="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800 flex-shrink-0">18+ UK</span>';
     cardsHtml +=
-      '<div data-bookmaker-card="' + key + '" class="bg-slate-950/95 rounded-xl p-2.5 border border-slate-800/90 flex flex-col justify-between gap-1.5 shadow-md hover:border-slate-700 transition flex-shrink-0 w-[236px] sm:w-[250px] lg:w-auto lg:flex-1 snap-start" style="border-top: 3px solid ' + accent + ';">' +
+      '<div data-bookmaker-card="' + key + '" class="' + cardHighlightClass + ' rounded-xl p-3 border flex flex-col justify-between gap-2 hover:border-slate-600 transition flex-shrink-0 w-[260px] sm:w-[270px] md:w-auto md:flex-1 snap-start" style="border-top: 3px solid ' + accent + ';">' +
         '<div class="space-y-1.5">' +
           '<div class="flex items-center justify-between gap-1.5">' +
             '<div class="flex items-center gap-2 min-w-0">' +
               '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="32" height="32" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-8 h-8 rounded-lg object-contain flex-shrink-0 p-0.5 shadow-sm" style="background-color:' + brandBg + '; border:1px solid ' + accent + '66;" />' +
               '<span data-bookmaker-badge="' + key + '" class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase tracking-wider shadow-sm truncate" style="background-color:' + brandBg + '; color:' + brandText + '; border:1px solid ' + accent + '66;">' + p.name + '</span>' +
             '</div>' +
-            '<span class="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800 flex-shrink-0">' + (i === 0 ? '★ #1 UK PICK' : '18+ UK') + '</span>' +
+            badgeHtml +
           '</div>' +
-          '<p class="text-[10.5px] font-extrabold text-emerald-300 leading-snug">' + p.offerText + '</p>' +
+          '<p class="text-[11px] font-extrabold text-emerald-300 leading-snug">' + p.offerText + '</p>' +
         '</div>' +
-        '<div class="space-y-1 pt-0.5">' +
-          '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-bookmaker-cta="' + key + '" class="w-full py-1 px-2 rounded-lg font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow transition hover:opacity-95 cursor-pointer text-center" style="background-color:' + accent + '; color:' + btnTextColor + ';">' +
+        '<div class="space-y-1.5 pt-0.5">' +
+          '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-bookmaker-cta="' + key + '" class="w-full py-1.5 px-2.5 rounded-lg font-black text-[10.5px] uppercase tracking-wider flex items-center justify-center gap-1 shadow transition hover:opacity-95 cursor-pointer text-center" style="background-color:' + accent + '; color:' + btnTextColor + ';">' +
             '<span>' + p.ctaText + '</span>' +
             '<span>↗</span>' +
           '</a>' +
@@ -720,10 +710,8 @@ window.renderFeaturedBookmakerOffersHtml = function() {
 
 window.BOOKMAKER_SLIP_HOOKS = {
   betfred: "Bet £10 Get £50 in Free Bets",
-  midnite: "Bet £10 Get £20 Free",
-  betmgm: "Bet £10 Get £40 Free",
-  betfair: "Bet £10 Get £50 Free",
-  ladbrokes: "Bet £5 Get £20 Free"
+  virginbet: "Bet £10 Get £20 Free",
+  betvictor: "Bet £10 Get £30 Free"
 };
 
 window.renderSlipModalBookmakerButtonsHtml = function() {
@@ -732,7 +720,7 @@ window.renderSlipModalBookmakerButtonsHtml = function() {
     partners.betfred.url = window.getActiveBetfredAffiliateUrl();
   }
   var hooks = window.BOOKMAKER_SLIP_HOOKS || {};
-  var keys = Object.keys(partners);
+  var keys = ["betfred", "virginbet", "betvictor"];
   var btnsHtml = "";
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
@@ -744,14 +732,14 @@ window.renderSlipModalBookmakerButtonsHtml = function() {
     var logoUrl = p.logoUrl || window.makeBookmakerFallbackSvg(key);
     var hookSubtext = hooks[key] || p.ctaText || p.offerText || "";
     var isTopFeatured = (i === 0 || key === "betfred");
-    var spanClass = isTopFeatured ? "col-span-2 sm:col-span-4 py-2 px-3" : "px-2 py-1.5";
-    var titleLabel = isTopFeatured ? ("Place Bet at " + p.name) : String(p.name).toUpperCase();
+    var spanClass = isTopFeatured ? "col-span-2 py-2.5 px-3" : "col-span-1 px-2.5 py-2";
+    var titleLabel = isTopFeatured ? ("★ Place Bet at " + p.name) : String(p.name).toUpperCase();
     btnsHtml +=
-      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-slip-bookmaker-btn="' + key + '" onclick="window.onSlipBookmakerClick(\'' + key + '\', event)" class="' + spanClass + ' rounded-lg flex items-center justify-center gap-2 shadow transition hover:opacity-95 cursor-pointer text-left min-w-0" style="background-color:' + brandBg + '; color:' + brandText + '; border:' + (isTopFeatured ? '1.5px solid #38bdf8' : ('1px solid ' + accent + '99')) + ';">' +
-        '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="20" height="20" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[20px] h-[20px] rounded object-contain flex-shrink-0" />' +
+      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-slip-bookmaker-btn="' + key + '" onclick="window.onSlipBookmakerClick(\'' + key + '\', event)" class="' + spanClass + ' rounded-xl flex items-center justify-center gap-2 shadow transition hover:opacity-95 cursor-pointer text-left min-w-0" style="background-color:' + brandBg + '; color:' + brandText + '; border:' + (isTopFeatured ? '1.5px solid #38bdf8' : ('1px solid ' + accent + '99')) + ';">' +
+        '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="22" height="22" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[22px] h-[22px] rounded object-contain flex-shrink-0" />' +
         '<div class="flex flex-col min-w-0 leading-tight">' +
           '<span class="font-black ' + (isTopFeatured ? 'text-[11px]' : 'text-[9.5px]') + ' uppercase tracking-wider flex items-center gap-1"><span>' + titleLabel + '</span> <span class="text-[9px] opacity-90">↗</span></span>' +
-          '<span class="' + (isTopFeatured ? 'text-[9px] text-emerald-300' : 'text-[8px] opacity-90') + ' font-bold" data-slip-bookmaker-hook="' + key + '">' + hookSubtext + '</span>' +
+          '<span class="' + (isTopFeatured ? 'text-[9.5px] text-emerald-300' : 'text-[8.5px] opacity-90') + ' font-bold" data-slip-bookmaker-hook="' + key + '">' + hookSubtext + '</span>' +
         '</div>' +
       '</a>';
   }
@@ -767,7 +755,7 @@ window.applyDefaultBookmakerStripMode = function() {
   var isMobileViewport = (typeof window.innerWidth === "number" && window.innerWidth < 768);
   if (isMobileViewport) {
     gridEl.classList.add("hidden");
-    if (btnEl) btnEl.innerText = "▸ Show 5 Offers";
+    if (btnEl) btnEl.innerText = "▸ Show 3 Offers";
   } else {
     gridEl.classList.remove("hidden");
     if (btnEl) btnEl.innerText = "▾ Compact";
@@ -785,7 +773,7 @@ window.toggleFeaturedBookmakerStrip = function() {
     if (btnEl) btnEl.innerText = "▾ Compact";
   } else {
     gridEl.classList.add("hidden");
-    if (btnEl) btnEl.innerText = "▸ Show 5 Offers";
+    if (btnEl) btnEl.innerText = "▸ Show 3 Offers";
   }
 };
 
@@ -794,19 +782,21 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
   if (partners.betfred && typeof window.getActiveBetfredAffiliateUrl === "function") {
     partners.betfred.url = window.getActiveBetfredAffiliateUrl();
   }
-  var keys = Object.keys(partners);
+  var keys = ["betfred", "virginbet", "betvictor"];
   var btnsHtml = "";
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     var p = partners[key];
     if (!p) continue;
+    var isPrimary = (i === 0 || key === "betfred");
     var accent = p.accentColor || "#10b981";
     var brandBg = p.brandBg || p.brandBadgeBg || "#0f172a";
     var logoUrl = p.logoUrl || window.makeBookmakerFallbackSvg(key);
-    var btnLabel = (i === 0 || key === "betfred") ? ("Place Bet at " + p.name + " ↗") : ("Back on " + p.name + " ↗");
-    var colSpanClass = (i === 0 || key === "betfred") ? "col-span-2 sm:col-span-1" : "";
+    var btnLabel = isPrimary ? ("Place Bet at " + p.name + " ↗") : ("Back on " + p.name + " ↗");
+    var colSpanClass = isPrimary ? "col-span-2 sm:col-span-1 ring-1 ring-sky-400/50" : "col-span-1";
+    var btnBg = isPrimary ? "#071a33" : "#111927";
     btnsHtml +=
-      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-affiliate-pick-btn="' + key + '" onclick="event.stopPropagation()" class="' + colSpanClass + ' px-2.5 py-2 rounded-xl hover:brightness-110 text-[10px] font-extrabold text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer text-center" style="background-color:#111927; border:1.5px solid ' + accent + '; color:#ffffff;">' +
+      '<a href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-twa-external-link="true" data-affiliate-pick-btn="' + key + '" onclick="event.stopPropagation()" class="' + colSpanClass + ' px-2.5 py-2 rounded-xl hover:brightness-110 text-[10px] font-extrabold text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer text-center" style="background-color:' + btnBg + '; border:1.5px solid ' + accent + '; color:#ffffff;">' +
         '<img src="' + logoUrl + '" alt="' + p.name + ' Logo" width="22" height="22" onerror="this.onerror=null;this.src=window.makeBookmakerFallbackSvg(\'' + key + '\');" class="w-[22px] h-[22px] rounded-md object-contain flex-shrink-0 p-0.5" style="background-color:' + brandBg + '; border:1px solid ' + accent + '66;" />' +
         '<span class="text-[10px] font-extrabold text-white tracking-tight">' + btnLabel + '</span>' +
       '</a>';
@@ -819,7 +809,7 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
         '</span>' +
         (contextLabel ? '<span class="text-[8.5px] font-bold text-slate-400 truncate max-w-[200px]">' + contextLabel + '</span>' : '') +
       '</div>' +
-      '<div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">' +
+      '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">' +
         btnsHtml +
       '</div>' +
       '<p class="text-[8.5px] text-slate-400 text-center font-medium tracking-wide">18+ Only. Please Gamble Responsibly. | T&amp;Cs Apply | Commercial Partner | <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">BeGambleAware.org</a> | <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-emerald-300">GamCare.org.uk</a> | <a href="https://www.gamstop.co.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-sky-300">GamStop.co.uk</a></p>' +
@@ -2299,7 +2289,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="space-y-1">
         <label for="adminBetfredAffiliateUrlInput" class="block text-[9.5px] font-bold text-slate-300">Betfred Affiliate Tracking URL (#1 Featured Bookmaker &amp; Bet Slip Top CTA):</label>
         <div class="flex items-center gap-1.5">
-          <input type="url" id="adminBetfredAffiliateUrlInput" placeholder="https://www.betfred.com" class="flex-1 bg-slate-900 border border-slate-700 focus:border-sky-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-white font-mono outline-none transition">
+          <input type="url" id="adminBetfredAffiliateUrlInput" placeholder="https://betting.partners/link/198/115?cid=57" class="flex-1 bg-slate-900 border border-slate-700 focus:border-sky-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-white font-mono outline-none transition">
           <button type="button" id="adminSaveBetfredUrlBtn" onclick="window.saveAdminBetfredAffiliateUrl()" class="bg-sky-600 hover:bg-sky-500 text-white font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex-shrink-0">💾 Save URL</button>
         </div>
       </div>
@@ -2399,7 +2389,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button type="button" id="toggleBookmakerStripBtn" onclick="window.toggleFeaturedBookmakerStrip()" class="text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">▾ Compact</button>
         </div>
       </div>
-      <div id="featuredBookmakerOffersGrid" class="flex lg:grid lg:grid-cols-5 gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-0.5 scroll-smooth"></div>
+      <div id="featuredBookmakerOffersGrid" class="flex md:grid md:grid-cols-3 gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-0.5 scroll-smooth"></div>
     </section>
 
     <!-- Dynamic Empty State Container (Displayed when 0 fixtures match selected date/filters) -->
@@ -2589,7 +2579,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </span>
           <span class="text-[8px] font-semibold text-slate-400">18+ | T&amp;Cs Apply | <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">BeGambleAware.org</a> | <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-emerald-300">GamCare.org.uk</a></span>
         </div>
-        <div id="slipModalBookmakerButtons" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5"></div>
+        <div id="slipModalBookmakerButtons" class="grid grid-cols-2 gap-1.5"></div>
       </div>
     </div>
 
@@ -3118,6 +3108,10 @@ window.RESIDUAL_STORAGE_KEYS_TO_PURGE = [
   "airp_live_espn_fixtures_v18",
   "airp_live_espn_fixtures_v19",
   "airp_live_espn_fixtures_v20",
+  "airp_live_espn_fixtures_v21",
+  "airp_live_espn_fixtures_v22",
+  "airp_live_espn_fixtures_v23",
+  "airp_espn_truth_v4",
   "airp_club_crests_v2",
   "airp_club_crests_v3"
 ];
@@ -3207,7 +3201,7 @@ window.enforceUniformDefaultStartupState = function(){
 window.enforceUniformDefaultStartupState();
 window.scanHistory = window.safeGet("airp_v122_hist", window.PUBLISHED_STATE.hist || []);
 window.logHistory = window.safeGet("airp_v122_log", window.PUBLISHED_STATE.logs || []);
-window.apiLiveScores = window.safeGet("airp_espn_truth_v4", {});
+window.apiLiveScores = window.safeGet("airp_espn_truth_v5", {});
 window.isMockOrFakeFaCupFixture = function(favName, oppName, leagueCode){
   var lg = String(leagueCode || "FAC").trim().toUpperCase();
   var norm = function(v){
@@ -3234,7 +3228,10 @@ window.isInvalidOrSyntheticFixturePairing = window.isMockOrFakeFaCupFixture;
 window.isLegacyFallbackFixtureRow = function(row){
   if(!Array.isArray(row)) return true;
   var idNum = Number(row[0]);
+  if(!Number.isFinite(idNum) || idNum <= 0) return true;
   if(idNum >= 900000 && idNum < 1000000) return true;
+  if(idNum >= 260000 && idNum < 300000) return true;
+  if(idNum >= 46202600 && idNum <= 46202699) return true;
   if(window.isMockOrFakeFaCupFixture && window.isMockOrFakeFaCupFixture(row[4], row[5], row[2])) return true;
   return false;
 };
@@ -3271,7 +3268,7 @@ window.sanitizeDailyFixturesMap = function(mapObj){
   });
   return clean;
 };
-window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v22", {}));
+window.DAILY_FIXTURES = window.sanitizeDailyFixturesMap(window.safeGet("airp_live_espn_fixtures_v24", {}));
 window.subPassState = window.safeGet("airp_sub_pass_state", (window.PUBLISHED_STATE && window.PUBLISHED_STATE.subPasses) || {
   allowMasterPass: true,
   revoked: [],
@@ -5760,9 +5757,28 @@ window.updateModelHeaders = function(){
     return evUkDate === target;
   };
 
+  var EFLT_INVITED_ACADEMY_PARENTS = [
+    "arsenal","astonvilla","brentford","brighton","brightonandhovealbion","chelsea","crystalpalace",
+    "everton","fulham","ipswich","ipswichtown","leicester","leicestercity","liverpool","mancity",
+    "manchestercity","manutd","manchesterunited","newcastle","newcastleunited","nottinghamforest",
+    "nottmforest","southampton","tottenham","tottenhamhotspur","westham","westhamunited","wolves",
+    "wolverhamptonwanderers"
+  ];
+
+  window.normalizeEflTrophyTeamName = function(name, lgCode){
+    var clean = String(name || "").trim();
+    if(lgCode !== "EFLT" || !clean) return clean;
+    if(/\b(u21|u-21|under[\s-]*21|u23)\b/i.test(clean)) return clean;
+    var baseK = clean.toLowerCase().replace(/\b(fc|afc)\b/g, "").replace(/[^a-z0-9]/g, "");
+    if(EFLT_INVITED_ACADEMY_PARENTS.indexOf(baseK) !== -1){
+      return clean + " U21";
+    }
+    return clean;
+  };
+
   window.buildAccurateFixtureRow = function(ev, dateStr, lgCode, idx){
     if(!ev || !dateStr) return null;
-    if(ev.date && !window.isEventOnSelectedUkDate(ev.date, dateStr)){
+    if(!ev.date || !window.isEventOnSelectedUkDate(ev.date, dateStr)){
       return null;
     }
     var comp = ev.competitions && ev.competitions[0];
@@ -5770,13 +5786,16 @@ window.updateModelHeaders = function(){
     var hC = comp.competitors.find(function(c){return c.homeAway==="home";});
     var aC = comp.competitors.find(function(c){return c.homeAway==="away";});
     if(!hC || !aC) return null;
-    var hN = window.resolveApiTeamName ? window.resolveApiTeamName(hC.team) : (hC.team.displayName || hC.team.name || hC.team.shortDisplayName);
-    var aN = window.resolveApiTeamName ? window.resolveApiTeamName(aC.team) : (aC.team.displayName || aC.team.name || aC.team.shortDisplayName);
+    var rawHN = window.resolveApiTeamName ? window.resolveApiTeamName(hC.team) : (hC.team.displayName || hC.team.name || hC.team.shortDisplayName);
+    var rawAN = window.resolveApiTeamName ? window.resolveApiTeamName(aC.team) : (aC.team.displayName || aC.team.name || aC.team.shortDisplayName);
+    var hN = window.normalizeEflTrophyTeamName(rawHN, lgCode);
+    var aN = window.normalizeEflTrophyTeamName(rawAN, lgCode);
     if(window.isMockOrFakeFaCupFixture && window.isMockOrFakeFaCupFixture(hN, aN, lgCode)){
       return null;
     }
 
-    var idNum = parseInt(ev.id, 10) || (260000 + idx);
+    var idNum = parseInt(ev.id, 10);
+    if(!Number.isFinite(idNum) || idNum <= 0) return null;
     var hP = window.getTrueClubRating(hN, hC), aP = window.getTrueClubRating(aN, aC);
     var hFormScore = window.parseEspnFormScore(hC.form);
     var aFormScore = window.parseEspnFormScore(aC.form);
@@ -6782,27 +6801,27 @@ window.buildDeterministicFallbackSlate = function(){
 
 window.EFL_TROPHY_SCHEDULE_SLATE = {
   "2026-11-10": [
-    { id: 46202601, ko: "19:00", homeTeam: "Mansfield Town", awayTeam: "Chesterfield", group: "Northern Group H" },
-    { id: 46202602, ko: "19:00", homeTeam: "Stockport County", awayTeam: "Tranmere Rovers", group: "Northern Group A" },
-    { id: 46202603, ko: "19:00", homeTeam: "Huddersfield Town", awayTeam: "Liverpool U21", group: "Northern Group F" },
-    { id: 46202604, ko: "19:00", homeTeam: "Stevenage", awayTeam: "Fulham U21", group: "Southern Group D" },
-    { id: 46202605, ko: "19:00", homeTeam: "Plymouth Argyle", awayTeam: "Swindon Town", group: "Southern Group G" },
-    { id: 46202606, ko: "19:00", homeTeam: "Bolton Wanderers", awayTeam: "Fleetwood Town", group: "Northern Group D" },
-    { id: 46202607, ko: "19:00", homeTeam: "Wigan Athletic", awayTeam: "Nottingham Forest U21", group: "Northern Group C" },
-    { id: 46202608, ko: "19:00", homeTeam: "Blackpool", awayTeam: "Aston Villa U21", group: "Northern Group E" },
-    { id: 46202609, ko: "19:00", homeTeam: "Rotherham United", awayTeam: "Newcastle United U21", group: "Northern Group H" },
-    { id: 46202610, ko: "19:00", homeTeam: "Peterborough United", awayTeam: "Crystal Palace U21", group: "Southern Group D" },
-    { id: 46202611, ko: "19:00", homeTeam: "Wycombe Wanderers", awayTeam: "Brighton U21", group: "Southern Group F" },
-    { id: 46202612, ko: "19:00", homeTeam: "Leyton Orient", awayTeam: "Arsenal U21", group: "Southern Group E" },
-    { id: 46202613, ko: "19:00", homeTeam: "Charlton Athletic", awayTeam: "Chelsea U21", group: "Southern Group C" },
-    { id: 46202614, ko: "19:30", homeTeam: "Bradford City", awayTeam: "York City", group: "Northern Group H" },
-    { id: 46202615, ko: "19:45", homeTeam: "Exeter City", awayTeam: "Tottenham Hotspur U21", group: "Southern Group G" },
-    { id: 46202616, ko: "19:45", homeTeam: "Lincoln City", awayTeam: "Manchester United U21", group: "Northern Group G" },
-    { id: 46202617, ko: "19:45", homeTeam: "Reading", awayTeam: "West Ham United U21", group: "Southern Group H" }
+    { id: 401906329, ko: "19:00", homeTeam: "Barnet", awayTeam: "Leyton Orient", group: "Southern Group E" },
+    { id: 401906331, ko: "19:00", homeTeam: "Bristol Rovers", awayTeam: "Reading", group: "Southern Group H" },
+    { id: 401906336, ko: "19:00", homeTeam: "Burton Albion", awayTeam: "Notts County", group: "Northern Group G" },
+    { id: 401906251, ko: "19:00", homeTeam: "Crewe Alexandra", awayTeam: "Wigan Athletic", group: "Northern Group C" },
+    { id: 401906335, ko: "19:00", homeTeam: "Grimsby Town", awayTeam: "Nottingham Forest U21", group: "Northern Group C" },
+    { id: 401906334, ko: "19:00", homeTeam: "Huddersfield Town", awayTeam: "Liverpool U21", group: "Northern Group F" },
+    { id: 401906332, ko: "19:00", homeTeam: "Leicester City U21", awayTeam: "Walsall", group: "Northern Group B" },
+    { id: 401906338, ko: "19:00", homeTeam: "Mansfield Town", awayTeam: "Chesterfield", group: "Northern Group H" },
+    { id: 401906328, ko: "19:00", homeTeam: "Northampton Town", awayTeam: "Gillingham", group: "Southern Group C" },
+    { id: 401906333, ko: "19:00", homeTeam: "Oxford United", awayTeam: "Cheltenham Town", group: "Southern Group F" },
+    { id: 401906330, ko: "19:00", homeTeam: "Plymouth Argyle", awayTeam: "Swindon Town", group: "Southern Group G" },
+    { id: 401906250, ko: "19:00", homeTeam: "Stevenage", awayTeam: "Fulham U21", group: "Southern Group D" },
+    { id: 401906337, ko: "19:00", homeTeam: "Stockport County", awayTeam: "Tranmere Rovers", group: "Northern Group A" },
+    { id: 401906339, ko: "19:30", homeTeam: "Bradford City", awayTeam: "York City", group: "Northern Group H" },
+    { id: 401906327, ko: "19:30", homeTeam: "Bromley", awayTeam: "Milton Keynes Dons", group: "Southern Group A" },
+    { id: 401906272, ko: "19:30", homeTeam: "Crawley Town", awayTeam: "Brentford U21", group: "Southern Group B" },
+    { id: 401906271, ko: "19:45", homeTeam: "Colchester United", awayTeam: "Ipswich Town U21", group: "Southern Group A" }
   ],
   "2026-11-11": [
-    { id: 46202618, ko: "19:00", homeTeam: "Sheffield Wednesday", awayTeam: "Accrington Stanley", group: "Northern Group A" },
-    { id: 46202619, ko: "19:30", homeTeam: "Barnsley", awayTeam: "Oldham Athletic", group: "Northern Group F" }
+    { id: 401906340, ko: "19:00", homeTeam: "Sheffield Wednesday", awayTeam: "Accrington Stanley", group: "Northern Group A" },
+    { id: 401911177, ko: "19:00", homeTeam: "Barnsley", awayTeam: "Oldham Athletic", group: "Northern Group F" }
   ]
 };
 
@@ -6853,18 +6872,14 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
   ];
 
   window.fetchAllLeaguesForDate = function(dateStr, force){
-    if(!dateStr) return;
+    if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr))) return;
     var now = Date.now();
     if(window.inFlightDatesMap[dateStr]) return;
-    if(!force && window.fetchedDatesMap[dateStr] && (now - window.fetchedDatesMap[dateStr] < 30000)) return;
+    if(!force && window.fetchedDatesMap[dateStr] && (now - window.fetchedDatesMap[dateStr] < 20000)) return;
     window.fetchedDatesMap[dateStr] = now;
     window.inFlightDatesMap[dateStr] = true;
 
-    var dStr = dateStr.replace(/-/g, ""), col = [], anyFetchOk = false;
-    var verifiedEflRows = window.buildVerifiedEflTrophyRowsForDate ? window.buildVerifiedEflTrophyRowsForDate(dateStr) : [];
-    if (verifiedEflRows.length > 0) {
-      verifiedEflRows.forEach(function(vr) { col.push(vr); });
-    }
+    var dStr = dateStr.replace(/-/g, ""), col = [], anyFetchOk = false, efltFetchOk = false;
     var jobs = LGS.map(function(lg){
       var espnUrl = "https://site.api.espn.com/apis/site/v2/sports/soccer/"+lg.s+"/scoreboard?dates="+dStr;
       var reqPromise = window.fetchJsonWithFallback ? window.fetchJsonWithFallback(espnUrl) : fetch(espnUrl).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
@@ -6872,6 +6887,7 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
         .then(function(d){
           if(!d) return;
           anyFetchOk = true;
+          if(lg.c === "EFLT") efltFetchOk = true;
           if(lg.c !== "UNL" && lg.c !== "EFLT" && d.leagues && d.leagues[0] && d.leagues[0].logos && d.leagues[0].logos[0] && d.leagues[0].logos[0].href){
             var officialLogoHref = d.leagues[0].logos[0].href;
             if(window.LEAGUE_LOGOS[lg.c] !== officialLogoHref){
@@ -6882,8 +6898,8 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
           }
           if(!Array.isArray(d.events)) return;
           d.events.forEach(function(ev, idx){
-            // Strict UK calendar date (YYYY-MM-DD) filter: skip any event not scheduled on dateStr
-            if(ev && ev.date && window.isEventOnSelectedUkDate && !window.isEventOnSelectedUkDate(ev.date, dateStr)){
+            // Strict UK calendar date (YYYY-MM-DD) filter: exclude any event not scheduled on dateStr
+            if(!ev || !ev.date || (window.isEventOnSelectedUkDate && !window.isEventOnSelectedUkDate(ev.date, dateStr))){
               return;
             }
             var row = window.buildAccurateFixtureRow ? window.buildAccurateFixtureRow(ev, dateStr, lg.c, idx) : null;
@@ -6895,20 +6911,25 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
             var hC = comp.competitors.find(function(x){return x.homeAway==="home";});
             var aC = comp.competitors.find(function(x){return x.homeAway==="away";});
             if(!hC || !aC) return;
-            var hN = window.resolveApiTeamName ? window.resolveApiTeamName(hC.team) : (hC.team.displayName||hC.team.name);
-            var aN = window.resolveApiTeamName ? window.resolveApiTeamName(aC.team) : (aC.team.displayName||aC.team.name);
+            var rawHN = window.resolveApiTeamName ? window.resolveApiTeamName(hC.team) : (hC.team.displayName||hC.team.name);
+            var rawAN = window.resolveApiTeamName ? window.resolveApiTeamName(aC.team) : (aC.team.displayName||aC.team.name);
+            var hN = window.normalizeEflTrophyTeamName ? window.normalizeEflTrophyTeamName(rawHN, lg.c) : rawHN;
+            var aN = window.normalizeEflTrophyTeamName ? window.normalizeEflTrophyTeamName(rawAN, lg.c) : rawAN;
             if(window.isMockOrFakeFaCupFixture && window.isMockOrFakeFaCupFixture(hN, aN, lg.c)){
               return;
             }
             var hK = window.normTeamKey(hN), aK = window.normTeamKey(aN);
+            var rawHK = window.normTeamKey(rawHN), rawAK = window.normTeamKey(rawAN);
             // Only map API logo under the exact full club key — never under a truncated shortDisplayName
             if(hC.team.logo && hK){
               window.CLUB_CREST_MAP[hK]=hC.team.logo;
+              if(rawHK) window.CLUB_CREST_MAP[rawHK]=hC.team.logo;
             } else if(hK && (!window.CLUB_CREST_MAP || !window.CLUB_CREST_MAP[hK]) && window.fetchTeamCrestFromSportsDB){
               window.fetchTeamCrestFromSportsDB(hN);
             }
             if(aC.team.logo && aK){
               window.CLUB_CREST_MAP[aK]=aC.team.logo;
+              if(rawAK) window.CLUB_CREST_MAP[rawAK]=aC.team.logo;
             } else if(aK && (!window.CLUB_CREST_MAP || !window.CLUB_CREST_MAP[aK]) && window.fetchTeamCrestFromSportsDB){
               window.fetchTeamCrestFromSportsDB(aN);
             }
@@ -6948,6 +6969,7 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
             var rawAScore = (aC && aC.score && typeof aC.score === "object") ? (aC.score.displayValue || aC.score.value || "0") : (aC && aC.score !== undefined ? aC.score : "0");
             var rec = {
               id:String(ev.id),
+              date:dateStr,
               state:st,
               detail:dt,
               h:parseInt(rawHScore,10) || 0,
@@ -6959,19 +6981,29 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
               ko:row?row[20]:"15:00",
               corners: totalCorn,
               cards: totalCards,
-              fhGoals: fhGoalsVal
+              fhGoals: fhGoalsVal,
+              updatedAt: Date.now()
             };
             window.apiLiveScores["id_"+ev.id] = rec;
             if(hK) window.apiLiveScores[hK+"_"+dateStr] = rec;
+            if(aK) window.apiLiveScores[aK+"_"+dateStr] = rec;
+            if(rawHK) window.apiLiveScores[rawHK+"_"+dateStr] = rec;
+            if(rawAK) window.apiLiveScores[rawAK+"_"+dateStr] = rec;
+            if(hK && aK) window.apiLiveScores[hK+"_vs_"+aK+"_"+dateStr] = rec;
           });
         }).catch(function(){});
     });
     Promise.all(jobs).then(function(){
       window.inFlightDatesMap[dateStr] = false;
+      // Only fall back to verified EFL Trophy slate if the network request for EFLT completely failed offline
+      if(!efltFetchOk && col.filter(function(r){ return Array.isArray(r) && r[2] === "EFLT"; }).length === 0 && window.buildVerifiedEflTrophyRowsForDate){
+        var fallbackEflRows = window.buildVerifiedEflTrophyRowsForDate(dateStr);
+        fallbackEflRows.forEach(function(vr){ col.push(vr); });
+      }
       var dedupedCol = [];
       var seenIds = {}, seenPairs = {}, seenClubs = {};
       col.forEach(function(r){
-        if(!Array.isArray(r)) return;
+        if(!Array.isArray(r) || window.isLegacyFallbackFixtureRow(r) || String(r[1] || "") !== String(dateStr)) return;
         var idK = String(r[0] || "");
         var c1 = window.normTeamKey ? window.normTeamKey(r[4]) : String(r[4] || "").toLowerCase();
         var c2 = window.normTeamKey ? window.normTeamKey(r[5]) : String(r[5] || "").toLowerCase();
@@ -6994,10 +7026,10 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
       });
       if(dedupedCol.length > 0 || anyFetchOk || !window.DAILY_FIXTURES[dateStr]){
         window.DAILY_FIXTURES[dateStr] = dedupedCol;
-        window.safeSet("airp_live_espn_fixtures_v22", window.DAILY_FIXTURES);
+        window.safeSet("airp_live_espn_fixtures_v24", window.DAILY_FIXTURES);
       }
       window.safeSet("airp_espn_bookmaker_odds_v1", window.espnBookmakerOddsMap);
-      window.safeSet("airp_espn_truth_v4", window.apiLiveScores);
+      window.safeSet("airp_espn_truth_v5", window.apiLiveScores);
       window.safeSet("airp_club_crests_v4", window.CLUB_CREST_MAP);
       window.safeSet("airp_official_league_logos_v1", window.LEAGUE_LOGOS);
       if(typeof window.autoSettleAndEvolveCompletedDays === "function") window.autoSettleAndEvolveCompletedDays();
@@ -7005,9 +7037,16 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
       if(window.selectedDate === dateStr && typeof window.fetchTheOddsApiMarkets === "function"){
         window.fetchTheOddsApiMarkets(false, dateStr);
       }
-      if(window.selectedDate === dateStr && window._lastRenderedDate !== dateStr + "_" + (window.DAILY_FIXTURES[dateStr]||[]).length){
-        window._lastRenderedDate = dateStr + "_" + (window.DAILY_FIXTURES[dateStr]||[]).length;
-        if(window.runEngine) window.runEngine(false);
+      if(window.selectedDate === dateStr){
+        var activeRows = window.DAILY_FIXTURES[dateStr] || [];
+        var liveSig = dateStr + "_" + activeRows.map(function(r){
+          var aRec = (window.apiLiveScores && window.apiLiveScores["id_" + r[0]]) || {};
+          return r[0] + ":" + (aRec.state || "") + ":" + (aRec.detail || "") + ":" + (aRec.h || 0) + "-" + (aRec.a || 0);
+        }).join("|");
+        if(window._lastRenderedDate !== liveSig){
+          window._lastRenderedDate = liveSig;
+          if(window.runEngine) window.runEngine(false);
+        }
       }
     });
   };
@@ -7032,46 +7071,53 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
 })();
 
 window.generateFixturesForDate = function(dateStr){
-  if(!dateStr) return [];
+  if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr))) return [];
   if(Array.isArray(window.DAILY_FIXTURES[dateStr])){
+    var seenIds = {}, seenPairs = {}, seenClubs = {};
     window.DAILY_FIXTURES[dateStr] = window.DAILY_FIXTURES[dateStr].filter(function(r){
-      return Array.isArray(r) && !window.isLegacyFallbackFixtureRow(r) && String(r[1] || "") === String(dateStr);
+      if(!Array.isArray(r) || window.isLegacyFallbackFixtureRow(r) || String(r[1] || "") !== String(dateStr)) return false;
+      var idK = String(r[0] || "");
+      var c1 = window.normTeamKey ? window.normTeamKey(r[4]) : String(r[4] || "").toLowerCase();
+      var c2 = window.normTeamKey ? window.normTeamKey(r[5]) : String(r[5] || "").toLowerCase();
+      if(!c1 || !c2 || c1 === c2) return false;
+      var pairK = [c1, c2].sort().join("_vs_");
+      if((idK && seenIds[idK]) || seenPairs[pairK] || seenClubs[c1] || seenClubs[c2]) return false;
+      if(idK) seenIds[idK] = true;
+      seenPairs[pairK] = true;
+      seenClubs[c1] = true;
+      seenClubs[c2] = true;
+      return true;
     });
-  }
-  if(window.buildVerifiedEflTrophyRowsForDate){
-    var eflRows = window.buildVerifiedEflTrophyRowsForDate(dateStr);
-    if(eflRows && eflRows.length > 0){
-      var existingArr = Array.isArray(window.DAILY_FIXTURES[dateStr]) ? window.DAILY_FIXTURES[dateStr].slice() : [];
-      var existingPairs = {};
-      existingArr.forEach(function(er){
-        if(Array.isArray(er)){
-          var pk = [window.normTeamKey(er[4]), window.normTeamKey(er[5])].sort().join("__");
-          existingPairs[pk] = true;
-        }
-      });
-      eflRows.forEach(function(eflR){
-        var pk2 = [window.normTeamKey(eflR[4]), window.normTeamKey(eflR[5])].sort().join("__");
-        if(!existingPairs[pk2]){
-          existingPairs[pk2] = true;
-          existingArr.push(eflR);
-        }
-      });
-      window.DAILY_FIXTURES[dateStr] = existingArr;
-    }
-  }
-  if(window.DAILY_FIXTURES[dateStr] && window.DAILY_FIXTURES[dateStr].length > 0){
-    window.fetchAllLeaguesForDate(dateStr, false);
-    return window.DAILY_FIXTURES[dateStr];
   }
   window.fetchAllLeaguesForDate(dateStr, false);
   return window.DAILY_FIXTURES[dateStr] || [];
 };
 
-window.getLiveMatchState = function(m){
-  var hName = m.venue === "HOME" ? m.fav : m.opp;
-  var v = window.apiLiveScores || {};
-  var api = v["id_" + m.id] || v[window.normTeamKey(hName) + "_" + m.date];
-  if(api && api.ko) m.ko = api.ko;
+window.parseUkKickoffTimestampMs = function(dateStr, koStr){
+  var cleanDate = String(dateStr || "").trim();
+  var cleanKo = String(koStr || "19:45").trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) return NaN;
+  var m = cleanKo.match(/^(\d{1,2}):(\d{2})$/);
+  var hh = m ? String(Number(m[1])).padStart(2, "0") : "19";
+  var mm = m ? m[2] : "45";
+  var parsedUtc = Date.parse(cleanDate + "T" + hh + ":" + mm + ":00Z");
+  if(isNaN(parsedUtc)) return NaN;
+  try {
+    var londonParts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).formatToParts(new Date(parsedUtc));
+    var lonHourPart = londonParts.find(function(p){ return p.type === "hour"; });
+    var lonHour = lonHourPart ? Number(lonHourPart.value) : Number(hh);
+    var offsetHours = lonHour - Number(hh);
+    return parsedUtc - (offsetHours * 3600000);
+  } catch(e){
+    return parsedUtc;
+  }
+};
+
 window.buildInPlayStatusPillHtml = function(rawClockOrStatus) {
   var raw = String(rawClockOrStatus || "LIVE").trim();
   if (/\bht\b|half[\s-]*time/i.test(raw)) {
@@ -7091,6 +7137,18 @@ window.buildInPlayStatusPillHtml = function(rawClockOrStatus) {
   var liveLabel = cleanClock ? ("LIVE " + cleanClock) : "LIVE";
   return '<span data-card-status-pill="live" class="text-[10px] bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.38)]"><span class="text-emerald-400 animate-pulse drop-shadow-[0_0_6px_rgba(52,211,153,0.95)] leading-none">●</span><span>' + liveLabel + '</span></span>';
 };
+
+window.getLiveMatchState = function(m){
+  var hName = m.venue === "HOME" ? m.fav : m.opp;
+  var aName = m.venue === "HOME" ? m.opp : m.fav;
+  var hKey = window.normTeamKey ? window.normTeamKey(hName) : String(hName || "").toLowerCase();
+  var aKey = window.normTeamKey ? window.normTeamKey(aName) : String(aName || "").toLowerCase();
+  var v = window.apiLiveScores || {};
+  var api = v["id_" + m.id] ||
+            (hKey && aKey && v[hKey + "_vs_" + aKey + "_" + m.date]) ||
+            (hKey && v[hKey + "_" + m.date]) ||
+            (aKey && v[aKey + "_" + m.date]);
+  if(api && api.ko) m.ko = api.ko;
 
   var koStr = m.ko || "19:45";
 
@@ -7114,26 +7172,66 @@ window.buildInPlayStatusPillHtml = function(rawClockOrStatus) {
     return { isLive: false, displayStatus: customVal, badgeHtml: "" };
   }
 
-  if(api){
-    var hs = Number(api.h || 0), as = Number(api.a || 0);
-    if(api.state === "post"){
-      if(m.league === "EFLT" && window.resolveEflTrophyRegulationScore && /\b(pen|pens|penalties|ft[\s-]*pen|shootout)\b/i.test(String(api.detail || ""))){
-        var regApi = window.resolveEflTrophyRegulationScore(String(api.detail || ""), hs, as);
-        hs = regApi.regulationHomeGoals;
-        as = regApi.regulationAwayGoals;
-      }
-      var fg = m.venue === "HOME" ? hs : as, og = m.venue === "HOME" ? as : hs;
-      return { isLive: false, displayStatus: hs + "-" + as + " (" + (fg > og ? "Won" : (fg === og ? "Draw" : "Lost")) + ")", badgeHtml: "" };
+  var hs = Number((api && api.h !== undefined) ? api.h : 0);
+  var as = Number((api && api.a !== undefined) ? api.a : 0);
+  var rawState = String((api && api.state) || "").toLowerCase();
+  var rawDetail = String((api && api.detail) || "").trim();
+
+  if(api && (rawState === "post" || /\b(ft|full[\s-]*time|final|aet|after extra time|ft[\s-]*pen)\b/i.test(rawDetail))){
+    if(m.league === "EFLT" && window.resolveEflTrophyRegulationScore && /\b(pen|pens|penalties|ft[\s-]*pen|shootout)\b/i.test(rawDetail)){
+      var regApi = window.resolveEflTrophyRegulationScore(rawDetail, hs, as);
+      hs = regApi.regulationHomeGoals;
+      as = regApi.regulationAwayGoals;
     }
-    if(api.state === "in"){
-      var sc = hs + " - " + as, clk = api.detail || "LIVE";
+    var fg = m.venue === "HOME" ? hs : as, og = m.venue === "HOME" ? as : hs;
+    return { isLive: false, displayStatus: hs + "-" + as + " (" + (fg > og ? "Won" : (fg === og ? "Draw" : "Lost")) + ")", badgeHtml: "" };
+  }
+
+  if(api && rawState === "in"){
+    var sc = hs + " - " + as;
+    var clkIn = /\bht\b|half[\s-]*time/i.test(rawDetail) ? "HT" : (rawDetail || "LIVE");
+    return {
+      isLive: true,
+      displayStatus: "LIVE " + clkIn + " (" + sc + ")",
+      badgeHtml: window.buildInPlayStatusPillHtml(clkIn)
+    };
+  }
+
+  // Real-time timestamp validation: never allow a match whose kickoff has passed to display a stale "KO" placeholder
+  var kickMs = window.parseUkKickoffTimestampMs ? window.parseUkKickoffTimestampMs(m.date, koStr) : NaN;
+  var nowMs = Date.now();
+  if(Number.isFinite(kickMs) && nowMs >= kickMs){
+    var elapsedMin = Math.floor((nowMs - kickMs) / 60000);
+    var scFallback = hs + " - " + as;
+    if(elapsedMin >= 0 && elapsedMin < 45){
+      var fhClk = Math.max(1, elapsedMin) + "'";
       return {
         isLive: true,
-        displayStatus: "LIVE " + clk + " (" + sc + ")",
-        badgeHtml: window.buildInPlayStatusPillHtml(clk)
+        displayStatus: "LIVE " + fhClk + " (" + scFallback + ")",
+        badgeHtml: window.buildInPlayStatusPillHtml(fhClk)
       };
     }
+    if(elapsedMin >= 45 && elapsedMin < 60){
+      return {
+        isLive: true,
+        displayStatus: "LIVE HT (" + scFallback + ")",
+        badgeHtml: window.buildInPlayStatusPillHtml("HT")
+      };
+    }
+    if(elapsedMin >= 60 && elapsedMin <= 120){
+      var shClk = Math.min(90, Math.max(46, elapsedMin - 15)) + "'";
+      return {
+        isLive: true,
+        displayStatus: "LIVE " + shClk + " (" + scFallback + ")",
+        badgeHtml: window.buildInPlayStatusPillHtml(shClk)
+      };
+    }
+    if(elapsedMin > 120 && api && (api.h !== undefined || api.a !== undefined)){
+      var fgFt = m.venue === "HOME" ? hs : as, ogFt = m.venue === "HOME" ? as : hs;
+      return { isLive: false, displayStatus: hs + "-" + as + " (" + (fgFt > ogFt ? "Won" : (fgFt === ogFt ? "Draw" : "Lost")) + ")", badgeHtml: "" };
+    }
   }
+
   return {
     isLive: false,
     displayStatus: "KO " + koStr,
@@ -7154,10 +7252,10 @@ window.mapRawMatch = function(x){
 };
 
 window.getFixturesForDateAndLeagues = function(dateStr, leagues){
-  if(!dateStr || !leagues || leagues.length === 0) return [];
+  if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr)) || !leagues || leagues.length === 0) return [];
   var rawList = window.generateFixturesForDate(dateStr);
   return rawList.map(window.mapRawMatch).filter(function(f){
-    return f && String(f.date) === String(dateStr) && leagues.indexOf(f.league) !== -1;
+    return f && !window.isLegacyFallbackFixtureRow([f.id, f.date, f.league, f.venue, f.fav, f.opp]) && String(f.date) === String(dateStr) && leagues.indexOf(f.league) !== -1;
   });
 };
 
@@ -11304,8 +11402,8 @@ window.runEngine = function(isForcedSync){
     var addDateFixtureToPool = function(m, isAlreadyEvaluated){
       if(!m || !m.fav || !m.opp) return;
       if(m.isFallbackMock === true || m.isHardcodedFallback === true) return;
-      if(Number(m.id) >= 900000 && Number(m.id) < 1000000) return;
-      if(m.date && String(m.date) !== String(activeDateStr)) return;
+      if(window.isLegacyFallbackFixtureRow && window.isLegacyFallbackFixtureRow([m.id, m.date, m.league, m.venue, m.fav, m.opp])) return;
+      if(!m.date || String(m.date) !== String(activeDateStr)) return;
       var hN = m.venue === "HOME" ? m.fav : m.opp;
       var aN = m.venue === "HOME" ? m.opp : m.fav;
       var k = window.normTeamKey(hN) + "_vs_" + window.normTeamKey(aN);
