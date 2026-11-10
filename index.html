@@ -53,12 +53,127 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="betboy-build-version" content="betboy-ai-v2026-11-10-live-v16">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js').catch(function() {});
-    });
-  }
+  (function() {
+    var CURRENT_BUILD_VERSION = 'betboy-ai-v2026-11-10-live-v16';
+    window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
+    window._betboyReloadingNow = false;
+
+    window.purgeAllBrowserCachesAndReload = function(reasonTag) {
+      if (window._betboyReloadingNow) return Promise.resolve(false);
+      var guardKey = 'betboy_sw_autoreload_' + String(reasonTag || CURRENT_BUILD_VERSION);
+      try {
+        if (sessionStorage.getItem(guardKey) === '1') {
+          return Promise.resolve(false);
+        }
+        sessionStorage.setItem(guardKey, '1');
+      } catch (e) {}
+      window._betboyReloadingNow = true;
+
+      var clearPromise = ('caches' in window && caches && typeof caches.keys === 'function')
+        ? caches.keys().then(function(keys) {
+            return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+          }).catch(function() {})
+        : Promise.resolve();
+
+      return clearPromise.then(function() {
+        window.location.reload();
+        return true;
+      });
+    };
+
+    window.checkLiveAppVersionAndUpdate = function() {
+      if (window._swRegistration && typeof window._swRegistration.update === 'function') {
+        try { window._swRegistration.update().catch(function() {}); } catch (e) {}
+      }
+      var checkUrl = '/index.html?t=' + Date.now();
+      return fetch(checkUrl, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
+        .then(function(res) {
+          if (!res || !res.ok) return '';
+          return res.text();
+        })
+        .then(function(htmlText) {
+          if (!htmlText) return false;
+          var match = htmlText.match(/<meta\s+name=["']betboy-build-version["']\s+content=["']([^"']+)["']/i);
+          var remoteVersion = match && match[1] ? match[1].trim() : '';
+          if (remoteVersion && remoteVersion !== CURRENT_BUILD_VERSION) {
+            return window.purgeAllBrowserCachesAndReload('ver_' + remoteVersion);
+          }
+          return false;
+        })
+        .catch(function() {
+          return false;
+        });
+    };
+
+    if ('serviceWorker' in navigator) {
+      var hadControllerOnBoot = !!navigator.serviceWorker.controller;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        if (hadControllerOnBoot) {
+          window.purgeAllBrowserCachesAndReload('ctrl_' + CURRENT_BUILD_VERSION);
+        }
+      });
+
+      navigator.serviceWorker.addEventListener('message', function(event) {
+        if (event && event.data && event.data.type === 'FORCE_RELOAD') {
+          var incomingVer = event.data.version || 'force';
+          if (incomingVer !== CURRENT_BUILD_VERSION || event.data.hadStaleCache) {
+            window.purgeAllBrowserCachesAndReload('msg_' + incomingVer);
+          }
+        }
+      });
+
+      var registerAndCheckSw = function() {
+        navigator.serviceWorker
+          .register('/sw.js', { updateViaCache: 'none' })
+          .then(function(registration) {
+            window._swRegistration = registration;
+            try { registration.update().catch(function() {}); } catch (e) {}
+
+            if (registration.waiting) {
+              try { registration.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+            }
+
+            registration.addEventListener('updatefound', function() {
+              var newWorker = registration.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', function() {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  try { newWorker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                  window.purgeAllBrowserCachesAndReload('installed_' + Date.now());
+                }
+              });
+            });
+          })
+          .catch(function() {});
+
+        window.checkLiveAppVersionAndUpdate();
+      };
+
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        registerAndCheckSw();
+      } else {
+        window.addEventListener('load', registerAndCheckSw);
+      }
+
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          window.checkLiveAppVersionAndUpdate();
+        }
+      });
+    }
+  })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
