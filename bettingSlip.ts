@@ -11690,7 +11690,7 @@ export function buildFlashscoreHighlightsCardConfig(params: {
 // ============================================================================
 
 export const GLOBAL_NATIVE_APP_LOCKDOWN_CSS =
-  'html { overscroll-behavior-y: none; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; } body { overflow-x: clip; overflow-y: visible; touch-action: pan-y; }';
+  'html { overscroll-behavior-y: auto; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; } body { overflow-x: clip; overflow-y: visible; touch-action: pan-y; }';
 
 /**
  * Ensures background Service Worker updates, controllerchange events, and
@@ -11771,5 +11771,31 @@ export function reconcileMatchCardsInPlace(
     unchangedCardIds,
   };
 }
+
+export const SCROLL_TOP_FAB_CONFIG = {
+  bottomSpacingPx: 88,
+  zIndex: 85,
+  widthPx: 38,
+  heightPx: 38,
+  safeAreaInset: true,
+};
+
+export const ADMIN_STREAMLINED_COMPONENTS = {
+  topControlBar: true,
+  auditLogLiveStream: true,
+  singleXPostStudioButton: true,
+  paypalSubscriberPassManager: false,
+  affiliateUrlAndOddsKeyBlock: false,
+  duplicateXButtons: false,
+};
+
+export const SAFE_PULL_TO_REFRESH_CONFIG = {
+  enabled: true,
+  overscrollBehaviorY: 'auto',
+  usesSoftDataRefresh: true,
+  preventsHardReloadLoops: true,
+  pullThresholdPx: 70,
+};
+
 
 

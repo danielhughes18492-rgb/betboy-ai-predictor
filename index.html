@@ -181,7 +181,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script id="paypalSdkScript" src="https://www.paypal.com/sdk/js?client-id=BAADksjqqj_-OlL0WyIWeLi-OsBQitWr5HEZIwiAolAd8jaIc6iADWKnMud_yHL1-NrR2HiQJoIn4u475E&vault=true&intent=subscription" data-sdk-integration-source="button-factory"></script>
 <style>
   html {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: auto;
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -218,11 +218,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     padding-bottom: env(safe-area-inset-bottom, 36px);
   }
 
-  /* 3. Reposition the floating Back-to-Top button so it clears market text */
+  /* 3. Reposition the floating Back-to-Top button so it sits safely above the sticky bottom Betting Slip bar */
   .back-to-top-btn, [class*="scroll-top"] {
-    bottom: 30px !important;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
     left: 16px !important;
-    z-index: 999;
+    z-index: 85;
     backdrop-filter: blur(8px);
   }
   .glass { background: linear-gradient(165deg, rgba(30, 41, 59, 0.68) 0%, rgba(15, 23, 42, 0.92) 100%) !important; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.09) !important; box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.09); transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease; }
@@ -315,9 +315,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .kpi-active-ring { outline: 2px solid #10b981 !important; background: rgba(16,185,129,0.16) !important; }
   .btn-press { transition: transform 0.16s cubic-bezier(0.16,1,0.3,1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
   .btn-press:active { transform: scale(0.96); }
-  #scrollTopFab, .back-to-top-btn, [class*="scroll-top"] { position:fixed; bottom:30px !important; left:16px !important; right:auto; width:36px; height:36px; z-index:999; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding:0; font-size:14px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
-  #scrollTopFab.vis, .back-to-top-btn.vis, [class*="scroll-top"].vis { opacity:0.65; pointer-events:auto; transform:translateY(0); }
-  #scrollTopFab:hover, .back-to-top-btn:hover, [class*="scroll-top"]:hover { opacity:0.95 !important; }
+  #scrollTopFab, .back-to-top-btn, [class*="scroll-top"] { position:fixed; bottom:calc(88px + env(safe-area-inset-bottom, 0px)) !important; left:16px !important; right:auto; width:38px; height:38px; z-index:85; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding:0; font-size:15px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  #scrollTopFab.vis, .back-to-top-btn.vis, [class*="scroll-top"].vis { opacity:0.85; pointer-events:auto; transform:translateY(0); }
+  #scrollTopFab:hover, .back-to-top-btn:hover, [class*="scroll-top"]:hover { opacity:1 !important; }
   .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
   .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
   body.admin-mode-active:not(.admin-preview-feed-active) #userFeedSection { display: none !important; }
@@ -1949,7 +1949,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button type="button" onclick="window.exitTrialToSubscribe()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-2 rounded-xl text-[10px] leading-tight shadow flex-shrink-0 cursor-pointer transition text-center">🔓 £3.99/mo<br><span class="text-[8px] font-bold opacity-80">&lt;£1/week</span></button>
   </div>
 
-  <!-- ADMIN-ONLY PANEL: Model Metrics, Self-Evolution Weights, Calibration & Controls -->
+  <!-- ADMIN-ONLY PANEL: Streamlined Clean Control Bar, Live Audit Log & X Post Studio -->
   <div id="adminBar" class="bg-emerald-950/40 border border-emerald-500/40 p-3.5 rounded-2xl space-y-3 text-xs hidden">
     <!-- Admin Top Header -->
     <div class="flex justify-between items-center flex-wrap gap-2 border-b border-emerald-500/20 pb-2">
@@ -1964,40 +1964,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </div>
 
-    <!-- 0. PAYWALL MASTER TOGGLE (FREE OPEN ACCESS MODE vs. PAID VIP LOGIN/PAYPAL MODE) -->
-    <div id="adminPaywallMasterCard" class="bg-slate-950/95 border-2 border-amber-500/50 rounded-2xl p-3.5 space-y-2.5 shadow-lg">
-      <div class="flex items-center justify-between gap-2 flex-wrap">
-        <label for="adminPaywallToggleCheckbox" class="flex items-center gap-2.5 cursor-pointer select-none min-w-0 flex-1">
-          <input type="checkbox" id="adminPaywallToggleCheckbox" onchange="window.togglePaywallModeFromAdmin(this.checked)" class="sr-only">
-          <div id="adminPaywallSwitchTrack" onclick="event.preventDefault();window.togglePaywallModeFromAdmin()" role="switch" aria-label="VIP Paywall & Login Screen Toggle" class="w-12 h-6 rounded-full transition-colors duration-200 bg-slate-800 border border-slate-600 relative flex items-center px-0.5 shadow-inner flex-shrink-0 cursor-pointer">
-            <div id="adminPaywallSwitchThumb" class="w-5 h-5 rounded-full bg-amber-300 shadow-md transform transition-transform duration-200 translate-x-0"></div>
-          </div>
-          <span class="font-black text-white text-xs leading-snug">
-            🔒 VIP Paywall &amp; Login Screen (ON = Paid Mode / OFF = 100% Free Open Access)
-          </span>
-        </label>
-        <div class="flex items-center gap-1.5 flex-shrink-0 ml-auto">
-          <span id="adminPaywallStatusBadge" class="text-[9.5px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/50">OFF • 100% FREE OPEN ACCESS</span>
-        </div>
-      </div>
-
-      <div id="adminPaywallHelperNote" class="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-2 text-[9.5px] text-slate-300 font-mono leading-relaxed">
-        GitHub Pages Master Constant: <code class="text-emerald-300 font-bold select-all">const DEFAULT_PAYWALL_ENABLED = false;</code> • Active Runtime: <b class="text-amber-300">FREE MODE (Bypassed)</b>
-      </div>
-
-      <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <button type="button" id="copyPaywallConfigBtn" onclick="window.copyPaywallConfigStatus()" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] shadow cursor-pointer transition flex items-center gap-1">
-            <span>📋 Copy Config Status</span>
-          </button>
-          <button type="button" onclick="window.previewAuthGateFromAdmin()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-bold text-[10px] cursor-pointer transition flex items-center gap-1">
-            <span>👁️ Turn ON &amp; View Login Screen</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 1. APP ACTIVITY & AUTONOMOUS AUDIT LOG (FIRST SECTION IN ADMIN PANEL) -->
+    <!-- 1. APP ACTIVITY & AUTONOMOUS AUDIT LOG -->
     <div id="logWrapper" class="bg-slate-950/95 border border-emerald-500/35 rounded-2xl p-3 space-y-2 shadow-inner">
       <div class="flex justify-between items-center border-b border-slate-800/90 pb-1.5 gap-2">
         <div class="flex items-center gap-2">
@@ -2012,93 +1979,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="logContainer" class="space-y-1 max-h-40 overflow-y-auto mono text-[9.5px] text-slate-300 pr-1 divide-y divide-slate-800/40"></div>
     </div>
 
-    <!-- 2. Admin Self-Evolving 60-Metric Neural Telemetry Box (with Brier / Log-Loss FT Audit & Permanent Export) -->
-    <div class="bg-slate-950/90 border border-emerald-500/30 rounded-2xl p-3 space-y-2 text-[10px]">
-      <div class="flex items-center justify-between gap-2 flex-wrap">
-        <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-          <span id="neuralEngineHeaderBadge" class="font-black text-emerald-300 uppercase tracking-wide">🧠 60-Metric Self-Evolving Engine (v15.0)</span>
-        </div>
-        <div class="flex items-center gap-1.5 ml-auto flex-wrap">
-          <span id="neuralAuditedCounter" class="bg-slate-900 border border-slate-700/80 text-slate-200 px-2 py-0.5 rounded-md font-mono font-bold">FT Audited: 0</span>
-          <span id="neuralBrierLogLossBadge" class="bg-slate-900 border border-sky-500/40 text-sky-300 px-2 py-0.5 rounded-md font-mono font-bold">Brier: 0.185 • LogLoss: 0.545</span>
-          <button type="button" onclick="window.toggleNeuralMetricsPanel()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">Inspect 60 Metrics &amp; Evolution ▾</button>
-        </div>
-      </div>
-
-      <div id="adminWeightsBar" class="grid grid-cols-4 gap-1.5 text-center font-mono text-[9px] bg-slate-900/90 border border-slate-800 rounded-lg p-1.5">
-        <div><span class="text-slate-400 block">🏠 Home Boost</span><b id="awHome" class="text-emerald-400">+4.20</b></div>
-        <div><span class="text-slate-400 block">✈️ Away Shield</span><b id="awAway" class="text-amber-300">-3.20</b></div>
-        <div><span class="text-slate-400 block">🛡️ Draw Gate</span><b id="awDraw" class="text-sky-300">12.00</b></div>
-        <div><span class="text-slate-400 block">⚽ xG / BTTS</span><b id="awXg" class="text-emerald-300">1.00x</b></div>
-      </div>
-
-      <div id="neuralLastLearningNote" class="bg-slate-900/90 border border-emerald-500/25 rounded-lg px-2.5 py-1.5 text-emerald-300 font-mono text-[9px]">
-        🧠 <b>Latest Self-Calibration:</b> 60-Metric Neural Baseline Calibrated &amp; Active
-      </div>
-
-      <!-- Self-Learning Audit & Permanent Codebase Persistence Actions -->
-      <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
-        <button type="button" id="runSixtyMetricAuditBtn" onclick="window.runManualSixtyMetricAudit()" class="bg-sky-700 hover:bg-sky-600 text-white font-black px-2.5 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex items-center gap-1.5 btn-press">
-          <span>🔬 Run 60-Metric FT Audit (Brier / Log-Loss)</span>
-        </button>
-        <button type="button" id="applyExportWeightsBtn" onclick="window.applyAndExportSelfLearnedWeights()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400/40 font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex items-center gap-1.5 btn-press">
-          <span>💾 Apply &amp; Export Self-Learned Weights</span>
-        </button>
-      </div>
-
-      <div id="adminWeightsExportBox" class="hidden bg-slate-950 border border-emerald-500/40 rounded-xl p-2.5 space-y-1.5 font-mono text-[9px] text-emerald-300">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <span class="font-bold text-amber-300">✅ Permanent Self-Learned Weights Snapshot (Copied to Clipboard):</span>
-          <button type="button" onclick="window.downloadUpdatedIndexHtmlWithWeights()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-0.5 rounded text-[9px] cursor-pointer">⬇️ Download Updated index.html</button>
-        </div>
-        <textarea id="adminWeightsExportTextarea" readonly rows="3" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-[8.5px] text-emerald-200 font-mono outline-none select-all"></textarea>
-      </div>
-
-      <!-- Expandable Full 60 Metrics & Evolution Inspector (Admin Only) -->
-      <div id="neuralMetricsExpandBox" class="hidden pt-2 border-t border-slate-800 space-y-2 text-[9px] text-slate-300">
-        <div class="flex justify-between items-center flex-wrap gap-1">
-          <span class="font-bold text-emerald-400 uppercase tracking-wider">📊 All 60 Active Model Metrics &amp; Dynamic Weight Multipliers</span>
-          <span id="adminLearnedTeamsCount" class="font-mono text-amber-300">0 Clubs Calibrated</span>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
-          <div class="bg-slate-900/90 border border-slate-800 p-2 rounded-lg space-y-1">
-            <div class="font-bold text-sky-300 border-b border-slate-800 pb-1">⚙️ Core Base Metrics (1–31):</div>
-            <div id="adminCore31MetricsList" class="space-y-0.5 text-slate-300 font-mono text-[8.5px]"></div>
-          </div>
-          <div class="bg-slate-900/90 border border-slate-800 p-2 rounded-lg space-y-1">
-            <div class="font-bold text-emerald-300 border-b border-slate-800 pb-1">🧬 Self-Evolved Neural Metrics (32–60+):</div>
-            <div id="adminEvolvedMetricsList" class="space-y-0.5 text-emerald-300 font-mono text-[8.5px]"></div>
-          </div>
-        </div>
-        <div id="adminTeamReliabilityBox" class="bg-slate-900/90 border border-slate-800 p-2 rounded-lg font-mono text-[8.5px] text-slate-300"></div>
-      </div>
-    </div>
-
-    <!-- 3. Admin System Operations Grid (Clean 6-Button Grid) -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-      <button type="button" onclick="window.triggerManualHourlyAudit()" class="bg-sky-700 hover:bg-sky-600 font-bold py-2 px-2.5 rounded-xl text-white shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
-        <span>⏱️ Hourly Audit</span>
-      </button>
-      <button type="button" id="improveBtn" onclick="window.autoFetchAndImprove(false)" class="bg-emerald-600 hover:bg-emerald-500 font-bold py-2 px-2.5 rounded-xl text-white shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
-        <span>⚡ Evolve AI</span>
-      </button>
-      <div id="adminAutoSyncIndicator" class="bg-slate-900/90 text-emerald-300 border border-emerald-500/40 font-bold py-2 px-2.5 rounded-xl shadow text-[11px] flex items-center justify-center gap-1.5" title="Background Auto-Sync Active">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>🟢 Live Auto-Sync</span>
-      </div>
-      <button type="button" onclick="window.toggleDrawer()" class="bg-slate-800 hover:bg-slate-700 font-bold py-2 px-2.5 rounded-xl text-emerald-300 border border-emerald-500/30 shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
-        <span>📂 Past Archive</span>
-      </button>
-      <button type="button" onclick="window.forceLockAllT30Odds()" class="bg-slate-900 hover:bg-amber-950/60 text-amber-300 border border-amber-500/40 font-bold py-2 px-2.5 rounded-xl shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
-        <span>🛡️ Lock T-30m Odds</span>
-      </button>
-      <button type="button" onclick="window.clearAdminAppCache()" class="bg-slate-900 hover:bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold py-2 px-2.5 rounded-xl shadow text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 btn-press">
-        <span>🧹 Clear Cache</span>
-      </button>
-    </div>
-
-    <!-- 𝕏 ADMIN POST TO X STUDIO CARD (Dedicated Admin Tool with Half-Time Re-Post Persistence) -->
+    <!-- 2. ADMIN X POST STUDIO (Single Clean Entry Button) -->
     <div id="adminXPostStudioCard" class="bg-slate-950/95 border border-sky-500/40 rounded-2xl p-3.5 space-y-2.5 shadow-lg">
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2">
@@ -2115,92 +1996,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
       </div>
 
-      <!-- Saved Posts Folder in Admin Panel -->
-      <div id="adminSavedXCardStatusBox" class="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-2.5 space-y-2 text-[9.5px]">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <button type="button" id="adminToggleFolderBtn" onclick="window.toggleAdminSavedPostsFolder()" class="flex items-center gap-1.5 min-w-0 text-left cursor-pointer group">
-            <span id="adminFolderIcon" class="text-base">📁</span>
-            <span class="font-black text-emerald-300 group-hover:text-emerald-200 underline decoration-emerald-500/40">Saved Posts Folder</span>
-            <span id="adminSavedXCardStatusText" class="text-slate-300 font-mono text-[9px] bg-slate-950/90 border border-slate-700 px-1.5 py-0.5 rounded">0 Saved Posts</span>
-            <span id="adminFolderChevron" class="text-[9px] text-emerald-400 font-bold ml-0.5">▾ Open Folder</span>
-          </button>
-          <div class="flex items-center gap-1.5 ml-auto">
-            <button type="button" id="adminClearSavedCardBtn" onclick="window.clearAllSavedXPostsHistory()" class="text-[9px] text-rose-300 hover:text-rose-200 underline cursor-pointer font-bold hidden">🗑️ Empty Folder</button>
-          </div>
-        </div>
-        <!-- Expandable Folder Contents in Admin Panel showing old posts & live ✅ won ticks -->
-        <div id="adminSavedCardsChipsRow" class="space-y-1.5 pt-1 border-t border-slate-800/80 hidden"></div>
-      </div>
-
-      <!-- Quick Action Buttons -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <button type="button" onclick="window.openXPostStudio()" class="bg-black hover:bg-slate-900 text-white border border-white/40 hover:border-emerald-400 font-black py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-2 cursor-pointer transition btn-press">
+      <div>
+        <button type="button" onclick="window.openXPostStudio()" class="w-full bg-black hover:bg-slate-900 text-white border border-white/40 hover:border-emerald-400 font-black py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-2 cursor-pointer transition btn-press">
           <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-          <span>𝕏 Open Post Studio</span>
+          <span>Open 𝕏 Post Studio</span>
         </button>
-        <button type="button" id="adminOpenSavedFolderModalBtn" onclick="window.openSavedPostsFolderFromAdmin()" class="bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-black py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-1.5 cursor-pointer transition btn-press">
-          <span>📁 Saved Posts Folder (0)</span>
-        </button>
-        <button type="button" id="adminOpenSavedHtCardBtn" onclick="window.openSavedHalfTimeXCard()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-2 cursor-pointer transition btn-press">
-          <span>💾 Re-Post Half-Time (Live)</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- 4. Beneficial Admin Controls: Confidence Gate Strictness & Model Reset -->
-    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2 text-[10px]">
-      <div class="flex items-center justify-between gap-2 flex-wrap">
-        <span class="font-extrabold text-white text-[11px] flex items-center gap-1.5">
-          <span>🎯 Prediction Confidence Gate Strictness</span>
-          <span id="adminGateActiveBadge" class="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded">Balanced (75%)</span>
-        </span>
-        <button type="button" onclick="window.resetModelWeightsToBaseline()" class="text-[9px] text-slate-400 hover:text-amber-300 underline cursor-pointer font-bold transition">↺ Reset Weights to Baseline</button>
-      </div>
-      <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
-        <button type="button" id="adminGateBtn-balanced" onclick="window.setAdminConfidenceGate('balanced')" class="py-1.5 rounded-lg font-black bg-emerald-600 text-white shadow cursor-pointer transition text-center">🎯 Balanced (75%)</button>
-        <button type="button" id="adminGateBtn-conservative" onclick="window.setAdminConfidenceGate('conservative')" class="py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition text-center">🛡️ Selective (78%)</button>
-        <button type="button" id="adminGateBtn-aggressive" onclick="window.setAdminConfidenceGate('aggressive')" class="py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition text-center">⚡ Aggressive (70%)</button>
-      </div>
-    </div>
-
-    <!-- 5. PayPal Subscriber Pass Manager -->
-    <div id="adminSubManagerBox" class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">
-      <div class="flex justify-between items-center gap-2 flex-wrap border-b border-slate-800/80 pb-1.5">
-        <div class="flex items-center gap-1.5">
-          <span class="text-base">💳</span>
-          <span class="font-extrabold text-white text-[11px]">PayPal Subscriber Pass Manager</span>
-        </div>
-        <button type="button" id="toggleMasterPassBtn" onclick="window.toggleLegacyMasterPass()" class="text-[9.5px] px-2 py-0.5 rounded-md font-bold border border-amber-500/40 bg-amber-500/15 text-amber-300 cursor-pointer transition">Shared Pass (12341867): ON</button>
-      </div>
-      <div class="grid grid-cols-2 gap-1.5">
-        <button type="button" onclick="window.adminCreateManualPass()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2 px-2.5 rounded-xl text-[10.5px] shadow cursor-pointer transition">➕ Issue 30d Pass</button>
-        <button type="button" onclick="window.adminRevokePassPrompt()" class="bg-rose-900/70 hover:bg-rose-800 text-rose-200 border border-rose-500/30 font-bold py-2 px-2.5 rounded-xl text-[10.5px] cursor-pointer transition">🚫 Revoke Pass</button>
-      </div>
-      <div id="adminSubPassOutput" style="display:none;" class="bg-slate-950 border border-slate-800 p-2 rounded-xl text-[10px] font-mono text-emerald-300 select-all"></div>
-    </div>
-
-    <!-- 6. Betfred #1 Affiliate Tracking URL & Odds API Key Manager (Persisted in localStorage) -->
-    <div id="adminAffiliateConfigBox" class="bg-slate-950/90 border border-sky-500/40 rounded-2xl p-3 space-y-2.5 text-[10px]">
-      <div class="flex justify-between items-center gap-2 flex-wrap border-b border-slate-800/80 pb-1.5">
-        <div class="flex items-center gap-1.5">
-          <span class="text-base">🔗</span>
-          <span class="font-extrabold text-white text-[11px]">Betfred #1 Affiliate URL &amp; Live Odds API Key</span>
-        </div>
-        <span id="adminBetfredUrlSavedBadge" class="text-[9px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 px-1.5 py-0.5 rounded">Persisted in localStorage</span>
-      </div>
-      <div class="space-y-1">
-        <label for="adminBetfredAffiliateUrlInput" class="block text-[9.5px] font-bold text-slate-300">Betfred Affiliate Tracking URL (#1 Featured Bookmaker &amp; Bet Slip Top CTA):</label>
-        <div class="flex items-center gap-1.5">
-          <input type="url" id="adminBetfredAffiliateUrlInput" placeholder="https://betting.partners/link/198/115?cid=57" class="flex-1 bg-slate-900 border border-slate-700 focus:border-sky-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-white font-mono outline-none transition">
-          <button type="button" id="adminSaveBetfredUrlBtn" onclick="window.saveAdminBetfredAffiliateUrl()" class="bg-sky-600 hover:bg-sky-500 text-white font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex-shrink-0">💾 Save URL</button>
-        </div>
-      </div>
-      <div class="space-y-1 pt-1 border-t border-slate-800/70">
-        <label for="adminOddsApiKeyInput" class="block text-[9.5px] font-bold text-slate-300">The Odds API Key (12h Per-League Cache):</label>
-        <div class="flex items-center gap-1.5">
-          <input type="text" id="adminOddsApiKeyInput" placeholder="a62ab0985455e5bba4ffbe015b26fec1" class="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2.5 py-1.5 text-[10.5px] text-emerald-300 font-mono outline-none transition">
-          <button type="button" id="adminSaveOddsApiKeyBtn" onclick="window.saveAdminOddsApiKeyFromInput()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-black px-3 py-1.5 rounded-xl text-[10px] shadow cursor-pointer transition flex-shrink-0">🔑 Save Key</button>
-        </div>
       </div>
     </div>
   </div>
@@ -2896,7 +2696,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Non-Blocking Toast Notification (Positioned at bottom:98px so it never overlaps the sticky Betting Slip Guide bar) -->
 <div id="appToastBanner" style="position:fixed;bottom:98px;left:50%;transform:translateX(-50%);z-index:10050;display:none;pointer-events:none;" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-2xl border border-emerald-300/40 whitespace-nowrap max-w-[92vw] truncate"></div>
 
-<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top" aria-label="Scroll to top" style="bottom: 30px; left: 16px; right: auto; width: 36px; height: 36px;" class="back-to-top-btn scroll-top-btn bg-slate-900/80 hover:bg-emerald-600/90 active:bg-emerald-700 text-emerald-300 hover:text-white font-black rounded-full shadow-lg border border-emerald-500/40 cursor-pointer flex items-center justify-center backdrop-blur-sm">↑</button>
+<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top" aria-label="Scroll to top" style="bottom: calc(88px + env(safe-area-inset-bottom, 0px)); left: 16px; right: auto; width: 38px; height: 38px; z-index: 85;" class="back-to-top-btn scroll-top-btn bg-slate-900/80 hover:bg-emerald-600/90 active:bg-emerald-700 text-emerald-300 hover:text-white font-black rounded-full shadow-lg border border-emerald-500/40 cursor-pointer flex items-center justify-center backdrop-blur-sm">↑</button>
 
 <script>
 window.openAboutContactModal = function() {

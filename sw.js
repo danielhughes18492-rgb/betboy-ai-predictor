@@ -1,6 +1,6 @@
 const SW_BUILD_VERSION = '20261110-v3';
-const CACHE_VERSION = 'betboy-ai-v' + SW_BUILD_VERSION;
-const CACHE_NAME = CACHE_VERSION;
+const CACHE_NAME = 'betboy-v2';
+const CACHE_VERSION = CACHE_NAME;
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -10,6 +10,12 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
+      // 1. Immediately claim all active clients so the new service worker takes over right away
+      try {
+        await self.clients.claim();
+      } catch (err) {}
+
+      // 2. Loop through all existing caches and purge stale/old versions so Safari and Chrome never serve old fixtures or layouts
       try {
         const keys = await caches.keys();
         await Promise.all(
@@ -22,11 +28,7 @@ self.addEventListener('activate', (event) => {
         );
       } catch (err) {}
 
-      try {
-        await self.clients.claim();
-      } catch (err) {}
-
-      // Silent takeover: never call client.navigate() or force a hard page reload while the user is browsing
+      // 3. Silent takeover notification to active browser tabs without forcing a hard page reload loop
       try {
         const windowClients = await self.clients.matchAll({
           type: 'window',
@@ -37,7 +39,7 @@ self.addEventListener('activate', (event) => {
             client.postMessage({
               type: 'SW_ACTIVATED_SILENT',
               version: SW_BUILD_VERSION,
-              cacheVersion: CACHE_VERSION,
+              cacheVersion: CACHE_NAME,
               reloadDisabled: true,
             });
           } catch (e) {}

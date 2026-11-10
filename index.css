@@ -1,5 +1,5 @@
 html {
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -9,6 +9,18 @@ body {
   overflow-x: clip;
   overflow-y: visible;
   touch-action: pan-y;
+}
+
+#scrollTopFab,
+.back-to-top-btn,
+[class*="scroll-top"] {
+  position: fixed;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  left: 16px !important;
+  right: auto !important;
+  width: 38px !important;
+  height: 38px !important;
+  z-index: 85 !important;
 }
 
 #greenResults,

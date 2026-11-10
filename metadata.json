@@ -1,0 +1,6 @@
+{
+  "name": "BetBoy AI Predictor",
+  "description": "BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
