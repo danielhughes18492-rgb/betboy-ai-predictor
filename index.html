@@ -2168,16 +2168,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="featuredBookmakerOffersGrid" class="flex lg:grid lg:grid-cols-5 gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-0.5 scroll-smooth"></div>
     </section>
 
+    <!-- Dynamic Empty State Container (Displayed when 0 fixtures match selected date/filters) -->
+    <div id="emptyFixturesStateContainer" class="hidden"></div>
+
     <!-- Green, Amber & Red Fixture Tiers -->
-    <div>
+    <div id="greenTierSectionWrap">
       <h2 class="font-bold text-emerald-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> GREEN PICKS (75%+ HIGH-CONFIDENCE)</h2>
       <div id="greenResults" class="space-y-2.5"></div>
     </div>
-    <div>
+    <div id="amberTierSectionWrap">
       <h2 class="font-bold text-amber-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> AMBER PICKS (60%–74.9% MODERATE / CAUTION)</h2>
       <div id="amberResults" class="space-y-2.5"></div>
     </div>
-    <div>
+    <div id="redTierSectionWrap">
       <h2 class="font-bold text-rose-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> RED PICKS (BELOW 60% • AVOID)</h2>
       <div id="redResults" class="space-y-2.5"></div>
     </div>
@@ -11048,6 +11051,12 @@ window.runEngine = function(isForcedSync){
     if(redResContainer.parentElement) redResContainer.parentElement.style.display = "block";
   }
 
+  var totalFixtureCount = greens.length + ambers.length + reds.length;
+  window._lastTotalBracketCount = totalFixtureCount;
+  if(typeof window.syncDashboardEmptyStateUI === "function"){
+    window.syncDashboardEmptyStateUI(totalFixtureCount);
+  }
+
   var activeSearch = document.getElementById("instantSearchInput");
   if(activeSearch && activeSearch.value.trim()){
     window._filterDomNow(activeSearch.value.toLowerCase().trim());
@@ -11139,14 +11148,86 @@ window.toggleAllLeagues = function(){
   window.runEngine(false);
 };
 
+window.jumpToNextFixtureDate = function(){
+  var dateObj = window.getRollingDates ? window.getRollingDates() : { dates: [], today: "" };
+  var dates = dateObj.dates || [];
+  var curr = window.selectedDate || dateObj.today;
+  var idx = dates.indexOf(curr);
+  var nextDate = (idx !== -1 && idx + 1 < dates.length)
+    ? dates[idx + 1]
+    : (dateObj.tomorrow || (dates.length > 0 ? dates[dates.length - 1] : curr));
+  if(nextDate && typeof window.selectDateTab === "function"){
+    window.selectDateTab(nextDate);
+  }
+};
+
+window.syncDashboardEmptyStateUI = function(totalMatchesOverride){
+  var emptyContainer = document.getElementById("emptyFixturesStateContainer");
+  var gEl = document.getElementById("greenResults");
+  var aEl = document.getElementById("amberResults");
+  var rEl = document.getElementById("redResults");
+  var gWrap = gEl ? gEl.parentElement : null;
+  var aWrap = aEl ? aEl.parentElement : null;
+  var rWrap = rEl ? rEl.parentElement : null;
+
+  var count = (typeof totalMatchesOverride === "number")
+    ? totalMatchesOverride
+    : (typeof window._lastTotalBracketCount === "number" ? window._lastTotalBracketCount : 0);
+
+  var allBoxes = Array.from(document.querySelectorAll("#leagueFilters input[type='checkbox']"));
+  var checkedBoxes = allBoxes.filter(function(b){ return b.checked; });
+  var searchEl = document.getElementById("instantSearchInput");
+  var hasActiveSearch = !!(searchEl && searchEl.value && searchEl.value.trim().length > 0);
+  var hasCustomLeagueFilter = allBoxes.length > 0 && checkedBoxes.length < allBoxes.length;
+
+  if(count === 0){
+    if(gWrap) gWrap.style.display = "none";
+    if(aWrap) aWrap.style.display = "none";
+    if(rWrap) rWrap.style.display = "none";
+    if(emptyContainer){
+      var headlineText = (hasCustomLeagueFilter || hasActiveSearch)
+        ? "No Matches Found for Selected Filters"
+        : "No Fixtures Scheduled Today";
+      var badgeIcon = (hasCustomLeagueFilter || hasActiveSearch) ? "⚽️" : "📅";
+      emptyContainer.innerHTML =
+        '<div data-empty-fixtures-card="true" class="glass rounded-2xl border border-slate-800/90 bg-gradient-to-b from-slate-900/90 to-[#070d19]/95 px-5 py-8 sm:py-10 text-center max-w-xl mx-auto my-2 shadow-xl">' +
+          '<div data-empty-state-badge="true" class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500/20 via-slate-900 to-slate-950 border border-emerald-500/45 shadow-[0_0_24px_rgba(16,185,129,0.28)] flex items-center justify-center mx-auto mb-3.5 text-2xl select-none">' +
+            badgeIcon +
+          '</div>' +
+          '<h3 data-empty-state-headline="true" class="text-base sm:text-lg font-extrabold text-white tracking-tight mb-1.5">' +
+            headlineText +
+          '</h3>' +
+          '<p data-empty-state-subtext="true" class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">' +
+            'There are no live or upcoming matches scheduled for this date. Check tomorrow\'s fixtures above or explore the standings tables.' +
+          '</p>' +
+          '<div class="flex flex-wrap items-center justify-center gap-2.5 mt-5">' +
+            '<button type="button" id="emptyStateJumpNextDateBtn" onclick="window.jumpToNextFixtureDate()" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs border border-emerald-400/50 shadow-[0_0_16px_rgba(16,185,129,0.3)] cursor-pointer active:scale-95 transition">' +
+              '<span>👉 Jump to Tomorrow\'s Fixtures</span>' +
+            '</button>' +
+            '<button type="button" id="emptyStateViewTablesBtn" onclick="window.openStandingsModal(\'PL\')" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 text-emerald-300 font-extrabold text-xs border border-emerald-500/40 shadow-sm cursor-pointer active:scale-95 transition">' +
+              '<span>📊 View League Tables</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      emptyContainer.classList.remove("hidden");
+    }
+  } else {
+    if(emptyContainer){
+      emptyContainer.classList.add("hidden");
+      emptyContainer.innerHTML = "";
+    }
+    var tierFilter = window.activeTierFilter || "ALL";
+    if(gWrap) gWrap.style.display = (tierFilter === "ALL" || tierFilter === "GREEN") ? "block" : "none";
+    if(aWrap) aWrap.style.display = (tierFilter === "ALL" || tierFilter === "AMBER") ? "block" : "none";
+    if(rWrap) rWrap.style.display = (tierFilter === "ALL" || tierFilter === "RED") ? "block" : "none";
+  }
+};
+
 window.toggleTierView = function(tier){
   window.activeTierFilter = (window.activeTierFilter === tier) ? 'ALL' : tier;
-  var gWrap = document.getElementById('greenResults').parentElement;
-  var aWrap = document.getElementById('amberResults').parentElement;
-  var rWrap = document.getElementById('redResults').parentElement;
-  if(gWrap) gWrap.style.display = (window.activeTierFilter === 'ALL' || window.activeTierFilter === 'GREEN') ? 'block' : 'none';
-  if(aWrap) aWrap.style.display = (window.activeTierFilter === 'ALL' || window.activeTierFilter === 'AMBER') ? 'block' : 'none';
-  if(rWrap) rWrap.style.display = (window.activeTierFilter === 'ALL' || window.activeTierFilter === 'RED') ? 'block' : 'none';
+  if(typeof window.syncDashboardEmptyStateUI === "function"){
+    window.syncDashboardEmptyStateUI();
+  }
 
   ['greenCount','amberCount','redCount'].forEach(function(id, idx){
     var code = ['GREEN','AMBER','RED'][idx];
@@ -11160,11 +11241,14 @@ window.toggleTierView = function(tier){
 
 window._filterDomNow = function(clean){
   var found = false;
+  var totalCards = 0;
   ["greenResults","amberResults","redResults"].forEach(function(cid){
     var c = document.getElementById(cid);
     if(!c) return;
     var vis = 0;
-    Array.from(c.children).forEach(function(card){
+    var cards = Array.from(c.querySelectorAll("div[id^='cardWrap-']"));
+    totalCards += cards.length;
+    cards.forEach(function(card){
       var m = !clean || card.innerText.toLowerCase().indexOf(clean) !== -1;
       card.style.display = m ? "" : "none";
       if(m) vis++;
@@ -11174,6 +11258,23 @@ window._filterDomNow = function(clean){
       c.parentElement.style.display = (clean && vis === 0) ? "none" : "block";
     }
   });
+  if(typeof window.syncDashboardEmptyStateUI === "function"){
+    if(totalCards === 0 || (clean && !found)){
+      window.syncDashboardEmptyStateUI(0);
+    } else {
+      window.syncDashboardEmptyStateUI(totalCards);
+      if(clean){
+        ["greenResults","amberResults","redResults"].forEach(function(cid){
+          var c = document.getElementById(cid);
+          if(!c || !c.parentElement) return;
+          var visCards = Array.from(c.querySelectorAll("div[id^='cardWrap-']")).filter(function(el){ return el.style.display !== "none"; });
+          if((window.activeTierFilter || "ALL") === "ALL"){
+            c.parentElement.style.display = visCards.length === 0 ? "none" : "block";
+          }
+        });
+      }
+    }
+  }
   return found;
 };
 
