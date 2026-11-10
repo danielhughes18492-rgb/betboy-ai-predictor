@@ -3287,7 +3287,7 @@ window.DEFAULT_THE_ODDS_API_KEY = "a62ab0985455e5bba4ffbe015b26fec1";
 window.EXHAUSTED_ODDS_API_KEYS = ["e2f5348bc22ef1afe0ee29483e392284", "4ac360beb7e127a1a02a9b769ecaa319"];
 window.ODDS_API_KEY_STORAGE_KEY = "betboy_odds_api_key_v1";
 window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY = "betboy_odds_league_cache_v1";
-window.ODDS_API_CACHE_TTL_MS = 43200000; // 12 hours (43,200,000 ms) per league
+window.ODDS_API_CACHE_TTL_MS = 21600000; // 6 hours (21,600,000 ms) per league
 
 window.getActiveOddsApiKey = function(){
   try {
@@ -3672,10 +3672,193 @@ window.rebuildCombinedOddsMapFromCache = function(){
   return window.liveOddsApiMap;
 };
 
-// Strict Odds API Credit Saver:
+// Strict Odds API Credit Saver (6-Hour TTL):
 // 1. Only calls `regions=uk&markets=h2h` (1 credit per active competition).
 // 2. Only calls competitions that actually have fixtures scheduled on the selected date from ESPN scoreboard.
-// 3. Caches each competition's response in localStorage for 12 hours (43200000 ms) so refreshes use 0 credits.
+// 3. Caches each competition's response in localStorage for 6 hours (21600000 ms) so refreshes use 0 credits.
+// 4. Automatic API-Football Odds Failover: If The Odds API hits 401/429/quota limits, falls back to API-Football /odds seamlessly.
+window.buildApiFootballOddsUrl = function(dateOrFixture) {
+  var query = (typeof dateOrFixture === "number" || /^\d+$/.test(String(dateOrFixture || "").trim()))
+    ? "fixture=" + dateOrFixture
+    : "date=" + dateOrFixture;
+  return "https://v3.football.api-sports.io/odds?" + query;
+};
+
+window.parseApiFootballOddsResponse = function(rawResponse, knownFixtures, nowMs) {
+  var list = Array.isArray(rawResponse)
+    ? rawResponse
+    : (rawResponse && Array.isArray(rawResponse.response))
+    ? rawResponse.response
+    : [];
+
+  var outMap = {};
+  if (!list.length) return outMap;
+  var now = Number(nowMs) || Date.now();
+
+  var fixtureLookup = {};
+  if (Array.isArray(knownFixtures)) {
+    for (var fIdx = 0; fIdx < knownFixtures.length; fIdx++) {
+      var f = knownFixtures[fIdx];
+      if (!f) continue;
+      var idKey = String(f.id !== undefined && f.id !== null ? f.id : "");
+      var home = f.homeName || f.homeTeam || (f.venue === "HOME" ? f.fav : f.opp) || "";
+      var away = f.awayName || f.awayTeam || (f.venue === "HOME" ? f.opp : f.fav) || "";
+      if (idKey && home && away) {
+        fixtureLookup[idKey] = { homeName: home, awayName: away };
+      }
+    }
+  }
+
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i];
+    if (!item) continue;
+    var fixtureId = (item.fixture && item.fixture.id) ? String(item.fixture.id) : "";
+    var commenceTime = (item.fixture && item.fixture.date) || "";
+
+    var homeName = (item.teams && item.teams.home && item.teams.home.name) || "";
+    var awayName = (item.teams && item.teams.away && item.teams.away.name) || "";
+    if ((!homeName || !awayName) && fixtureId && fixtureLookup[fixtureId]) {
+      var known = fixtureLookup[fixtureId];
+      homeName = homeName || known.homeName;
+      awayName = awayName || known.awayName;
+    }
+
+    var homeKey = window.normalizeOddsTeamKey ? window.normalizeOddsTeamKey(homeName) : "";
+    var awayKey = window.normalizeOddsTeamKey ? window.normalizeOddsTeamKey(awayName) : "";
+    if (!homeKey || !awayKey) continue;
+
+    var bookmakers = Array.isArray(item.bookmakers) ? item.bookmakers : [];
+    if (!bookmakers.length) continue;
+
+    var homePrices = [];
+    var drawPrices = [];
+    var awayPrices = [];
+    var over25Prices = [];
+    var under25Prices = [];
+    var bttsYesPrices = [];
+    var bttsNoPrices = [];
+    var bookmakerCount = bookmakers.length;
+
+    for (var bIdx = 0; bIdx < bookmakers.length; bIdx++) {
+      var bm = bookmakers[bIdx];
+      if (!bm || !Array.isArray(bm.bets)) continue;
+
+      for (var btIdx = 0; btIdx < bm.bets.length; btIdx++) {
+        var bet = bm.bets[btIdx];
+        if (!bet || !Array.isArray(bet.values)) continue;
+        var betName = String(bet.name || "").toLowerCase();
+        var betId = Number(bet.id);
+
+        if (betId === 1 || betName.indexOf("winner") !== -1 || betName.indexOf("1x2") !== -1 || betName.indexOf("full time result") !== -1) {
+          for (var vIdx = 0; vIdx < bet.values.length; vIdx++) {
+            var val = bet.values[vIdx];
+            var oddNum = parseFloat(String((val && val.odd) || 0));
+            if (oddNum <= 1.0) continue;
+            var valName = String((val && val.value) || "").trim().toLowerCase();
+            if (valName === "home" || valName === "1" || valName === homeName.toLowerCase()) {
+              homePrices.push(oddNum);
+            } else if (valName === "draw" || valName === "x" || valName === "tie") {
+              drawPrices.push(oddNum);
+            } else if (valName === "away" || valName === "2" || valName === awayName.toLowerCase()) {
+              awayPrices.push(oddNum);
+            }
+          }
+        }
+
+        if (betId === 2 || betId === 5 || betName.indexOf("over/under") !== -1 || betName.indexOf("goals over") !== -1) {
+          for (var v2Idx = 0; v2Idx < bet.values.length; v2Idx++) {
+            var val2 = bet.values[v2Idx];
+            var oddNum2 = parseFloat(String((val2 && val2.odd) || 0));
+            if (oddNum2 <= 1.0) continue;
+            var val2Name = String((val2 && val2.value) || "").trim().toLowerCase();
+            if (val2Name === "over 2.5" || (val2Name.indexOf("over") !== -1 && val2Name.indexOf("2.5") !== -1)) {
+              over25Prices.push(oddNum2);
+            } else if (val2Name === "under 2.5" || (val2Name.indexOf("under") !== -1 && val2Name.indexOf("2.5") !== -1)) {
+              under25Prices.push(oddNum2);
+            }
+          }
+        }
+
+        if (betId === 8 || betName.indexOf("both teams") !== -1 || betName.indexOf("btts") !== -1) {
+          for (var v3Idx = 0; v3Idx < bet.values.length; v3Idx++) {
+            var val3 = bet.values[v3Idx];
+            var oddNum3 = parseFloat(String((val3 && val3.odd) || 0));
+            if (oddNum3 <= 1.0) continue;
+            var val3Name = String((val3 && val3.value) || "").trim().toLowerCase();
+            if (val3Name === "yes") {
+              bttsYesPrices.push(oddNum3);
+            } else if (val3Name === "no") {
+              bttsNoPrices.push(oddNum3);
+            }
+          }
+        }
+      }
+    }
+
+    if (!homePrices.length || !awayPrices.length) continue;
+
+    var avgVal = function(arr, fallback) {
+      if (!arr || !arr.length) return fallback;
+      var sum = 0;
+      for (var aI = 0; aI < arr.length; aI++) sum += arr[aI];
+      return parseFloat((sum / arr.length).toFixed(2));
+    };
+
+    var matchKey = homeKey + "_vs_" + awayKey;
+    var parsed = {
+      eventId: fixtureId || matchKey,
+      homeTeam: homeName,
+      awayTeam: awayName,
+      homeKey: homeKey,
+      awayKey: awayKey,
+      homeOdds: avgVal(homePrices, 2.10),
+      drawOdds: avgVal(drawPrices, 3.30),
+      awayOdds: avgVal(awayPrices, 3.40),
+      bookmakerCount: bookmakerCount,
+      regions: ["uk", "eu"],
+      commenceTime: commenceTime,
+      source: "api-football-failover",
+      updatedAt: now
+    };
+    if (over25Prices.length > 0) parsed.over25Odds = avgVal(over25Prices, 1.85);
+    if (under25Prices.length > 0) parsed.under25Odds = avgVal(under25Prices, 1.95);
+    if (bttsYesPrices.length > 0) parsed.bttsYesOdds = avgVal(bttsYesPrices, 1.75);
+    if (bttsNoPrices.length > 0) parsed.bttsNoOdds = avgVal(bttsNoPrices, 2.05);
+
+    outMap[matchKey] = parsed;
+    if (fixtureId) {
+      outMap["id_" + fixtureId] = parsed;
+    }
+    outMap["team_" + homeKey] = parsed;
+    outMap["team_" + awayKey] = parsed;
+  }
+
+  return outMap;
+};
+
+window.fetchApiFootballOddsFailover = function(targetDateStr) {
+  var activeDate = targetDateStr || window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : "");
+  if (!activeDate) return Promise.resolve(window.liveOddsApiMap);
+
+  var apiKey = window.getActiveApiFootballKey ? window.getActiveApiFootballKey() : "";
+  var url = window.buildApiFootballOddsUrl(activeDate);
+  var opts = apiKey ? { headers: { "x-apisports-key": apiKey } } : undefined;
+
+  return window.fetchJsonWithFallback(url, opts, 10000).then(function(json) {
+    if (json && Array.isArray(json.response) && json.response.length > 0) {
+      var failoverMap = window.parseApiFootballOddsResponse(json.response, window.allMatches || window.rawFixturesFlat || []);
+      if (failoverMap && Object.keys(failoverMap).length > 0) {
+        window.liveOddsApiMap = Object.assign({}, window.liveOddsApiMap || {}, failoverMap);
+        window.liveBet365OddsMap = window.liveOddsApiMap;
+        window.safeSet("airp_the_odds_api_v2", window.liveOddsApiMap);
+      }
+    }
+    return window.liveOddsApiMap;
+  }).catch(function() {
+    return window.liveOddsApiMap;
+  });
+};
+
 window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
   var now = Date.now();
   if (window.oddsApiInFlight) return Promise.resolve(window.liveOddsApiMap);
@@ -3702,7 +3885,7 @@ window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
 
   window.oddsLeagueCacheMap = window.oddsLeagueCacheMap || window.safeGet(window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY, {}) || {};
   var activeKey = window.getActiveOddsApiKey ? window.getActiveOddsApiKey() : window.THE_ODDS_API_KEY;
-  var ttlMs = window.ODDS_API_CACHE_TTL_MS || 43200000;
+  var ttlMs = window.ODDS_API_CACHE_TTL_MS || 21600000; // Strict 6-Hour TTL
 
   var leaguesToFetch = activeLeagueCodes.filter(function(lgCode){
     var sportKey = window.LEAGUE_CODE_TO_ODDS_SPORT_KEY[lgCode];
@@ -3719,6 +3902,8 @@ window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
   }
 
   window.oddsApiInFlight = true;
+  var quotaExceededOrAuthFailed = false;
+
   var jobs = leaguesToFetch.map(function(lgCode){
     var sportKey = window.LEAGUE_CODE_TO_ODDS_SPORT_KEY[lgCode];
     var url = "https://api.the-odds-api.com/v4/sports/" + sportKey + "/odds/?regions=uk&markets=h2h&apiKey=" + activeKey;
@@ -3729,6 +3914,11 @@ window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
             timestamp: Date.now(),
             events: data
           };
+        } else if (data && typeof data === "object") {
+          var errString = JSON.stringify(data).toLowerCase();
+          if (errString.indexOf("quota") !== -1 || errString.indexOf("usage") !== -1 || errString.indexOf("limit") !== -1 || errString.indexOf("unauthorized") !== -1 || errString.indexOf("invalid") !== -1) {
+            quotaExceededOrAuthFailed = true;
+          }
         }
       })
       .catch(function(){});
@@ -3740,12 +3930,24 @@ window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
     window.safeSet(window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY, window.oddsLeagueCacheMap);
     window.safeSet("airp_the_odds_api_sync_ts", window.lastOddsApiSyncTime);
     window.rebuildCombinedOddsMapFromCache();
+
+    // Automatic API-Football Odds Failover if quota is exceeded or events are empty
+    if (quotaExceededOrAuthFailed || !window.liveOddsApiMap || Object.keys(window.liveOddsApiMap).length === 0) {
+      return window.fetchApiFootballOddsFailover(activeDate).then(function(){
+        if (window.runEngine) window.runEngine(false);
+        if (window.updateMiniSlip) window.updateMiniSlip();
+        return window.liveOddsApiMap;
+      });
+    }
+
     if (window.runEngine) window.runEngine(false);
     if (window.updateMiniSlip) window.updateMiniSlip();
     return window.liveOddsApiMap;
   }).catch(function(){
     window.oddsApiInFlight = false;
-    return window.liveOddsApiMap;
+    return window.fetchApiFootballOddsFailover(activeDate).then(function(){
+      return window.liveOddsApiMap;
+    });
   });
 };
 
@@ -10284,199 +10486,17 @@ window.copy5PillarTelemetry = function(matchId, e){
 };
 
 window.render5PillarTelemetryPanelHtml = function(m, isUnlocked){
-  var isTr = !!window.isTrial && !isUnlocked;
-  var isHomeFav = m.venue === "HOME";
-  var homeName = isHomeFav ? m.fav : m.opp;
-  var awayName = isHomeFav ? m.opp : m.fav;
-  var evalResult = window.evaluateFixtureWith5Pillars({ id: m.id, homeTeam: homeName, awayTeam: awayName, league: m.league });
-  var hm = evalResult.homeMetrics;
-  var am = evalResult.awayMetrics;
-  var sim = evalResult.simulation;
-  var xg = evalResult.expectedGoals;
-  var gaps = evalResult.valueGaps;
-
-  if(isTr){
-    return '<div class="mt-2.5 rounded-2xl overflow-hidden border border-slate-800 bg-[#06101c]/90 p-3 text-center space-y-2">' +
-      '<div class="flex items-center justify-between text-[9.5px] font-black text-emerald-400 uppercase tracking-wider">' +
-        '<span>🧠 5-Pillar Model Telemetry & Value Gap</span>' +
-        '<span class="text-amber-400 font-bold">🔒 VIP Feature</span>' +
-      '</div>' +
-      '<p class="text-slate-400 text-[10px] leading-relaxed">Unlock deep non-penalty xG, Expected Threat (xT), PPDA pressing dynamics, low-block matchup indexes, and positive Expected Value (+EV) bookmaker gaps.</p>' +
-      '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="inline-block px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] cursor-pointer transition shadow">' +
-        '🔓 Unlock 5-Pillar ML Telemetry' +
-      '</div>' +
-    '</div>';
-  }
-
-  var topEv = gaps.find(function(g){ return g.rating === "+EV Banker"; }) || gaps.find(function(g){ return g.isPositiveEV; }) || gaps[0];
-
-  var scoresHtml = sim.topScores.slice(0, 4).map(function(s){
-    return '<span class="px-2 py-0.5 rounded bg-slate-950/80 border border-slate-700/80 text-white font-mono text-[9px] font-bold">' + s.score + ' <b class="text-emerald-400">' + s.probPct + '%</b></span>';
-  }).join(" ");
-
-  var gapsHtml = gaps.slice(0, 4).map(function(g){
-    var badgeCls = g.rating === "+EV Banker" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-      : (g.rating === "+EV Value Pick" ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-      : (g.rating === "Negative EV (Avoid)" ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-sky-500/15 text-sky-300 border-sky-500/30"));
-    return '<div class="flex items-center justify-between text-[9px] py-1 border-b border-slate-800/60 last:border-0">' +
-      '<span class="font-bold text-slate-200 truncate pr-1">' + g.marketName + '</span>' +
-      '<div class="flex items-center gap-1.5 flex-shrink-0 font-mono">' +
-        '<span class="text-amber-300 font-bold">' + g.bookmakerOdds + '</span>' +
-        '<span class="text-slate-400">Model ' + g.modelProbPct + '%</span>' +
-        '<span class="px-1.5 py-0.5 rounded text-[8.5px] font-bold border ' + badgeCls + '">' + (g.edgePct >= 0 ? "+" : "") + g.edgePct + '% Edge (' + (g.expectedValuePct >= 0 ? "+" : "") + g.expectedValuePct + '% EV)</span>' +
-      '</div>' +
-    '</div>';
-  }).join("");
-
-  var refCards = (evalResult.environment && evalResult.environment.refereeProfile && evalResult.environment.refereeProfile.cardsPer90) || 3.8;
-  var refPens = (evalResult.environment && evalResult.environment.refereeProfile && evalResult.environment.refereeProfile.penaltiesPer90) || 0.28;
-  var activeMetricsCount = window.getActivePointCount ? window.getActivePointCount() : 60;
-  var modelVer = (window.modelState && window.modelState.version) ? window.modelState.version.toFixed(1) : "15.0";
-
-  return '<div id="telemetry-box-' + m.id + '" onclick="event.stopPropagation()" class="mt-2.5 rounded-2xl overflow-hidden border border-slate-800 bg-[#06101c]/95 p-3 shadow-xl space-y-2.5">' +
-    '<div class="flex items-center justify-between gap-1 flex-wrap">' +
-      '<div class="flex items-center gap-1.5 min-w-0 flex-wrap">' +
-        '<span class="text-emerald-400 font-black text-[10px] uppercase tracking-wider">🧠 ' + activeMetricsCount + '-Metric + 5-Pillar Self-Evolving Telemetry (v' + modelVer + ')</span>' +
-        '<span class="text-[8.5px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono font-bold">⚡ Bayesian + Adam Calibrated</span>' +
-      '</div>' +
-      '<button type="button" onclick="window.copy5PillarTelemetry(' + m.id + ', event)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[8.5px] font-bold border border-slate-700/80 cursor-pointer transition flex items-center gap-1 flex-shrink-0">' +
-        '<span>📋 Copy Telemetry</span>' +
-      '</button>' +
-    '</div>' +
-
-    // Top KPI Strip: Projected Goals λ & μ + Top Correct Scores
-    '<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-slate-950/80 p-2 rounded-xl border border-slate-800/80">' +
-      '<div class="text-center">' +
-        '<div class="text-[8.5px] text-slate-400 font-bold uppercase">λ ' + homeName.slice(0, 10) + ' xG</div>' +
-        '<div class="text-xs font-mono font-black text-emerald-400">' + xg.lambdaHome + '</div>' +
-      '</div>' +
-      '<div class="text-center">' +
-        '<div class="text-[8.5px] text-slate-400 font-bold uppercase">μ ' + awayName.slice(0, 10) + ' xG</div>' +
-        '<div class="text-xs font-mono font-black text-sky-400">' + xg.lambdaAway + '</div>' +
-      '</div>' +
-      '<div class="text-center">' +
-        '<div class="text-[8.5px] text-slate-400 font-bold uppercase">Match Total xG</div>' +
-        '<div class="text-xs font-mono font-black text-amber-300">' + xg.totalExpectedGoals + '</div>' +
-      '</div>' +
-      '<div class="text-center">' +
-        '<div class="text-[8.5px] text-slate-400 font-bold uppercase">Top +EV Pick</div>' +
-        '<div class="text-[9.5px] font-bold text-emerald-300 truncate" title="' + topEv.marketName + '">' + topEv.marketName + '</div>' +
-      '</div>' +
-    '</div>' +
-
-    // 5-Pillar Compact Deep Metric Cards Grid
-    '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">' +
-      // Pillar 1: xG & xT Breakdown
-      '<div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800/80 space-y-1">' +
-        '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-emerald-400 uppercase tracking-wide">' +
-          '<span>1. Advanced xG & Expected Threat (xT)</span>' +
-          '<span>xG/Shot ' + hm.xgPerShot + ' vs ' + am.xgPerShot + '</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>npxG For / Against:</span>' +
-          '<b class="text-white">' + hm.npxGFor + '/' + hm.npxGAgainst + ' vs ' + am.npxGFor + '/' + am.npxGAgainst + '</b>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Expected Threat (xT):</span>' +
-          '<b class="text-sky-300">' + hm.expectedThreat + ' vs ' + am.expectedThreat + '</b>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>SCA / GCA per 90:</span>' +
-          '<span>' + hm.scaPer90 + ' / ' + hm.gcaPer90 + ' vs ' + am.scaPer90 + ' / ' + am.gcaPer90 + '</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>GK Post-Shot xG (PSxG):</span>' +
-          '<span class="' + (hm.psxgDifferential >= 0 ? 'text-emerald-400' : 'text-rose-400') + '">' + (hm.psxgDifferential >= 0 ? '+' : '') + hm.psxgDifferential + ' vs ' + (am.psxgDifferential >= 0 ? '+' : '') + am.psxgDifferential + '</span>' +
-        '</div>' +
-      '</div>' +
-
-      // Pillar 2: Pressing & Transition Dynamics
-      '<div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800/80 space-y-1">' +
-        '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-sky-400 uppercase tracking-wide">' +
-          '<span>2. Possession, Pressing & Transitions</span>' +
-          '<span>Tilt ' + hm.fieldTiltPct + '%</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>PPDA (Press Intensity):</span>' +
-          '<b class="text-white">' + hm.ppda + ' vs ' + am.ppda + ' ' + (hm.ppda < 9.0 ? '⚡ High Press' : '') + '</b>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Field Tilt % (Final 3rd):</span>' +
-          '<span class="text-sky-300 font-bold">' + hm.fieldTiltPct + '% vs ' + (100 - hm.fieldTiltPct).toFixed(1) + '%</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Final-3rd Pressures & Conv:</span>' +
-          '<span>' + hm.finalThirdPressures + ' (' + hm.turnoverConversionPct + '%) vs ' + am.finalThirdPressures + ' (' + am.turnoverConversionPct + '%)</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Build-up Completion (Press):</span>' +
-          '<span>' + Math.round(hm.buildupCompletionUnderPress * 100) + '% vs ' + Math.round(am.buildupCompletionUnderPress * 100) + '%</span>' +
-        '</div>' +
-      '</div>' +
-
-      // Pillar 3: Tactical Archetype Matchup
-      '<div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800/80 space-y-1">' +
-        '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-amber-400 uppercase tracking-wide">' +
-          '<span>3. Tactical Matchup Profile</span>' +
-          '<span class="text-slate-400">' + hm.tacticalArchetype + ' vs ' + am.tacticalArchetype + '</span>' +
-        '</div>' +
-        '<div class="text-[9px] text-slate-300">' +
-          '<span>Low-Block Vulnerability: </span><b class="text-amber-300 font-mono">' + Math.round(hm.lowBlockVulnerabilityIndex * 100) + '% (' + evalResult.tacticalAnalysis.lowBlockRisk + ')</b>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Counter-Attack Efficiency:</span>' +
-          '<span class="text-white">' + Math.round(hm.counterAttackEfficiency * 100) + '% vs ' + Math.round(am.counterAttackEfficiency * 100) + '%</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Set-Piece xG (For/Against):</span>' +
-          '<span>' + hm.setPieceXgFor + '/' + hm.setPieceXgAgainst + ' vs ' + am.setPieceXgFor + '/' + am.setPieceXgAgainst + '</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Width vs Half-Space Ratio:</span>' +
-          '<span>' + Math.round(hm.widthVsHalfSpaceRatio * 100) + '% Width vs ' + Math.round((1 - hm.widthVsHalfSpaceRatio) * 100) + '% Half-Space</span>' +
-        '</div>' +
-      '</div>' +
-
-      // Pillar 4: Squad Health & Midweek Friction
-      '<div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800/80 space-y-1">' +
-        '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-purple-400 uppercase tracking-wide">' +
-          '<span>4. Squad Health, Depth & Ref</span>' +
-          '<span class="text-slate-400">' + hm.daysOfRest + 'd vs ' + am.daysOfRest + 'd Rest</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Missing Key Players ΔxG:</span>' +
-          '<b class="' + ((hm.missingKeyPlayersDelta || 0) < 0 ? 'text-rose-400' : 'text-emerald-400') + '">' + (hm.missingKeyPlayersDelta || 0) + ' (H) / ' + (am.missingKeyPlayersDelta || 0) + ' (A)</b>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Rotation & UEFA Friction:</span>' +
-          '<b class="' + (hm.midweekEuropeanFriction || am.midweekEuropeanFriction ? 'text-amber-300' : 'text-emerald-400') + '">' + (hm.midweekEuropeanFriction || am.midweekEuropeanFriction ? '⚠️ Midweek Load' : '✓ Optimal Rest') + ' (' + am.travelDistanceKm + 'km)</b>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>Referee Cards / Pen Tendency:</span>' +
-          '<span>' + refCards + ' Cards/90 • ' + refPens + ' Pen/90</span>' +
-        '</div>' +
-        '<div class="flex justify-between text-[9px] text-slate-300 font-mono">' +
-          '<span>1st-Goal Lead Retention:</span>' +
-          '<span class="text-emerald-300">' + hm.firstGoalRetentionRate + '% (H) vs ' + am.firstGoalRetentionRate + '% (A)</span>' +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-
-    // Pillar 5: Historical Psychological, Environmental & Value Gap
-    '<div class="bg-slate-950/85 p-2.5 rounded-xl border border-slate-800/90 space-y-1.5">' +
-      '<div class="flex items-center justify-between text-[8.5px] font-extrabold text-emerald-400 uppercase tracking-wide flex-wrap gap-1">' +
-        '<span>5. Bivariate Poisson Matrix, Context & Value Gap (+EV)</span>' +
-        '<span class="text-slate-400 font-mono">1X2: ' + sim.homeWinPct + '% - ' + sim.drawPct + '% - ' + sim.awayWinPct + '% | Pitch: Grass/Standard</span>' +
-      '</div>' +
-      '<div class="flex items-center gap-1.5 flex-wrap py-1">' +
-        '<span class="text-[8.5px] text-slate-400 font-bold uppercase">Top Correct Scores:</span>' +
-        scoresHtml +
-      '</div>' +
-      '<div class="pt-1">' +
-        gapsHtml +
-      '</div>' +
-    '</div>' +
-  '</div>';
+  try {
+    var isHomeFav = m && m.venue === "HOME";
+    var homeName = isHomeFav ? m.fav : (m ? m.opp : "Home");
+    var awayName = isHomeFav ? m.opp : (m ? m.fav : "Away");
+    if (window.evaluateFixtureWith5Pillars && m) {
+      window.evaluateFixtureWith5Pillars({ id: m.id, homeTeam: homeName, awayTeam: awayName, league: m.league });
+    }
+  } catch(e) {}
+  // Completely hide/remove the telemetry UI container from the rendered match card DOM
+  // while keeping the underlying 60-metric calculation engine running silently in the background
+  return "";
 };
 
 // Expandable Match Details: Both-Teams Betting Markets Panel
@@ -10714,7 +10734,6 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     : ' style="height:0px;max-height:0px;opacity:0;" aria-hidden="true"';
 
   var ytHighlightsHtml = window.renderYouTubeHighlightsPanelHtml ? window.renderYouTubeHighlightsPanelHtml(m) : "";
-  var fivePillarsHtml = window.render5PillarTelemetryPanelHtml ? window.render5PillarTelemetryPanelHtml(m, isUnlocked) : "";
   var affiliatePickBarHtml = window.renderBackThisPickAffiliateBar
     ? window.renderBackThisPickAffiliateBar((m.fav || "Home") + " vs " + (m.opp || "Away"))
     : "";
@@ -10723,15 +10742,19 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     ytHighlightsHtml +
     marketsBoxHtml +
     affiliatePickBarHtml +
-    fivePillarsHtml +
     (adm || "") + '</div>';
 };
 
 // ============================================================================
-// SECURE VIDEO ID MAPPING & EMBEDDED HIGHLIGHTS PLAYER (FT FIXTURES)
+// KEYLESS FLASHSCORE-STYLE HORIZONTAL HIGHLIGHTS CARD & SCOREBAT VIDEO FETCHER
 // ============================================================================
+window.SCOREBAT_FREE_VIDEO_API_URL = "https://www.scorebat.com/video-api/v3/";
+window.scorebatVideoFeedCache = null;
+window.scorebatVideoFeedFetchedAt = 0;
+window.scorebatVideoFeedPromise = null;
+
 window.MATCH_HIGHLIGHTS_VIDEO_MAP = {
-  // Pre-configured secure curated video IDs for key European fixtures
+  // Pre-configured curated video IDs (no API keys used)
   "arsenal_vs_chelsea": "WyFr2ZYSRBg",
   "realmadrid_vs_realsociedad": "jfTukj6Qjnw",
   "celtic_vs_aberdeen": "8VP6eqKdDgA",
@@ -10752,11 +10775,9 @@ window.MATCH_HIGHLIGHTS_VIDEO_MAP = {
 
 window.getMatchHighlightsVideoId = function(m){
   if(!m) return null;
-  // 1. Direct configured highlightsVideoId on match object
   if(m.highlightsVideoId && typeof m.highlightsVideoId === "string" && m.highlightsVideoId.trim()){
     return m.highlightsVideoId.trim();
   }
-  // 2. Check secure video ID mapping
   var isHomeFav = m.venue === "HOME";
   var homeTeam = isHomeFav ? m.fav : m.opp;
   var awayTeam = isHomeFav ? m.opp : m.fav;
@@ -10770,56 +10791,138 @@ window.getMatchHighlightsVideoId = function(m){
   return null;
 };
 
+window.fetchKeylessScorebatFeed = function(){
+  var now = Date.now();
+  if(Array.isArray(window.scorebatVideoFeedCache) && (now - window.scorebatVideoFeedFetchedAt < 900000)){
+    return Promise.resolve(window.scorebatVideoFeedCache);
+  }
+  if(window.scorebatVideoFeedPromise){
+    return window.scorebatVideoFeedPromise;
+  }
+  window.scorebatVideoFeedPromise = fetch(window.SCOREBAT_FREE_VIDEO_API_URL)
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      window.scorebatVideoFeedPromise = null;
+      var items = (data && Array.isArray(data.response)) ? data.response : (Array.isArray(data) ? data : []);
+      window.scorebatVideoFeedCache = items;
+      window.scorebatVideoFeedFetchedAt = Date.now();
+      return items;
+    })
+    .catch(function(){
+      window.scorebatVideoFeedPromise = null;
+      return window.scorebatVideoFeedCache || [];
+    });
+  return window.scorebatVideoFeedPromise;
+};
+
+window.matchScorebatEntryForTeams = function(feedItems, homeTeam, awayTeam){
+  if(!Array.isArray(feedItems) || !feedItems.length) return null;
+  var norm = window.normalizeOddsTeamKey || function(s){ return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); };
+  var hK = norm(homeTeam);
+  var aK = norm(awayTeam);
+  if(!hK || !aK) return null;
+  for(var i = 0; i < feedItems.length; i++){
+    var item = feedItems[i];
+    if(!item || typeof item !== "object") continue;
+    var s1 = norm(item.side1 && item.side1.name ? item.side1.name : "");
+    var s2 = norm(item.side2 && item.side2.name ? item.side2.name : "");
+    var tNorm = norm(item.title || "");
+    var isMatch = (s1 && s2 && ((s1 === hK && s2 === aK) || (s1 === aK && s2 === hK))) ||
+                  (tNorm.indexOf(hK) !== -1 && tNorm.indexOf(aK) !== -1);
+    if(isMatch){
+      var thumb = (typeof item.thumbnail === "string" && item.thumbnail.trim().indexOf("http") === 0)
+        ? item.thumbnail.trim()
+        : null;
+      var directYtUrl = null;
+      if(Array.isArray(item.videos)){
+        for(var j = 0; j < item.videos.length; j++){
+          var emb = String((item.videos[j] && item.videos[j].embed) || "");
+          var ym = emb.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/i);
+          if(ym && ym[1]){
+            directYtUrl = "https://www.youtube.com/watch?v=" + ym[1];
+            break;
+          }
+        }
+      }
+      return { thumbnailUrl: thumb, videoUrl: directYtUrl };
+    }
+  }
+  return null;
+};
+
+window.resolveClubBadgeImgSrc = function(teamName){
+  var exactKey = window.cleanCrestKey ? window.cleanCrestKey(teamName) : String(teamName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  var fb = window.makeFallbackShieldSvg ? window.makeFallbackShieldSvg(teamName) : "";
+  var localUrl = (exactKey && window.TEAM_LOGOS && window.TEAM_LOGOS[exactKey]) ? window.TEAM_LOGOS[exactKey] : null;
+  var cachedUrl = (!localUrl && exactKey && window.BETBOY_LOGO_CACHE && window.BETBOY_LOGO_CACHE[exactKey]) ? window.BETBOY_LOGO_CACHE[exactKey] : null;
+  var verifiedSeed = (!localUrl && !cachedUrl && exactKey && window.SPORTSDB_VERIFIED_BADGES && window.SPORTSDB_VERIFIED_BADGES[exactKey]) ? window.SPORTSDB_VERIFIED_BADGES[exactKey] : null;
+  return {
+    src: localUrl || cachedUrl || verifiedSeed || fb,
+    fallback: fb
+  };
+};
+
 window.renderYouTubeHighlightsPanelHtml = function(m){
   if(!m || !window.isCompletedMatch || !window.isCompletedMatch(m)) return "";
   var isHomeFav = m.venue === "HOME";
   var homeTeam = isHomeFav ? m.fav : m.opp;
   var awayTeam = isHomeFav ? m.opp : m.fav;
-  var leagueLabel = (window.getLeagueName ? window.getLeagueName(m.league) : m.league) || m.league || "";
+  var leagueCode = String(m.league || "PL");
+  var leagueName = (window.getLeagueName ? window.getLeagueName(leagueCode) : leagueCode) || leagueCode || "";
   var videoId = (m.highlightsVideoId && typeof m.highlightsVideoId === "string" && m.highlightsVideoId.trim())
     ? m.highlightsVideoId.trim()
     : (window.getMatchHighlightsVideoId ? window.getMatchHighlightsVideoId(m) : null);
 
-  var searchQuery = homeTeam + " vs " + awayTeam + " highlights " + leagueLabel;
-  var searchUrl = "https://www.youtube.com/results?search_query=" + encodeURIComponent(searchQuery);
+  var sbMatch = window.matchScorebatEntryForTeams
+    ? window.matchScorebatEntryForTeams(window.scorebatVideoFeedCache, homeTeam, awayTeam)
+    : null;
 
-  var playerOrFallbackHtml = "";
-  if(videoId){
-    playerOrFallbackHtml =
-      '<div class="relative w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-inner" style="aspect-ratio: 16 / 9;">' +
-        '<iframe ' +
-          'src="https://www.youtube.com/embed/' + videoId + '?rel=0&modestbranding=1" ' +
-          'title="' + homeTeam + ' vs ' + awayTeam + ' Full-Time Highlights" ' +
-          'class="w-full h-full border-0 block" ' +
-          'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
-          'allowfullscreen ' +
-          'loading="lazy">' +
-        '</iframe>' +
-      '</div>' +
-      '<div class="flex items-center justify-between gap-2 pt-1 text-[9px] text-slate-400">' +
-        '<span class="truncate">' + homeTeam + ' vs ' + awayTeam + ' • Official Match Highlights</span>' +
-        '<a href="' + searchUrl + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-rose-400 hover:text-rose-300 font-bold whitespace-nowrap flex-shrink-0">Search Highlights on YouTube ↗</a>' +
-      '</div>';
-  } else {
-    playerOrFallbackHtml =
-      '<div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">' +
-        '<div class="space-y-0.5 min-w-0">' +
-          '<div class="text-[10.5px] font-extrabold text-white truncate">' + homeTeam + ' vs ' + awayTeam + ' (' + leagueLabel + ')</div>' +
-          '<div class="text-[9px] text-slate-400 leading-snug">Watch post-match goals, key chances &amp; extended full-time highlights.</div>' +
-        '</div>' +
-        '<a href="' + searchUrl + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] inline-flex items-center justify-center gap-1.5 shadow-md transition flex-shrink-0 whitespace-nowrap border border-rose-400/30">' +
-          '<span>Search Highlights on YouTube</span>' +
-          '<span>↗</span>' +
-        '</a>' +
-      '</div>';
-  }
+  var searchQuery = (homeTeam + " vs " + awayTeam + " " + leagueName + " highlights").replace(/\s+/g, " ").trim();
+  var searchUrl = "https://www.youtube.com/results?search_query=" + encodeURIComponent(searchQuery);
+  var targetHref = (sbMatch && sbMatch.videoUrl)
+    ? sbMatch.videoUrl
+    : (videoId ? ("https://www.youtube.com/watch?v=" + encodeURIComponent(videoId)) : searchUrl);
+
+  var externalThumbUrl = (sbMatch && sbMatch.thumbnailUrl)
+    ? sbMatch.thumbnailUrl
+    : (videoId ? ("https://i.ytimg.com/vi/" + encodeURIComponent(videoId) + "/mqdefault.jpg") : "");
+
+  var homeBadge = window.resolveClubBadgeImgSrc(homeTeam);
+  var awayBadge = window.resolveClubBadgeImgSrc(awayTeam);
+  var compLogoUrl = (window.LEAGUE_LOGOS && window.LEAGUE_LOGOS[leagueCode]) || "https://media.api-sports.io/football/leagues/39.png";
+  var safeHomeAlt = String(homeTeam || "Home").replace(/"/g, "&quot;");
+  var safeAwayAlt = String(awayTeam || "Away").replace(/"/g, "&quot;");
+  var safeLeagueAlt = String(leagueName || leagueCode).replace(/"/g, "&quot;");
+
+  var externalImgHtml = externalThumbUrl
+    ? '<img id="yt-hl-thumb-img-' + m.id + '" src="' + externalThumbUrl + '" alt="' + safeHomeAlt + ' vs ' + safeAwayAlt + ' highlights" loading="lazy" onerror="this.style.display=\'none\'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;" />'
+    : '<img id="yt-hl-thumb-img-' + m.id + '" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;" />';
 
   return '<div id="yt-highlights-box-' + m.id + '" onclick="event.stopPropagation()" class="rounded-2xl overflow-hidden border border-slate-800 bg-[#07111a]/95 p-2.5 shadow-lg space-y-2">' +
     '<div class="flex items-center justify-between gap-2">' +
       '<span class="text-[10px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">▶ FULL-TIME HIGHLIGHTS</span>' +
-      '<span class="text-[8.5px] font-mono font-bold text-slate-400 bg-slate-900/90 border border-slate-800 px-1.5 py-0.5 rounded">' + (videoId ? "FT • YouTube" : "FT • Search") + '</span>' +
     '</div>' +
-    playerOrFallbackHtml +
+    '<a id="yt-hl-card-link-' + m.id + '" data-highlights-card="flashscore" href="' + targetHref + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="group transition hover:border-slate-600/90 no-underline" style="display:flex;align-items:center;gap:14px;background:rgba(15,23,42,0.92);border:1px solid rgba(51,65,85,0.65);border-radius:12px;padding:8px 12px 8px 8px;text-decoration:none;cursor:pointer;">' +
+      '<div data-highlights-thumbnail="145x82" style="width:145px;height:82px;min-width:145px;min-height:82px;position:relative;overflow:hidden;border-radius:8px;flex-shrink:0;background:radial-gradient(circle at 50% 45%, #0f3d2e 0%, #09221c 58%, #051018 100%);border:1px solid rgba(148,163,184,0.22);box-shadow:inset 0 0 18px rgba(0,0,0,0.65);">' +
+        '<div data-highlights-broadcast-fallback="true" style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(90deg, rgba(16,185,129,0.06) 0px, rgba(16,185,129,0.06) 14px, transparent 14px, transparent 28px);">' +
+          '<div style="position:absolute;inset:6px;border:1px solid rgba(255,255,255,0.08);border-radius:5px;pointer-events:none;"></div>' +
+          '<img data-highlights-comp-badge="true" src="' + compLogoUrl + '" alt="' + safeLeagueAlt + '" style="position:absolute;top:5px;left:6px;width:15px;height:15px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));z-index:2;" onerror="this.style.display=\'none\'" />' +
+          '<div style="display:flex;align-items:center;justify-content:center;gap:42px;width:100%;padding:0 10px 8px 10px;">' +
+            '<img data-highlights-team-badge="home" src="' + homeBadge.src + '" onerror="this.onerror=null;this.src=\'' + homeBadge.fallback + '\'" alt="' + safeHomeAlt + '" style="width:24px;height:24px;min-width:24px;min-height:24px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.85));" />' +
+            '<img data-highlights-team-badge="away" src="' + awayBadge.src + '" onerror="this.onerror=null;this.src=\'' + awayBadge.fallback + '\'" alt="' + safeAwayAlt + '" style="width:24px;height:24px;min-width:24px;min-height:24px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.85));" />' +
+          '</div>' +
+        '</div>' +
+        externalImgHtml +
+        '<div data-highlights-play-btn="true" style="position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#ff0046 0%,#e91e63 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,0,70,0.55);border:1px solid rgba(255,255,255,0.28);z-index:3;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true" style="margin-left:1px;"><path d="M8 5v14l11-7z"/></svg>' +
+        '</div>' +
+        '<span data-highlights-key-moments="true" style="position:absolute;bottom:5px;left:5px;z-index:3;background:rgba(7,17,26,0.9);border:1px solid rgba(255,255,255,0.18);border-radius:4px;padding:1.5px 5px;font-size:8.5px;font-weight:900;font-family:\'JetBrains Mono\',monospace,sans-serif;letter-spacing:0.05em;text-transform:uppercase;color:#ffffff;line-height:1.15;">KEY MOMENTS</span>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1;">' +
+        '<div data-highlights-title="true" class="group-hover:text-rose-300 transition truncate" style="font-size:15px;font-weight:700;color:#ffffff;line-height:1.25;">Match highlights</div>' +
+        '<div data-highlights-subtitle="true" class="truncate" style="font-size:13px;font-weight:500;color:#94a3b8;line-height:1.3;margin-top:2px;">YouTube</div>' +
+      '</div>' +
+    '</a>' +
   '</div>';
 };
 
@@ -10829,6 +10932,25 @@ window.ensureMatchHighlightsLoaded = function(m){
     ? m.highlightsVideoId.trim()
     : (window.getMatchHighlightsVideoId ? window.getMatchHighlightsVideoId(m) : null);
   if(videoId && !m.highlightsVideoId) m.highlightsVideoId = videoId;
+
+  var isHomeFav = m.venue === "HOME";
+  var homeTeam = isHomeFav ? m.fav : m.opp;
+  var awayTeam = isHomeFav ? m.opp : m.fav;
+  if(window.fetchKeylessScorebatFeed){
+    window.fetchKeylessScorebatFeed().then(function(items){
+      var matched = window.matchScorebatEntryForTeams ? window.matchScorebatEntryForTeams(items, homeTeam, awayTeam) : null;
+      if(!matched) return;
+      var imgEl = document.getElementById("yt-hl-thumb-img-" + m.id);
+      if(imgEl && matched.thumbnailUrl && !imgEl.getAttribute("src")){
+        imgEl.setAttribute("src", matched.thumbnailUrl);
+        imgEl.style.display = "block";
+      }
+      var linkEl = document.getElementById("yt-hl-card-link-" + m.id);
+      if(linkEl && matched.videoUrl){
+        linkEl.setAttribute("href", matched.videoUrl);
+      }
+    });
+  }
 };
 
 window.ensureMatchHighlightsLoadedById = function(matchId){
