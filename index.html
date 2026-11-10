@@ -53,19 +53,56 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta name="betboy-build-version" content="20261110-03">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<meta name="betboy-build-version" content="20261110-04">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261110-03';
-    var SW_SCRIPT_URL = '/sw.js?v=20261110-03';
+    var CURRENT_BUILD_VERSION = '20261110-04';
+    var SW_SCRIPT_URL = '/sw.js?v=20261110-04';
+    var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
     window._betboyReloadingNow = false;
 
-    window.purgeAllBrowserCachesAndReload = function(reasonTag) {
+    window.computeSwScriptByteHash = function(scriptText) {
+      var str = String(scriptText || '');
+      var h = 2166136261 >>> 0;
+      for (var i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul ? (Math.imul(h, 16777619) >>> 0) : ((h * 16777619) >>> 0);
+      }
+      return str.length + ':' + h.toString(16);
+    };
+
+    window.extractSwBuildVersionFromScript = function(scriptText) {
+      var match = String(scriptText || '').match(/SW_BUILD_VERSION\s*=\s*['"]([^'"]+)['"]/i);
+      return match && match[1] ? match[1].trim() : '';
+    };
+
+    window.unregisterAllServiceWorkersCleanly = function(activeRegistration) {
+      var tasks = [];
+      if (activeRegistration && typeof activeRegistration.unregister === 'function') {
+        tasks.push(activeRegistration.unregister().catch(function() { return false; }));
+      }
+      if ('serviceWorker' in navigator && typeof navigator.serviceWorker.getRegistrations === 'function') {
+        tasks.push(
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            if (!Array.isArray(regs)) return false;
+            return Promise.all(regs.map(function(reg) {
+              if (reg && reg !== activeRegistration && typeof reg.unregister === 'function') {
+                return reg.unregister().catch(function() { return false; });
+              }
+              return Promise.resolve(false);
+            }));
+          }).catch(function() { return false; })
+        );
+      }
+      return Promise.all(tasks);
+    };
+
+    window.purgeAllBrowserCachesAndReload = function(reasonTag, shouldUnregisterSw) {
       if (window._betboyReloadingNow) return Promise.resolve(false);
       var guardKey = 'betboy_sw_autoreload_' + String(reasonTag || CURRENT_BUILD_VERSION);
       try {
@@ -76,27 +113,70 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       } catch (e) {}
       window._betboyReloadingNow = true;
 
+      var unregisterPromise = shouldUnregisterSw
+        ? window.unregisterAllServiceWorkersCleanly(window._swRegistration)
+        : Promise.resolve();
+
       var clearPromise = ('caches' in window && caches && typeof caches.keys === 'function')
         ? caches.keys().then(function(keys) {
             return Promise.all(keys.map(function(k) { return caches.delete(k); }));
           }).catch(function() {})
         : Promise.resolve();
 
-      return clearPromise.then(function() {
+      return Promise.all([unregisterPromise, clearPromise]).then(function() {
         window.location.reload();
         return true;
       });
+    };
+
+    window.checkIosSafariSwUpdate = function() {
+      var swCheckUrl = '/sw.js?check=' + Date.now();
+      return fetch(swCheckUrl, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
+        .then(function(res) {
+          if (!res || !res.ok) return '';
+          return res.text();
+        })
+        .then(function(swScriptText) {
+          if (!swScriptText) return false;
+          var newByteHash = window.computeSwScriptByteHash(swScriptText);
+          var remoteSwVersion = window.extractSwBuildVersionFromScript(swScriptText);
+          var prevByteHash = window._swScriptByteHash || '';
+          if (!prevByteHash) {
+            try { prevByteHash = localStorage.getItem(SW_BYTE_HASH_STORAGE_KEY) || ''; } catch (e) {}
+          }
+          var versionChanged = !!(remoteSwVersion && remoteSwVersion !== CURRENT_BUILD_VERSION);
+          var byteHashChanged = !!(prevByteHash && newByteHash !== prevByteHash);
+
+          window._swScriptByteHash = newByteHash;
+          try { localStorage.setItem(SW_BYTE_HASH_STORAGE_KEY, newByteHash); } catch (e) {}
+
+          if (versionChanged || byteHashChanged) {
+            var reason = versionChanged ? ('sw_ver_' + remoteSwVersion) : ('sw_hash_' + newByteHash);
+            return window.purgeAllBrowserCachesAndReload(reason, true);
+          }
+          return false;
+        })
+        .catch(function() {
+          return false;
+        });
     };
 
     window.checkLiveAppVersionAndUpdate = function() {
       if (window._swRegistration && typeof window._swRegistration.update === 'function') {
         try { window._swRegistration.update().catch(function() {}); } catch (e) {}
       }
+      var swPromise = window.checkIosSafariSwUpdate();
       var checkUrl = '/index.html?t=' + Date.now();
-      return fetch(checkUrl, {
+      var htmlPromise = fetch(checkUrl, {
         cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache'
         }
       })
@@ -109,13 +189,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           var match = htmlText.match(/<meta\s+name=["']betboy-build-version["']\s+content=["']([^"']+)["']/i);
           var remoteVersion = match && match[1] ? match[1].trim() : '';
           if (remoteVersion && remoteVersion !== CURRENT_BUILD_VERSION) {
-            return window.purgeAllBrowserCachesAndReload('ver_' + remoteVersion);
+            return window.purgeAllBrowserCachesAndReload('ver_' + remoteVersion, true);
           }
           return false;
         })
         .catch(function() {
           return false;
         });
+      return Promise.all([swPromise, htmlPromise]).then(function(results) {
+        return !!(results[0] || results[1]);
+      });
     };
 
     if ('serviceWorker' in navigator) {
@@ -123,7 +206,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       navigator.serviceWorker.addEventListener('controllerchange', function() {
         if (hadControllerOnBoot) {
-          window.purgeAllBrowserCachesAndReload('ctrl_' + CURRENT_BUILD_VERSION);
+          window.purgeAllBrowserCachesAndReload('ctrl_' + CURRENT_BUILD_VERSION, false);
         }
       });
 
@@ -131,14 +214,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         if (event && event.data && event.data.type === 'FORCE_RELOAD') {
           var incomingVer = event.data.version || 'force';
           if (incomingVer !== CURRENT_BUILD_VERSION || event.data.hadStaleCache) {
-            window.purgeAllBrowserCachesAndReload('msg_' + incomingVer);
+            window.purgeAllBrowserCachesAndReload('msg_' + incomingVer, false);
           }
         }
       });
 
       var registerAndCheckSw = function() {
         navigator.serviceWorker
-          .register('/sw.js?v=20261110-03', { updateViaCache: 'none' })
+          .register('/sw.js?v=20261110-04', { updateViaCache: 'none' })
           .then(function(registration) {
             window._swRegistration = registration;
             try { registration.update().catch(function() {}); } catch (e) {}
@@ -153,7 +236,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               newWorker.addEventListener('statechange', function() {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   try { newWorker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
-                  window.purgeAllBrowserCachesAndReload('installed_' + CURRENT_BUILD_VERSION);
+                  window.purgeAllBrowserCachesAndReload('installed_' + CURRENT_BUILD_VERSION, false);
                 }
               });
             });
@@ -171,9 +254,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'visible') {
+          window.checkIosSafariSwUpdate();
           window.checkLiveAppVersionAndUpdate();
         }
       });
+
+      window.addEventListener('pageshow', function(event) {
+        if (event && event.persisted) {
+          window.checkIosSafariSwUpdate();
+          window.checkLiveAppVersionAndUpdate();
+        }
+      });
+
+      setInterval(function() {
+        if (document.visibilityState === 'visible') {
+          window.checkIosSafariSwUpdate();
+        }
+      }, 60000);
     }
   })();
 </script>
