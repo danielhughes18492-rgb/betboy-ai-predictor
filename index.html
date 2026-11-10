@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-56W2VCNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),l=f.parentNode,j.async=true,j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i;f.parentNode.insertBefore(j,f);
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-56W2VCNV');</script>
 <!-- End Google Tag Manager -->
 <meta charset="UTF-8">
@@ -102,6 +108,7 @@ j=d.createElement(s),l=f.parentNode,j.async=true,j.src=
   .lg-icon-sm { width:18px !important; height:18px !important; min-width:18px !important; min-height:18px !important; aspect-ratio:1/1 !important; object-fit:contain !important; background:#ffffff !important; border-radius:4px !important; padding:1.5px !important; box-sizing:border-box !important; display:inline-block !important; vertical-align:middle !important; flex-shrink:0 !important; box-shadow:0 1px 2px rgba(0,0,0,0.4) !important; }
   .crest-box { width:24px !important; height:24px !important; min-width:24px !important; min-height:24px !important; aspect-ratio:1/1 !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; flex-shrink:0 !important; vertical-align:middle !important; background:rgba(15,23,42,0.65); border:1px solid rgba(255,255,255,0.08); border-radius:7px; padding:2px; box-sizing:border-box; }
   .crest-box img { width:100% !important; height:100% !important; object-fit:contain !important; display:block !important; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.45)); }
+  .scoreboard-crest-slot .crest-box { width:22px !important; height:22px !important; min-width:22px !important; min-height:22px !important; border-radius:6px !important; padding:1.5px !important; }
   .no-scrollbar::-webkit-scrollbar { display:none; }
   .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
   .border-l-emerald-500 { border-left: 4px solid #10b981 !important; box-shadow: -4px 0 18px -4px rgba(16, 185, 129, 0.38), 0 10px 28px -6px rgba(0, 0, 0, 0.5) !important; }
@@ -245,7 +252,7 @@ j=d.createElement(s),l=f.parentNode,j.async=true,j.src=
     }
     div[id^="cardWrap-"].card-expanded [id^="mktGrid-"],
     div[id^="cardWrap-"].card-collapsing [id^="mktGrid-"] {
-      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       gap: 0.65rem !important;
     }
     #adminBar:not(.hidden) {
@@ -291,7 +298,7 @@ j=d.createElement(s),l=f.parentNode,j.async=true,j.src=
     }
     div[id^="cardWrap-"].card-expanded [id^="mktGrid-"],
     div[id^="cardWrap-"].card-collapsing [id^="mktGrid-"] {
-      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
   }
 </style>
@@ -644,12 +651,12 @@ window.isAdmin = false;
 window.isTrial = false;
 window.activeTierFilter = 'ALL';
 
-// Ordered by Country (Leagues then Domestic Cups): England (PL, CHA, L1, L2 -> FAC, EFLC) -> Spain -> Germany -> France -> Italy -> Scotland -> European Cups
-window.ALL_LEAGUES = ["PL","CHA","L1","L2","FAC","EFLC","LL","BUN","FL1","SA","SPL","UCL","UEL","UECL"];
+// Ordered by Country (Leagues then Domestic Cups): England (PL, CHA, L1, L2 -> FAC, EFLC) -> Spain -> Germany -> France -> Italy -> Scotland -> European Cups & UEFA Nations League
+window.ALL_LEAGUES = ["PL","CHA","L1","L2","FAC","EFLC","LL","BUN","FL1","SA","SPL","UCL","UEL","UECL","UNL"];
 window.LEAGUE_NAMES = {
   PL: "Premier League", CHA: "Championship", L1: "League One", L2: "League Two", FAC: "Emirates FA Cup", EFLC: "EFL Cup",
   LL: "La Liga", BUN: "Bundesliga", FL1: "Ligue 1", SA: "Serie A", SPL: "Scottish Premiership",
-  UCL: "Champions League", UEL: "Europa League", UECL: "Conference League"
+  UCL: "Champions League", UEL: "Europa League", UECL: "Conference League", UNL: "UEFA Nations League"
 };
 // Clean Inline SVG Country/Confederation Flags (100% ASCII-safe, zero Unicode flag emojis)
 window.ENGLAND_FLAG_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0 shadow-sm border border-white/20" aria-label="England"><rect width="24" height="16" fill="#ffffff"/><rect x="10" y="0" width="4" height="16" fill="#ce1124"/><rect x="0" y="6" width="24" height="4" fill="#ce1124"/></svg>';
@@ -674,7 +681,8 @@ window.LEAGUE_COUNTRY_TAGS = {
   SPL: window.SCOTLAND_FLAG_SVG,
   UCL: window.UEFA_FLAG_SVG,
   UEL: window.UEFA_FLAG_SVG,
-  UECL: window.UEFA_FLAG_SVG
+  UECL: window.UEFA_FLAG_SVG,
+  UNL: window.UEFA_FLAG_SVG
 };
 
 window.getLeagueCountryFlagHtml = function(code) {
@@ -683,14 +691,32 @@ window.getLeagueCountryFlagHtml = function(code) {
 window.API_FOOTBALL_LEAGUE_IDS = {
   PL: 39, FAC: 45, CHA: 40, L1: 41, L2: 42, EFLC: 48,
   LL: 140, BUN: 78, FL1: 61, SA: 135, SPL: 179,
-  UCL: 2, UEL: 3, UECL: 848
+  UCL: 2, UEL: 3, UECL: 848, UNL: 5
 };
 window.ODDS_API_SPORT_KEYS = {
   PL: "soccer_epl", FAC: "soccer_fa_cup", CHA: "soccer_efl_champ",
   L1: "soccer_england_league1", L2: "soccer_england_league2", EFLC: "soccer_england_efl_cup",
   SPL: "soccer_spl", LL: "soccer_spain_la_liga", BUN: "soccer_germany_bundesliga",
   FL1: "soccer_france_ligue_one", SA: "soccer_italy_serie_a",
-  UCL: "soccer_uefa_champs_league", UEL: "soccer_uefa_europa_league", UECL: "soccer_uefa_europa_conference_league"
+  UCL: "soccer_uefa_champs_league", UEL: "soccer_uefa_europa_league", UECL: "soccer_uefa_europa_conference_league",
+  UNL: "soccer_uefa_nations_league"
+};
+window.resolveUefaNationsLeagueSeason = function(dateInput) {
+  if (!dateInput) return 2026;
+  var d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(d.getTime())) return 2026;
+  var yr = d.getUTCFullYear();
+  if (yr >= 2026 && yr <= 2027) return 2026;
+  return yr % 2 === 0 ? yr : yr - 1;
+};
+window.UEFA_NATIONS_LEAGUE_CONFIG = {
+  code: "UNL",
+  name: "UEFA Nations League",
+  apiFootballLeagueId: 5,
+  logoUrl: "https://media.api-sports.io/football/leagues/5.png",
+  season: 2026,
+  oddsApiSportKey: "soccer_uefa_nations_league",
+  espnSlug: "uefa.nations"
 };
 
 window.selectedDate = "";
@@ -1139,7 +1165,8 @@ window.LEAGUE_FALLBACK_SVGS = {
   FL1: window.makeLigue1Logo(),
   UCL: window.makeUclLogo(),
   UEL: window.makeUelLogo(),
-  UECL: window.makeUeclLogo()
+  UECL: window.makeUeclLogo(),
+  UNL: window.makeUclLogo()
 };
 
 // Official High-Resolution Competition Logos (Uniformly Sized via .lg-icon & .lg-icon-sm)
@@ -1157,10 +1184,12 @@ window.LEAGUE_LOGOS = window.safeGet("airp_official_league_logos_v1", {
   FL1: "https://a.espncdn.com/i/leaguelogos/soccer/500/9.png",
   UCL: "https://a.espncdn.com/i/leaguelogos/soccer/500/2.png",
   UEL: "https://a.espncdn.com/i/leaguelogos/soccer/500/2310.png",
-  UECL: "https://a.espncdn.com/i/leaguelogos/soccer/500/20296.png"
+  UECL: "https://a.espncdn.com/i/leaguelogos/soccer/500/20296.png",
+  UNL: "https://media.api-sports.io/football/leagues/5.png"
 });
 window.LEAGUE_LOGOS.SPL = window.LEAGUE_LOGOS.SPL || "https://a.espncdn.com/i/leaguelogos/soccer/500/45.png";
 window.LEAGUE_LOGOS.FAC = window.LEAGUE_LOGOS.FAC || "https://a.espncdn.com/i/leaguelogos/soccer/500/40.png";
+window.LEAGUE_LOGOS.UNL = "https://media.api-sports.io/football/leagues/5.png";
 
 window.getLeagueLogo = function(lg, isSmall) {
   var cls = isSmall ? "lg-icon-sm" : "lg-icon";
@@ -2059,9 +2088,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Filter Competitions Bar (Ordered by Country: England, Spain, Germany, France, Italy, Scotland, then Cup Competitions) -->
     <div class="glass p-2.5 rounded-xl text-xs space-y-2">
-      <div class="flex justify-between items-center px-0.5">
-        <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Filter Competitions (By Country &amp; Cups)</span>
-        <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition">Clear All (14)</button>
+      <div class="flex justify-between items-center px-0.5 gap-2 flex-nowrap">
+        <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider truncate">Filter Competitions (By Country &amp; Cups)</span>
+        <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition flex-shrink-0 whitespace-nowrap">Clear All (15)</button>
       </div>
       <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
         <script>
@@ -2114,10 +2143,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="topBankerAffiliateBar"></div>
     </div>
 
-    <!-- Instant Team & League Search Bar -->
-    <div id="liveTeamSearchWrap" class="glass p-2 rounded-xl mb-2 relative flex items-center">
-      <input type="search" id="instantSearchInput" placeholder="🔍 Instant team / league search..." oninput="window.filterAppCards(this.value)" class="w-full bg-slate-950/90 border border-slate-800 pl-3 pr-8 py-2 rounded-lg text-xs text-white outline-none focus:border-emerald-500 transition">
-      <button type="button" id="clearSearchBtn" onclick="var inp=document.getElementById('instantSearchInput');inp.value='';window.filterAppCards('');" style="display:none;" class="absolute right-4 text-slate-400 hover:text-white font-bold text-sm px-1.5 cursor-pointer">×</button>
+    <!-- Instant Team & League Search Bar + Compact Standings / Tables Button Row -->
+    <div id="liveTeamSearchWrap" class="glass p-2 rounded-xl mb-2 flex items-center gap-2">
+      <div class="relative flex-1 min-w-0 flex items-center">
+        <input type="search" id="instantSearchInput" placeholder="🔍 Instant team / league search..." oninput="window.filterAppCards(this.value)" class="w-full bg-slate-950/90 border border-slate-800 pl-3 pr-8 py-2 rounded-lg text-xs text-white outline-none focus:border-emerald-500 transition">
+        <button type="button" id="clearSearchBtn" onclick="var inp=document.getElementById('instantSearchInput');inp.value='';window.filterAppCards('');" style="display:none;" class="absolute right-2 text-slate-400 hover:text-white font-bold text-sm px-1.5 cursor-pointer">×</button>
+      </div>
+      <button type="button" id="openStandingsModalBtn" onclick="window.openStandingsModal('PL')" class="bg-slate-950/90 hover:bg-slate-900 active:bg-slate-950 text-emerald-400 border border-emerald-500/40 font-bold px-3 py-2 rounded-lg text-xs shadow cursor-pointer transition inline-flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
+        <span>📊 Tables</span>
+      </button>
     </div>
 
     <!-- Featured UK Bookmaker Sign-Up Offers Strip (Compact Horizontal Swipeable Carousel + Accordion Toggle) -->
@@ -2494,6 +2528,55 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </div>
 
+<!-- Multi-Tier Standings / Competition Tables Modal -->
+<div id="standingsTableModal" role="dialog" aria-modal="true" aria-labelledby="standingsTableModalTitle" onclick="if(event.target===this)window.closeStandingsModal()" style="position:fixed;inset:0;background:rgba(2,6,23,0.88);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:14px;">
+  <div class="glass w-full max-w-2xl rounded-3xl p-4 sm:p-5 border border-sky-500/40 shadow-[0_12px_48px_rgba(0,0,0,0.85)] max-h-[90vh] flex flex-col space-y-3 text-left select-text">
+    <div class="flex justify-between items-center border-b border-slate-800/90 pb-2.5 gap-2 flex-shrink-0">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <img id="standingsModalLogo" src="https://media.api-sports.io/football/leagues/39.png" alt="Competition Logo" class="lg-icon flex-shrink-0">
+        <div class="min-w-0">
+          <h2 id="standingsTableModalTitle" class="text-white font-black text-sm sm:text-base tracking-wide truncate">Premier League — League Table (2026-27)</h2>
+        </div>
+      </div>
+      <button type="button" onclick="window.closeStandingsModal()" aria-label="Close Standings Modal" class="text-slate-400 hover:text-white text-2xl font-bold px-2 py-0.5 leading-none cursor-pointer flex-shrink-0">&times;</button>
+    </div>
+
+    <!-- Competition Switcher (All 13 Active League & Group Competitions) -->
+    <div class="bg-slate-950/85 border border-slate-800 rounded-xl p-2 space-y-1.5 flex-shrink-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Select Competition:</span>
+        <span id="standingsTeamCountBadge" class="text-[9.5px] font-mono font-bold text-emerald-400">20 Teams</span>
+      </div>
+      <div class="flex items-center gap-1.5 overflow-x-auto sm:flex-wrap pb-1 sm:pb-0 no-scrollbar" id="standingsCompTabs">
+        <button type="button" onclick="window.openStandingsModal('PL')" data-standings-comp="PL" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-sky-600 text-white cursor-pointer transition whitespace-nowrap flex-shrink-0">Premier League</button>
+        <button type="button" onclick="window.openStandingsModal('CHA')" data-standings-comp="CHA" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Championship</button>
+        <button type="button" onclick="window.openStandingsModal('L1')" data-standings-comp="L1" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">League One</button>
+        <button type="button" onclick="window.openStandingsModal('L2')" data-standings-comp="L2" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">League Two</button>
+        <button type="button" onclick="window.openStandingsModal('LL')" data-standings-comp="LL" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">La Liga</button>
+        <button type="button" onclick="window.openStandingsModal('BUN')" data-standings-comp="BUN" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Bundesliga</button>
+        <button type="button" onclick="window.openStandingsModal('FL1')" data-standings-comp="FL1" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Ligue 1</button>
+        <button type="button" onclick="window.openStandingsModal('SA')" data-standings-comp="SA" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Serie A</button>
+        <button type="button" onclick="window.openStandingsModal('SPL')" data-standings-comp="SPL" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Scottish Prem</button>
+        <button type="button" onclick="window.openStandingsModal('UCL')" data-standings-comp="UCL" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Champions League</button>
+        <button type="button" onclick="window.openStandingsModal('UEL')" data-standings-comp="UEL" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Europa League</button>
+        <button type="button" onclick="window.openStandingsModal('UECL')" data-standings-comp="UECL" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">Conference League</button>
+        <button type="button" onclick="window.openStandingsModal('UNL')" data-standings-comp="UNL" class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0">UEFA Nations League</button>
+      </div>
+    </div>
+
+    <!-- Multi-Tier League A / B / C / D Selector (Visible when UEFA Nations League is active) -->
+    <div id="standingsTierTabsBar" class="grid grid-cols-4 gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 flex-shrink-0" style="display:none;">
+      <button type="button" onclick="window.selectStandingsTier('League A')" data-standings-tier="League A" class="py-1.5 rounded-lg text-[11px] font-black bg-emerald-600 text-white shadow cursor-pointer transition">League A</button>
+      <button type="button" onclick="window.selectStandingsTier('League B')" data-standings-tier="League B" class="py-1.5 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white cursor-pointer transition">League B</button>
+      <button type="button" onclick="window.selectStandingsTier('League C')" data-standings-tier="League C" class="py-1.5 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white cursor-pointer transition">League C</button>
+      <button type="button" onclick="window.selectStandingsTier('League D')" data-standings-tier="League D" class="py-1.5 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white cursor-pointer transition">League D</button>
+    </div>
+
+    <!-- Rendered Scrollable Full-Length Standings Tables Container -->
+    <div id="standingsTablesContainer" class="max-h-[60vh] overflow-y-auto pr-1 space-y-3"></div>
+  </div>
+</div>
+
 <!-- About & Contact Compliance Modal -->
 <div id="aboutContactModal" role="dialog" aria-modal="true" aria-labelledby="aboutContactModalTitle" onclick="if(event.target===this)window.closeAboutContactModal()" style="position:fixed;inset:0;background:rgba(2,6,23,0.88);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:14px;">
   <div class="glass w-full max-w-lg rounded-3xl p-5 sm:p-6 border border-emerald-500/40 shadow-[0_12px_48px_rgba(0,0,0,0.85)] max-h-[90vh] overflow-y-auto space-y-4 text-left select-text">
@@ -2749,7 +2832,7 @@ window.UNIFORM_STARTUP_SCHEMA_KEY = "betboy_uniform_state_schema_v22";
 window.DEFAULT_CORE_STATE = Object.freeze({
   schemaVersion: "v22.0-uniform",
   modelVersion: 15.0,
-  defaultCompetitions: (window.ALL_LEAGUES || ["PL","CHA","L1","L2","LL","BUN","FL1","SA","SPL","FAC","EFLC","UCL","UEL","UECL"]).slice(),
+  defaultCompetitions: (window.ALL_LEAGUES || ["PL","CHA","L1","L2","FAC","EFLC","LL","BUN","FL1","SA","SPL","UCL","UEL","UECL","UNL"]).slice(),
   defaultSortMode: "CONF",
   defaultOddsFormat: "frac",
   defaultTierFilter: "ALL",
@@ -2997,6 +3080,7 @@ window.THE_ODDS_API_KEY = window.getActiveOddsApiKey();
 window.THE_ODDS_API_UK_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=uk&markets=h2h&apiKey=" + window.THE_ODDS_API_KEY;
 window.THE_ODDS_API_EU_URL = "https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=eu&markets=h2h&apiKey=" + window.THE_ODDS_API_KEY;
 window.THE_ODDS_API_FA_CUP_URL = "https://api.the-odds-api.com/v4/sports/soccer_fa_cup/odds/?regions=uk&markets=h2h&apiKey=" + window.THE_ODDS_API_KEY;
+window.THE_ODDS_API_NATIONS_LEAGUE_URL = "https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds/?regions=uk&markets=h2h&apiKey=" + window.THE_ODDS_API_KEY;
 window.LEAGUE_CODE_TO_ODDS_SPORT_KEY = {
   PL: "soccer_epl",
   CHA: "soccer_efl_champ",
@@ -3011,7 +3095,8 @@ window.LEAGUE_CODE_TO_ODDS_SPORT_KEY = {
   FL1: "soccer_france_ligue_one",
   UCL: "soccer_uefa_champs_league",
   UEL: "soccer_uefa_europa_league",
-  UECL: "soccer_uefa_europa_conference_league"
+  UECL: "soccer_uefa_europa_conference_league",
+  UNL: "soccer_uefa_nations_league"
 };
 window.oddsLeagueCacheMap = window.safeGet(window.ODDS_API_LEAGUE_CACHE_STORAGE_KEY, {});
 window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v2", {});
@@ -3022,7 +3107,30 @@ window.preKoOddsSnapshotMap = {};
 window.lastOddsApiSyncTime = Number(window.safeGet("airp_the_odds_api_sync_ts", 0)) || 0;
 window.oddsApiInFlight = false;
 
-window.ODDS_TEAM_ALIAS_MAP = {
+window.NATIONAL_TEAM_NORMALIZATION_DICTIONARY = {
+  czechrepublic: "czechia", czechrep: "czechia", czechia: "czechia",
+  turkey: "turkiye", turkiye: "turkiye", tuerkiye: "turkiye",
+  republicofireland: "ireland", repofireland: "ireland", irelandrepublic: "ireland", ireland: "ireland", eire: "ireland",
+  bosniaandherzegovina: "bosniaandherzegovina", bosniaherzegovina: "bosniaandherzegovina", bosnia: "bosniaandherzegovina",
+  northmacedonia: "northmacedonia", nmacedonia: "northmacedonia", macedonia: "northmacedonia", fyrmacedonia: "northmacedonia", fyr: "northmacedonia",
+  northernireland: "northernireland", northireland: "northernireland", nireland: "northernireland",
+  faroeislands: "faroeislands", faroeisles: "faroeislands", faroe: "faroeislands",
+  sanmarino: "sanmarino",
+  england: "england", scotland: "scotland", wales: "wales",
+  france: "france", spain: "spain", germany: "germany", italy: "italy", portugal: "portugal",
+  netherlands: "netherlands", holland: "netherlands", belgium: "belgium", croatia: "croatia",
+  denmark: "denmark", switzerland: "switzerland", austria: "austria", poland: "poland",
+  hungary: "hungary", serbia: "serbia", ukraine: "ukraine", sweden: "sweden", norway: "norway",
+  greece: "greece", slovakia: "slovakia", slovenia: "slovenia", romania: "romania",
+  finland: "finland", iceland: "iceland", albania: "albania", georgia: "georgia",
+  israel: "israel", montenegro: "montenegro", luxembourg: "luxembourg", bulgaria: "bulgaria",
+  armenia: "armenia", kazakhstan: "kazakhstan", azerbaijan: "azerbaijan", kosovo: "kosovo",
+  cyprus: "cyprus", estonia: "estonia", latvia: "latvia", lithuania: "lithuania",
+  moldova: "moldova", belarus: "belarus", malta: "malta", andorra: "andorra",
+  gibraltar: "gibraltar", liechtenstein: "liechtenstein"
+};
+
+window.ODDS_TEAM_ALIAS_MAP = Object.assign({}, window.NATIONAL_TEAM_NORMALIZATION_DICTIONARY, {
   manchestercity: "mancity", mancity: "mancity",
   manchesterunited: "manutd", manchesterutd: "manutd", manutd: "manutd",
   tottenhamhotspur: "tottenham", spurs: "tottenham",
@@ -3044,7 +3152,7 @@ window.ODDS_TEAM_ALIAS_MAP = {
   internazionale: "inter", intermilan: "inter", acmilan: "milan",
   hellasverona: "verona", sportingcp: "sporting", sportinglisbon: "sporting",
   glasgowrangers: "rangers", celticfc: "celtic", heartofmidlothian: "hearts"
-};
+});
 
 window.normalizeOddsTeamKey = function(name) {
   var raw = String(name || "")
@@ -3248,30 +3356,52 @@ window.deriveMarketsFromOddsApiH2H = function(favOdds, drawOdds, oppOdds) {
   };
 };
 
-window.fetchJsonWithFallback = function(url){
+window.fetchJsonWithFallback = function(url, options, timeoutMs){
+  var timeout = Number(timeoutMs) > 0 ? Number(timeoutMs) : 8000;
+  var runTimedFetch = function(targetUrl) {
+    return new Promise(function(resolve) {
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var timer = setTimeout(function() {
+        if (ctrl) {
+          try { ctrl.abort(); } catch (e) {}
+        }
+        resolve(null);
+      }, timeout);
+      var reqOpts = Object.assign({}, options || {});
+      if (ctrl && !reqOpts.signal) reqOpts.signal = ctrl.signal;
+      try {
+        fetch(targetUrl, reqOpts)
+          .then(function(r) {
+            clearTimeout(timer);
+            if (!r || !r.ok) return null;
+            return r.json().catch(function() { return null; });
+          })
+          .then(function(json) { resolve(json || null); })
+          .catch(function() {
+            clearTimeout(timer);
+            resolve(null);
+          });
+      } catch (err) {
+        clearTimeout(timer);
+        resolve(null);
+      }
+    });
+  };
+
   var isLocalOrPreview = typeof window !== "undefined" && window.location && (
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1" ||
     window.location.hostname.indexOf(".run.app") !== -1
   );
   if(isLocalOrPreview){
-    return fetch("/api/espn-proxy?url=" + encodeURIComponent(url))
-      .then(function(r){
-        if(!r.ok) throw new Error("Proxy HTTP " + r.status);
-        return r.json();
+    return runTimedFetch("/api/espn-proxy?url=" + encodeURIComponent(url))
+      .then(function(proxyJson){
+        if (proxyJson !== null) return proxyJson;
+        return runTimedFetch(url);
       })
-      .catch(function(){
-        return fetch(url)
-          .then(function(r2){ return r2.ok ? r2.json() : null; })
-          .catch(function(){ return null; });
-      });
+      .catch(function(){ return null; });
   }
-  return fetch(url)
-    .then(function(r){
-      if(!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    })
-    .catch(function(){ return null; });
+  return runTimedFetch(url);
 };
 
 window.rebuildCombinedOddsMapFromCache = function(){
@@ -3343,18 +3473,14 @@ window.fetchTheOddsApiMarkets = function(forceRefresh, targetDateStr) {
     var url = "https://api.the-odds-api.com/v4/sports/" + sportKey + "/odds/?regions=uk&markets=h2h&apiKey=" + activeKey;
     return window.fetchJsonWithFallback(url)
       .then(function(data){
-        var validEvents = Array.isArray(data) ? data : [];
-        window.oddsLeagueCacheMap[sportKey] = {
-          timestamp: Date.now(),
-          events: validEvents
-        };
+        if (Array.isArray(data)) {
+          window.oddsLeagueCacheMap[sportKey] = {
+            timestamp: Date.now(),
+            events: data
+          };
+        }
       })
-      .catch(function(){
-        window.oddsLeagueCacheMap[sportKey] = {
-          timestamp: Date.now(),
-          events: []
-        };
-      });
+      .catch(function(){});
   });
 
   return Promise.allSettled(jobs).then(function(){
@@ -3861,6 +3987,7 @@ window.toggleBetSlipByEl = function(elId, e) {
   if (e) e.stopPropagation();
   var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[elId];
   if (!reg) return;
+  if (reg.won === false) return; // Disable adding settled LOST markets to slip
   window.toggleBetSlip(reg.team, reg.market, elId, e, reg);
 };
 
@@ -4846,6 +4973,9 @@ window.EXACT_CLUB_KEY_MAP = {
   lechpoznan: "lech", lech: "lech",
   unionstgilloise: "unionsg", unionsaintgilloise: "unionsg", unionsg: "unionsg"
 };
+if (window.NATIONAL_TEAM_NORMALIZATION_DICTIONARY) {
+  Object.assign(window.EXACT_CLUB_KEY_MAP, window.NATIONAL_TEAM_NORMALIZATION_DICTIONARY);
+}
 
 window.smartNormalizeTeamKey = function(name){
   var rawStr = String(name || "");
@@ -4888,7 +5018,72 @@ window.cleanCrestKey = function(n){
     psg:160,marseille:176,monaco:174,lille:166,lyon:167,lens:175,rennes:169,nice:2502,brest:6997,toulouse:179,strasbourg:180,auxerre:172,angers:7868,lorient:273,lehavre:3236,nantes:165,reims:3243,montpellier:274,stetienne:178,paris:6851,lemans:2697,troyes:170,
     benfica:1929,sporting:2250,porto:437,braga:2994,ajax:139,feyenoord:142,psv:148,twente:152,azalkmaar:140,brugge:570,unionsg:5807,anderlecht:441,gent:3611,galatasaray:432,fenerbahce:436,besiktas:1895,trabzonspor:997,olympiacos:435,panathinaikos:443,paok:602,salzburg:2790,sturm:3746,sparta:433,slavia:494,plzen:11706,copenhagen:909,midtjylland:572,nordsjaelland:3101,legia:594,jagiellonia:11505,lech:2990,dinamozagreb:597,ferencvaros:622
   };
+  var nationalFlags = {
+    england: "https://flagcdn.com/w80/gb-eng.png",
+    scotland: "https://flagcdn.com/w80/gb-sct.png",
+    wales: "https://flagcdn.com/w80/gb-wls.png",
+    northernireland: "https://flagcdn.com/w80/gb-nir.png",
+    ireland: "https://flagcdn.com/w80/ie.png",
+    republicofireland: "https://flagcdn.com/w80/ie.png",
+    france: "https://flagcdn.com/w80/fr.png",
+    spain: "https://flagcdn.com/w80/es.png",
+    germany: "https://flagcdn.com/w80/de.png",
+    italy: "https://flagcdn.com/w80/it.png",
+    portugal: "https://flagcdn.com/w80/pt.png",
+    netherlands: "https://flagcdn.com/w80/nl.png",
+    belgium: "https://flagcdn.com/w80/be.png",
+    croatia: "https://flagcdn.com/w80/hr.png",
+    denmark: "https://flagcdn.com/w80/dk.png",
+    switzerland: "https://flagcdn.com/w80/ch.png",
+    austria: "https://flagcdn.com/w80/at.png",
+    poland: "https://flagcdn.com/w80/pl.png",
+    hungary: "https://flagcdn.com/w80/hu.png",
+    serbia: "https://flagcdn.com/w80/rs.png",
+    ukraine: "https://flagcdn.com/w80/ua.png",
+    sweden: "https://flagcdn.com/w80/se.png",
+    norway: "https://flagcdn.com/w80/no.png",
+    czechia: "https://flagcdn.com/w80/cz.png",
+    czechrepublic: "https://flagcdn.com/w80/cz.png",
+    turkiye: "https://flagcdn.com/w80/tr.png",
+    turkey: "https://flagcdn.com/w80/tr.png",
+    greece: "https://flagcdn.com/w80/gr.png",
+    slovakia: "https://flagcdn.com/w80/sk.png",
+    slovenia: "https://flagcdn.com/w80/si.png",
+    romania: "https://flagcdn.com/w80/ro.png",
+    finland: "https://flagcdn.com/w80/fi.png",
+    iceland: "https://flagcdn.com/w80/is.png",
+    bosniaandherzegovina: "https://flagcdn.com/w80/ba.png",
+    bosniaherzegovina: "https://flagcdn.com/w80/ba.png",
+    northmacedonia: "https://flagcdn.com/w80/mk.png",
+    macedonia: "https://flagcdn.com/w80/mk.png",
+    fyrmacedonia: "https://flagcdn.com/w80/mk.png",
+    albania: "https://flagcdn.com/w80/al.png",
+    georgia: "https://flagcdn.com/w80/ge.png",
+    israel: "https://flagcdn.com/w80/il.png",
+    montenegro: "https://flagcdn.com/w80/me.png",
+    luxembourg: "https://flagcdn.com/w80/lu.png",
+    bulgaria: "https://flagcdn.com/w80/bg.png",
+    armenia: "https://flagcdn.com/w80/am.png",
+    kazakhstan: "https://flagcdn.com/w80/kz.png",
+    azerbaijan: "https://flagcdn.com/w80/az.png",
+    kosovo: "https://flagcdn.com/w80/xk.png",
+    cyprus: "https://flagcdn.com/w80/cy.png",
+    estonia: "https://flagcdn.com/w80/ee.png",
+    latvia: "https://flagcdn.com/w80/lv.png",
+    lithuania: "https://flagcdn.com/w80/lt.png",
+    faroeislands: "https://flagcdn.com/w80/fo.png",
+    moldova: "https://flagcdn.com/w80/md.png",
+    belarus: "https://flagcdn.com/w80/by.png",
+    malta: "https://flagcdn.com/w80/mt.png",
+    andorra: "https://flagcdn.com/w80/ad.png",
+    sanmarino: "https://flagcdn.com/w80/sm.png",
+    gibraltar: "https://flagcdn.com/w80/gi.png",
+    liechtenstein: "https://flagcdn.com/w80/li.png"
+  };
   window.CLUB_CREST_MAP = window.safeGet("airp_club_crests_v4", {});
+  Object.keys(nationalFlags).forEach(function(k){
+    window.CLUB_CREST_MAP[k] = nationalFlags[k];
+  });
   Object.keys(map).forEach(function(k){
     if(!window.CLUB_CREST_MAP[k]) window.CLUB_CREST_MAP[k] = B + map[k] + ".png";
   });
@@ -5077,24 +5272,54 @@ window.isCardUnlockedInTrial = function(m, idx, type){
   return false;
 };
 
-// Responsive Team Layout (Prevents VIP badge overlap on long club names)
-window.formatMatchTeams = function(m, isUnlocked){
-  var fc = window.getClubCrestHtml(m.fav), oc = window.getClubCrestHtml(m.opp);
+// Uniform Two-Row Scoreboard Team Layout (Fixed 22x22px Crests + Truncated Team Names)
+window.formatMatchTeams = function(m, isUnlocked, scoreMeta){
+  var isFavHome = m.venue === "HOME";
+  var homeName = isFavHome ? m.fav : m.opp;
+  var awayName = isFavHome ? m.opp : m.fav;
+  var homeCrest = window.getClubCrestHtml(homeName);
+  var awayCrest = window.getClubCrestHtml(awayName);
+
+  var hasScore = Boolean(scoreMeta && scoreMeta.isLiveOrFT && typeof scoreMeta.homeGoals === "number" && typeof scoreMeta.awayGoals === "number" && !isNaN(scoreMeta.homeGoals) && !isNaN(scoreMeta.awayGoals));
+  var homeScoreHtml = hasScore
+    ? '<span data-scoreboard-score="home" class="mono text-[11px] font-black px-1.5 py-0.5 rounded bg-slate-900/90 border border-slate-700/70 ' + (isFavHome ? 'text-emerald-300' : 'text-slate-300') + ' flex-shrink-0 ml-auto">' + scoreMeta.homeGoals + '</span>'
+    : '';
+  var awayScoreHtml = hasScore
+    ? '<span data-scoreboard-score="away" class="mono text-[11px] font-black px-1.5 py-0.5 rounded bg-slate-900/90 border border-slate-700/70 ' + (!isFavHome ? 'text-emerald-300' : 'text-slate-300') + ' flex-shrink-0 ml-auto">' + scoreMeta.awayGoals + '</span>'
+    : '';
+
   if(window.isTrial && !isUnlocked){
-    var homeName = m.venue === "HOME" ? m.fav : m.opp;
-    var awayName = m.venue === "HOME" ? m.opp : m.fav;
-    var homeCrest = m.venue === "HOME" ? fc : oc;
-    var awayCrest = m.venue === "HOME" ? oc : fc;
-    return '<div class="flex items-center flex-wrap gap-x-2 gap-y-1.5 leading-snug">' +
-      '<span class="font-bold text-white inline-flex items-center gap-1.5">' + homeCrest + '<span>' + homeName + '</span></span>' +
-      '<span class="text-slate-500 font-semibold text-[11px]">vs</span>' +
-      '<span class="font-bold text-white inline-flex items-center gap-1.5">' + awayCrest + '<span>' + awayName + '</span></span>' +
-      '<span onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[9px] bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap shadow-sm cursor-pointer ml-auto">🔒 VIP Pick</span>' +
+    return '<div data-match-scoreboard="true" class="flex flex-col justify-center gap-1.5 min-w-0 w-full">' +
+      '<div data-scoreboard-row="home" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+        '<span data-scoreboard-crest="home" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + homeCrest + '</span>' +
+        '<span data-scoreboard-team="home" class="font-bold text-white text-[14px] leading-tight truncate">' + homeName + '</span>' +
+        '<span onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[9px] bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap shadow-sm cursor-pointer ml-auto">🔒 VIP Pick</span>' +
+      '</div>' +
+      '<div data-scoreboard-row="away" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+        '<span data-scoreboard-crest="away" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + awayCrest + '</span>' +
+        '<span data-scoreboard-team="away" class="font-bold text-white text-[14px] leading-tight truncate">' + awayName + '</span>' +
+        awayScoreHtml +
+      '</div>' +
     '</div>';
   }
-  return m.venue==="HOME"
-    ? '<div class="flex items-center flex-wrap gap-x-2 gap-y-1.5 leading-snug"><span class="font-extrabold text-white underline decoration-emerald-500/60 underline-offset-4 inline-flex items-center gap-1.5">'+fc+'<span>'+m.fav+'</span></span><span class="text-slate-500 font-semibold text-[11px]">vs</span><span class="text-slate-300 font-medium inline-flex items-center gap-1.5">'+oc+'<span>'+m.opp+'</span></span></div>'
-    : '<div class="flex items-center flex-wrap gap-x-2 gap-y-1.5 leading-snug"><span class="text-slate-300 font-medium inline-flex items-center gap-1.5">'+oc+'<span>'+m.opp+'</span></span><span class="text-slate-500 font-semibold text-[11px]">vs</span><span class="font-extrabold text-white underline decoration-indigo-400/70 underline-offset-4 inline-flex items-center gap-1.5">'+fc+'<span>'+m.fav+'</span></span></div>';
+
+  var favNameClass = 'font-extrabold text-white underline decoration-emerald-500/70 underline-offset-4 text-[14px] leading-tight truncate';
+  var oppNameClass = 'font-medium text-slate-200 text-[14px] leading-tight truncate';
+  var homeNameClass = isFavHome ? favNameClass : oppNameClass;
+  var awayNameClass = isFavHome ? oppNameClass : favNameClass;
+
+  return '<div data-match-scoreboard="true" class="flex flex-col justify-center gap-1.5 min-w-0 w-full">' +
+    '<div data-scoreboard-row="home" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+      '<span data-scoreboard-crest="home" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + homeCrest + '</span>' +
+      '<span data-scoreboard-team="home" data-favoured="' + (isFavHome ? 'true' : 'false') + '" class="' + homeNameClass + '">' + homeName + '</span>' +
+      homeScoreHtml +
+    '</div>' +
+    '<div data-scoreboard-row="away" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+      '<span data-scoreboard-crest="away" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + awayCrest + '</span>' +
+      '<span data-scoreboard-team="away" data-favoured="' + (!isFavHome ? 'true' : 'false') + '" class="' + awayNameClass + '">' + awayName + '</span>' +
+      awayScoreHtml +
+    '</div>' +
+  '</div>';
 };
 
 window.addDays = function(dateStr, days){
@@ -5374,6 +5599,18 @@ window.updateModelHeaders = function(){
     var cupXgBoost = (lgCode === "FAC") ? (0.08 + Math.max(0, tierGap) * 0.14) : 0;
     var xg = parseFloat(((1.14 + ((conf - 50) * 0.032) + (formDiff * 0.04) + cupXgBoost) * xgM).toFixed(2));
     var xga = parseFloat(Math.max(0.62, ((1.36 - ((conf - 50) * 0.019) - (formDiff * 0.02)) * (2 - xgM))).toFixed(2));
+    if (lgCode === "UNL" && window.calculateUefaNationsLeagueCalibration) {
+      var unlCal = window.calculateUefaNationsLeagueCalibration({
+        leagueId: 5,
+        leagueCode: "UNL",
+        homeTeam: hN,
+        awayTeam: aN,
+        baseHomeXg: favH ? xg : xga,
+        baseAwayXg: favH ? xga : xg
+      });
+      xg = favH ? unlCal.calibratedHomeXg : unlCal.calibratedAwayXg;
+      xga = favH ? unlCal.calibratedAwayXg : unlCal.calibratedHomeXg;
+    }
     var favShots = Math.round((conf * 0.24) + (lgCode === "FAC" ? (1.2 + Math.max(0, tierGap) * 1.6) : 0));
     var ko = "15:00";
     if(ev.date){
@@ -5388,19 +5625,719 @@ window.updateModelHeaders = function(){
     }
     var id = idNum;
     var vr = conf < 60.0 ? "High Draw / Toss-Up Risk ( Red Avoid )" : (conf < 75.0 ? (!favH ? "Away Trap Shield ( Amber Caution )" : "Competitive Matchup ( Amber Value )") : "");
-    var statTag = (lgCode === "FAC" && tierGap >= 1)
-      ? "FA Cup Divisional Mismatch & xG Edge"
-      : (favH ? "Home Fortress & xG Edge" : "Elite Away Mismatch");
+    var statTag = (lgCode === "UNL" && window.resolveFixtureRoundBadge)
+      ? window.resolveFixtureRoundBadge({ league: "UNL", homeTeam: hN, awayTeam: aN })
+      : ((lgCode === "FAC" && tierGap >= 1)
+        ? "FA Cup Divisional Mismatch & xG Edge"
+        : (favH ? "Home Fortress & xG Edge" : "Elite Away Mismatch"));
     return [id, dateStr, lgCode, venue, fav, opp, favShots, 10, 8, 16, conf, "Pending", vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), statTag, Math.round(conf)+"%", ko];
   };
 })();
+
+// UEFA Nations League (League ID 5) Multi-Tier Structure, Calibration & Standings Modal Engine
+window.UEFA_NATIONS_LEAGUE_TIERS = {
+  A: {
+    "Group 1": ["Portugal", "Croatia", "Poland", "Scotland"],
+    "Group 2": ["France", "Italy", "Belgium", "Israel"],
+    "Group 3": ["Germany", "Netherlands", "Hungary", "Bosnia and Herzegovina"],
+    "Group 4": ["Spain", "Denmark", "Switzerland", "Serbia"]
+  },
+  B: {
+    "Group 1": ["Czechia", "Ukraine", "Albania", "Georgia"],
+    "Group 2": ["England", "Greece", "Republic of Ireland", "Finland"],
+    "Group 3": ["Norway", "Austria", "Slovenia", "Kazakhstan"],
+    "Group 4": ["Wales", "Türkiye", "Iceland", "Montenegro"]
+  },
+  C: {
+    "Group 1": ["Sweden", "Slovakia", "Estonia", "Azerbaijan"],
+    "Group 2": ["Romania", "Kosovo", "Cyprus", "Lithuania"],
+    "Group 3": ["Northern Ireland", "Bulgaria", "Belarus", "Luxembourg"],
+    "Group 4": ["North Macedonia", "Armenia", "Faroe Islands", "Latvia"]
+  },
+  D: {
+    "Group 1": ["Gibraltar", "San Marino", "Liechtenstein"],
+    "Group 2": ["Moldova", "Malta", "Andorra"]
+  }
+};
+
+window.resolveNationalTeamLeagueTier = function(teamName) {
+  var key = window.normalizeOddsTeamKey ? window.normalizeOddsTeamKey(teamName) : String(teamName || "").toLowerCase();
+  var tiers = ["A", "B", "C", "D"];
+  for (var i = 0; i < tiers.length; i++) {
+    var t = tiers[i];
+    var groups = window.UEFA_NATIONS_LEAGUE_TIERS[t];
+    for (var gName in groups) {
+      var list = groups[gName];
+      for (var j = 0; j < list.length; j++) {
+        if (window.normalizeOddsTeamKey(list[j]) === key) {
+          return { tier: t, group: gName };
+        }
+      }
+    }
+  }
+  return { tier: "B", group: "Group 1" };
+};
+
+window.resolveFixtureRoundBadge = function(match) {
+  if (!match) return "Regular Season";
+  var explicitRound = String(match.round || "").trim();
+  if (explicitRound) {
+    if (/quarter[\s-]*final/i.test(explicitRound)) return "Quarter-finals";
+    if (/semi[\s-]*final/i.test(explicitRound)) return "Semi-finals";
+    if (/play[\s-]*off/i.test(explicitRound)) return "Play-offs";
+    if (/league\s+[a-d]\s*-\s*group\s+\d/i.test(explicitRound)) return explicitRound.replace(/\s+/g, " ");
+    return explicitRound;
+  }
+  var lg = String(match.league || "PL").toUpperCase();
+  if (lg === "UNL" || Number(match.leagueId) === 5) {
+    var sample = match.homeTeam || match.fav || match.awayTeam || match.opp || "";
+    if (sample) {
+      var resolved = window.resolveNationalTeamLeagueTier(sample);
+      return "League " + resolved.tier + " - " + resolved.group;
+    }
+    return "League A - Group 1";
+  }
+  if (lg === "FAC") return "FA Cup Round";
+  if (lg === "EFLC") return "EFL Cup Tie";
+  if (lg === "UCL" || lg === "UEL" || lg === "UECL") return "League Phase";
+  return "Regular Season";
+};
+
+window.calculateUefaNationsLeagueCalibration = function(input) {
+  var inp = input || {};
+  var resDiv = inp.divisionTier ? { tier: inp.divisionTier, group: "Group 1" } : window.resolveNationalTeamLeagueTier(inp.homeTeam || inp.awayTeam || "");
+  var tier = resDiv.tier;
+  var homeXg = Number.isFinite(inp.baseHomeXg) ? Number(inp.baseHomeXg) : 1.45;
+  var awayXg = Number.isFinite(inp.baseAwayXg) ? Number(inp.baseAwayXg) : 1.12;
+  var bttsProb = Number.isFinite(inp.baseBttsProb) ? Number(inp.baseBttsProb) : 54.0;
+  var over25Prob = Number.isFinite(inp.baseOver25Prob) ? Number(inp.baseOver25Prob) : 52.0;
+  var drawProb = Number.isFinite(inp.baseDrawProb) ? Number(inp.baseDrawProb) : 25.5;
+  if (tier === "A") {
+    homeXg *= 1.09; awayXg *= 1.08; bttsProb += 5.8; over25Prob += 4.6; drawProb -= 1.2;
+  } else if (tier === "B") {
+    homeXg *= 1.02; awayXg *= 1.01; bttsProb += 1.5; over25Prob += 1.2;
+  } else if (tier === "C") {
+    homeXg *= 0.91; awayXg *= 0.88; bttsProb -= 4.8; over25Prob -= 5.6; drawProb += 3.4;
+  } else {
+    homeXg *= 0.84; awayXg *= 0.81; bttsProb -= 7.5; over25Prob -= 8.4; drawProb += 5.2;
+  }
+  if (inp.isSecondFixtureOfWindow || (Number(inp.hoursSincePreviousFixture) >= 60 && Number(inp.hoursSincePreviousFixture) <= 102)) {
+    awayXg *= 0.915; homeXg *= 0.97; drawProb += 1.8;
+  }
+  return {
+    isNationsLeague: true,
+    leagueId: 5,
+    divisionTier: tier,
+    roundBadge: window.resolveFixtureRoundBadge({ league: "UNL", homeTeam: inp.homeTeam, awayTeam: inp.awayTeam, round: inp.round }),
+    calibratedHomeXg: parseFloat(homeXg.toFixed(2)),
+    calibratedAwayXg: parseFloat(awayXg.toFixed(2)),
+    totalXg: parseFloat((homeXg + awayXg).toFixed(2)),
+    bttsProb: parseFloat(bttsProb.toFixed(1)),
+    over25Prob: parseFloat(over25Prob.toFixed(1)),
+    under25Prob: parseFloat((100 - over25Prob).toFixed(1)),
+    drawProb: parseFloat(drawProb.toFixed(1))
+  };
+};
+
+window._activeStandingsComp = "PL";
+window._activeStandingsTier = "League A";
+window.STANDINGS_CACHE_KEY_PREFIX = "betboy_live_standings_2026_v3_";
+window._liveStandingsMemoryCache = {};
+window._liveStandingsInFlight = {};
+
+// Purge any legacy/stale standings caches immediately on startup so old fake tables are wiped
+(function purgeLegacyStandingsCaches() {
+  var legacyKeys = [
+    "betboy_standings_cache_v1",
+    "betboy_standings_cache_v2",
+    "betboy_live_standings_v1",
+    "betboy_live_standings_v2"
+  ];
+  legacyKeys.forEach(function(k) {
+    try { localStorage.removeItem(k); } catch (e) {}
+    try { sessionStorage.removeItem(k); } catch (e2) {}
+  });
+})();
+
+window.STANDINGS_ESPN_SLUGS = {
+  PL: "eng.1", CHA: "eng.2", L1: "eng.3", L2: "eng.4", SPL: "sco.1",
+  LL: "esp.1", BUN: "ger.1", SA: "ita.1", FL1: "fra.1",
+  UCL: "uefa.champions", UEL: "uefa.europa", UECL: "uefa.europa.conf", UNL: "uefa.nations"
+};
+
+window.getStandingsLeagueId = function(compCode) {
+  var code = String(compCode || "PL").toUpperCase();
+  return (window.API_FOOTBALL_LEAGUE_IDS && window.API_FOOTBALL_LEAGUE_IDS[code]) || 39;
+};
+
+window.getStandingsCacheKey = function(leagueId) {
+  return window.STANDINGS_CACHE_KEY_PREFIX + Number(leagueId || 39);
+};
+
+window.getActiveApiFootballKey = function() {
+  try {
+    var saved = localStorage.getItem("betboy_api_football_key_v1");
+    if (saved && String(saved).trim()) return String(saved).trim();
+  } catch (e) {}
+  if (window.API_FOOTBALL_KEY && String(window.API_FOOTBALL_KEY).trim()) {
+    return String(window.API_FOOTBALL_KEY).trim();
+  }
+  return (window.getActiveOddsApiKey ? window.getActiveOddsApiKey() : window.DEFAULT_THE_ODDS_API_KEY) || "4ac360beb7e127a1a02a9b769ecaa319";
+};
+
+window.resolveStandingsZoneIndicator = function(description, rank, totalTeams, compCode) {
+  var desc = String(description || "").toLowerCase();
+  var code = String(compCode || "PL").toUpperCase();
+  if (desc) {
+    if (desc.indexOf("relegation") !== -1) {
+      return { zoneType: "relegation", borderClass: "border-l-2 border-l-rose-500", rankTextClass: "text-rose-400 font-bold", label: description || "Relegation" };
+    }
+    if (desc.indexOf("play-off") !== -1 || desc.indexOf("playoff") !== -1 || desc.indexOf("europa") !== -1 || desc.indexOf("conference") !== -1) {
+      return { zoneType: "europa", borderClass: "border-l-2 border-l-sky-400", rankTextClass: "text-sky-300 font-bold", label: description || "Play-offs / Europa" };
+    }
+    if (desc.indexOf("champions league") !== -1 || desc.indexOf("promotion") !== -1 || desc.indexOf("quarter-final") !== -1 || desc.indexOf("round of 16") !== -1 || desc.indexOf("qualifies") !== -1) {
+      return { zoneType: "champions", borderClass: "border-l-2 border-l-emerald-500", rankTextClass: "text-emerald-400 font-black", label: description || "Qualification / Promotion" };
+    }
+  }
+  if (code === "UCL" || code === "UEL" || code === "UECL") {
+    if (rank <= 8) return { zoneType: "champions", borderClass: "border-l-2 border-l-emerald-500", rankTextClass: "text-emerald-400 font-black", label: "Round of 16 (Direct)" };
+    if (rank <= 24) return { zoneType: "europa", borderClass: "border-l-2 border-l-sky-400", rankTextClass: "text-sky-300 font-bold", label: "Knockout Play-offs" };
+    return { zoneType: "relegation", borderClass: "border-l-2 border-l-rose-500", rankTextClass: "text-rose-400 font-bold", label: "Eliminated" };
+  }
+  if (code === "CHA" || code === "L1") {
+    if (rank <= 2) return { zoneType: "champions", borderClass: "border-l-2 border-l-emerald-500", rankTextClass: "text-emerald-400 font-black", label: "Automatic Promotion" };
+    if (rank <= 6) return { zoneType: "europa", borderClass: "border-l-2 border-l-amber-400", rankTextClass: "text-amber-300 font-bold", label: "Promotion Play-offs" };
+    var relCnt = code === "L1" ? 4 : 3;
+    if (rank > totalTeams - relCnt) return { zoneType: "relegation", borderClass: "border-l-2 border-l-rose-500", rankTextClass: "text-rose-400 font-bold", label: "Relegation" };
+  } else if (code === "L2") {
+    if (rank <= 3) return { zoneType: "champions", borderClass: "border-l-2 border-l-emerald-500", rankTextClass: "text-emerald-400 font-black", label: "Automatic Promotion" };
+    if (rank <= 7) return { zoneType: "europa", borderClass: "border-l-2 border-l-amber-400", rankTextClass: "text-amber-300 font-bold", label: "Promotion Play-offs" };
+    if (rank > totalTeams - 2) return { zoneType: "relegation", borderClass: "border-l-2 border-l-rose-500", rankTextClass: "text-rose-400 font-bold", label: "Relegation" };
+  } else if (code === "SPL") {
+    if (rank <= 2) return { zoneType: "champions", borderClass: "border-l-2 border-l-emerald-500", rankTextClass: "text-emerald-400 font-black", label: "UEFA Champions League" };
+    if (rank <= 4) return { zoneType: "europa", borderClass: "border-l-2 border-l-sky-400", rankTextClass: "text-sky-300 font-bold", label: "UEFA Competitions" };
+    if (rank >= totalTeams - 1) return { zoneType: "relegation", borderClass: "border-l-2 border-l-rose-500", rankTextClass: "text-rose-400 font-bold", label: "Relegation" };
+  } else if (code === "UNL") {
+    if (rank === 1) return { zoneType: "champions", borderClass: "border-l-2 border-l-emerald-500", rankTextClass: "text-emerald-400 font-black", label: "Quarter-finals / Promotion" };
+    if (rank === 2) return { zoneType: "europa", borderClass: "border-l-2 border-l-sky-400", rankTextClass: "text-sky-300 font-bold", label: "Quarter-finals / Play-offs" };
+    if (rank === totalTeams) return { zoneType: "relegation", borderClass: "border-l-2 border-l-rose-500", rankTextClass: "text-rose-400 font-bold", label: "Relegation" };
+  } else {
+    var uclSpots = code === "FL1" ? 3 : 4;
+    if (rank <= uclSpots) return { zoneType: "champions", borderClass: "border-l-2 border-l-emerald-500", rankTextClass: "text-emerald-400 font-black", label: "UEFA Champions League" };
+    if (rank <= uclSpots + 2) return { zoneType: "europa", borderClass: "border-l-2 border-l-sky-400", rankTextClass: "text-sky-300 font-bold", label: "UEFA Europa / Conference League" };
+    if (rank > totalTeams - 3) return { zoneType: "relegation", borderClass: "border-l-2 border-l-rose-500", rankTextClass: "text-rose-400 font-bold", label: "Relegation" };
+  }
+  return { zoneType: "none", borderClass: "border-l-2 border-l-transparent", rankTextClass: "text-slate-300 font-bold", label: "Regular Season" };
+};
+
+window.renderStandingsCrestHtml = function(teamName, teamLogo) {
+  var exactKey = window.cleanCrestKey ? window.cleanCrestKey(teamName) : "";
+  if (teamLogo && exactKey) {
+    if (window.BETBOY_LOGO_CACHE) {
+      window.BETBOY_LOGO_CACHE[exactKey] = teamLogo;
+      window.BETBOY_LOGO_CACHE[String(teamName || "").trim()] = teamLogo;
+    }
+    if (window.CLUB_CREST_MAP && window.normTeamKey) {
+      window.CLUB_CREST_MAP[window.normTeamKey(teamName)] = teamLogo;
+    }
+  }
+  if (teamLogo) {
+    var fb = window.makeFallbackShieldSvg ? window.makeFallbackShieldSvg(teamName) : "";
+    var safeAlt = String(teamName || "").replace(/"/g, "&quot;");
+    return '<span class="crest-box"><img data-team-crest="' + exactKey + '" src="' + teamLogo + '" onerror="this.onerror=null;this.src=\'' + fb + '\'" alt="' + safeAlt + '"></span>';
+  }
+  return window.getClubCrestHtml(teamName);
+};
+
+window.STANDINGS_CACHE_TTL_MS = 21600000; // 6 hours
+window._standingsLastError = {};
+
+window.isValidStandingsCacheEntry = function(parsedWrapper, expectedLeagueId, expectedSeason) {
+  if (!parsedWrapper || typeof parsedWrapper !== "object") return false;
+  if (Number(parsedWrapper.leagueId) !== Number(expectedLeagueId)) return false;
+  if (expectedSeason && Number(parsedWrapper.season || 2026) !== Number(expectedSeason)) return false;
+  var ts = Number(parsedWrapper.updatedAt || 0);
+  if (!Number.isFinite(ts) || ts <= 0 || (Date.now() - ts > window.STANDINGS_CACHE_TTL_MS)) return false;
+  var data = parsedWrapper.data;
+  if (!data) return false;
+  if (data.isMultiGroup) {
+    return Array.isArray(data.groups) && data.groups.length > 0 && data.groups.every(function(g) {
+      return g && Array.isArray(g.rows) && g.rows.length > 0 && g.rows.every(function(r) {
+        return r && typeof r.team === "string" && r.team.length > 0 && Number.isFinite(Number(r.points));
+      });
+    });
+  }
+  if (!Array.isArray(data) || data.length === 0) return false;
+  return data.every(function(r) {
+    return r && typeof r.team === "string" && r.team.length > 0 && typeof r.logo === "string" && r.logo.indexOf("http") === 0 && Number.isFinite(Number(r.points));
+  });
+};
+
+window.getStandingsCacheForLeague = function(leagueId, expectedSeason) {
+  var reqSeason = Number(expectedSeason || 2026);
+  var cacheKey = window.getStandingsCacheKey(leagueId);
+  if (window._liveStandingsMemoryCache[cacheKey]) {
+    return window._liveStandingsMemoryCache[cacheKey];
+  }
+  try {
+    var sRaw = sessionStorage.getItem(cacheKey);
+    if (sRaw) {
+      var sParsed = JSON.parse(sRaw);
+      if (window.isValidStandingsCacheEntry(sParsed, leagueId, reqSeason)) {
+        window._liveStandingsMemoryCache[cacheKey] = sParsed.data;
+        return sParsed.data;
+      } else {
+        sessionStorage.removeItem(cacheKey);
+      }
+    }
+  } catch (e) {
+    try { sessionStorage.removeItem(cacheKey); } catch (eRm1) {}
+  }
+  try {
+    var lRaw = localStorage.getItem(cacheKey);
+    if (lRaw) {
+      var lParsed = JSON.parse(lRaw);
+      if (window.isValidStandingsCacheEntry(lParsed, leagueId, reqSeason)) {
+        window._liveStandingsMemoryCache[cacheKey] = lParsed.data;
+        return lParsed.data;
+      } else {
+        localStorage.removeItem(cacheKey);
+      }
+    }
+  } catch (e2) {
+    try { localStorage.removeItem(cacheKey); } catch (eRm2) {}
+  }
+  return null;
+};
+
+window.saveStandingsCacheForLeague = function(leagueId, parsedData, seasonYr) {
+  var cacheKey = window.getStandingsCacheKey(leagueId);
+  window._liveStandingsMemoryCache[cacheKey] = parsedData;
+  delete window._standingsLastError[leagueId];
+  try {
+    var str = JSON.stringify({ updatedAt: Date.now(), leagueId: Number(leagueId), season: Number(seasonYr || 2026), data: parsedData });
+    try { sessionStorage.setItem(cacheKey, str); } catch (eS) {}
+    try { localStorage.setItem(cacheKey, str); } catch (eL) {}
+  } catch (e) {}
+};
+
+// Map a single API-Football standings row (`row.rank`, `row.team.logo`, `row.team.name`, `row.all.played`, `row.all.win`, `row.all.draw`, `row.all.lose`, `row.goalsDiff`, `row.points`)
+window.mapApiFootballStandingRow = function(row, idx) {
+  var all = (row && row.all) || {};
+  var gls = all.goals || {};
+  var gf = Number(gls.for !== undefined ? gls.for : 0);
+  var ga = Number(gls.against !== undefined ? gls.against : 0);
+  var gd = (row && row.goalsDiff !== undefined && row.goalsDiff !== null)
+    ? Number(row.goalsDiff)
+    : (gf - ga);
+  var teamObj = (row && row.team) || {};
+  var teamName = String(teamObj.name || ("Team " + (idx + 1))).trim();
+  var teamLogo = String(teamObj.logo || "").trim();
+  if (teamLogo && window.cleanCrestKey && window.BETBOY_LOGO_CACHE) {
+    var cKey = window.cleanCrestKey(teamName);
+    if (cKey) window.BETBOY_LOGO_CACHE[cKey] = teamLogo;
+  }
+  return {
+    rank: Number(row && row.rank ? row.rank : (idx + 1)),
+    team: teamName,
+    logo: teamLogo,
+    played: Number(all.played !== undefined ? all.played : 0),
+    won: Number(all.win !== undefined ? all.win : 0),
+    drawn: Number(all.draw !== undefined ? all.draw : 0),
+    lost: Number(all.lose !== undefined ? all.lose : 0),
+    gf: gf,
+    ga: ga,
+    goalsDiff: gd,
+    gd: gd,
+    points: Number(row && row.points !== undefined ? row.points : 0),
+    group: String((row && row.group) || ""),
+    description: String((row && row.description) || "")
+  };
+};
+
+// Parse nested API-Football response structure:
+// - Standard leagues: data.response[0].league.standings[0]
+// - Multi-group competitions (UEFA Nations League, Id: 5): iterate through all group arrays inside data.response[0].league.standings
+window.parseApiFootballStandingsPayload = function(data, compCode, leagueId) {
+  if (!data || !Array.isArray(data.response) || !data.response.length) return null;
+  var leagueObj = data.response[0] && data.response[0].league;
+  if (!leagueObj || !Array.isArray(leagueObj.standings) || !leagueObj.standings.length) return null;
+  var code = String(compCode || "PL").toUpperCase();
+  var isMultiGroup = (Number(leagueId) === 5 || code === "UNL" || leagueObj.standings.length > 1);
+
+  if (isMultiGroup) {
+    var groupsList = [];
+    var tierMap = { A: {}, B: {}, C: {}, D: {} };
+    leagueObj.standings.forEach(function(grpArray, gIdx) {
+      if (!Array.isArray(grpArray) || !grpArray.length) return;
+      var rawGroupTitle = String((grpArray[0] && grpArray[0].group) || ("Group " + (gIdx + 1))).trim();
+      var compactMatch = rawGroupTitle.match(/^Group\s*([A-D])(\d+)$/i);
+      if (compactMatch) {
+        rawGroupTitle = "League " + compactMatch[1].toUpperCase() + " - Group " + compactMatch[2];
+      }
+      var tMatch = rawGroupTitle.match(/League\s+([A-D])/i);
+      var gMatch = rawGroupTitle.match(/Group\s+(\d+)/i);
+      var tierLetter = tMatch ? tMatch[1].toUpperCase() : "A";
+      var groupSubName = gMatch ? ("Group " + gMatch[1]) : rawGroupTitle;
+      var mappedRows = grpArray.map(window.mapApiFootballStandingRow);
+      mappedRows.sort(function(a, b) {
+        return (a.rank - b.rank) || (b.points - a.points) || (b.goalsDiff - a.goalsDiff);
+      });
+      groupsList.push({
+        group: rawGroupTitle,
+        tierLetter: tierLetter,
+        groupName: groupSubName,
+        rows: mappedRows
+      });
+      if (!tierMap[tierLetter]) tierMap[tierLetter] = {};
+      tierMap[tierLetter][groupSubName] = mappedRows;
+    });
+    if (!groupsList.length) return null;
+    return {
+      isMultiGroup: true,
+      season: Number(leagueObj.season || 2026),
+      groups: groupsList,
+      tierMap: tierMap
+    };
+  }
+
+  var rawTable = leagueObj.standings[0];
+  if (!Array.isArray(rawTable) || !rawTable.length) return null;
+  var rows = rawTable.map(window.mapApiFootballStandingRow);
+  rows.sort(function(a, b) {
+    return (a.rank - b.rank) || (b.points - a.points) || (b.goalsDiff - a.goalsDiff);
+  });
+  return rows;
+};
+
+// Live Sports Feed -> API-Football v3 Schema Bridge (ensures 100% real 2026-27 season standings & club logos even if x-apisports-key quota is unconfigured)
+window.convertLiveFeedToApiFootballSchema = function(feedJson, compCode, leagueId, seasonYr) {
+  if (!feedJson || !Array.isArray(feedJson.children) || !feedJson.children.length) return null;
+  var standingsArrays = [];
+  feedJson.children.forEach(function(child) {
+    var entries = child && child.standings && child.standings.entries;
+    if (!Array.isArray(entries) || !entries.length) return;
+    var rawGroupName = String(child.name || feedJson.name || "Regular Season").trim();
+    var compactGroupMatch = rawGroupName.match(/^Group\s*([A-D])(\d+)$/i);
+    var groupHeader = compactGroupMatch
+      ? ("League " + compactGroupMatch[1].toUpperCase() + " - Group " + compactGroupMatch[2])
+      : rawGroupName;
+
+    var groupRows = entries.map(function(entry, idx) {
+      var stMap = {};
+      if (Array.isArray(entry.stats)) {
+        entry.stats.forEach(function(s) {
+          if (s && s.name) stMap[s.name] = Number(s.value !== undefined ? s.value : s.displayValue);
+        });
+      }
+      var teamObj = entry.team || {};
+      var rawName = window.resolveApiTeamName
+        ? window.resolveApiTeamName(teamObj)
+        : (teamObj.displayName || teamObj.name || ("Team " + (idx + 1)));
+      var logoHref = (teamObj.logos && teamObj.logos[0] && teamObj.logos[0].href) || teamObj.logo || "";
+      var gf = Number.isFinite(stMap.pointsFor) ? stMap.pointsFor : 0;
+      var ga = Number.isFinite(stMap.pointsAgainst) ? stMap.pointsAgainst : 0;
+      var gd = Number.isFinite(stMap.pointDifferential) ? stMap.pointDifferential : (gf - ga);
+      var rk = Number.isFinite(stMap.rank) && stMap.rank > 0
+        ? stMap.rank
+        : ((entry.note && Number(entry.note.rank) > 0) ? Number(entry.note.rank) : (idx + 1));
+
+      return {
+        rank: rk,
+        team: {
+          id: Number(teamObj.id || (idx + 1)),
+          name: rawName,
+          logo: logoHref
+        },
+        points: Number.isFinite(stMap.points) ? stMap.points : 0,
+        goalsDiff: gd,
+        group: groupHeader,
+        description: (entry.note && entry.note.description) ? String(entry.note.description) : "",
+        all: {
+          played: Number.isFinite(stMap.gamesPlayed) ? stMap.gamesPlayed : 0,
+          win: Number.isFinite(stMap.wins) ? stMap.wins : 0,
+          draw: Number.isFinite(stMap.ties) ? stMap.ties : 0,
+          lose: Number.isFinite(stMap.losses) ? stMap.losses : 0,
+          goals: {
+            for: gf,
+            against: ga
+          }
+        }
+      };
+    });
+
+    groupRows.sort(function(a, b) {
+      return (a.rank - b.rank) || (b.points - a.points) || (b.goalsDiff - a.goalsDiff);
+    });
+    standingsArrays.push(groupRows);
+  });
+
+  if (!standingsArrays.length) return null;
+  return {
+    response: [
+      {
+        league: {
+          id: Number(leagueId),
+          name: String(feedJson.name || compCode),
+          season: Number(seasonYr || 2026),
+          standings: standingsArrays
+        }
+      }
+    ]
+  };
+};
+
+window.fetchLiveStandingsForCompetition = function(compCode) {
+  var code = String(compCode || "PL").toUpperCase();
+  var leagueId = window.getStandingsLeagueId(code);
+  if (window._liveStandingsInFlight[leagueId]) {
+    return window._liveStandingsInFlight[leagueId];
+  }
+
+  var apiKey = window.getActiveApiFootballKey();
+  var reqHeaders = { "x-apisports-key": apiKey };
+
+  var fetchStandingsForSeason = function(seasonYr) {
+    var standingsUrl = "https://v3.football.api-sports.io/standings?league=" + leagueId + "&season=" + seasonYr;
+    return window.fetchJsonWithFallback(standingsUrl, { headers: reqHeaders })
+      .then(function(json) {
+        return window.parseApiFootballStandingsPayload(json, code, leagueId);
+      })
+      .catch(function() { return null; });
+  };
+
+  var detectActiveSeasonFromApiFootball = function() {
+    var leaguesUrl = "https://v3.football.api-sports.io/leagues?id=" + leagueId + "&current=true";
+    return window.fetchJsonWithFallback(leaguesUrl, { headers: reqHeaders })
+      .then(function(json) {
+        if (!json || !Array.isArray(json.response) || !json.response.length) return null;
+        var seasons = json.response[0] && json.response[0].seasons;
+        if (!Array.isArray(seasons) || !seasons.length) return null;
+        var currentObj = seasons.find(function(s) { return s && s.current === true; }) || seasons[seasons.length - 1];
+        return (currentObj && currentObj.year) ? Number(currentObj.year) : null;
+      })
+      .catch(function() { return null; });
+  };
+
+  var fetchLive2026Bridge = function() {
+    var slug = window.STANDINGS_ESPN_SLUGS[code] || "eng.1";
+    var liveStandingsUrl = "https://site.api.espn.com/apis/v2/sports/soccer/" + slug + "/standings";
+    return window.fetchJsonWithFallback(liveStandingsUrl)
+      .then(function(feedJson) {
+        var normalizedApiFootballPayload = window.convertLiveFeedToApiFootballSchema(feedJson, code, leagueId, 2026);
+        return window.parseApiFootballStandingsPayload(normalizedApiFootballPayload, code, leagueId);
+      })
+      .catch(function() { return null; });
+  };
+
+  var job = fetchStandingsForSeason(2026)
+    .then(function(res2026) {
+      if (res2026) return res2026;
+      // Dynamic season detection: query /leagues?id={leagueId}&current=true if season=2026 returns empty response
+      return detectActiveSeasonFromApiFootball().then(function(activeYear) {
+        if (activeYear && activeYear !== 2026) {
+          return fetchStandingsForSeason(activeYear);
+        }
+        return null;
+      });
+    })
+    .then(function(apiRes) {
+      if (apiRes) return apiRes;
+      return fetchLive2026Bridge();
+    })
+    .then(function(liveData) {
+      delete window._liveStandingsInFlight[leagueId];
+      if (liveData) {
+        window.saveStandingsCacheForLeague(leagueId, liveData, 2026);
+        if (window._activeStandingsComp === code) {
+          window.renderStandingsModalContent(true);
+        }
+      } else {
+        window._standingsLastError[leagueId] = "Live standings feed temporarily unreachable. Please check your connection and tap Retry.";
+        if (window._activeStandingsComp === code) {
+          window.renderStandingsModalContent(true);
+        }
+      }
+      return liveData;
+    })
+    .catch(function() {
+      delete window._liveStandingsInFlight[leagueId];
+      window._standingsLastError[leagueId] = "Live standings feed temporarily unreachable. Please check your connection and tap Retry.";
+      if (window._activeStandingsComp === code) {
+        window.renderStandingsModalContent(true);
+      }
+      return null;
+    });
+
+  window._liveStandingsInFlight[leagueId] = job;
+  return job;
+};
+
+window.openStandingsModal = function(compCode, tierName) {
+  window._activeStandingsComp = String(compCode || "PL").toUpperCase();
+  if (tierName) window._activeStandingsTier = tierName;
+  var modal = document.getElementById("standingsTableModal");
+  if (modal) modal.style.display = "flex";
+  var compTabsEl = document.getElementById("standingsCompTabs");
+  if (compTabsEl && window._activeStandingsComp === "PL") compTabsEl.scrollLeft = 0;
+  window.renderStandingsModalContent(false);
+};
+
+window.closeStandingsModal = function() {
+  var modal = document.getElementById("standingsTableModal");
+  if (modal) modal.style.display = "none";
+};
+
+window.selectStandingsTier = function(tierName) {
+  window._activeStandingsTier = tierName || "League A";
+  window.renderStandingsModalContent(true);
+};
+
+window.renderStandingsModalContent = function(skipRemoteFetch) {
+  var comp = window._activeStandingsComp || "PL";
+  var leagueId = window.getStandingsLeagueId(comp);
+  var isUnl = comp === "UNL" || Number(leagueId) === 5;
+  var titleEl = document.getElementById("standingsTableModalTitle");
+  var logoEl = document.getElementById("standingsModalLogo");
+  var tierBar = document.getElementById("standingsTierTabsBar");
+  var countBadge = document.getElementById("standingsTeamCountBadge");
+  var container = document.getElementById("standingsTablesContainer");
+  if (!container) return;
+
+  if (titleEl) {
+    titleEl.textContent = isUnl
+      ? "UEFA Nations League — Standings (2026-27)"
+      : (window.getLeagueName(comp) + " — League Table (2026-27)");
+  }
+  if (logoEl && window.LEAGUE_LOGOS && window.LEAGUE_LOGOS[comp]) {
+    logoEl.src = window.LEAGUE_LOGOS[comp];
+  }
+
+  var compBtns = document.querySelectorAll("[data-standings-comp]");
+  for (var cIdx = 0; cIdx < compBtns.length; cIdx++) {
+    var bComp = compBtns[cIdx].getAttribute("data-standings-comp");
+    compBtns[cIdx].className = bComp === comp
+      ? "px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-sky-600 text-white cursor-pointer transition whitespace-nowrap flex-shrink-0"
+      : "px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-slate-900 text-slate-300 border border-slate-700 cursor-pointer transition whitespace-nowrap flex-shrink-0";
+  }
+
+  if (tierBar) {
+    tierBar.style.display = isUnl ? "grid" : "none";
+    var tierBtns = tierBar.querySelectorAll("[data-standings-tier]");
+    for (var tIdx = 0; tIdx < tierBtns.length; tIdx++) {
+      var bTier = tierBtns[tIdx].getAttribute("data-standings-tier");
+      tierBtns[tIdx].className = bTier === window._activeStandingsTier
+        ? "py-1.5 rounded-lg text-[11px] font-black bg-emerald-600 text-white shadow cursor-pointer transition"
+        : "py-1.5 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white cursor-pointer transition";
+    }
+  }
+
+  var cachedEntry = window.getStandingsCacheForLeague(leagueId, 2026);
+  if (!skipRemoteFetch) {
+    delete window._standingsLastError[leagueId];
+    window.fetchLiveStandingsForCompetition(comp);
+  }
+
+  if (!cachedEntry) {
+    var errMsg = window._standingsLastError && window._standingsLastError[leagueId];
+    if (errMsg && !window._liveStandingsInFlight[leagueId]) {
+      if (countBadge) countBadge.textContent = "Offline / Retry";
+      container.innerHTML = '<div data-standings-error="true" class="bg-slate-950/90 border border-rose-500/40 rounded-2xl p-6 text-center space-y-3">' +
+        '<div class="text-xs font-bold text-rose-400">' + errMsg + '</div>' +
+        '<button type="button" onclick="window.openStandingsModal(\'' + comp + '\')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black cursor-pointer transition">🔄 Retry Live Sync</button>' +
+      '</div>';
+      return;
+    }
+    if (countBadge) countBadge.textContent = "Syncing Live 2026-27...";
+    container.innerHTML = '<div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-6 text-center space-y-2">' +
+      '<div class="text-xs font-bold text-emerald-400 animate-pulse">Fetching live 2026-27 standings from API-Football...</div>' +
+      '<div class="text-[10px] text-slate-400 font-mono">GET /standings?league=' + leagueId + '&season=2026</div>' +
+    '</div>';
+    return;
+  }
+
+  if (isUnl || (cachedEntry && cachedEntry.isMultiGroup)) {
+    var tierLetter = String(window._activeStandingsTier || "League A").replace(/^League\s+/i, "").trim().toUpperCase() || "A";
+    var allGroups = Array.isArray(cachedEntry.groups) ? cachedEntry.groups : [];
+    var filteredGroups = allGroups.filter(function(g) { return g.tierLetter === tierLetter; });
+    if (!filteredGroups.length) filteredGroups = allGroups;
+
+    var totalUnlTeamsInTier = 0;
+    var html = "";
+    filteredGroups.forEach(function(grpObj) {
+      var groupTeams = grpObj.rows || [];
+      totalUnlTeamsInTier += groupTeams.length;
+      var badgeLabel = grpObj.group || ("League " + tierLetter + " - " + grpObj.groupName);
+      html += '<div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">' +
+        '<div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">' +
+          '<span class="text-xs font-black text-sky-300">' + badgeLabel + '</span>' +
+          '<span class="text-[9.5px] text-slate-400 font-mono">' + groupTeams.length + ' Nations</span>' +
+        '</div>' +
+        '<div class="overflow-x-auto"><table class="w-full text-left text-[11px]">' +
+          '<thead class="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm"><tr class="text-[9.5px] text-slate-400 uppercase border-b border-slate-800/80"><th class="py-1.5 pl-2 pr-2">#</th><th class="py-1.5">NATION</th><th class="py-1.5 text-center">P</th><th class="py-1.5 text-center">W</th><th class="py-1.5 text-center">D</th><th class="py-1.5 text-center">L</th><th class="py-1.5 text-center">GD</th><th class="py-1.5 pr-2 text-right">PTS</th></tr></thead><tbody>';
+      groupTeams.forEach(function(row, idx) {
+        var rank = Number(row.rank || idx + 1);
+        var gd = Number(row.goalsDiff !== undefined ? row.goalsDiff : (row.gd || 0));
+        var zone = window.resolveStandingsZoneIndicator(row.description || "", rank, groupTeams.length, "UNL");
+        html += '<tr class="border-b border-slate-900/80 last:border-0 ' + zone.borderClass + '">' +
+          '<td class="py-1.5 pl-2 pr-2 mono ' + zone.rankTextClass + '">' + rank + '</td>' +
+          '<td class="py-1.5 font-bold text-white flex items-center gap-1.5 min-w-0 max-w-[155px] sm:max-w-none">' + window.renderStandingsCrestHtml(row.team, row.logo) + '<span class="truncate block">' + row.team + '</span></td>' +
+          '<td class="py-1.5 text-center mono text-slate-300">' + row.played + '</td>' +
+          '<td class="py-1.5 text-center mono text-slate-300">' + row.won + '</td>' +
+          '<td class="py-1.5 text-center mono text-slate-300">' + row.drawn + '</td>' +
+          '<td class="py-1.5 text-center mono text-slate-300">' + row.lost + '</td>' +
+          '<td class="py-1.5 text-center mono text-slate-300">' + (gd > 0 ? "+" + gd : gd) + '</td>' +
+          '<td class="py-1.5 pr-2 text-right mono font-black text-emerald-400">' + row.points + '</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table></div></div>';
+    });
+    if (countBadge) countBadge.textContent = "League " + tierLetter + " • " + totalUnlTeamsInTier + " Nations";
+    container.innerHTML = html;
+    return;
+  }
+
+  var fullRows = Array.isArray(cachedEntry) ? cachedEntry : [];
+  var totalCount = fullRows.length;
+  if (countBadge) countBadge.textContent = totalCount + " Clubs";
+
+  var domHtml = '<div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">' +
+    '<div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5 gap-2 flex-wrap">' +
+      '<span class="text-xs font-black text-emerald-400">' + window.getLeagueName(comp) + '</span>' +
+      '<div class="flex items-center gap-2 text-[9px] font-bold text-slate-400">' +
+        '<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>UCL / Promo</span>' +
+        '<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>Play-offs / UEL</span>' +
+        '<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>Relegation</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="overflow-x-auto"><table class="w-full text-left text-[11px]">' +
+      '<thead class="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm"><tr class="text-[9.5px] text-slate-400 uppercase border-b border-slate-800/80"><th class="py-1.5 pl-2 pr-2">#</th><th class="py-1.5">CLUB</th><th class="py-1.5 text-center">P</th><th class="py-1.5 text-center">W</th><th class="py-1.5 text-center">D</th><th class="py-1.5 text-center">L</th><th class="py-1.5 text-center">GD</th><th class="py-1.5 pr-2 text-right">PTS</th></tr></thead><tbody>';
+
+  fullRows.forEach(function(row, idx) {
+    var rank = Number(row.rank || idx + 1);
+    var zone = window.resolveStandingsZoneIndicator(row.description, rank, totalCount, comp);
+    var gd = Number(row.goalsDiff !== undefined ? row.goalsDiff : (row.gd || 0));
+    domHtml += '<tr class="border-b border-slate-900/80 last:border-0 ' + zone.borderClass + '">' +
+      '<td class="py-1.5 pl-2 pr-2 mono ' + zone.rankTextClass + '">' + rank + '</td>' +
+      '<td class="py-1.5 font-bold text-white flex items-center gap-1.5 min-w-0 max-w-[155px] sm:max-w-none">' + window.renderStandingsCrestHtml(row.team, row.logo) + '<span class="truncate block">' + row.team + '</span></td>' +
+      '<td class="py-1.5 text-center mono text-slate-300">' + row.played + '</td>' +
+      '<td class="py-1.5 text-center mono text-slate-300">' + row.won + '</td>' +
+      '<td class="py-1.5 text-center mono text-slate-300">' + row.drawn + '</td>' +
+      '<td class="py-1.5 text-center mono text-slate-300">' + row.lost + '</td>' +
+      '<td class="py-1.5 text-center mono text-slate-300">' + (gd > 0 ? "+" + gd : gd) + '</td>' +
+      '<td class="py-1.5 pr-2 text-right mono font-black text-emerald-400">' + row.points + '</td>' +
+    '</tr>';
+  });
+  domHtml += '</tbody></table></div></div>';
+  container.innerHTML = domHtml;
+};
 
 // Hardcoded fallback fixtures removed: Banker Slip and fixture feed strictly use real fixtures for the selected date
 window.buildDeterministicFallbackSlate = function(){
   return [];
 };
 
-// Live ESPN Scoreboard, Schedule & Live Odds Sync across all 14 Competitions (including Emirates FA Cup & Scottish Premiership)
+// Live ESPN Scoreboard, Schedule & Live Odds Sync across all 15 Competitions (including UEFA Nations League, Emirates FA Cup & Scottish Premiership)
 (function(){
   window.fetchedDatesMap = {};
   window.inFlightDatesMap = {};
@@ -5418,7 +6355,8 @@ window.buildDeterministicFallbackSlate = function(){
     {s:"sco.1",c:"SPL",apiFootballId:179,oddsSportKey:"soccer_spl"},
     {s:"uefa.champions",c:"UCL",apiFootballId:2,oddsSportKey:"soccer_uefa_champs_league"},
     {s:"uefa.europa",c:"UEL",apiFootballId:3,oddsSportKey:"soccer_uefa_europa_league"},
-    {s:"uefa.europa.conf",c:"UECL",apiFootballId:848,oddsSportKey:"soccer_uefa_europa_conference_league"}
+    {s:"uefa.europa.conf",c:"UECL",apiFootballId:848,oddsSportKey:"soccer_uefa_europa_conference_league"},
+    {s:"uefa.nations",c:"UNL",apiFootballId:5,season:2026,oddsSportKey:"soccer_uefa_nations_league"}
   ];
 
   window.fetchAllLeaguesForDate = function(dateStr, force){
@@ -5437,7 +6375,7 @@ window.buildDeterministicFallbackSlate = function(){
         .then(function(d){
           if(!d) return;
           anyFetchOk = true;
-          if(d.leagues && d.leagues[0] && d.leagues[0].logos && d.leagues[0].logos[0] && d.leagues[0].logos[0].href){
+          if(lg.c !== "UNL" && d.leagues && d.leagues[0] && d.leagues[0].logos && d.leagues[0].logos[0] && d.leagues[0].logos[0].href){
             var officialLogoHref = d.leagues[0].logos[0].href;
             if(window.LEAGUE_LOGOS[lg.c] !== officialLogoHref){
               window.LEAGUE_LOGOS[lg.c] = officialLogoHref;
@@ -5549,6 +6487,14 @@ window.buildDeterministicFallbackSlate = function(){
         seenClubs[c2] = true;
         dedupedCol.push(r);
       });
+      var lgOrder = window.ALL_LEAGUES || ["PL","CHA","L1","L2","FAC","EFLC","LL","BUN","FL1","SA","SPL","UCL","UEL","UECL","UNL"];
+      dedupedCol.sort(function(a, b){
+        var idxA = lgOrder.indexOf(String(a[2] || "PL"));
+        var idxB = lgOrder.indexOf(String(b[2] || "PL"));
+        if(idxA === -1) idxA = 99;
+        if(idxB === -1) idxB = 99;
+        return idxA - idxB;
+      });
       if(dedupedCol.length > 0 || anyFetchOk || !window.DAILY_FIXTURES[dateStr]){
         window.DAILY_FIXTURES[dateStr] = dedupedCol;
         window.safeSet("airp_live_espn_fixtures_v21", window.DAILY_FIXTURES);
@@ -5607,6 +6553,26 @@ window.getLiveMatchState = function(m){
   var v = window.apiLiveScores || {};
   var api = v["id_" + m.id] || v[window.normTeamKey(hName) + "_" + m.date];
   if(api && api.ko) m.ko = api.ko;
+window.buildInPlayStatusPillHtml = function(rawClockOrStatus) {
+  var raw = String(rawClockOrStatus || "LIVE").trim();
+  if (/\bht\b|half[\s-]*time/i.test(raw)) {
+    return '<span data-card-status-pill="ht" class="text-[10px] bg-amber-500/20 border border-amber-400/60 text-amber-300 px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1.5 shadow-[0_0_10px_rgba(245,158,11,0.3)]"><span class="text-amber-400 animate-pulse drop-shadow-[0_0_5px_rgba(251,191,36,0.95)] leading-none">●</span><span>HT</span></span>';
+  }
+  var minMatch = raw.match(/(\d+(?:\+\d+)?\s*')/);
+  var cleanClock = minMatch
+    ? minMatch[1].replace(/\s+/g, "")
+    : raw
+        .replace(/<[^>]*>/g, " ")
+        .replace(/•.*$/, "")
+        .replace(/\(.*?\)/g, "")
+        .replace(/\b\d+\s*-\s*\d+\b/g, "")
+        .replace(/\blive\b/gi, "")
+        .replace(/[●•]/g, "")
+        .trim();
+  var liveLabel = cleanClock ? ("LIVE " + cleanClock) : "LIVE";
+  return '<span data-card-status-pill="live" class="text-[10px] bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.38)]"><span class="text-emerald-400 animate-pulse drop-shadow-[0_0_6px_rgba(52,211,153,0.95)] leading-none">●</span><span>' + liveLabel + '</span></span>';
+};
+
   var koStr = m.ko || "19:45";
 
   var customVal = window.customResults && window.customResults[m.id];
@@ -5617,7 +6583,7 @@ window.getLiveMatchState = function(m){
       return {
         isLive: true,
         displayStatus: "LIVE " + clk + " (" + liveSc + ")",
-        badgeHtml: '<span class="live-blue-flash text-[9px] px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>LIVE ' + clk + ' • ' + liveSc + '</span>'
+        badgeHtml: window.buildInPlayStatusPillHtml(clk)
       };
     }
     return { isLive: false, displayStatus: customVal, badgeHtml: "" };
@@ -5634,14 +6600,14 @@ window.getLiveMatchState = function(m){
       return {
         isLive: true,
         displayStatus: "LIVE " + clk + " (" + sc + ")",
-        badgeHtml: '<span class="live-blue-flash text-[9px] px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>LIVE ' + clk + ' • ' + sc + '</span>'
+        badgeHtml: window.buildInPlayStatusPillHtml(clk)
       };
     }
   }
   return {
     isLive: false,
     displayStatus: "KO " + koStr,
-    badgeHtml: '<span class="text-[9px] bg-slate-800/90 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded-md mono">🕒 KO ' + koStr + '</span>'
+    badgeHtml: '<span data-card-status-pill="ko" class="text-[10px] bg-slate-900/90 border border-slate-700/70 text-slate-300 px-2 py-0.5 rounded-md mono font-semibold">KO ' + koStr + '</span>'
   };
 };
 
@@ -7035,7 +8001,14 @@ window.getMarketPopularityRank = function(marketName, teamSide){
 
 window.sortMatchMarkets = function(markets, sortMode){
   var mode = (sortMode === "odds" || sortMode === "popular" || sortMode === "confidence") ? sortMode : "confidence";
+  var getSettledRank = function(item){
+    if(item.w === null || item.w === undefined) return 0; // Active unsettled at top
+    if(item.w === true) return 1; // Settled WON (✓ LANDED) next
+    return 2; // Settled LOST (✗ SETTLED) at very bottom
+  };
   return (markets || []).slice().sort(function(a, b){
+    var settledDiff = getSettledRank(a) - getSettledRank(b);
+    if(settledDiff !== 0) return settledDiff;
     var probA = parseFloat(String(a.p).replace("%", "")) || 0;
     var probB = parseFloat(String(b.p).replace("%", "")) || 0;
     var oddsA = Number(a.odds) || 1.0;
@@ -7622,7 +8595,7 @@ window.fetchLiveMatchHighlights = function(matchId, showToast, e){
   var lgSlugMap = {
     PL:"eng.1", FAC:"eng.fa", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
     LL:"esp.1", SA:"ita.1", BUN:"ger.1", FL1:"fra.1",
-    UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf"
+    UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf", UNL:"uefa.nations"
   };
   var slug = lgSlugMap[m.league] || "eng.1";
   var statusEl = document.getElementById("hlSourceBadge-" + matchId);
@@ -7642,8 +8615,7 @@ window.fetchLiveMatchHighlights = function(matchId, showToast, e){
     return;
   }
 
-  fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/" + slug + "/summary?event=" + m.id)
-    .then(function(r){ return r.ok ? r.json() : null; })
+  window.fetchJsonWithFallback("https://site.api.espn.com/apis/site/v2/sports/soccer/" + slug + "/summary?event=" + m.id)
     .then(function(d){
       var extracted = [];
       if(d){
@@ -8072,15 +9044,14 @@ window.fetchLiveMatchTimeline = function(matchId, showToast, e){
   var lgSlugMap = {
     PL:"eng.1", FAC:"eng.fa", SPL:"sco.1", CHA:"eng.2", L1:"eng.3", L2:"eng.4", EFLC:"eng.league_cup",
     LL:"esp.1", SA:"ita.1", BUN:"ger.1", FL1:"fra.1",
-    UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf"
+    UCL:"uefa.champions", UEL:"uefa.europa", UECL:"uefa.europa.conf", UNL:"uefa.nations"
   };
   var slug = lgSlugMap[m.league] || "eng.1";
   var isHomeFav = m.venue === "HOME";
   var homeName = isHomeFav ? m.fav : m.opp;
   var homeKey = window.normTeamKey(homeName);
 
-  fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/" + slug + "/summary?event=" + m.id)
-    .then(function(r){ return r.ok ? r.json() : null; })
+  window.fetchJsonWithFallback("https://site.api.espn.com/apis/site/v2/sports/soccer/" + slug + "/summary?event=" + m.id)
     .then(function(d){
       if(d && Array.isArray(d.keyEvents) && d.keyEvents.length > 0){
         var parsedEvs = [];
@@ -8919,6 +9890,14 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var isD1x2Sel = window.betSlip.indexOf(m.fav + " " + dMktName) !== -1;
   var isA1x2Sel = window.betSlip.indexOf(m.fav + " " + aMktName) !== -1;
 
+  var getTrafficProbTextCls = function(pctVal){
+    var num = parseFloat(String(pctVal || "0").replace("%", "")) || 0;
+    return num >= 75 ? "text-emerald-400" : (num >= 60 ? "text-amber-400" : "text-rose-400");
+  };
+  var h1x2Color = getTrafficProbTextCls(outright.homePct || 60.0);
+  var d1x2Color = getTrafficProbTextCls(outright.drawPct || 22.0);
+  var a1x2Color = getTrafficProbTextCls(outright.awayPct || 18.0);
+
   var outright1x2StripHtml = '<div class="mb-2.5 bg-slate-950/85 border border-slate-800/90 rounded-xl p-2">' +
     '<div class="flex items-center justify-between gap-1 text-[8.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-0.5 whitespace-nowrap overflow-hidden">' +
       '<span class="truncate">⚽ FULL-TIME RESULT (1X2)</span>' +
@@ -8927,15 +9906,15 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     '<div class="grid grid-cols-3 gap-1.5">' +
       '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
         '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center flex-wrap gap-1 leading-tight">' + homeCrest + '<span>' + (outright.homeName || m.fav) + '</span>' + (outright.homeWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[10px] text-emerald-400 mono">' + (outright.homePct || "60.0") + '%</b></div>' +
+        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[10px] ' + h1x2Color + ' mono">' + (outright.homePct || "60.0") + '%</b></div>' +
       '</div>' +
       '<div id="' + d1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + d1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isD1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
         '<span class="text-[9.5px] font-extrabold text-slate-200 inline-flex items-center justify-center gap-1 leading-tight">🤝 Draw' + (outright.drawWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[10px] text-amber-300 mono">' + (outright.drawPct || "22.0") + '%</b></div>' +
+        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[10px] ' + d1x2Color + ' mono">' + (outright.drawPct || "22.0") + '%</b></div>' +
       '</div>' +
       '<div id="' + a1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + a1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isA1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
         '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center flex-wrap gap-1 leading-tight">' + awayCrest + '<span>' + (outright.awayName || m.opp) + '</span>' + (outright.awayWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[10px] text-sky-300 mono">' + (outright.awayPct || "18.0") + '%</b></div>' +
+        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[10px] ' + a1x2Color + ' mono">' + (outright.awayPct || "18.0") + '%</b></div>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -8957,31 +9936,71 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     }).join("") +
   '</div>';
 
-  var mktLegendHtml = '<div style="font-size: 10px; text-transform: uppercase; color: #9ca3af; padding: 0 8px;" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-1.5 select-none font-bold tracking-wider">' +
-    '<div class="flex items-center justify-between"><span>MARKET SELECTION</span><span>ODDS &nbsp;|&nbsp; AI PROB.</span></div>' +
-    '<div class="hidden sm:flex items-center justify-between"><span>MARKET SELECTION</span><span>ODDS &nbsp;|&nbsp; AI PROB.</span></div>' +
+  var mktLegendHtml = '<div style="font-size: 10px; text-transform: uppercase; color: #9ca3af; padding: 0 8px;" class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1.5 select-none font-bold tracking-wider">' +
+    '<div class="flex items-center justify-between"><span>MARKET SELECTION</span><span class="grid grid-cols-[58px_56px] gap-1.5 text-right"><span class="text-center">ODDS</span><span class="text-right">AI PROB.</span></span></div>' +
+    '<div class="hidden md:flex items-center justify-between"><span>MARKET SELECTION</span><span class="grid grid-cols-[58px_56px] gap-1.5 text-right"><span class="text-center">ODDS</span><span class="text-right">AI PROB.</span></span></div>' +
   '</div>';
 
-  var g = filteredMarkets.map(function(x, mIdx){
-    var p = +x.p, c = p >= 75 ? "text-emerald-400 border-emerald-500/30 bg-emerald-950/40" : (p >= 60 ? "text-amber-400 border-amber-500/30 bg-slate-900/80" : "text-sky-300 border-slate-700/70 bg-slate-900/70");
-    var lockThisMarket = isTr && x.vip;
-    var r = (!lockThisMarket && x.w === true)
-      ? ' <span class="inline-flex items-center px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-black ml-1">✓ WON</span>'
-      : ((!lockThisMarket && x.w === false)
-          ? ' <span class="inline-flex items-center px-1 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[9px] font-black ml-1">✗</span>'
-          : '');
-    var statPillHtml = (!lockThisMarket && x.statBadge)
-      ? ' <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[8.5px] font-mono font-bold ml-1">' + x.statBadge + '</span>'
-      : '';
-    var crestPrefix = "";
-    if(x.teamSide === "fav") crestPrefix = favCrest;
-    else if(x.teamSide === "opp") crestPrefix = oppCrest;
+  var renderLeft28pxSlotHtml = function(mktItem){
+    var baseSlotCls = "market-left-icon-slot w-7 h-7 min-w-[28px] min-h-[28px] rounded-full flex items-center justify-center flex-shrink-0";
+    if(mktItem.teamSide === "fav" && favCrest){
+      return '<div class="' + baseSlotCls + ' bg-slate-900/95 border border-slate-700/80 overflow-hidden">' + favCrest + '</div>';
+    }
+    if(mktItem.teamSide === "opp" && oppCrest){
+      return '<div class="' + baseSlotCls + ' bg-slate-900/95 border border-slate-700/80 overflow-hidden">' + oppCrest + '</div>';
+    }
+    var lowName = String(mktItem.n || "").toLowerCase();
+    if(/\b(1st\s*half|first\s*half|2nd\s*half|half)\b/i.test(lowName)){
+      return '<div class="' + baseSlotCls + ' bg-purple-500/15 border border-purple-500/35 text-purple-300 text-[12px]">⏱️</div>';
+    }
+    if(lowName.indexOf("corner") !== -1){
+      return '<div class="' + baseSlotCls + ' bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[12px]">🚩</div>';
+    }
+    if(lowName.indexOf("card") !== -1){
+      return '<div class="' + baseSlotCls + ' bg-yellow-500/15 border border-yellow-500/35 text-yellow-300 text-[12px]">🟨</div>';
+    }
+    if(mktItem.teamSide === "draw" || lowName === "match result: draw"){
+      return '<div class="' + baseSlotCls + ' bg-slate-800/90 border border-slate-700 text-slate-200 text-[12px]">🤝</div>';
+    }
+    return '<div class="' + baseSlotCls + ' bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[12px]">⚽</div>';
+  };
 
-    var displayTitle = crestPrefix
-      ? ('<span class="inline-flex items-center gap-1">' + crestPrefix + '<span>' + x.n + '</span></span>')
-      : x.n;
-    var labelSafe = lockThisMarket ? String(x.n).replace(m.fav, "🔒 VIP Pick").replace(m.opp, "🔒 VIP Pick") : displayTitle;
-    
+  var g = filteredMarkets.map(function(x, mIdx){
+    var p = +x.p;
+    var lockThisMarket = isTr && x.vip;
+    var isSettledWon = !lockThisMarket && x.w === true;
+    var isSettledLost = !lockThisMarket && x.w === false;
+
+    // 5. Sync Traffic-Light Probability Colors (Green 75%+, Amber 60-74.9%, Red/Coral <60%)
+    var probTextColorCls = p >= 75 ? "text-emerald-400" : (p >= 60 ? "text-amber-400" : "text-rose-400");
+    var cardThemeCls = p >= 75
+      ? "border-emerald-500/35 bg-emerald-950/35"
+      : (p >= 60
+          ? "border-amber-500/35 bg-slate-900/85"
+          : "border-rose-500/30 bg-slate-900/80");
+
+    if(isSettledWon){
+      cardThemeCls = "border-emerald-400/80 bg-emerald-950/55 shadow-[0_0_14px_rgba(16,185,129,0.22)]";
+    } else if(isSettledLost){
+      cardThemeCls = "border-rose-500/35 bg-slate-950/75 opacity-55";
+    }
+
+    var settledBadgeHtml = isSettledWon
+      ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/25 text-emerald-300 border border-emerald-400/60 text-[8.5px] font-black tracking-wide whitespace-nowrap flex-shrink-0">✓ LANDED</span>'
+      : (isSettledLost
+          ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-black tracking-wide whitespace-nowrap flex-shrink-0">✗ SETTLED</span>'
+          : '');
+
+    var rawTrackerText = (!lockThisMarket && x.statBadge) ? x.statBadge : ("🕒 KO " + (m.ko || "15:00"));
+    var trackerPillHtml = '<span data-market-tracker-pill="true" class="inline-flex items-center px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[8.5px] font-mono font-bold whitespace-nowrap">' + rawTrackerText + '</span>';
+
+    var cleanTitleText = lockThisMarket
+      ? String(x.n).replace(m.fav, "🔒 VIP Pick").replace(m.opp, "🔒 VIP Pick")
+      : String(x.n);
+    var safeAttrTitle = cleanTitleText.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+
+    var leftSlotHtml = renderLeft28pxSlotHtml(x);
+
     var elId = 'm-' + m.id + '-' + activeCat + '-' + mIdx;
     var betId = m.fav + " " + x.n;
     var isSel = window.betSlip.indexOf(betId) !== -1;
@@ -9000,17 +10019,34 @@ window.render31PointPanel = function(m, adm, isUnlocked){
       seed: m.id
     };
 
-    var clickHandler = lockThisMarket 
-        ? 'onclick="event.stopPropagation();window.exitTrialToSubscribe()"'
-        : 'onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + elId + '\', event)"';
+    var clickHandler = lockThisMarket
+      ? 'onclick="event.stopPropagation();window.exitTrialToSubscribe()"'
+      : (isSettledLost
+          ? 'onclick="event.stopPropagation()" aria-disabled="true"'
+          : 'onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + elId + '\', event)"');
 
-    var hoverClass = lockThisMarket ? 'cursor-pointer' : 'cursor-pointer hover:border-emerald-400 transition';
+    var hoverClass = isSettledLost
+      ? 'cursor-not-allowed'
+      : (lockThisMarket ? 'cursor-pointer' : 'cursor-pointer hover:border-emerald-400 transition');
+
+    var oddsBtnCls = isSettledLost
+      ? "min-w-[58px] text-center justify-center inline-flex items-center text-[9.5px] bg-slate-950/60 text-slate-500 border border-slate-800 px-1.5 py-1 rounded font-mono font-bold line-through"
+      : "min-w-[58px] text-center justify-center inline-flex items-center text-[9.5px] bg-slate-950/95 text-amber-300 border border-amber-500/30 px-1.5 py-1 rounded font-mono font-bold";
 
     var rightHtml = lockThisMarket
-      ? '<b onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[11px] mono flex-shrink-0 trial-blur-sm cursor-pointer">88.5%</b>'
-      : '<div class="flex items-center gap-1 flex-shrink-0"><span class="text-[9px] bg-slate-950/90 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(x.odds, false) + '</span><b class="text-[11px] mono">' + x.p + '%</b></div>';
+      ? '<div class="grid grid-cols-[58px_56px] items-center gap-1.5 flex-shrink-0"><span class="' + oddsBtnCls + ' trial-blur-sm">1.85</span><b onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="min-w-[56px] text-right text-[11px] mono ' + probTextColorCls + ' trial-blur-sm cursor-pointer">88.5%</b></div>'
+      : '<div class="grid grid-cols-[58px_56px] items-center gap-1.5 flex-shrink-0"><span class="' + oddsBtnCls + '">' + window.formatOdds(x.odds, false) + '</span><b class="min-w-[56px] text-right text-[11px] font-black mono ' + probTextColorCls + '">' + x.p + '%</b></div>';
 
-    return '<div id="' + elId + '" ' + clickHandler + ' class="p-2.5 rounded-xl border ' + c + ' ' + hoverClass + ' ' + selClass + ' flex justify-between items-center gap-1 shadow-sm"><span class="text-[10px] text-white font-bold flex items-center flex-wrap gap-1 min-w-0">'+labelSafe+statPillHtml+r+'</span>'+rightHtml+'</div>';
+    return '<div id="' + elId + '" ' + clickHandler + ' class="standardized-market-row py-2.5 px-2.5 min-h-[54px] rounded-xl border ' + cardThemeCls + ' ' + hoverClass + ' ' + selClass + ' flex justify-between items-center gap-2 shadow-sm">' +
+      '<div class="flex items-center gap-2.5 min-w-0 flex-1">' +
+        leftSlotHtml +
+        '<div data-market-text-container="true" class="flex flex-col justify-center flex-1 min-w-0 pr-2 gap-1">' +
+          '<div data-market-selection-title="true" title="' + safeAttrTitle + '" class="text-xs sm:text-sm text-white font-bold leading-snug break-words">' + cleanTitleText + '</div>' +
+          '<div class="flex items-center flex-wrap gap-1.5 min-w-0 leading-none mt-0.5">' + trackerPillHtml + settledBadgeHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+      rightHtml +
+    '</div>';
   }).join("");
 
   var trialCta = isTr
@@ -9039,7 +10075,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
       outright1x2StripHtml +
       catTabsHtml +
       mktLegendHtml +
-      '<div id="mktGrid-' + m.id + '" class="grid grid-cols-1 sm:grid-cols-2 gap-2">' + g + '</div>' +
+      '<div id="mktGrid-' + m.id + '" class="grid grid-cols-1 md:grid-cols-2 gap-2">' + g + '</div>' +
       trialCta +
     '</div>' +
   '</div>';
@@ -9297,16 +10333,19 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   }
 
   var statusBadge = "";
-  if(m.isLive && m.liveBadge){
-    statusBadge = m.liveBadge;
+  if(m.isLive){
+    var isHtNow = Boolean((liveStats && liveStats.isHT) || /\bht\b|half[\s-]*time/i.test(String(m.actual || "") + " " + String(m.liveBadge || "")));
+    statusBadge = window.buildInPlayStatusPillHtml
+      ? window.buildInPlayStatusPillHtml(isHtNow ? "HT" : (m.actual || m.liveBadge || "LIVE"))
+      : (m.liveBadge || '<span data-card-status-pill="live" class="text-[10px] bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1.5"><span class="text-emerald-400 animate-pulse leading-none">●</span><span>LIVE</span></span>');
   } else if(isSettledFT){
     if(mainPredWonState === true){
-      statusBadge = '<span data-card-ft-badge="won" class="text-[10px] bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md font-bold mono">✓ FT ' + ftScoreDisplay + ' (Won)</span>';
+      statusBadge = '<span data-card-ft-badge="won" data-card-status-pill="ft" class="text-[10px] bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md font-bold mono">FT</span>';
     } else {
-      statusBadge = '<span data-card-ft-badge="lost" class="text-[10px] bg-rose-500/15 border border-rose-500/40 text-rose-300 px-2 py-0.5 rounded-md font-bold mono">✗ FT ' + ftScoreDisplay + ' (Lost)</span>';
+      statusBadge = '<span data-card-ft-badge="lost" data-card-status-pill="ft" class="text-[10px] bg-rose-500/15 border border-rose-500/40 text-rose-300 px-2 py-0.5 rounded-md font-bold mono">FT</span>';
     }
   } else {
-    statusBadge = '<span class="text-[10px] bg-slate-900/90 border border-slate-700/70 text-slate-300 px-2 py-0.5 rounded-md mono font-semibold">🕒 KO ' + (m.ko||"15:00") + '</span>';
+    statusBadge = '<span data-card-status-pill="ko" class="text-[10px] bg-slate-900/90 border border-slate-700/70 text-slate-300 px-2 py-0.5 rounded-md mono font-semibold">KO ' + (m.ko||"15:00") + '</span>';
   }
 
   var sampleBadge = isFreeSample ? '<span class="text-[8px] px-2 py-0.5 rounded-full font-black bg-emerald-500 text-slate-900 flex-shrink-0">🎁 FREE SAMPLE</span>' : '';
@@ -9328,7 +10367,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     ? 'VIP Pick'
     : ((m && m.fav) ? (m.fav + ' to Win') : 'Top AI Pick');
 
-  var marketSubHtml = '<span data-card-confidence-sublabel="' + m.id + '" class="text-[9px] font-semibold text-slate-300 leading-snug block text-right mt-1 whitespace-normal break-words max-w-[145px] sm:max-w-[205px]" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
+  var marketSubHtml = '<span data-card-confidence-sublabel="' + m.id + '" class="text-[9px] font-semibold text-slate-300 leading-snug block text-right mt-1 truncate max-w-[140px] sm:max-w-[190px]" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
 
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
@@ -9360,11 +10399,16 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
         ? 'border-emerald-500/55 bg-emerald-950/35 hover:bg-emerald-950/55 text-emerald-200'
         : 'border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300');
 
+  var quickPlusBadgeClass = (topMktWonState === false)
+    ? 'w-5 h-5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-xs font-bold flex-shrink-0 leading-none'
+    : 'w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-xs font-bold flex-shrink-0 leading-none';
+
   var quickAddCardBtn = (!isTrLocked && topCardMkt)
     ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[10.5px] font-bold border ' + quickBtnThemeClass + ' transition cursor-pointer min-w-0 ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add ★ AI BEST PICK to Betting Slip">' +
-        '<span class="flex items-center gap-1.5 min-w-0 flex-wrap text-left">' +
+        '<span class="flex items-center gap-1.5 min-w-0 flex-1 text-left">' +
           '<span data-ai-best-pick-badge="true" class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[8.5px] font-black uppercase tracking-wider flex-shrink-0">★ AI BEST PICK</span>' +
-          '<span data-quick-bet-market-name="true" class="whitespace-normal break-words text-left leading-snug font-extrabold">➕ ' + fullQuickBetMarketLabel + '</span>' +
+          '<span data-quick-bet-plus-badge="true" class="' + quickPlusBadgeClass + '">+</span>' +
+          '<span data-quick-bet-market-name="true" class="truncate text-left leading-snug font-extrabold">' + fullQuickBetMarketLabel + '</span>' +
         '</span>' +
         '<span class="inline-flex items-center gap-1 flex-shrink-0 ml-auto pl-2">' +
           '<b class="text-amber-300 mono text-[11px] font-black">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
@@ -9384,25 +10428,38 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     '</div>' +
   '</div>';
 
+  var roundBadgeLabel = window.resolveFixtureRoundBadge ? window.resolveFixtureRoundBadge(m) : 'Regular Season';
+  var showRoundBadge = Boolean(roundBadgeLabel && String(roundBadgeLabel).trim() !== '' && !/^regular\s+season$/i.test(String(roundBadgeLabel).trim()));
+  var roundBadgeHtml = showRoundBadge
+    ? '<span data-round-badge="' + roundBadgeLabel + '" class="text-[9px] bg-sky-950/90 text-sky-300 border border-sky-500/30 px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 truncate max-w-[115px]">' + roundBadgeLabel + '</span>'
+    : '';
+
+  var parsedHomeGoals = rawScoreMatch ? parseInt(rawScoreMatch[1], 10) : null;
+  var parsedAwayGoals = rawScoreMatch ? parseInt(rawScoreMatch[2], 10) : null;
+  var scoreMeta = {
+    isLiveOrFT: Boolean(m.isLive || isSettledFT),
+    homeGoals: parsedHomeGoals,
+    awayGoals: parsedAwayGoals
+  };
+
   return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="fixture-card match-card glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer' + isExp + '">' +
-    '<div class="flex justify-between items-start gap-3">' +
-      '<div class="flex-1 min-w-0 space-y-2">' +
-        '<div class="flex items-center gap-1.5 flex-wrap">' +
-          '<span class="text-[10px] font-black ' + txt + ' mono">#' + (i+1) + '</span>' +
-          '<span class="text-[10px] bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 rounded-md font-semibold inline-flex items-center gap-1.5 truncate">' + window.getLeagueLogo(m.league,true) + ' <span class="truncate">' + window.getLeagueName(m.league) + '</span></span>' +
-          '<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 ' + (m.venue==="HOME"?"bg-emerald-950/90 text-emerald-300":"bg-indigo-950/90 text-indigo-300") + '">' + (m.venue==="HOME"?"🏠 HOME":"✈️ AWAY") + '</span>' +
-          sampleBadge +
-        '</div>' +
-        '<div class="text-[15px]">' + window.formatMatchTeams(m, isUnlocked) + '</div>' +
+    '<div data-card-header-row="true" class="flex items-center justify-between whitespace-nowrap gap-1.5 min-w-0">' +
+      '<div class="flex items-center gap-1.5 min-w-0 overflow-hidden">' +
+        '<span class="text-[10px] font-black ' + txt + ' mono flex-shrink-0">#' + (i+1) + '</span>' +
+        '<span class="text-[10px] bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 rounded-md font-semibold inline-flex items-center gap-1.5 min-w-0 truncate">' + window.getLeagueLogo(m.league,true) + ' <span class="truncate">' + window.getLeagueName(m.league) + '</span></span>' +
+        roundBadgeHtml +
+        '<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 ' + (m.venue==="HOME"?"bg-emerald-950/90 text-emerald-300":"bg-indigo-950/90 text-indigo-300") + '">' + (m.venue==="HOME"?"🏠 HOME":"✈️ AWAY") + '</span>' +
+        sampleBadge +
       '</div>' +
-      '<div class="flex flex-col items-end justify-between flex-shrink-0 text-right space-y-1.5">' +
-        statusBadge +
-        '<div class="flex flex-col items-end gap-0.5">' +
-          aiConfidenceMicroLabel +
-          pctDisplay +
-          '<div class="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1"><div class="h-full ' + bar + ' rounded-full transition-all duration-700" style="width:' + w + '%"></div></div>' +
-          marketSubHtml +
-        '</div>' +
+      '<div class="flex items-center flex-shrink-0">' + statusBadge + '</div>' +
+    '</div>' +
+    '<div data-card-middle-row="true" class="flex items-center justify-between gap-3 mt-2.5 min-h-[56px]">' +
+      '<div class="flex-1 min-w-0 text-[14px]">' + window.formatMatchTeams(m, isUnlocked, scoreMeta) + '</div>' +
+      '<div class="flex flex-col items-end justify-center flex-shrink-0 text-right gap-0.5">' +
+        aiConfidenceMicroLabel +
+        pctDisplay +
+        '<div class="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-0.5"><div class="h-full ' + bar + ' rounded-full transition-all duration-700" style="width:' + w + '%"></div></div>' +
+        marketSubHtml +
       '</div>' +
     '</div>' +
     expandBar + window.render31PointPanel(m, adminCtrlHtml, isUnlocked) + '</div>';
