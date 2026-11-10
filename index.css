@@ -1,0 +1,18 @@
+html, body {
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
+}
+
+#greenResults,
+#amberResults,
+#redResults,
+#topAccaSlipList {
+  overflow-anchor: none;
+}
+
+.fixture-card,
+.match-card {
+  contain: layout paint;
+  min-height: 140px;
+  overflow-anchor: none;
+}

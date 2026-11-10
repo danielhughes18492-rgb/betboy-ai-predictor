@@ -103,119 +103,43 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     };
 
     window.purgeAllBrowserCachesAndReload = function(reasonTag, shouldUnregisterSw) {
-      if (window._betboyReloadingNow) return Promise.resolve(false);
-      var guardKey = 'betboy_sw_autoreload_' + String(reasonTag || CURRENT_BUILD_VERSION);
-      try {
-        if (sessionStorage.getItem(guardKey) === '1') {
-          return Promise.resolve(false);
-        }
-        sessionStorage.setItem(guardKey, '1');
-      } catch (e) {}
-      window._betboyReloadingNow = true;
-
-      var unregisterPromise = shouldUnregisterSw
-        ? window.unregisterAllServiceWorkersCleanly(window._swRegistration)
-        : Promise.resolve();
-
       var clearPromise = ('caches' in window && caches && typeof caches.keys === 'function')
         ? caches.keys().then(function(keys) {
             return Promise.all(keys.map(function(k) { return caches.delete(k); }));
           }).catch(function() {})
         : Promise.resolve();
 
-      return Promise.all([unregisterPromise, clearPromise]).then(function() {
-        window.location.reload();
-        return true;
+      return clearPromise.then(function() {
+        // Hard page reloads (window.location.reload) are permanently disabled so background
+        // Service Worker updates and cache cleanups never interrupt browsing or trigger reload loops.
+        return false;
       });
     };
 
     window.checkIosSafariSwUpdate = function() {
-      var swCheckUrl = '/sw.js?check=' + Date.now();
-      return fetch(swCheckUrl, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      })
-        .then(function(res) {
-          if (!res || !res.ok) return '';
-          return res.text();
-        })
-        .then(function(swScriptText) {
-          if (!swScriptText) return false;
-          var newByteHash = window.computeSwScriptByteHash(swScriptText);
-          var remoteSwVersion = window.extractSwBuildVersionFromScript(swScriptText);
-          var prevByteHash = window._swScriptByteHash || '';
-          if (!prevByteHash) {
-            try { prevByteHash = localStorage.getItem(SW_BYTE_HASH_STORAGE_KEY) || ''; } catch (e) {}
-          }
-          var versionChanged = !!(remoteSwVersion && remoteSwVersion !== CURRENT_BUILD_VERSION);
-          var byteHashChanged = !!(prevByteHash && newByteHash !== prevByteHash);
-
-          window._swScriptByteHash = newByteHash;
-          try { localStorage.setItem(SW_BYTE_HASH_STORAGE_KEY, newByteHash); } catch (e) {}
-
-          if (versionChanged || byteHashChanged) {
-            var reason = versionChanged ? ('sw_ver_' + remoteSwVersion) : ('sw_hash_' + newByteHash);
-            return window.purgeAllBrowserCachesAndReload(reason, true);
-          }
-          return false;
-        })
-        .catch(function() {
-          return false;
-        });
+      if (window._swRegistration && typeof window._swRegistration.update === 'function') {
+        try { window._swRegistration.update().catch(function() {}); } catch (e) {}
+      }
+      return Promise.resolve(false);
     };
 
     window.checkLiveAppVersionAndUpdate = function() {
       if (window._swRegistration && typeof window._swRegistration.update === 'function') {
         try { window._swRegistration.update().catch(function() {}); } catch (e) {}
       }
-      var swPromise = window.checkIosSafariSwUpdate();
-      var checkUrl = '/index.html?t=' + Date.now();
-      var htmlPromise = fetch(checkUrl, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      })
-        .then(function(res) {
-          if (!res || !res.ok) return '';
-          return res.text();
-        })
-        .then(function(htmlText) {
-          if (!htmlText) return false;
-          var match = htmlText.match(/<meta\s+name=["']betboy-build-version["']\s+content=["']([^"']+)["']/i);
-          var remoteVersion = match && match[1] ? match[1].trim() : '';
-          if (remoteVersion && remoteVersion !== CURRENT_BUILD_VERSION) {
-            return window.purgeAllBrowserCachesAndReload('ver_' + remoteVersion, true);
-          }
-          return false;
-        })
-        .catch(function() {
-          return false;
-        });
-      return Promise.all([swPromise, htmlPromise]).then(function(results) {
-        return !!(results[0] || results[1]);
-      });
+      return Promise.resolve(false);
     };
 
     if ('serviceWorker' in navigator) {
-      var hadControllerOnBoot = !!navigator.serviceWorker.controller;
-
+      // Do NOT call window.location.reload() on controllerchange or SW messages;
+      // background Service Worker updates take over silently without reloading the screen.
       navigator.serviceWorker.addEventListener('controllerchange', function() {
-        if (hadControllerOnBoot) {
-          window.purgeAllBrowserCachesAndReload('ctrl_' + CURRENT_BUILD_VERSION, false);
-        }
+        window._swControllerUpdatedSilently = true;
       });
 
       navigator.serviceWorker.addEventListener('message', function(event) {
-        if (event && event.data && event.data.type === 'FORCE_RELOAD') {
-          var incomingVer = event.data.version || 'force';
-          if (incomingVer !== CURRENT_BUILD_VERSION || event.data.hadStaleCache) {
-            window.purgeAllBrowserCachesAndReload('msg_' + incomingVer, false);
-          }
+        if (event && event.data && (event.data.type === 'SW_ACTIVATED_SILENT' || event.data.type === 'FORCE_RELOAD')) {
+          window._swLastSilentVersion = event.data.version || CURRENT_BUILD_VERSION;
         }
       });
 
@@ -224,7 +148,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           .register('/sw.js?v=20261110-v3', { updateViaCache: 'none' })
           .then(function(registration) {
             window._swRegistration = registration;
-            try { registration.update().catch(function() {}); } catch (e) {}
 
             if (registration.waiting) {
               try { registration.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
@@ -234,16 +157,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               var newWorker = registration.installing;
               if (!newWorker) return;
               newWorker.addEventListener('statechange', function() {
-                if (newWorker.state === 'installed' && hadControllerOnBoot) {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   try { newWorker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
-                  window.purgeAllBrowserCachesAndReload('installed_' + CURRENT_BUILD_VERSION, false);
                 }
               });
             });
           })
           .catch(function() {});
-
-        window.checkLiveAppVersionAndUpdate();
       };
 
       if (document.readyState === 'complete' || document.readyState === 'interactive') {
@@ -251,31 +171,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       } else {
         window.addEventListener('load', registerAndCheckSw);
       }
-
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-          window.checkIosSafariSwUpdate();
-          window.checkLiveAppVersionAndUpdate();
-        }
-      });
-
-      window.addEventListener('focus', function() {
-        window.checkIosSafariSwUpdate();
-        window.checkLiveAppVersionAndUpdate();
-      });
-
-      window.addEventListener('pageshow', function(event) {
-        if (event && event.persisted) {
-          window.checkIosSafariSwUpdate();
-          window.checkLiveAppVersionAndUpdate();
-        }
-      });
-
-      setInterval(function() {
-        if (document.visibilityState === 'visible') {
-          window.checkIosSafariSwUpdate();
-        }
-      }, 60000);
     }
   })();
 </script>
@@ -286,20 +181,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script id="paypalSdkScript" src="https://www.paypal.com/sdk/js?client-id=BAADksjqqj_-OlL0WyIWeLi-OsBQitWr5HEZIwiAolAd8jaIc6iADWKnMud_yHL1-NrR2HiQJoIn4u475E&vault=true&intent=subscription" data-sdk-integration-source="button-factory"></script>
 <style>
   html, body {
+    overscroll-behavior-y: none;
+    overflow-x: hidden;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 36px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
   }
-  body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 36px); }
+  body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 36px); overscroll-behavior-y: none; overflow-x: hidden; }
   header.sticky, #topAppHeader {
     padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
   }
 
-  /* 1. Stop fixture cards from jittering/snapping on load */
+  /* 1. Stop fixture cards from jittering/snapping on load or live score refresh */
+  #greenResults, #amberResults, #redResults, #topAccaSlipList {
+    overflow-anchor: none;
+  }
   .fixture-card, .match-card {
     contain: layout paint;
     min-height: 140px;
+    overflow-anchor: none;
   }
 
   /* Ensure team crests and logos reserve their space immediately */
@@ -359,7 +260,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   @keyframes expandDetails { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
   @keyframes slipBounce { 0% { transform: translate(-50%, 0) scale(1); } 40% { transform: translate(-50%, -4px) scale(1.03); } 100% { transform: translate(-50%, 0) scale(1); } }
   .slip-pop-anim { animation: slipBounce 0.36s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  #greenResults > div, #amberResults > div, #redResults > div { animation: fadeSlideUp 0.32s cubic-bezier(0.16,1,0.3,1) both; }
+  #greenResults > div, #amberResults > div, #redResults > div { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   #greenResults > div:hover, #amberResults > div:hover, #redResults > div:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.18) !important; box-shadow: 0 14px 34px -6px rgba(0, 0, 0, 0.6); }
   div[id^="d-"] {
     display: block !important;
@@ -1206,11 +1107,8 @@ window.setupHomeScreenAppIcons = function(){
     manifestLink.href = "data:application/manifest+json," + JSON.stringify(window.PWA_MANIFEST_CONFIG);
     document.head.appendChild(manifestLink);
   }
-  if("serviceWorker" in navigator && window.location && (window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")){
-    window.addEventListener("load", function(){
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function(){});
-    });
-  }
+  // Service Worker registration is handled once in the top <head> script with ?v=20261110-v3
+  // to avoid duplicate SW registrations with differing script URLs causing controllerchange loops.
 };
 window.setupHomeScreenAppIcons();
 document.addEventListener("DOMContentLoaded", function(){
@@ -11623,7 +11521,7 @@ window.runEngine = function(isForcedSync){
 
     var topCombOdds = 1;
     if(sortedBankerPairs.length){
-      slipList.innerHTML = sortedBankerPairs.map(function(pair, idx){
+      var slipHtmlItems = sortedBankerPairs.map(function(pair, idx){
         var m = pair.m;
         var bestM = pair.bestM;
         var stLow = (m.actual || "").toLowerCase();
@@ -11723,7 +11621,11 @@ window.runEngine = function(isForcedSync){
             '<span class="text-[10px] text-slate-200 font-semibold text-right ml-auto">★ ' + (bestM ? cleanMarketName + ' (<b class="text-amber-300 mono">' + window.formatOdds(bestM.odds, false) + '</b>)' : '') + marketTick + '</span>' +
           '</div>' +
         '</div>';
-      }).join("");
+      });
+      var nextSlipHtml = slipHtmlItems.join("");
+      if(slipList.innerHTML !== nextSlipHtml){
+        slipList.innerHTML = nextSlipHtml;
+      }
       var topBadge = document.getElementById("topAccaCombinedOddsBadge");
       if(topBadge){
         var foldLabel = sortedBankerPairs.length + "-Fold";
@@ -11742,7 +11644,10 @@ window.runEngine = function(isForcedSync){
     } else {
       var topBadgeEmpty = document.getElementById("topAccaCombinedOddsBadge");
       if(topBadgeEmpty) topBadgeEmpty.innerText = "0-Fold";
-      slipList.innerHTML = '<div class="text-slate-500 text-xs">No fixtures available for this date/filter.</div>';
+      var emptySlipHtml = '<div class="text-slate-500 text-xs">No fixtures available for this date/filter.</div>';
+      if(slipList.innerHTML !== emptySlipHtml){
+        slipList.innerHTML = emptySlipHtml;
+      }
     }
   }
 
@@ -11790,12 +11695,84 @@ window.runEngine = function(isForcedSync){
     return window.isAdmin ? '<div class="pt-1.5 mt-1.5 border-t border-slate-800 flex items-center justify-between flex-wrap gap-1"><span class="text-emerald-300 font-bold">Admin Live Override:</span><div class="flex gap-1"><button onclick="window.promptLiveScore(' + id + ',event)" class="bg-sky-700 px-2 py-0.5 rounded text-white font-bold cursor-pointer">⚽ Set Live Score</button><button onclick="window.setMatchResult(' + id + ',\'Pending\',event)" class="bg-slate-700 px-2 py-0.5 rounded text-white cursor-pointer">Reset to Auto-Tracker</button></div></div>' : "";
   };
 
-  document.getElementById("greenResults").innerHTML = greens.length ? greens.map(function(m,i){return window.renderBasicCleanCard(m,i,'green',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Green Picks (' + gThresh + '%+) for selected competitions on this date.</p>';
-  document.getElementById("amberResults").innerHTML = ambers.length ? ambers.map(function(m,i){return window.renderBasicCleanCard(m,i,'amber',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Amber Picks (' + aThresh + '–' + (gThresh - 0.1).toFixed(1) + '%) for selected competitions on this date.</p>';
-  
+  window.patchBracketCardsInPlace = window.patchBracketCardsInPlace || function(containerEl, items, tierType, emptyHtml, getAdminCtrl){
+    if(!containerEl) return;
+    if(!items || !items.length){
+      if(containerEl.innerHTML !== emptyHtml){
+        containerEl.innerHTML = emptyHtml;
+      }
+      return;
+    }
+    Array.from(containerEl.children).forEach(function(ch){
+      if(!ch.id || ch.id.indexOf("cardWrap-") !== 0){
+        containerEl.removeChild(ch);
+      }
+    });
+    var wantedIds = {};
+    items.forEach(function(m){ wantedIds["cardWrap-" + m.id] = true; });
+    Array.from(containerEl.children).forEach(function(ch){
+      if(ch.id && !wantedIds[ch.id]){
+        containerEl.removeChild(ch);
+      }
+    });
+    var scratch = document.createElement("div");
+    items.forEach(function(m, i){
+      var cardId = "cardWrap-" + m.id;
+      var cardHtml = window.renderBasicCleanCard(m, i, tierType, getAdminCtrl(m.id));
+      scratch.innerHTML = cardHtml;
+      var nextCardEl = scratch.firstElementChild;
+      if(!nextCardEl) return;
+
+      var existingEl = null;
+      for(var cIdx = 0; cIdx < containerEl.children.length; cIdx++){
+        if(containerEl.children[cIdx].id === cardId){
+          existingEl = containerEl.children[cIdx];
+          break;
+        }
+      }
+
+      if(existingEl){
+        if(existingEl.className !== nextCardEl.className){
+          existingEl.className = nextCardEl.className;
+        }
+        if(existingEl.innerHTML !== nextCardEl.innerHTML){
+          existingEl.innerHTML = nextCardEl.innerHTML;
+        }
+        var refAtPos = containerEl.children[i] || null;
+        if(refAtPos !== existingEl){
+          containerEl.insertBefore(existingEl, refAtPos);
+        }
+      } else {
+        var refInsert = containerEl.children[i] || null;
+        containerEl.insertBefore(nextCardEl, refInsert);
+      }
+    });
+  };
+
+  window.patchBracketCardsInPlace(
+    document.getElementById("greenResults"),
+    greens,
+    "green",
+    '<p class="text-xs text-slate-500">No Green Picks (' + gThresh + '%+) for selected competitions on this date.</p>',
+    adminResControls
+  );
+  window.patchBracketCardsInPlace(
+    document.getElementById("amberResults"),
+    ambers,
+    "amber",
+    '<p class="text-xs text-slate-500">No Amber Picks (' + aThresh + '–' + (gThresh - 0.1).toFixed(1) + '%) for selected competitions on this date.</p>',
+    adminResControls
+  );
+
   var redResContainer = document.getElementById("redResults");
   if(redResContainer){
-    redResContainer.innerHTML = reds.length ? reds.map(function(m,i){return window.renderBasicCleanCard(m,i,'red',adminResControls(m.id));}).join("") : '<p class="text-xs text-slate-500">No Red Picks (&lt;' + aThresh + '%) for selected competitions on this date.</p>';
+    window.patchBracketCardsInPlace(
+      redResContainer,
+      reds,
+      "red",
+      '<p class="text-xs text-slate-500">No Red Picks (&lt;' + aThresh + '%) for selected competitions on this date.</p>',
+      adminResControls
+    );
     if(redResContainer.parentElement) redResContainer.parentElement.style.display = "block";
   }
 
@@ -11841,8 +11818,6 @@ window.runEngine = function(isForcedSync){
       ufs.classList.remove("hidden");
     }
   }
-
-  window.scrollTo(scrollX, scrollY);
 };
 
 window.centerActiveDateTab = function(smooth){

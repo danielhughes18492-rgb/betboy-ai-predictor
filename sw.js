@@ -10,17 +10,23 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      let hadExistingCaches = false;
       try {
         const keys = await caches.keys();
-        hadExistingCaches = keys.length > 0;
-        await Promise.all(keys.map((key) => caches.delete(key)));
+        await Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+            return Promise.resolve(false);
+          })
+        );
       } catch (err) {}
 
       try {
         await self.clients.claim();
       } catch (err) {}
 
+      // Silent takeover: never call client.navigate() or force a hard page reload while the user is browsing
       try {
         const windowClients = await self.clients.matchAll({
           type: 'window',
@@ -29,19 +35,12 @@ self.addEventListener('activate', (event) => {
         for (const client of windowClients) {
           try {
             client.postMessage({
-              type: 'FORCE_RELOAD',
+              type: 'SW_ACTIVATED_SILENT',
               version: SW_BUILD_VERSION,
               cacheVersion: CACHE_VERSION,
-              hadStaleCache: hadExistingCaches,
+              reloadDisabled: true,
             });
           } catch (e) {}
-          if (hadExistingCaches) {
-            try {
-              if (typeof client.navigate === 'function' && client.url) {
-                await client.navigate(client.url);
-              }
-            } catch (e) {}
-          }
         }
       } catch (err) {}
     })()
@@ -62,6 +61,17 @@ self.addEventListener('fetch', (event) => {
   const path = url.pathname.toLowerCase();
   const dest = (req.destination || '').toLowerCase();
   const accept = (req.headers.get('accept') || '').toLowerCase();
+
+  // Pass through background live score and odds polling silently without caching or navigation side effects
+  if (
+    url.origin !== self.location.origin ||
+    path.startsWith('/api/')
+  ) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   // Strict Network-First for all HTML, JS, and CSS requests
   const isHtmlOrDoc =
@@ -100,4 +110,3 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
   );
 });
-
