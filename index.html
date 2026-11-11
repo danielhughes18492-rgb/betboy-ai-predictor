@@ -26,41 +26,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:title" content="BetBoy AI Predictor">
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
-<link rel="manifest" href='data:application/manifest+json,{
-  "name": "BetBoy AI: Football Predictions",
-  "short_name": "BetBoy AI",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0a0f1d",
-  "theme_color": "#0a0f1d",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "https://www.betboyai.co.uk/pwa-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://www.betboyai.co.uk/pwa-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
-}'>
+<link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta name="betboy-build-version" content="20261110-v3">
+<meta name="betboy-build-version" content="20261111-v1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261110-v3';
-    var SW_SCRIPT_URL = '/sw.js?v=20261110-v3';
+    var CURRENT_BUILD_VERSION = '20261111-v1';
+    var SW_SCRIPT_URL = '/sw.js?v=20261111-v1';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -145,7 +123,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       var registerAndCheckSw = function() {
         navigator.serviceWorker
-          .register('/sw.js?v=20261110-v3', { updateViaCache: 'none' })
+          .register('/sw.js?v=20261111-v1', { updateViaCache: 'none' })
           .then(function(registration) {
             window._swRegistration = registration;
 
@@ -605,7 +583,7 @@ window.renderSlipModalBookmakerButtonsHtml = function() {
     brandBadgeBg: "#002b5c",
     brandText: "#ffffff"
   };
-  var slipButtonUrl = "https://bfpartners.click/o/wJQgDI?lpage=CveKm2&site_id=117689";
+  var slipButtonUrl = window.BETFRED_BETTING_SLIP_BUTTON_URL || "https://bfpartners.click/o/wJQgDI?lpage=CveKm2&site_id=117689";
   var hooks = window.BOOKMAKER_SLIP_HOOKS || {};
   var brandBg = p.brandBg || p.brandBadgeBg || "#002b5c";
   var brandText = p.brandText || "#ffffff";
@@ -657,7 +635,7 @@ window.renderBackThisPickAffiliateBar = function(contextLabel) {
     brandBg: "#002b5c",
     brandBadgeBg: "#002b5c"
   };
-  var pickUrl = "https://bfpartners.click/o/wJQgDI?lpage=CveKm2&site_id=117689";
+  var pickUrl = window.BETFRED_BETTING_SLIP_BUTTON_URL || "https://bfpartners.click/o/wJQgDI?lpage=CveKm2&site_id=117689";
   var accent = p.accentColor || "#00529b";
   var brandBg = p.brandBg || p.brandBadgeBg || "#002b5c";
   var logoUrl = p.logoUrl || window.makeBookmakerFallbackSvg("betfred");
@@ -819,14 +797,14 @@ window.safeSet = function(k, val) {
   try { localStorage.setItem(k, JSON.stringify(val)); } catch(e) {}
 };
 
-// Circular BetBoy AI Predictor Shield Logo
+// Circular BetBoy AI Predictor Shield Logo (Full-Bleed 100% Circle, No White Outer Border)
 window.makeBetBoyLogoSvg = function() {
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 500 500">' +
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">' +
     '<defs>' +
       '<radialGradient id="bbBg" cx="50%" cy="50%" r="50%">' +
-        '<stop offset="0%" stop-color="#0a1329"/>' +
-        '<stop offset="75%" stop-color="#040914"/>' +
-        '<stop offset="100%" stop-color="#02040a"/>' +
+        '<stop offset="0%" stop-color="#0e1a33"/>' +
+        '<stop offset="65%" stop-color="#081220"/>' +
+        '<stop offset="100%" stop-color="#060d13"/>' +
       '</radialGradient>' +
       '<linearGradient id="bbRing" x1="0%" y1="0%" x2="100%" y2="100%">' +
         '<stop offset="0%" stop-color="#22c55e"/>' +
@@ -834,8 +812,8 @@ window.makeBetBoyLogoSvg = function() {
         '<stop offset="100%" stop-color="#0ea5e9"/>' +
       '</linearGradient>' +
       '<linearGradient id="bbShield" x1="0%" y1="0%" x2="0%" y2="100%">' +
-        '<stop offset="0%" stop-color="#0d1b36"/>' +
-        '<stop offset="100%" stop-color="#050b16"/>' +
+        '<stop offset="0%" stop-color="#0e1e3b"/>' +
+        '<stop offset="100%" stop-color="#060d17"/>' +
       '</linearGradient>' +
       '<linearGradient id="bbPill" x1="0%" y1="0%" x2="100%" y2="0%">' +
         '<stop offset="0%" stop-color="#10b981"/>' +
@@ -843,15 +821,15 @@ window.makeBetBoyLogoSvg = function() {
         '<stop offset="100%" stop-color="#0284c7"/>' +
       '</linearGradient>' +
     '</defs>' +
-    '<rect width="500" height="500" rx="110" fill="#02040a"/>' +
-    '<circle cx="250" cy="250" r="236" fill="url(#bbBg)" stroke="url(#bbRing)" stroke-width="14"/>' +
-    '<path d="M250,52 L412,115 V255 C412,355 335,425 250,455 C165,425 88,355 88,255 V115 Z" fill="url(#bbShield)" stroke="url(#bbRing)" stroke-width="9" stroke-linejoin="round"/>' +
-    '<path d="M188,125 L215,82 L250,108 L285,82 L312,125 Z" fill="#fbbf24"/>' +
-    '<path d="M122,208 L194,160 L255,192 L362,114" fill="none" stroke="#29b6f6" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<circle cx="362" cy="114" r="16" fill="#2dd4bf"/>' +
-    '<text x="250" y="272" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="82" fill="#ffffff" text-anchor="middle" letter-spacing="1">BET<tspan fill="#2dd4bf">BOY</tspan></text>' +
-    '<rect x="122" y="302" width="256" height="62" rx="31" fill="url(#bbPill)"/>' +
-    '<text x="250" y="342" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="25.5" fill="#020617" text-anchor="middle" letter-spacing="2.5">AI PREDICTOR</text>' +
+    '<rect width="512" height="512" fill="#060d13"/>' +
+    '<circle cx="256" cy="256" r="246" fill="url(#bbBg)" stroke="url(#bbRing)" stroke-width="16"/>' +
+    '<path d="M256,56 L418,120 V260 C418,360 342,430 256,460 C170,430 94,360 94,260 V120 Z" fill="url(#bbShield)" stroke="url(#bbRing)" stroke-width="10" stroke-linejoin="round"/>' +
+    '<path d="M194,130 L221,87 L256,113 L291,87 L318,130 Z" fill="#fbbf24"/>' +
+    '<path d="M128,214 L200,166 L261,198 L368,120" fill="none" stroke="#29b6f6" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="368" cy="120" r="17" fill="#2dd4bf"/>' +
+    '<text x="256" y="278" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="84" fill="#ffffff" text-anchor="middle" letter-spacing="1">BET<tspan fill="#2dd4bf">BOY</tspan></text>' +
+    '<rect x="128" y="308" width="256" height="62" rx="31" fill="url(#bbPill)"/>' +
+    '<text x="256" y="348" font-family="system-ui,-apple-system,Arial,sans-serif" font-weight="900" font-size="26" fill="#020617" text-anchor="middle" letter-spacing="2.5">AI PREDICTOR</text>' +
     '</svg>';
   return "data:image/svg+xml;base64," + window.btoa(svg);
 };
@@ -923,22 +901,35 @@ window.PWA_MANIFEST_CONFIG = {
   "name": "BetBoy AI: Football Predictions",
   "short_name": "BetBoy AI",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0a0f1d",
-  "theme_color": "#0a0f1d",
+  "background_color": "#060d13",
+  "theme_color": "#060d13",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://www.betboyai.co.uk/pwa-192x192.png",
+      "src": "/pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "https://www.betboyai.co.uk/pwa-512x512.png",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 };
@@ -1071,10 +1062,12 @@ window.setupHomeScreenAppIcons = function(){
     manifestLink = document.createElement("link");
     manifestLink.id = "pwaManifestLink";
     manifestLink.rel = "manifest";
-    manifestLink.href = "data:application/manifest+json," + JSON.stringify(window.PWA_MANIFEST_CONFIG);
+    manifestLink.href = "/manifest.json";
     document.head.appendChild(manifestLink);
+  } else if (!manifestLink.getAttribute("href")) {
+    manifestLink.setAttribute("href", "/manifest.json");
   }
-  // Service Worker registration is handled once in the top <head> script with ?v=20261110-v3
+  // Service Worker registration is handled once in the top <head> script with ?v=20261111-v1
   // to avoid duplicate SW registrations with differing script URLs causing controllerchange loops.
 };
 window.setupHomeScreenAppIcons();
@@ -2852,7 +2845,7 @@ window.enforceUniformDefaultStartupState = function(){
     if(oddsSelect){
       oddsSelect.value = window.oddsFormat;
     }
-    var searchInp = document.getElementById("teamSearchInput");
+    var searchInp = document.getElementById("instantSearchInput") || document.getElementById("teamSearchInput");
     if(searchInp){
       searchInp.value = "";
     }
@@ -4438,6 +4431,11 @@ window.openSlipModal = function() {
   window.setSlipBetMode(window.slipBetMode || 'acca');
   window.renderSlipSelections();
 
+  var slipModalBtnsEl = document.getElementById('slipModalBookmakerButtons');
+  if (slipModalBtnsEl && typeof window.renderSlipModalBookmakerButtonsHtml === 'function') {
+    slipModalBtnsEl.innerHTML = window.renderSlipModalBookmakerButtonsHtml();
+  }
+
   var m = document.getElementById('bookmakerModal');
   var sheet = document.getElementById('bookieSheet');
   if (m && sheet) {
@@ -4689,19 +4687,61 @@ window.downloadUpdatedIndexHtmlWithWeights = function(){
   }
 };
 
+window.updateSortBarButtonStyles = function() {
+  var bConf = document.getElementById("sortByConfBtn");
+  var bKo = document.getElementById("sortByKoBtn");
+  var bAcca = document.getElementById("toggleAccaBtn");
+  var box = document.getElementById("topAccaSlipBox");
+  var isTopSlipOpen = box && !box.classList.contains("hidden");
+  var mode = window.matchSortMode || "CONF";
+
+  if (bAcca) {
+    if (isTopSlipOpen) {
+      bAcca.className = "px-2.5 py-1 rounded-lg font-black bg-amber-500 text-slate-950 border border-amber-400 shadow-md transition cursor-pointer btn-press";
+    } else {
+      bAcca.className = "px-2.5 py-1 rounded-lg font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer btn-press";
+    }
+  }
+
+  if (bConf) {
+    if (!isTopSlipOpen && mode === "CONF") {
+      bConf.className = "px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white shadow-sm transition cursor-pointer btn-press";
+    } else {
+      bConf.className = "px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press";
+    }
+  }
+
+  if (bKo) {
+    if (!isTopSlipOpen && mode === "KO") {
+      bKo.className = "px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white shadow-sm transition cursor-pointer btn-press";
+    } else {
+      bKo.className = "px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press";
+    }
+  }
+};
+
 window.setMatchSortMode = function(mode){
   window.matchSortMode = mode;
   window.safeSet("airp_sort_mode", mode);
-  var bConf = document.getElementById("sortByConfBtn");
-  var bKo = document.getElementById("sortByKoBtn");
-  if(bConf) bConf.className = mode === "CONF" ? "px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition cursor-pointer btn-press" : "px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press";
-  if(bKo) bKo.className = mode === "KO" ? "px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition cursor-pointer btn-press" : "px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press";
+  // Auto-close / hide Top Slip box when switching to Best % or Kick-Off
+  var box = document.getElementById("topAccaSlipBox");
+  if (box && !box.classList.contains("hidden")) {
+    box.classList.add("hidden");
+  }
+  window.updateSortBarButtonStyles();
   window.runEngine(false);
 };
 
 window.toggleTopAccaSlip = function(){
   var box = document.getElementById("topAccaSlipBox");
-  if(box) box.classList.toggle("hidden");
+  if (!box) return;
+  var isCurrentlyHidden = box.classList.contains("hidden");
+  if (isCurrentlyHidden) {
+    box.classList.remove("hidden");
+  } else {
+    box.classList.add("hidden");
+  }
+  window.updateSortBarButtonStyles();
 };
 
 window.currentTopAccaSelections = [];
@@ -14739,6 +14779,9 @@ window.autoSyncEverythingOnLoad = function(forceAll){
     }
     if(window.runEngine){
       window.runEngine(false);
+    }
+    if(typeof window.updateSortBarButtonStyles === "function"){
+      window.updateSortBarButtonStyles();
     }
     if(window.updateMiniSlip){
       window.updateMiniSlip();

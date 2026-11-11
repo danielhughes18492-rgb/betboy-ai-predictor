@@ -9474,22 +9474,35 @@ export const BETBOY_PWA_MANIFEST = {
   name: 'BetBoy AI: Football Predictions',
   short_name: 'BetBoy AI',
   start_url: '/',
+  scope: '/',
   display: 'standalone',
-  background_color: '#0a0f1d',
-  theme_color: '#0a0f1d',
+  background_color: '#060d13',
+  theme_color: '#060d13',
   orientation: 'portrait',
   icons: [
     {
-      src: 'https://www.betboyai.co.uk/pwa-192x192.png',
+      src: '/pwa-192x192.png',
       sizes: '192x192',
       type: 'image/png',
-      purpose: 'any maskable',
+      purpose: 'any',
     },
     {
-      src: 'https://www.betboyai.co.uk/pwa-512x512.png',
+      src: '/pwa-512x512.png',
       sizes: '512x512',
       type: 'image/png',
-      purpose: 'any maskable',
+      purpose: 'any',
+    },
+    {
+      src: '/pwa-maskable-512x512.png',
+      sizes: '512x512',
+      type: 'image/png',
+      purpose: 'maskable',
+    },
+    {
+      src: '/icon.svg',
+      sizes: '512x512',
+      type: 'image/svg+xml',
+      purpose: 'any',
     },
   ],
 } as const;
@@ -11059,7 +11072,7 @@ export function resolveDashboardEmptyState(params: {
   };
 }
 
-export const BETBOY_SW_CACHE_VERSION = '20261110-v3';
+export const BETBOY_SW_CACHE_VERSION = '20261111-v1';
 export const BETBOY_SW_REGISTRATION_URL = `/sw.js?v=${BETBOY_SW_CACHE_VERSION}`;
 
 export const IOS_SAFARI_ANTI_CACHE_META_TAGS = [
@@ -11812,6 +11825,52 @@ export function resolveFeaturedWelcomeOfferStripState(isCollapsedByUser = false)
     toggleButtonLabel: isCollapsedByUser ? '▸ Show Welcome Offer' : '▾ Compact',
   };
 }
+
+export interface SortByBarState {
+  sortMode: 'CONF' | 'KO';
+  topSlipOpen: boolean;
+}
+
+export function handleSortBarTabSwitch(
+  currentState: SortByBarState,
+  action: 'CONF' | 'KO' | 'TOP_SLIP'
+): SortByBarState {
+  if (action === 'TOP_SLIP') {
+    return {
+      sortMode: currentState.sortMode,
+      topSlipOpen: !currentState.topSlipOpen,
+    };
+  }
+  return {
+    sortMode: action,
+    topSlipOpen: false,
+  };
+}
+
+export function resolveSortByBarButtonClasses(
+  state: SortByBarState
+): {
+  confBtnClass: string;
+  koBtnClass: string;
+  topSlipBtnClass: string;
+} {
+  const isTopOpen = state.topSlipOpen;
+  const isConfActive = !isTopOpen && state.sortMode === 'CONF';
+  const isKoActive = !isTopOpen && state.sortMode === 'KO';
+
+  return {
+    confBtnClass: isConfActive
+      ? 'px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white shadow-sm transition cursor-pointer btn-press'
+      : 'px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press',
+    koBtnClass: isKoActive
+      ? 'px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white shadow-sm transition cursor-pointer btn-press'
+      : 'px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press',
+    topSlipBtnClass: isTopOpen
+      ? 'px-2.5 py-1 rounded-lg font-black bg-amber-500 text-slate-950 border border-amber-400 shadow-md transition cursor-pointer btn-press'
+      : 'px-2.5 py-1 rounded-lg font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer btn-press',
+  };
+}
+
 
 
 
