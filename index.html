@@ -2918,9 +2918,14 @@ window.enforceUniformDefaultStartupState = function(){
   window.activeTierFilter = window.DEFAULT_CORE_STATE.defaultTierFilter;
   window.liveDriftMap = {};
   window.customResults = {};
-  window.lockedScores = {};
-  window.lockedOddsMap = {};
-  window.preKoOddsSnapshotMap = {};
+  window.T30_LOCKED_PREDICTIONS_KEY = "betboy_t30_locked_predictions_v1";
+  window.T30_PRE_KO_PREDICTIONS_KEY = "betboy_t30_pre_ko_predictions_v1";
+  window.T30_LOCKED_ODDS_KEY = "betboy_t30_locked_odds_v1";
+  window.T30_PRE_KO_ODDS_KEY = "betboy_t30_pre_ko_odds_v1";
+  window.lockedScores = window.safeGet(window.T30_LOCKED_PREDICTIONS_KEY, {}) || {};
+  window.preKoPredictionsMap = window.safeGet(window.T30_PRE_KO_PREDICTIONS_KEY, {}) || {};
+  window.lockedOddsMap = window.safeGet(window.T30_LOCKED_ODDS_KEY, {}) || {};
+  window.preKoOddsSnapshotMap = window.safeGet(window.T30_PRE_KO_ODDS_KEY, {}) || {};
 
   // 3. Synchronize DOM controls (competition checkboxes, sort buttons, odds selector, PWA banner)
   if(typeof document !== "undefined"){
@@ -3090,8 +3095,10 @@ window.oddsLeagueCacheMap = window.safeGet(window.ODDS_API_LEAGUE_CACHE_STORAGE_
 window.liveOddsApiMap = window.safeGet("airp_the_odds_api_v2", {});
 window.espnBookmakerOddsMap = window.safeGet("airp_espn_bookmaker_odds_v1", {});
 window.liveBet365OddsMap = window.liveOddsApiMap;
-window.lockedOddsMap = {};
-window.preKoOddsSnapshotMap = {};
+window.lockedOddsMap = window.safeGet("betboy_t30_locked_odds_v1", {}) || {};
+window.preKoOddsSnapshotMap = window.safeGet("betboy_t30_pre_ko_odds_v1", {}) || {};
+window.lockedScores = window.safeGet("betboy_t30_locked_predictions_v1", {}) || {};
+window.preKoPredictionsMap = window.safeGet("betboy_t30_pre_ko_predictions_v1", {}) || {};
 window.lastOddsApiSyncTime = Number(window.safeGet("airp_the_odds_api_sync_ts", 0)) || 0;
 window.oddsApiInFlight = false;
 
@@ -3255,9 +3262,10 @@ window.parseTheOddsApiEvents = function(ukEvents, euEvents) {
   Object.keys(accMap).forEach(function(matchKey) {
     var b = accMap[matchKey];
     if (!b.homePrices.length || !b.awayPrices.length) return;
-    // Do not overwrite pre-kickoff odds if the match has already kicked off
+    // Do not accept or overwrite odds once the match is within 30 minutes of kick-off (T-30m lock) or already in-play
     var koTs = b.commenceTime ? Date.parse(b.commenceTime) : NaN;
-    if (Number.isFinite(koTs) && nowTs >= koTs && outMap[matchKey] && outMap[matchKey].homeOdds > 1.0) {
+    var lockCutoffTs = Number.isFinite(koTs) ? (koTs - (window.LOCK_BEFORE_KO_MS || 1800000)) : NaN;
+    if (Number.isFinite(lockCutoffTs) && nowTs >= lockCutoffTs) {
       return;
     }
     var parsed = {
@@ -3465,6 +3473,11 @@ window.parseApiFootballOddsResponse = function(rawResponse, knownFixtures, nowMs
     if (!item) continue;
     var fixtureId = (item.fixture && item.fixture.id) ? String(item.fixture.id) : "";
     var commenceTime = (item.fixture && item.fixture.date) || "";
+    var koTsApi = commenceTime ? Date.parse(commenceTime) : NaN;
+    var lockCutoffApi = Number.isFinite(koTsApi) ? (koTsApi - (window.LOCK_BEFORE_KO_MS || 1800000)) : NaN;
+    if (Number.isFinite(lockCutoffApi) && now >= lockCutoffApi) {
+      continue;
+    }
 
     var homeName = (item.teams && item.teams.home && item.teams.home.name) || "";
     var awayName = (item.teams && item.teams.away && item.teams.away.name) || "";
@@ -5700,19 +5713,29 @@ window.updateModelHeaders = function(){
     var comp = ev && Array.isArray(ev.competitions) && ev.competitions[0] ? ev.competitions[0] : null;
     var oddsObj = comp && Array.isArray(comp.odds) && comp.odds[0] ? comp.odds[0] : null;
     if(!oddsObj) return null;
-    var hMl = (oddsObj.moneyline && oddsObj.moneyline.home && (oddsObj.moneyline.home.close || oddsObj.moneyline.home.open) && (oddsObj.moneyline.home.close || oddsObj.moneyline.home.open).odds) ||
-              (oddsObj.homeTeamOdds && oddsObj.homeTeamOdds.moneyLine);
-    var aMl = (oddsObj.moneyline && oddsObj.moneyline.away && (oddsObj.moneyline.away.close || oddsObj.moneyline.away.open) && (oddsObj.moneyline.away.close || oddsObj.moneyline.away.open).odds) ||
-              (oddsObj.awayTeamOdds && oddsObj.awayTeamOdds.moneyLine);
-    var dMl = (oddsObj.moneyline && oddsObj.moneyline.draw && (oddsObj.moneyline.draw.close || oddsObj.moneyline.draw.open) && (oddsObj.moneyline.draw.close || oddsObj.moneyline.draw.open).odds) ||
-              (oddsObj.drawOdds && oddsObj.drawOdds.moneyLine);
+    var evState = String((comp && comp.status && comp.status.type && comp.status.type.state) || (ev && ev.status && ev.status.type && ev.status.type.state) || "pre").toLowerCase();
+    var evKoMs = (ev && ev.date) ? Date.parse(ev.date) : NaN;
+    var isPastT30 = (evState !== "pre" && evState !== "scheduled") || (Number.isFinite(evKoMs) && Date.now() >= (evKoMs - (window.LOCK_BEFORE_KO_MS || 1800000)));
+    // Once a match reaches T-30m or kicks off, NEVER read live/closing moneyline odds (.close / moneyLine) because they shift with the live scoreline
+    var hMl = isPastT30
+      ? (oddsObj.moneyline && oddsObj.moneyline.home && oddsObj.moneyline.home.open && oddsObj.moneyline.home.open.odds)
+      : ((oddsObj.moneyline && oddsObj.moneyline.home && (oddsObj.moneyline.home.close || oddsObj.moneyline.home.open) && (oddsObj.moneyline.home.close || oddsObj.moneyline.home.open).odds) ||
+         (oddsObj.homeTeamOdds && oddsObj.homeTeamOdds.moneyLine));
+    var aMl = isPastT30
+      ? (oddsObj.moneyline && oddsObj.moneyline.away && oddsObj.moneyline.away.open && oddsObj.moneyline.away.open.odds)
+      : ((oddsObj.moneyline && oddsObj.moneyline.away && (oddsObj.moneyline.away.close || oddsObj.moneyline.away.open) && (oddsObj.moneyline.away.close || oddsObj.moneyline.away.open).odds) ||
+         (oddsObj.awayTeamOdds && oddsObj.awayTeamOdds.moneyLine));
+    var dMl = isPastT30
+      ? (oddsObj.moneyline && oddsObj.moneyline.draw && oddsObj.moneyline.draw.open && oddsObj.moneyline.draw.open.odds)
+      : ((oddsObj.moneyline && oddsObj.moneyline.draw && (oddsObj.moneyline.draw.close || oddsObj.moneyline.draw.open) && (oddsObj.moneyline.draw.close || oddsObj.moneyline.draw.open).odds) ||
+         (oddsObj.drawOdds && oddsObj.drawOdds.moneyLine));
     var homeOdds = window.americanToDecimalOdds(hMl);
     var awayOdds = window.americanToDecimalOdds(aMl);
     var drawOdds = window.americanToDecimalOdds(dMl) || 3.40;
     if(!homeOdds || !awayOdds) return null;
     var overUnderLine = Number.isFinite(Number(oddsObj.overUnder)) ? Number(oddsObj.overUnder) : 2.5;
-    var overOdds = window.americanToDecimalOdds(oddsObj.total && oddsObj.total.over && (oddsObj.total.over.close || oddsObj.total.over.open) && (oddsObj.total.over.close || oddsObj.total.over.open).odds);
-    var underOdds = window.americanToDecimalOdds(oddsObj.total && oddsObj.total.under && (oddsObj.total.under.close || oddsObj.total.under.open) && (oddsObj.total.under.close || oddsObj.total.under.open).odds);
+    var overOdds = window.americanToDecimalOdds(oddsObj.total && oddsObj.total.over && (isPastT30 ? oddsObj.total.over.open : (oddsObj.total.over.close || oddsObj.total.over.open)) && (isPastT30 ? oddsObj.total.over.open : (oddsObj.total.over.close || oddsObj.total.over.open)).odds);
+    var underOdds = window.americanToDecimalOdds(oddsObj.total && oddsObj.total.under && (isPastT30 ? oddsObj.total.under.open : (oddsObj.total.under.close || oddsObj.total.under.open)) && (isPastT30 ? oddsObj.total.under.open : (oddsObj.total.under.close || oddsObj.total.under.open)).odds);
     return {
       homeOdds: homeOdds,
       drawOdds: drawOdds,
@@ -5796,6 +5819,24 @@ window.updateModelHeaders = function(){
 
     var idNum = parseInt(ev.id, 10);
     if(!Number.isFinite(idNum) || idNum <= 0) return null;
+
+    var evState = String((comp.status && comp.status.type && comp.status.type.state) || (ev.status && ev.status.type && ev.status.type.state) || "pre").toLowerCase();
+    var evKoMs = ev.date ? Date.parse(ev.date) : NaN;
+    var isPastT30 = (evState !== "pre" && evState !== "scheduled") || (Number.isFinite(evKoMs) && Date.now() >= (evKoMs - (window.LOCK_BEFORE_KO_MS || 1800000)));
+
+    // If match is at or past T-30m (or in-play / FT) and we already have a pre-match row in DAILY_FIXTURES, preserve it so in-play updates NEVER alter pre-match predictions!
+    var existingDayRows = (window.DAILY_FIXTURES && Array.isArray(window.DAILY_FIXTURES[dateStr])) ? window.DAILY_FIXTURES[dateStr] : [];
+    var existingRow = null;
+    for(var rI = 0; rI < existingDayRows.length; rI++){
+      if(existingDayRows[rI] && Number(existingDayRows[rI][0]) === idNum){
+        existingRow = existingDayRows[rI];
+        break;
+      }
+    }
+    if(isPastT30 && existingRow && existingRow.length >= 21){
+      return existingRow.slice();
+    }
+
     var hP = window.getTrueClubRating(hN, hC), aP = window.getTrueClubRating(aN, aC);
     var hFormScore = window.parseEspnFormScore(hC.form);
     var aFormScore = window.parseEspnFormScore(aC.form);
@@ -5811,22 +5852,24 @@ window.updateModelHeaders = function(){
       window.espnBookmakerOddsMap = window.espnBookmakerOddsMap || {};
       var hKeyNorm = window.normalizeOddsTeamKey ? window.normalizeOddsTeamKey(hN) : hN.toLowerCase();
       var aKeyNorm = window.normalizeOddsTeamKey ? window.normalizeOddsTeamKey(aN) : aN.toLowerCase();
-      var entryRec = {
-        eventId: String(idNum),
-        homeTeam: hN,
-        awayTeam: aN,
-        homeKey: hKeyNorm,
-        awayKey: aKeyNorm,
-        homeOdds: espnOdds.homeOdds,
-        drawOdds: espnOdds.drawOdds,
-        awayOdds: espnOdds.awayOdds,
-        overUnderLine: espnOdds.overUnderLine,
-        overOdds: espnOdds.overOdds,
-        underOdds: espnOdds.underOdds,
-        updatedAt: Date.now()
-      };
-      window.espnBookmakerOddsMap["id_" + idNum] = entryRec;
-      if(hKeyNorm && aKeyNorm) window.espnBookmakerOddsMap[hKeyNorm + "_vs_" + aKeyNorm] = entryRec;
+      if(!isPastT30 || !window.espnBookmakerOddsMap["id_" + idNum]){
+        var entryRec = {
+          eventId: String(idNum),
+          homeTeam: hN,
+          awayTeam: aN,
+          homeKey: hKeyNorm,
+          awayKey: aKeyNorm,
+          homeOdds: espnOdds.homeOdds,
+          drawOdds: espnOdds.drawOdds,
+          awayOdds: espnOdds.awayOdds,
+          overUnderLine: espnOdds.overUnderLine,
+          overOdds: espnOdds.overOdds,
+          underOdds: espnOdds.underOdds,
+          updatedAt: Date.now()
+        };
+        window.espnBookmakerOddsMap["id_" + idNum] = entryRec;
+        if(hKeyNorm && aKeyNorm) window.espnBookmakerOddsMap[hKeyNorm + "_vs_" + aKeyNorm] = entryRec;
+      }
     }
 
     var liveOddsEntry = (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: idNum, homeName: hN, awayName: aN }) : null) || espnOdds;
@@ -7393,10 +7436,11 @@ window.getSixtyMetricCompositeDelta = function(){
 // T-30m Final Pre-Match Audit & Deterministic Confidence Lock
 window.resolveMatchPrediction = function(m){
   var koStr = m.ko || "19:45";
-  var kickMs = new Date(m.date + "T" + koStr + ":00").getTime();
-  var lockMs = kickMs - window.LOCK_BEFORE_KO_MS;
+  var kickMs = window.parseUkKickoffTimestampMs ? window.parseUkKickoffTimestampMs(m.date, koStr) : new Date(m.date + "T" + koStr + ":00").getTime();
+  var lockWindowMs = window.LOCK_BEFORE_KO_MS || 1800000;
+  var lockMs = kickMs - lockWindowMs;
   var now = Date.now();
-  var isLocked = Number.isFinite(kickMs) ? (now >= lockMs) : false;
+  var isLocked = window.isMatchKickedOffOrLocked ? window.isMatchKickedOffOrLocked(m) : (Number.isFinite(kickMs) ? (now >= lockMs) : false);
   var lockLbl = window.getLockTimeLabel(m.date, koStr);
 
   var drift = window.getDeterministicDrift(m, lockMs);
@@ -7408,6 +7452,49 @@ window.resolveMatchPrediction = function(m){
     : (baseVal >= 60.0
         ? parseFloat(Math.min(74.7, Math.max(60.1, rawCalcFs)).toFixed(1))
         : parseFloat(Math.min(59.6, Math.max(51.1, rawCalcFs)).toFixed(1)));
+
+  window.lockedScores = window.lockedScores || {};
+  window.preKoPredictionsMap = window.preKoPredictionsMap || {};
+  var matchKeyId = String(m.id);
+
+  if (isLocked) {
+    if (window.lockedScores[matchKeyId] && Number.isFinite(Number(window.lockedScores[matchKeyId].fs))) {
+      calcFs = Number(window.lockedScores[matchKeyId].fs);
+    } else if (window.preKoPredictionsMap[matchKeyId] && Number.isFinite(Number(window.preKoPredictionsMap[matchKeyId].fs))) {
+      calcFs = Number(window.preKoPredictionsMap[matchKeyId].fs);
+      window.lockedScores[matchKeyId] = Object.assign({}, window.preKoPredictionsMap[matchKeyId], {
+        fs: calcFs,
+        isLocked: true,
+        lockedAtMs: now
+      });
+      window.safeSet(window.T30_LOCKED_PREDICTIONS_KEY || "betboy_t30_locked_predictions_v1", window.lockedScores);
+    } else {
+      window.lockedScores[matchKeyId] = Object.assign({}, window.lockedScores[matchKeyId] || {}, {
+        fs: calcFs,
+        fav: m.fav,
+        opp: m.opp,
+        venue: m.venue,
+        xg: m.xg,
+        xga: m.xga,
+        isLocked: true,
+        lockedAtMs: now
+      });
+      window.safeSet(window.T30_LOCKED_PREDICTIONS_KEY || "betboy_t30_locked_predictions_v1", window.lockedScores);
+    }
+  } else {
+    window.preKoPredictionsMap[matchKeyId] = Object.assign({}, window.preKoPredictionsMap[matchKeyId] || {}, {
+      fs: calcFs,
+      fav: m.fav,
+      opp: m.opp,
+      venue: m.venue,
+      xg: m.xg,
+      xga: m.xga,
+      isLocked: false,
+      updatedAtMs: now
+    });
+    window.safeSet(window.T30_PRE_KO_PREDICTIONS_KEY || "betboy_t30_pre_ko_predictions_v1", window.preKoPredictionsMap);
+  }
+
   var vr = calcFs < 75.0 ? (m.vetoReason || (m.venue === "AWAY" ? "Away Trap Shield ( Amber Caution )" : "Tight xG / Draw Risk Shield")) : "";
 
   var activeFs = calcFs;
@@ -7427,7 +7514,7 @@ window.resolveMatchPrediction = function(m){
     note: activeNote,
     vr: vr,
     isLocked: isLocked,
-    lockedMarkets: null
+    lockedMarkets: (window.lockedScores[matchKeyId] && window.lockedScores[matchKeyId].lockedMarkets) || null
   };
 };
 
@@ -7679,13 +7766,13 @@ window.isMatchKickedOffOrLocked = function(m){
   if(!m) return false;
   if(m.isLocked || m.isLive) return true;
   var actLow = String(m.actual || "").toLowerCase();
-  if(actLow.indexOf("live") !== -1 || actLow.indexOf("(won)") !== -1 || actLow.indexOf("(draw)") !== -1 || actLow.indexOf("(lost)") !== -1){
+  if(actLow.indexOf("live") !== -1 || /\bht\b/.test(actLow) || /\bft\b/.test(actLow) || actLow.indexOf("(won)") !== -1 || actLow.indexOf("(draw)") !== -1 || actLow.indexOf("(lost)") !== -1){
     return true;
   }
   var koStr = m.ko || "19:45";
-  var kickMs = new Date(m.date + "T" + koStr + ":00").getTime();
+  var kickMs = window.parseUkKickoffTimestampMs ? window.parseUkKickoffTimestampMs(m.date, koStr) : new Date(m.date + "T" + koStr + ":00").getTime();
   if(Number.isFinite(kickMs)){
-    return Date.now() >= (kickMs - (window.LOCK_BEFORE_KO_MS || 0));
+    return Date.now() >= (kickMs - (window.LOCK_BEFORE_KO_MS || 1800000));
   }
   return false;
 };
@@ -8201,10 +8288,10 @@ window.calcExtraMarkets = function(m, fs){
     if (isKoLocked) {
       window.lockedOddsMap[matchKeyId] = snapshotRecord;
       if (savedLock) savedLock.lockedOdds = snapshotRecord;
-      window.safeSet("airp_locked_ko_odds_v21", window.lockedOddsMap);
+      window.safeSet(window.T30_LOCKED_ODDS_KEY || "betboy_t30_locked_odds_v1", window.lockedOddsMap);
     } else {
       window.preKoOddsSnapshotMap[matchKeyId] = snapshotRecord;
-      window.safeSet("airp_pre_ko_odds_v21", window.preKoOddsSnapshotMap);
+      window.safeSet(window.T30_PRE_KO_ODDS_KEY || "betboy_t30_pre_ko_odds_v1", window.preKoOddsSnapshotMap);
     }
   } else {
     // Even on frozen pre-KO odds, enforce mathematical ordering dcOdds < dnbOdds < favOdds < winO15Odds < ah1Odds
@@ -8276,35 +8363,119 @@ window.calcExtraMarkets = function(m, fs){
     return ok ? ("FT: " + og + " " + m.opp + " Gls") : ("⚽ " + og + "/" + target + " " + m.opp + " Gls (" + liveSt.elapsedMins + "')");
   };
 
+  var computedMarketsList = [
+    {n:"Match Result: " + m.fav + " to Win", p:favWinCalP, odds:parseFloat(favOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"fav"},
+    {n:"Match Result: " + m.opp + " to Win", p:oppWinCalP, odds:parseFloat(oppOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+    {n:"Match Result: Draw", p:drawCalP, odds:parseFloat(drawOdds.toFixed(2)), w:ok?(fg===og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"draw"},
+    {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:dcCalP, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+    {n:m.opp+"/Draw ("+(isH?"X2":"1X")+")", p:oppDcPctVal, odds:parseFloat(oppDcOdds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+    {n:m.fav+" Draw No Bet", p:dnbCalP, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+    {n:m.opp+" Draw No Bet", p:oppDnbPctVal, odds:parseFloat(oppDnbOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+    {n:m.fav+" Win & Over 1.5 Gls", p:winO15CalP, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+    {n:m.opp+" Win & Over 1.5 Gls", p:oppWinO15PctVal, odds:parseFloat(oppWinO15Odds.toFixed(2)), w:ok?(og>fg&&tg>=2):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+    {n:m.fav+" -1.0 Handicap", p:ah1CalP, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
+    {n:m.opp+" +1.0 Handicap", p:oppAhPlus1PctVal, odds:parseFloat(oppAhPlus1Odds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
+    {n:"Over 1.5 Goals", p:o15CalP, odds:o15Odds, w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
+    {n:"Over 2.5 Goals", p:o25CalP, odds:o25Odds, w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
+    {n:"Over 3.5 Goals", p:o35CalP, odds:o35Odds, w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
+    {n:"Under 2.5 Goals", p:u25CalP, odds:u25Odds, w:koStarted?(tg>2?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+    {n:"Under 3.5 Goals", p:u35CalP, odds:u35Odds, w:koStarted?(tg>3?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
+    {n:"BTTS: Yes", p:bttsCalP, odds:bttsOdds, w:koStarted?((h>=1&&g>=1)?true:(ok?false:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+    {n:"BTTS: No", p:bttsNoCalP, odds:bttsNoOdds, w:koStarted?((h>=1&&g>=1)?false:(ok?true:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
+    {n:m.fav+" Over 1.5 Team Gls", p:f15CalP, odds:f15Odds, w:koStarted?(fg>=2?true:(ok?false:null)):null, statBadge:tmGlsBadge, vip:true, cat:"goals", teamSide:"fav"},
+    {n:m.opp+" Over 0.5 Team Gls", p:oppO05PctVal, odds:oppO05Odds, w:koStarted?(og>=1?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(1), vip:false, cat:"goals", teamSide:"opp"},
+    {n:m.opp+" Over 1.5 Team Gls", p:oppO15PctVal, odds:oppO15Odds, w:koStarted?(og>=2?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(2), vip:false, cat:"goals", teamSide:"opp"},
+    {n:"1st Half Over 0.5", p:fh05CalP, odds:fh05Odds, w:koStarted?liveSt.fh05Won:null, statBadge:liveSt.fh05StatBadge, vip:false, cat:"specials", teamSide:"both"},
+    {n:"Over 8.5 Corners", p:c85CalP, odds:c85Odds, w:koStarted?liveSt.cornersWon:null, statBadge:liveSt.cornersStatBadge, vip:true, cat:"specials", teamSide:"both"},
+    {n:"Over 3.5 Cards", p:cards35CalP, odds:cards35Odds, w:koStarted?liveSt.cardsWon:null, statBadge:liveSt.cardsStatBadge, vip:true, cat:"specials", teamSide:"both"}
+  ];
+
+  // T-30m Permanent Market Percentage & Odds Lock:
+  // Once a match is within 30 minutes of kick-off (or in-play / FT), all 24 market percentages (p) and odds are permanently frozen!
+  window.lockedScores = window.lockedScores || {};
+  window.preKoPredictionsMap = window.preKoPredictionsMap || {};
+  if (isKoLocked) {
+    var existingLockedRec = window.lockedScores[matchKeyId];
+    var preSnapRec = window.preKoPredictionsMap[matchKeyId];
+    if (!existingLockedRec || !Array.isArray(existingLockedRec.lockedMarkets) || existingLockedRec.lockedMarkets.length === 0) {
+      var sourceMarkets = (preSnapRec && Array.isArray(preSnapRec.lockedMarkets) && preSnapRec.lockedMarkets.length > 0)
+        ? preSnapRec.lockedMarkets
+        : computedMarketsList.map(function(it){ return { n: it.n, p: it.p, odds: it.odds, vip: it.vip, cat: it.cat, teamSide: it.teamSide }; });
+      var sourceOutright = (preSnapRec && preSnapRec.lockedOutright)
+        ? preSnapRec.lockedOutright
+        : {
+            homePct: outrightObj.homePct, homeOdds: outrightObj.homeOdds,
+            drawPct: outrightObj.drawPct, drawOdds: outrightObj.drawOdds,
+            awayPct: outrightObj.awayPct, awayOdds: outrightObj.awayOdds,
+            favPct: outrightObj.favPct, favOdds: outrightObj.favOdds,
+            oppPct: outrightObj.oppPct, oppOdds: outrightObj.oppOdds,
+            oddsSource: outrightObj.oddsSource
+          };
+      window.lockedScores[matchKeyId] = Object.assign({}, existingLockedRec || {}, {
+        fs: (existingLockedRec && Number.isFinite(Number(existingLockedRec.fs))) ? existingLockedRec.fs : ((preSnapRec && Number.isFinite(Number(preSnapRec.fs))) ? preSnapRec.fs : baseConf),
+        fav: m.fav,
+        opp: m.opp,
+        venue: m.venue,
+        lockedMarkets: sourceMarkets,
+        lockedOutright: sourceOutright,
+        isLocked: true,
+        lockedAtMs: Date.now()
+      });
+      window.safeSet(window.T30_LOCKED_PREDICTIONS_KEY || "betboy_t30_locked_predictions_v1", window.lockedScores);
+    }
+
+    var activeLockRec = window.lockedScores[matchKeyId];
+    if (activeLockRec && Array.isArray(activeLockRec.lockedMarkets)) {
+      var lockedByName = {};
+      activeLockRec.lockedMarkets.forEach(function(lm, idx){
+        if (lm && lm.n) lockedByName[lm.n] = lm;
+        lockedByName["idx_" + idx] = lm;
+      });
+      computedMarketsList = computedMarketsList.map(function(it, idx){
+        var lm = lockedByName[it.n] || lockedByName["idx_" + idx];
+        if (!lm) return it;
+        return Object.assign({}, it, {
+          p: lm.p,
+          odds: lm.odds
+        });
+      });
+    }
+    if (activeLockRec && activeLockRec.lockedOutright) {
+      var lo = activeLockRec.lockedOutright;
+      outrightObj = Object.assign({}, outrightObj, {
+        homePct: lo.homePct, homeOdds: lo.homeOdds,
+        drawPct: lo.drawPct, drawOdds: lo.drawOdds,
+        awayPct: lo.awayPct, awayOdds: lo.awayOdds,
+        favPct: lo.favPct, favOdds: lo.favOdds,
+        oppPct: lo.oppPct, oppOdds: lo.oppOdds,
+        oddsLocked: true
+      });
+    }
+  } else {
+    window.preKoPredictionsMap[matchKeyId] = Object.assign({}, window.preKoPredictionsMap[matchKeyId] || {}, {
+      fs: baseConf,
+      fav: m.fav,
+      opp: m.opp,
+      venue: m.venue,
+      lockedMarkets: computedMarketsList.map(function(it){ return { n: it.n, p: it.p, odds: it.odds, vip: it.vip, cat: it.cat, teamSide: it.teamSide }; }),
+      lockedOutright: {
+        homePct: outrightObj.homePct, homeOdds: outrightObj.homeOdds,
+        drawPct: outrightObj.drawPct, drawOdds: outrightObj.drawOdds,
+        awayPct: outrightObj.awayPct, awayOdds: outrightObj.awayOdds,
+        favPct: outrightObj.favPct, favOdds: outrightObj.favOdds,
+        oppPct: outrightObj.oppPct, oppOdds: outrightObj.oppOdds,
+        oddsSource: outrightObj.oddsSource
+      },
+      isLocked: false,
+      updatedAtMs: Date.now()
+    });
+    window.safeSet(window.T30_PRE_KO_PREDICTIONS_KEY || "betboy_t30_pre_ko_predictions_v1", window.preKoPredictionsMap);
+  }
+
   return {
     outright: outrightObj,
     liveStats: liveSt,
-    L: [
-      {n:"Match Result: " + m.fav + " to Win", p:favWinCalP, odds:parseFloat(favOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"fav"},
-      {n:"Match Result: " + m.opp + " to Win", p:oppWinCalP, odds:parseFloat(oppOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:"Match Result: Draw", p:drawCalP, odds:parseFloat(drawOdds.toFixed(2)), w:ok?(fg===og):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"draw"},
-      {n:m.fav+"/Draw ("+(isH?"1X":"X2")+")", p:dcCalP, odds:parseFloat(dcOdds.toFixed(2)), w:ok?(fg>=og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
-      {n:m.opp+"/Draw ("+(isH?"X2":"1X")+")", p:oppDcPctVal, odds:parseFloat(oppDcOdds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" Draw No Bet", p:dnbCalP, odds:parseFloat(dnbOdds.toFixed(2)), w:ok?(fg>og):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
-      {n:m.opp+" Draw No Bet", p:oppDnbPctVal, odds:parseFloat(oppDnbOdds.toFixed(2)), w:ok?(og>fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" Win & Over 1.5 Gls", p:winO15CalP, odds:parseFloat(winO15Odds.toFixed(2)), w:ok?(fg>og&&tg>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
-      {n:m.opp+" Win & Over 1.5 Gls", p:oppWinO15PctVal, odds:parseFloat(oppWinO15Odds.toFixed(2)), w:ok?(og>fg&&tg>=2):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:m.fav+" -1.0 Handicap", p:ah1CalP, odds:parseFloat(ah1Odds.toFixed(2)), w:ok?((fg-og)>=2):null, statBadge:resBadge, vip:true, cat:"result", teamSide:"fav"},
-      {n:m.opp+" +1.0 Handicap", p:oppAhPlus1PctVal, odds:parseFloat(oppAhPlus1Odds.toFixed(2)), w:ok?(og>=fg):null, statBadge:resBadge, vip:false, cat:"result", teamSide:"opp"},
-      {n:"Over 1.5 Goals", p:o15CalP, odds:o15Odds, w:koStarted?(tg>=2?true:(ok?false:null)):null, statBadge:glsBadge(2), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Over 2.5 Goals", p:o25CalP, odds:o25Odds, w:koStarted?(tg>=3?true:(ok?false:null)):null, statBadge:glsBadge(3), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Over 3.5 Goals", p:o35CalP, odds:o35Odds, w:koStarted?(tg>=4?true:(ok?false:null)):null, statBadge:glsBadge(4), vip:false, cat:"goals", teamSide:"both"},
-      {n:"Under 2.5 Goals", p:u25CalP, odds:u25Odds, w:koStarted?(tg>2?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"Under 3.5 Goals", p:u35CalP, odds:u35Odds, w:koStarted?(tg>3?false:(ok?true:null)):null, statBadge:uGlsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"BTTS: Yes", p:bttsCalP, odds:bttsOdds, w:koStarted?((h>=1&&g>=1)?true:(ok?false:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:"BTTS: No", p:bttsNoCalP, odds:bttsNoOdds, w:koStarted?((h>=1&&g>=1)?false:(ok?true:null)):null, statBadge:bttsBadge, vip:false, cat:"goals", teamSide:"both"},
-      {n:m.fav+" Over 1.5 Team Gls", p:f15CalP, odds:f15Odds, w:koStarted?(fg>=2?true:(ok?false:null)):null, statBadge:tmGlsBadge, vip:true, cat:"goals", teamSide:"fav"},
-      {n:m.opp+" Over 0.5 Team Gls", p:oppO05PctVal, odds:oppO05Odds, w:koStarted?(og>=1?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(1), vip:false, cat:"goals", teamSide:"opp"},
-      {n:m.opp+" Over 1.5 Team Gls", p:oppO15PctVal, odds:oppO15Odds, w:koStarted?(og>=2?true:(ok?false:null)):null, statBadge:oppTmGlsBadge(2), vip:false, cat:"goals", teamSide:"opp"},
-      {n:"1st Half Over 0.5", p:fh05CalP, odds:fh05Odds, w:koStarted?liveSt.fh05Won:null, statBadge:liveSt.fh05StatBadge, vip:false, cat:"specials", teamSide:"both"},
-      {n:"Over 8.5 Corners", p:c85CalP, odds:c85Odds, w:koStarted?liveSt.cornersWon:null, statBadge:liveSt.cornersStatBadge, vip:true, cat:"specials", teamSide:"both"},
-      {n:"Over 3.5 Cards", p:cards35CalP, odds:cards35Odds, w:koStarted?liveSt.cardsWon:null, statBadge:liveSt.cardsStatBadge, vip:true, cat:"specials", teamSide:"both"}
-    ]
+    L: computedMarketsList
   };
 };
 
@@ -11126,14 +11297,15 @@ window.runEngine = function(isForcedSync){
 
   evaluated.sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); });
 
-  // Ensure smaller matchday slates (e.g., Fridays with <= 14 fixtures) naturally produce at least 1–2 genuine Green Picks (75%+)
+  // Ensure smaller matchday slates (e.g., Fridays with <= 14 fixtures) naturally produce at least 1–2 genuine Green Picks (75%+),
+  // ONLY for pre-match unlocked fixtures (never modify a T-30m locked or in-play match!)
   var greenThreshVal = (window.adminConfThresholds && window.adminConfThresholds.green) || 75.0;
   var initialGreenCount = evaluated.filter(function(x){ return (x.displayConf || x.fs) >= greenThreshVal; }).length;
   if(evaluated.length >= 2 && evaluated.length <= 14 && initialGreenCount < 2){
     var targetLeaderCount = Math.min(2, evaluated.length);
     for(var sIdx = 0; sIdx < targetLeaderCount; sIdx++){
       var leaderItem = evaluated[sIdx];
-      if(leaderItem && (leaderItem.displayConf || leaderItem.fs) < greenThreshVal && Number(leaderItem.fs || 68) >= 60.0){
+      if(leaderItem && !leaderItem.isLocked && !(window.isMatchKickedOffOrLocked && window.isMatchKickedOffOrLocked(leaderItem)) && (leaderItem.displayConf || leaderItem.fs) < greenThreshVal && Number(leaderItem.fs || 68) >= 60.0){
         leaderItem._slateGreenLeaderBoost = sIdx === 0 ? 76.4 : 75.4;
         delete leaderItem.displayConf;
         delete leaderItem._cachedDetails;

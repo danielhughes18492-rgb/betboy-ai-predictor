@@ -11934,6 +11934,250 @@ export function resolveSortByBarButtonClasses(
   };
 }
 
+export const T30_LOCK_BEFORE_KO_MS = 30 * 60 * 1000;
+export const T30_LOCKED_PREDICTIONS_STORAGE_KEY = 'betboy_t30_locked_predictions_v1' as const;
+export const T30_PRE_KO_PREDICTIONS_STORAGE_KEY = 'betboy_t30_pre_ko_predictions_v1' as const;
+
+export interface T30LockedMarketEntry {
+  n: string;
+  p: string;
+  odds: number;
+  w?: boolean | null;
+  statBadge?: string;
+  vip?: boolean;
+  cat?: string;
+  teamSide?: string;
+}
+
+export interface T30LockedOutrightSummary {
+  homeName: string;
+  homePct: string;
+  homeOdds: number;
+  homeWon?: boolean | null;
+  drawPct: string;
+  drawOdds: number;
+  drawWon?: boolean | null;
+  awayName: string;
+  awayPct: string;
+  awayOdds: number;
+  awayWon?: boolean | null;
+  favName: string;
+  favPct: string;
+  favOdds: number;
+  favWon?: boolean | null;
+  oppName: string;
+  oppPct: string;
+  oppOdds: number;
+  oddsSource?: string;
+  oddsLocked?: boolean;
+}
+
+export interface T30LockedMatchSnapshot {
+  matchId: string;
+  fav: string;
+  opp: string;
+  venue: 'HOME' | 'AWAY';
+  fs: number;
+  xg: number;
+  xga: number;
+  outright: T30LockedOutrightSummary;
+  markets: T30LockedMarketEntry[];
+  lockedAtMs: number;
+  isLocked: boolean;
+}
+
+/**
+ * Determines whether a match has reached or passed its T-30m (30 minutes before kick-off) prediction lock cutoff,
+ * or is already in-play / settled at Full-Time.
+ */
+export function isMatchAtOrPastT30Lock(
+  match: {
+    date: string;
+    ko?: string;
+    isLive?: boolean;
+    actual?: string;
+    isLocked?: boolean;
+    kickoffMs?: number;
+  },
+  nowMs = Date.now(),
+  lockBeforeKoMs = T30_LOCK_BEFORE_KO_MS
+): boolean {
+  if (!match) return false;
+  if (match.isLocked || match.isLive) return true;
+  const actLow = String(match.actual || '').toLowerCase();
+  if (
+    actLow.includes('live') ||
+    /\bht\b/.test(actLow) ||
+    /\bft\b/.test(actLow) ||
+    actLow.includes('(won)') ||
+    actLow.includes('(draw)') ||
+    actLow.includes('(lost)')
+  ) {
+    return true;
+  }
+  const koStr = match.ko || '19:45';
+  const kickMs =
+    typeof match.kickoffMs === 'number' && Number.isFinite(match.kickoffMs)
+      ? match.kickoffMs
+      : parseUkKickoffTimestampMs(match.date, koStr);
+  if (Number.isFinite(kickMs)) {
+    return nowMs >= kickMs - lockBeforeKoMs;
+  }
+  return false;
+}
+
+/**
+ * Prevents live/in-play bookmaker odds or post-T30m odds refreshes from polluting the pre-match predictor.
+ */
+export function shouldAcceptOddsForPreMatchPredictor(params: {
+  commenceTimeMs: number;
+  nowMs?: number;
+  eventState?: string;
+  lockBeforeKoMs?: number;
+}): boolean {
+  const now = typeof params.nowMs === 'number' ? params.nowMs : Date.now();
+  const lockWindow = typeof params.lockBeforeKoMs === 'number' ? params.lockBeforeKoMs : T30_LOCK_BEFORE_KO_MS;
+  const st = String(params.eventState || 'pre').toLowerCase();
+  if (st !== 'pre' && st !== 'scheduled' && st !== 'upcoming') {
+    return false;
+  }
+  if (Number.isFinite(params.commenceTimeMs) && now >= params.commenceTimeMs - lockWindow) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Permanently locks a match's headline confidence (fs), favourite/opponent, outright percentages/odds,
+ * and all 24 betting market percentages (p) and odds 30 minutes before kick-off (T-30m).
+ * Once locked at T-30m, market percentages NEVER change during the match (even if a team is winning or losing)
+ * or after Full-Time, while still updating live/FT settlement flags (`w` and `statBadge`).
+ */
+export function resolveT30LockedMatchAndMarkets(
+  match: {
+    id: string | number;
+    date: string;
+    ko?: string;
+    venue: 'HOME' | 'AWAY';
+    fav: string;
+    opp: string;
+    isLive?: boolean;
+    actual?: string;
+    isLocked?: boolean;
+    kickoffMs?: number;
+  },
+  candidate: {
+    fs: number;
+    xg: number;
+    xga: number;
+    outright: T30LockedOutrightSummary;
+    markets: T30LockedMarketEntry[];
+  },
+  lockedStore: Record<string, T30LockedMatchSnapshot>,
+  preKoStore: Record<string, T30LockedMatchSnapshot>,
+  nowMs = Date.now(),
+  lockBeforeKoMs = T30_LOCK_BEFORE_KO_MS
+): T30LockedMatchSnapshot {
+  const key = String(match.id);
+  const atOrPastT30 = isMatchAtOrPastT30Lock(match, nowMs, lockBeforeKoMs);
+
+  // Build live settlement lookup from candidate so live badges and FT ✓/✗ results stay live while percentages stay frozen
+  const liveMarketStatusByName = new Map<string, { w?: boolean | null; statBadge?: string }>();
+  for (const mkt of candidate.markets || []) {
+    liveMarketStatusByName.set(mkt.n, { w: mkt.w ?? null, statBadge: mkt.statBadge ?? '' });
+  }
+
+  if (!atOrPastT30) {
+    const preSnap: T30LockedMatchSnapshot = {
+      matchId: key,
+      fav: match.fav,
+      opp: match.opp,
+      venue: match.venue,
+      fs: parseFloat(Number(candidate.fs).toFixed(1)),
+      xg: parseFloat(Number(candidate.xg).toFixed(2)),
+      xga: parseFloat(Number(candidate.xga).toFixed(2)),
+      outright: { ...candidate.outright, oddsLocked: false },
+      markets: (candidate.markets || []).map((m) => ({ ...m })),
+      lockedAtMs: nowMs,
+      isLocked: false,
+    };
+    preKoStore[key] = preSnap;
+    return preSnap;
+  }
+
+  // Match is at or past T-30m (or in-play / FT): promote preKoStore if not yet in lockedStore
+  let frozen = lockedStore[key];
+  if (!frozen) {
+    const baseSource = preKoStore[key];
+    if (baseSource) {
+      frozen = {
+        ...baseSource,
+        outright: { ...baseSource.outright, oddsLocked: true },
+        markets: baseSource.markets.map((m) => ({ ...m })),
+        isLocked: true,
+      };
+    } else {
+      frozen = {
+        matchId: key,
+        fav: match.fav,
+        opp: match.opp,
+        venue: match.venue,
+        fs: parseFloat(Number(candidate.fs).toFixed(1)),
+        xg: parseFloat(Number(candidate.xg).toFixed(2)),
+        xga: parseFloat(Number(candidate.xga).toFixed(2)),
+        outright: { ...candidate.outright, oddsLocked: true },
+        markets: (candidate.markets || []).map((m) => ({ ...m })),
+        lockedAtMs: nowMs,
+        isLocked: true,
+      };
+    }
+    lockedStore[key] = frozen;
+  }
+
+  // Merge live/FT settlement status (w, statBadge, homeWon/drawWon/awayWon/favWon) onto the frozen T-30m percentages & odds
+  const mergedMarkets = frozen.markets.map((lockedMkt, idx) => {
+    const liveStatus =
+      liveMarketStatusByName.get(lockedMkt.n) ||
+      (candidate.markets && candidate.markets[idx]
+        ? { w: candidate.markets[idx].w ?? null, statBadge: candidate.markets[idx].statBadge ?? '' }
+        : { w: lockedMkt.w ?? null, statBadge: lockedMkt.statBadge ?? '' });
+    return {
+      ...lockedMkt,
+      p: lockedMkt.p,
+      odds: lockedMkt.odds,
+      w: liveStatus.w,
+      statBadge: liveStatus.statBadge,
+    };
+  });
+
+  const mergedOutright: T30LockedOutrightSummary = {
+    ...frozen.outright,
+    homePct: frozen.outright.homePct,
+    homeOdds: frozen.outright.homeOdds,
+    drawPct: frozen.outright.drawPct,
+    drawOdds: frozen.outright.drawOdds,
+    awayPct: frozen.outright.awayPct,
+    awayOdds: frozen.outright.awayOdds,
+    favPct: frozen.outright.favPct,
+    favOdds: frozen.outright.favOdds,
+    oppPct: frozen.outright.oppPct,
+    oppOdds: frozen.outright.oppOdds,
+    homeWon: candidate.outright.homeWon ?? frozen.outright.homeWon ?? null,
+    drawWon: candidate.outright.drawWon ?? frozen.outright.drawWon ?? null,
+    awayWon: candidate.outright.awayWon ?? frozen.outright.awayWon ?? null,
+    favWon: candidate.outright.favWon ?? frozen.outright.favWon ?? null,
+    oddsLocked: true,
+  };
+
+  return {
+    ...frozen,
+    outright: mergedOutright,
+    markets: mergedMarkets,
+    isLocked: true,
+  };
+}
+
+
 
 
 
