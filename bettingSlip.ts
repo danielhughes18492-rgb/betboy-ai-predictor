@@ -6680,13 +6680,46 @@ export const BOOKMAKER_PARTNERS: Record<BookmakerPartnerKey, BookmakerPartnerCon
   },
 };
 
+export function makeBetfredOfficialWordmarkSvg(): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 58" width="280" height="58" aria-label="BETFRED">` +
+    `<defs>` +
+    `<linearGradient id="bfWordGrad" x1="0%" y1="50%" x2="100%" y2="50%">` +
+    `<stop offset="0%" stop-color="#ec0e24"/>` +
+    `<stop offset="15%" stop-color="#da0b3f"/>` +
+    `<stop offset="30%" stop-color="#b10779"/>` +
+    `<stop offset="45%" stop-color="#7d01c4"/>` +
+    `<stop offset="60%" stop-color="#4a0ce2"/>` +
+    `<stop offset="78%" stop-color="#151fed"/>` +
+    `<stop offset="100%" stop-color="#0028f1"/>` +
+    `</linearGradient>` +
+    `</defs>` +
+    `<g transform="translate(10, 0) skewX(-9)">` +
+    `<rect x="0" y="0" width="269" height="58" fill="url(#bfWordGrad)"/>` +
+    `<path fill="#ffffff" fill-rule="evenodd" d="` +
+    `M12.5,9.5 H33.5 C40.8,9.5 45.2,13.2 45.2,19.2 C45.2,23.8 42.8,26.8 39.2,28.3 C43.8,29.7 46.6,33.2 46.6,38.5 C46.6,44.8 41.8,48.5 34.2,48.5 H12.5 Z ` +
+    `M24.5,18.8 H31.2 C33.4,18.8 34.8,20.0 34.8,21.9 C34.8,23.8 33.4,25.0 31.2,25.0 H24.5 Z ` +
+    `M24.5,33.0 H32.0 C34.4,33.0 35.8,34.3 35.8,36.2 C35.8,38.1 34.4,39.4 32.0,39.4 H24.5 Z ` +
+    `M50.5,9.5 H79.5 V19.0 H62.5 V24.8 H78.0 V33.4 H62.5 V39.0 H79.5 V48.5 H50.5 Z ` +
+    `M83.5,9.5 H114.5 V19.0 H105.0 V48.5 H93.0 V19.0 H83.5 Z ` +
+    `M118.5,9.5 H148.0 V19.0 H130.5 V25.0 H146.5 V33.6 H130.5 V48.5 H118.5 Z ` +
+    `M152.0,9.5 H173.5 C180.8,9.5 184.8,13.5 184.8,19.8 C184.8,24.8 182.2,28.2 178.0,29.8 C182.2,31.0 184.5,33.8 184.7,38.8 L185.2,48.5 H173.2 L172.9,38.5 C172.8,35.2 171.2,33.8 167.8,33.8 H164.0 V48.5 H152.0 Z ` +
+    `M164.0,18.8 H170.8 C173.2,18.8 174.5,20.0 174.5,22.0 C174.5,24.0 173.2,25.2 170.8,25.2 H164.0 Z ` +
+    `M189.5,9.5 H218.5 V19.0 H201.5 V24.8 H217.0 V33.4 H201.5 V39.0 H218.5 V48.5 H189.5 Z ` +
+    `M222.5,9.5 H238.5 C250.5,9.5 257.5,16.2 257.5,29.0 C257.5,41.8 250.5,48.5 238.5,48.5 H222.5 Z ` +
+    `M234.5,19.0 H238.0 C243.2,19.0 245.8,22.2 245.8,29.0 C245.8,35.8 243.2,39.0 238.0,39.0 H234.5 Z` +
+    `"/></g></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export function makeBookmakerFallbackSvg(key: string): string {
   const k = String(key || '').toLowerCase() as BookmakerPartnerKey;
+  if (k === 'betfred') {
+    return makeBetfredOfficialWordmarkSvg();
+  }
   const p = BOOKMAKER_PARTNERS[k] || BOOKMAKER_PARTNERS.betfred;
   const label =
-    k === 'betfred'
-      ? 'BF'
-      : k === 'virginbet'
+    k === 'virginbet'
       ? 'VB'
       : k === 'betvictor'
       ? 'BV'
@@ -6703,6 +6736,18 @@ export function makeBookmakerFallbackSvg(key: string): string {
 export const FEATURED_BOOKMAKER_SECTION_TITLE = '🔥 Featured UK Bookmaker Welcome Offers (18+ Ad)';
 export const UKGC_AFFILIATE_SUBLABEL = '18+ | T&Cs Apply | Commercial Partner | BeGambleAware.org';
 
+export const BETFRED_BRAND_FONT_FAMILY = "'Montserrat', 'Inter', 'Arial Black', sans-serif" as const;
+
+export const BETFRED_BRAND_TYPOGRAPHY = {
+  fontFamily: BETFRED_BRAND_FONT_FAMILY,
+  ctaFontWeight: 900,
+  subtextFontWeight: 800,
+  letterSpacing: '0.5px',
+  subtextLetterSpacing: '0.4px',
+  textTransform: 'uppercase' as const,
+  fontSmoothing: 'antialiased' as const,
+} as const;
+
 export interface BookmakerOfferCardItem extends BookmakerPartnerConfig {
   key: BookmakerPartnerKey;
   fallbackSvgUrl: string;
@@ -6710,6 +6755,9 @@ export interface BookmakerOfferCardItem extends BookmakerPartnerConfig {
   logoHeightPx: 32;
   relAttr: string;
   targetAttr: '_blank';
+  fontFamily: string;
+  fontWeight: 900;
+  letterSpacing: '0.5px';
 }
 
 export interface BackThisPickButtonItem {
@@ -6731,6 +6779,9 @@ export interface BackThisPickButtonItem {
   logoHeightPx: 22;
   relAttr: string;
   targetAttr: '_blank';
+  fontFamily: string;
+  fontWeight: 900;
+  letterSpacing: '0.5px';
 }
 
 export function getBookmakerOfferCards(
@@ -6748,6 +6799,9 @@ export function getBookmakerOfferCards(
       logoHeightPx: 32 as const,
       relAttr: 'noopener noreferrer sponsored',
       targetAttr: '_blank' as const,
+      fontFamily: BETFRED_BRAND_FONT_FAMILY,
+      fontWeight: 900 as const,
+      letterSpacing: '0.5px' as const,
     }));
 }
 
@@ -6782,6 +6836,9 @@ export function getBackThisPickActionButtons(
         logoHeightPx: 22 as const,
         relAttr: 'noopener noreferrer sponsored',
         targetAttr: '_blank' as const,
+        fontFamily: BETFRED_BRAND_FONT_FAMILY,
+        fontWeight: 900 as const,
+        letterSpacing: '0.5px' as const,
       };
     });
 
@@ -6983,6 +7040,9 @@ export interface SlipModalBookmakerButtonItem {
   relAttr: 'noopener noreferrer sponsored';
   targetAttr: '_blank';
   isTopFeaturedButton: boolean;
+  fontFamily: string;
+  fontWeight: 900;
+  letterSpacing: '0.5px';
 }
 
 export function getSlipModalBookmakerButtons(
@@ -7009,6 +7069,9 @@ export function getSlipModalBookmakerButtons(
         relAttr: 'noopener noreferrer sponsored' as const,
         targetAttr: '_blank' as const,
         isTopFeaturedButton: idx === 0,
+        fontFamily: BETFRED_BRAND_FONT_FAMILY,
+        fontWeight: 900 as const,
+        letterSpacing: '0.5px' as const,
       };
     });
 }
