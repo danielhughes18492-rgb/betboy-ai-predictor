@@ -6592,7 +6592,9 @@ export interface BookmakerPartnerConfig {
 export type BookmakerPartnerKey = 'betfred' | 'virginbet' | 'betvictor';
 
 export const BETFRED_AFFILIATE_URL_STORAGE_KEY = 'betboy_betfred_affiliate_url_v1';
-export const DEFAULT_BETFRED_AFFILIATE_URL = 'https://betting.partners/link/198/115?cid=57';
+export const BETFRED_WELCOME_OFFER_BANNER_URL = 'https://bfpartners.click/o/59RjUZ?site_id=117689';
+export const BETFRED_BETTING_SLIP_BUTTON_URL = 'https://bfpartners.click/o/wJQgDI?lpage=CveKm2&site_id=117689';
+export const DEFAULT_BETFRED_AFFILIATE_URL = BETFRED_WELCOME_OFFER_BANNER_URL;
 export const DEFAULT_VIRGIN_BET_AFFILIATE_URL = 'https://betting.partners/link/198/160?cid=57';
 export const DEFAULT_BET_VICTOR_AFFILIATE_URL = 'https://betting.partners/link/198/121?cid=57';
 
@@ -6606,7 +6608,8 @@ export function getActiveBetfredAffiliateUrl(
       if (
         saved &&
         /^https?:\/\//i.test(saved) &&
-        saved.replace(/\/+$/, '').toLowerCase() !== 'https://www.betfred.com'
+        saved.replace(/\/+$/, '').toLowerCase() !== 'https://www.betfred.com' &&
+        !saved.includes('betting.partners')
       ) {
         return saved;
       }
@@ -6640,7 +6643,7 @@ export const BOOKMAKER_PARTNERS: Record<BookmakerPartnerKey, BookmakerPartnerCon
     name: 'Betfred',
     offerText: 'Bet £10 Get £50 in Free Bets',
     ctaText: 'Bet £10 Get £50',
-    url: DEFAULT_BETFRED_AFFILIATE_URL,
+    url: BETFRED_WELCOME_OFFER_BANNER_URL,
     terms:
       '18+ New UK customers only. Register, deposit with Debit Card, and place first bet £10+ at Evens (2.0)+ on Sports within 7 days to get £50 in Free Bets. T&Cs apply. BeGambleAware.org | GamCare.org.uk',
     accentColor: '#00529b',
@@ -6679,7 +6682,7 @@ export const BOOKMAKER_PARTNERS: Record<BookmakerPartnerKey, BookmakerPartnerCon
 
 export function makeBookmakerFallbackSvg(key: string): string {
   const k = String(key || '').toLowerCase() as BookmakerPartnerKey;
-  const p = BOOKMAKER_PARTNERS[k] || BOOKMAKER_PARTNERS.betfred || BOOKMAKER_PARTNERS.virginbet;
+  const p = BOOKMAKER_PARTNERS[k] || BOOKMAKER_PARTNERS.betfred;
   const label =
     k === 'betfred'
       ? 'BF'
@@ -6697,7 +6700,7 @@ export function makeBookmakerFallbackSvg(key: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export const FEATURED_BOOKMAKER_SECTION_TITLE = '🔥 Featured UK Bookmaker Free Bets (18+ Ad)';
+export const FEATURED_BOOKMAKER_SECTION_TITLE = '🔥 Featured UK Bookmaker Welcome Offers (18+ Ad)';
 export const UKGC_AFFILIATE_SUBLABEL = '18+ | T&Cs Apply | Commercial Partner | BeGambleAware.org';
 
 export interface BookmakerOfferCardItem extends BookmakerPartnerConfig {
@@ -6733,12 +6736,13 @@ export interface BackThisPickButtonItem {
 export function getBookmakerOfferCards(
   partners: Record<BookmakerPartnerKey, BookmakerPartnerConfig> = BOOKMAKER_PARTNERS
 ): BookmakerOfferCardItem[] {
-  const keys: BookmakerPartnerKey[] = ['betfred', 'virginbet', 'betvictor'];
+  const keys: BookmakerPartnerKey[] = ['betfred'];
   return keys
     .filter((k) => Boolean(partners[k]))
     .map((k) => ({
       key: k,
       ...partners[k],
+      url: BETFRED_WELCOME_OFFER_BANNER_URL,
       fallbackSvgUrl: makeBookmakerFallbackSvg(k),
       logoWidthPx: 32 as const,
       logoHeightPx: 32 as const,
@@ -6753,17 +6757,17 @@ export function getBackThisPickActionButtons(
   buttons: BackThisPickButtonItem[];
   subLabel: string;
 } {
-  const keys: BookmakerPartnerKey[] = ['betfred', 'virginbet', 'betvictor'];
+  const keys: BookmakerPartnerKey[] = ['betfred'];
   const buttons = keys
     .filter((k) => Boolean(partners[k]))
-    .map((k, idx) => {
+    .map((k) => {
       const p = partners[k];
-      const buttonLabel = idx === 0 ? `Place Bet at ${p.name} ↗` : `Back on ${p.name} ↗`;
+      const buttonLabel = `Place Bet at ${p.name} ↗`;
       return {
         key: k,
         name: p.name,
         buttonLabel,
-        url: p.url,
+        url: BETFRED_BETTING_SLIP_BUTTON_URL,
         accentColor: p.accentColor,
         logoUrl: p.logoUrl,
         brandBg: p.brandBg,
@@ -6952,7 +6956,7 @@ export function shouldShowScrollTopFab(
 export const BOOKMAKER_SLIP_HOOKS: Record<BookmakerPartnerKey, { titleText: string; subText: string }> = {
   betfred: {
     titleText: 'Place Bet at Betfred ↗',
-    subText: 'Bet £10 Get £50 in Free Bets',
+    subText: 'Bet Builder Bonus - Up to 100% Cash Bonus',
   },
   virginbet: {
     titleText: 'VIRGIN BET ↗',
@@ -6984,7 +6988,7 @@ export interface SlipModalBookmakerButtonItem {
 export function getSlipModalBookmakerButtons(
   partners: Record<BookmakerPartnerKey, BookmakerPartnerConfig> = BOOKMAKER_PARTNERS
 ): SlipModalBookmakerButtonItem[] {
-  const keys: BookmakerPartnerKey[] = ['betfred', 'virginbet', 'betvictor'];
+  const keys: BookmakerPartnerKey[] = ['betfred'];
   return keys
     .filter((k) => Boolean(partners[k]))
     .map((k, idx) => {
@@ -6995,7 +6999,7 @@ export function getSlipModalBookmakerButtons(
         name: p.name,
         titleText: hook.titleText,
         subText: hook.subText,
-        url: p.url,
+        url: BETFRED_BETTING_SLIP_BUTTON_URL,
         accentColor: p.accentColor,
         logoUrl: p.logoUrl,
         brandBg: p.brandBg,
@@ -9564,7 +9568,7 @@ export function verifyGooglePlayTwaBookmakerLinks(
   rel: 'noopener noreferrer';
   opensInExternalBrowser: true;
 }[] {
-  const keys: BookmakerPartnerKey[] = ['betfred', 'virginbet', 'betvictor'];
+  const keys: BookmakerPartnerKey[] = ['betfred'];
   return keys.map((k) => ({
     partnerKey: k,
     url: partners[k].url,
@@ -11796,6 +11800,19 @@ export const SAFE_PULL_TO_REFRESH_CONFIG = {
   preventsHardReloadLoops: true,
   pullThresholdPx: 70,
 };
+
+export function resolveFeaturedWelcomeOfferStripState(isCollapsedByUser = false): {
+  isVisibleByDefault: true;
+  isHidden: boolean;
+  toggleButtonLabel: '▾ Compact' | '▸ Show Welcome Offer';
+} {
+  return {
+    isVisibleByDefault: true,
+    isHidden: Boolean(isCollapsedByUser),
+    toggleButtonLabel: isCollapsedByUser ? '▸ Show Welcome Offer' : '▾ Compact',
+  };
+}
+
 
 
 
