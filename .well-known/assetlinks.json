@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "uk.co.betboyai.app.mobile",
+        "package_name": "uk.co.betboyai.app",
         "sha256_cert_fingerprints": ["A3:11:1D:73:85:B6:19:1A:9E:80:8F:B9:4A:9C:65:50:81:10:FA:67:79:F6:0C:4C:65:B0:21:A9:4F:7D:EF:5D"]
       }
     }]
