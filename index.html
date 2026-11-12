@@ -27,19 +27,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261112-v8">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261112-v8">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261112-v8">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v8">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v8">
-<meta name="betboy-build-version" content="20261112-v8">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261112-v9">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261112-v9">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261112-v9">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v9">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v9">
+<meta name="betboy-build-version" content="20261112-v9">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261112-v8';
-    var SW_SCRIPT_URL = '/sw.js?v=20261112-v8';
+    var CURRENT_BUILD_VERSION = '20261112-v9';
+    var SW_SCRIPT_URL = '/sw.js?v=20261112-v9';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -4218,6 +4218,92 @@ window.calculateSlipReturnsSummary = function() {
   };
 };
 
+window.HAPTIC_PATTERNS = {
+  slip_add: [14],
+  slip_remove: [10],
+  slip_batch_add: [14, 35, 22],
+  slip_clear: [18, 40, 12],
+  slip_copy: [12, 30, 18],
+  ui_tap: [8]
+};
+
+window.resolveHapticPattern = function(type) {
+  var key = (type && window.HAPTIC_PATTERNS[type]) ? type : 'ui_tap';
+  return window.HAPTIC_PATTERNS[key].slice();
+};
+
+window._hapticFeedbackHistory = window._hapticFeedbackHistory || [];
+
+window.ensureIosHapticSwitchDom = function() {
+  if (typeof document === 'undefined' || !document.body) return null;
+  var existingLbl = document.getElementById('betboyIosHapticLabel');
+  if (existingLbl) return existingLbl;
+  try {
+    var wrap = document.createElement('div');
+    wrap.id = 'betboyIosHapticWrap';
+    wrap.setAttribute('aria-hidden', 'true');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;';
+    wrap.innerHTML = '<input type="checkbox" id="betboyIosHapticSwitch" switch tabindex="-1" /><label id="betboyIosHapticLabel" for="betboyIosHapticSwitch"></label>';
+    document.body.appendChild(wrap);
+    return document.getElementById('betboyIosHapticLabel');
+  } catch (e) {
+    return null;
+  }
+};
+
+window.triggerHapticFeedback = function(type, navOverride, options) {
+  var normType = (type && window.HAPTIC_PATTERNS[type]) ? type : 'ui_tap';
+  var pattern = window.resolveHapticPattern(normType);
+
+  if ((options && options.enabled === false) || window.hapticsEnabled === false) {
+    var disabledRes = { triggered: false, type: normType, pattern: pattern, method: 'none', timestamp: Date.now() };
+    window._lastHapticFeedback = disabledRes;
+    return disabledRes;
+  }
+
+  var nav = (navOverride !== undefined) ? navOverride : (typeof navigator !== 'undefined' ? navigator : null);
+  var triggered = false;
+  var method = 'none';
+
+  if (nav && typeof nav.vibrate === 'function') {
+    try {
+      var ok = nav.vibrate(pattern.length === 1 ? pattern[0] : pattern);
+      if (ok !== false) {
+        triggered = true;
+        method = 'vibrate_api';
+      }
+    } catch (e) {}
+  }
+
+  if (!triggered) {
+    try {
+      var isIos = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+      if (isIos) {
+        var lbl = window.ensureIosHapticSwitchDom();
+        if (lbl && typeof lbl.click === 'function') {
+          lbl.click();
+          triggered = true;
+          method = 'ios_switch_fallback';
+        }
+      }
+    } catch (e2) {}
+  }
+
+  var res = {
+    triggered: triggered,
+    type: normType,
+    pattern: pattern,
+    method: method,
+    timestamp: Date.now()
+  };
+  window._lastHapticFeedback = res;
+  window._hapticFeedbackHistory.push(res);
+  if (window._hapticFeedbackHistory.length > 25) {
+    window._hapticFeedbackHistory.shift();
+  }
+  return res;
+};
+
 window.marketSelectionRegistry = window.marketSelectionRegistry || {};
 
 window.toggleBetSlipByEl = function(elId, e) {
@@ -4244,6 +4330,7 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
         node.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
       }
     });
+    if (window.triggerHapticFeedback) window.triggerHapticFeedback('slip_remove');
     if (window.showAppToast) window.showAppToast("Removed from Slip: " + team + " (" + market + ")");
   } else {
     window.betSlip.push(betId);
@@ -4273,6 +4360,7 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
         node.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
       }
     });
+    if (window.triggerHapticFeedback) window.triggerHapticFeedback('slip_add');
     if (window.showAppToast) window.showAppToast("➕ Added: " + team + " • " + market + " (" + window.formatOdds(odds, false) + ")");
   }
   window.updateMiniSlip(true);
@@ -4283,7 +4371,11 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
 };
 
 window.setSlipBetMode = function(mode) {
+  var prevMode = window.slipBetMode;
   window.slipBetMode = (mode === 'singles') ? 'singles' : 'acca';
+  if (prevMode && prevMode !== window.slipBetMode && window.triggerHapticFeedback) {
+    window.triggerHapticFeedback('ui_tap');
+  }
   window.safeSet("airp_slip_mode", window.slipBetMode);
   var bAcca = document.getElementById("slipModeAccaBtn");
   var bSing = document.getElementById("slipModeSinglesBtn");
@@ -4312,6 +4404,7 @@ window.onSlipStakeInput = function(val) {
 };
 
 window.setQuickStake = function(amount) {
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   window.slipStake = Number(amount) || 10;
   window.safeSet("airp_slip_stake", window.slipStake);
   var inp = document.getElementById("slipStakeInput");
@@ -4386,6 +4479,7 @@ window.removeBetFromSlip = function(betId) {
     }
   });
 
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('slip_remove');
   window.updateMiniSlip();
   window.renderSlipSelections();
 
@@ -4409,6 +4503,7 @@ window.clearBetSlip = function() {
 
   window.betSlip = [];
   window.betSlipData = {};
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('slip_clear');
   window.updateMiniSlip();
   window.closeBookmakerModal();
   if (window.showAppToast) window.showAppToast("Betting slip cleared.");
@@ -4629,6 +4724,7 @@ window.copySlipTextSilently = function(text) {
 };
 
 window.onSlipBookmakerClick = function(partnerKey, ev) {
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('slip_copy');
   var partners = window.BOOKMAKER_PARTNERS || BOOKMAKER_PARTNERS || {};
   var p = partners[partnerKey];
   var partnerName = p && p.name ? p.name : "Bookmaker";
@@ -4646,6 +4742,7 @@ window.copyCurrentBetSlip = function() {
     if (window.showAppToast) window.showAppToast("No selections on your betting slip to copy!");
     return;
   }
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('slip_copy');
   var text = window.formatCurrentBetSlipText();
   window._lastAutoCopiedSlipText = text;
 
@@ -4847,6 +4944,7 @@ window.updateSortBarButtonStyles = function() {
 };
 
 window.setMatchSortMode = function(mode){
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   window.matchSortMode = mode;
   window.safeSet("airp_sort_mode", mode);
   // Auto-close / hide Top Slip box when switching to Best % or Kick-Off
@@ -4859,6 +4957,7 @@ window.setMatchSortMode = function(mode){
 };
 
 window.toggleTopAccaSlip = function(){
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   var box = document.getElementById("topAccaSlipBox");
   if (!box) return;
   var isCurrentlyHidden = box.classList.contains("hidden");
@@ -4908,6 +5007,7 @@ window.addDailyAccaToSlip = function(e){
     if (el) el.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-900/40');
   });
 
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('slip_batch_add');
   window.updateMiniSlip(true);
   window.runEngine(false);
   window.openSlipModal();
@@ -10113,6 +10213,7 @@ window.renderMatchTimelineSection = function(m, defaultOpen){
 window.toggleCard = function(id){
   var el = document.getElementById("d-" + id);
   if(!el) return;
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   var wrap = document.getElementById("cardWrap-" + id);
   var isCurrentlyOpen = !!window.expandedCards[id] && !el.classList.contains("hidden");
   var nextOpen = !isCurrentlyOpen;
@@ -11972,6 +12073,7 @@ window.initDateTabs = function(targetDate){
 };
 
 window.selectDateTab = function(dateStr){
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   if(window.selectedDate !== dateStr){
     window.xPostSelectedIds = [];
     window.xPostMarketOverrides = {};
@@ -12064,6 +12166,7 @@ window.syncDashboardEmptyStateUI = function(totalMatchesOverride){
 };
 
 window.toggleTierView = function(tier){
+  if (window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   window.activeTierFilter = (window.activeTierFilter === tier) ? 'ALL' : tier;
   if(typeof window.syncDashboardEmptyStateUI === "function"){
     window.syncDashboardEmptyStateUI();

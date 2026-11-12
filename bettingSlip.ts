@@ -12421,6 +12421,107 @@ export function calculateModelDrivenMatchPrediction(params: {
   };
 }
 
+// ============================================================================
+// MOBILE HAPTIC VIBRATION FEEDBACK ENGINE
+// ============================================================================
+
+export type HapticFeedbackType =
+  | 'slip_add'
+  | 'slip_remove'
+  | 'slip_batch_add'
+  | 'slip_clear'
+  | 'slip_copy'
+  | 'ui_tap';
+
+export const HAPTIC_PATTERNS: Record<HapticFeedbackType, readonly number[]> = {
+  slip_add: [14],
+  slip_remove: [10],
+  slip_batch_add: [14, 35, 22],
+  slip_clear: [18, 40, 12],
+  slip_copy: [12, 30, 18],
+  ui_tap: [8],
+} as const;
+
+export function resolveHapticPattern(type?: HapticFeedbackType | string): number[] {
+  const key = (type && type in HAPTIC_PATTERNS ? type : 'ui_tap') as HapticFeedbackType;
+  return [...HAPTIC_PATTERNS[key]];
+}
+
+export interface HapticNavigatorLike {
+  vibrate?: (pattern: number | number[]) => boolean;
+}
+
+export interface HapticFeedbackResult {
+  triggered: boolean;
+  type: HapticFeedbackType;
+  pattern: number[];
+  method: 'vibrate_api' | 'ios_switch_fallback' | 'none';
+}
+
+export function triggerHapticFeedback(
+  type: HapticFeedbackType | string = 'ui_tap',
+  navOverride?: HapticNavigatorLike | null,
+  options?: { enabled?: boolean; iosSwitchTrigger?: () => boolean }
+): HapticFeedbackResult {
+  const normType = (type && type in HAPTIC_PATTERNS ? type : 'ui_tap') as HapticFeedbackType;
+  const pattern = resolveHapticPattern(normType);
+
+  if (options && options.enabled === false) {
+    return {
+      triggered: false,
+      type: normType,
+      pattern,
+      method: 'none',
+    };
+  }
+
+  const nav: HapticNavigatorLike | undefined =
+    navOverride !== undefined
+      ? navOverride || undefined
+      : typeof navigator !== 'undefined'
+      ? (navigator as unknown as HapticNavigatorLike)
+      : undefined;
+
+  if (nav && typeof nav.vibrate === 'function') {
+    try {
+      const ok = nav.vibrate(pattern.length === 1 ? pattern[0] : pattern);
+      if (ok !== false) {
+        return {
+          triggered: true,
+          type: normType,
+          pattern,
+          method: 'vibrate_api',
+        };
+      }
+    } catch {
+      // Ignore vibration permission or unsupported context errors
+    }
+  }
+
+  if (options && typeof options.iosSwitchTrigger === 'function') {
+    try {
+      const fallbackOk = options.iosSwitchTrigger();
+      if (fallbackOk) {
+        return {
+          triggered: true,
+          type: normType,
+          pattern,
+          method: 'ios_switch_fallback',
+        };
+      }
+    } catch {
+      // Ignore iOS switch fallback errors
+    }
+  }
+
+  return {
+    triggered: false,
+    type: normType,
+    pattern,
+    method: 'none',
+  };
+}
+
 
 
 
