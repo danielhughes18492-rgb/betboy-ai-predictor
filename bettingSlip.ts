@@ -12522,6 +12522,127 @@ export function triggerHapticFeedback(
   };
 }
 
+// ============================================================================
+// AI BEST PICK RIGHT-SIDE SVG ACTION PILL & MINI SLIP CLEAR BUTTON HELPERS
+// ============================================================================
+
+export interface QuickBetActionPillState {
+  label: 'ADD' | 'ADDED' | 'SETTLED';
+  iconType: 'svg_plus' | 'svg_check' | 'svg_cross';
+  usesCenteredVectorSvg: true;
+  pillPosition: 'right_beside_odds';
+  isInteractive: boolean;
+}
+
+export function resolveQuickBetActionPillState(input: {
+  isSelected: boolean;
+  isSettledWon?: boolean | null;
+}): QuickBetActionPillState {
+  if (input.isSettledWon === false) {
+    return {
+      label: 'SETTLED',
+      iconType: 'svg_cross',
+      usesCenteredVectorSvg: true,
+      pillPosition: 'right_beside_odds',
+      isInteractive: false,
+    };
+  }
+  if (input.isSelected) {
+    return {
+      label: 'ADDED',
+      iconType: 'svg_check',
+      usesCenteredVectorSvg: true,
+      pillPosition: 'right_beside_odds',
+      isInteractive: true,
+    };
+  }
+  return {
+    label: 'ADD',
+    iconType: 'svg_plus',
+    usesCenteredVectorSvg: true,
+    pillPosition: 'right_beside_odds',
+    isInteractive: true,
+  };
+}
+
+export interface MiniSlipBannerActionsState {
+  visible: boolean;
+  selectionCount: number;
+  showClearButton: boolean;
+  clearButtonId: 'miniSlipClearBtn';
+  clearButtonLabel: 'Clear';
+  clearStopsPropagation: true;
+  openCalculatorLabel: 'Calculator 🧮';
+}
+
+export function resolveMiniSlipBannerActions(selectionCount: number): MiniSlipBannerActionsState {
+  const count = Math.max(0, Math.floor(Number(selectionCount) || 0));
+  return {
+    visible: count > 0,
+    selectionCount: count,
+    showClearButton: count > 0,
+    clearButtonId: 'miniSlipClearBtn',
+    clearButtonLabel: 'Clear',
+    clearStopsPropagation: true,
+    openCalculatorLabel: 'Calculator 🧮',
+  };
+}
+
+// ============================================================================
+// KICK-OFF TIME PARSER & BRACKET-PRESERVING SORT ENGINE (CONF vs KO)
+// ============================================================================
+
+export function parseKickoffMinutes(koStr?: string | null): number {
+  const raw = String(koStr || '15:00').trim();
+  const match = raw.match(/(\d{1,2}):(\d{2})/);
+  if (!match) return 15 * 60;
+  const hours = Math.min(23, Math.max(0, parseInt(match[1], 10) || 0));
+  const mins = Math.min(59, Math.max(0, parseInt(match[2], 10) || 0));
+  return hours * 60 + mins;
+}
+
+export interface SortableBracketFixture {
+  id?: string | number;
+  fav?: string;
+  opp?: string;
+  ko?: string;
+  displayConf?: number;
+  fs?: number;
+}
+
+export function compareFixturesBySortMode<T extends SortableBracketFixture>(
+  a: T,
+  b: T,
+  sortMode: 'CONF' | 'KO' | string = 'CONF'
+): number {
+  const confA = typeof a.displayConf === 'number' && !Number.isNaN(a.displayConf) ? a.displayConf : Number(a.fs ?? 0);
+  const confB = typeof b.displayConf === 'number' && !Number.isNaN(b.displayConf) ? b.displayConf : Number(b.fs ?? 0);
+  const koA = parseKickoffMinutes(a.ko);
+  const koB = parseKickoffMinutes(b.ko);
+
+  if (sortMode === 'KO') {
+    if (koA !== koB) return koA - koB;
+    if (Math.abs(confB - confA) > 0.001) return confB - confA;
+    return String(a.fav || '').localeCompare(String(b.fav || ''));
+  }
+
+  if (Math.abs(confB - confA) > 0.001) return confB - confA;
+  if (koA !== koB) return koA - koB;
+  return String(a.fav || '').localeCompare(String(b.fav || ''));
+}
+
+export function sortBracketFixturesByMode<T extends SortableBracketFixture>(
+  brackets: { greens: T[]; ambers: T[]; reds: T[] },
+  sortMode: 'CONF' | 'KO' | string = 'CONF'
+): { greens: T[]; ambers: T[]; reds: T[] } {
+  return {
+    greens: [...(brackets.greens || [])].sort((a, b) => compareFixturesBySortMode(a, b, sortMode)),
+    ambers: [...(brackets.ambers || [])].sort((a, b) => compareFixturesBySortMode(a, b, sortMode)),
+    reds: [...(brackets.reds || [])].sort((a, b) => compareFixturesBySortMode(a, b, sortMode)),
+  };
+}
+
+
 
 
 
