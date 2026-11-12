@@ -27,18 +27,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta name="betboy-build-version" content="20261111-v1">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261112-v7">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261112-v7">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261112-v7">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v7">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v7">
+<meta name="betboy-build-version" content="20261112-v7">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261111-v1';
-    var SW_SCRIPT_URL = '/sw.js?v=20261111-v1';
+    var CURRENT_BUILD_VERSION = '20261112-v7';
+    var SW_SCRIPT_URL = '/sw.js?v=20261112-v7';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -1001,6 +1002,12 @@ window.PWA_MANIFEST_CONFIG = {
   "orientation": "portrait",
   "icons": [
     {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
@@ -1160,8 +1167,21 @@ window.setupHomeScreenAppIcons = function(){
   } else if (!manifestLink.getAttribute("href")) {
     manifestLink.setAttribute("href", "/manifest.json");
   }
-  // Service Worker registration is handled once in the top <head> script with ?v=20261111-v1
-  // to avoid duplicate SW registrations with differing script URLs causing controllerchange loops.
+  // Ensure Apple iOS Home Screen icons always scale the full 512x512 BetBoy AI shield edge-to-edge into 180x180 (never cropping top-left)
+  var ensureAppleTouchLinks = function(hrefUrl){
+    var rels = ["apple-touch-icon", "apple-touch-icon-precomposed"];
+    for(var i = 0; i < rels.length; i++){
+      var linkEl = document.querySelector('link[rel="' + rels[i] + '"]');
+      if(!linkEl){
+        linkEl = document.createElement("link");
+        linkEl.rel = rels[i];
+        linkEl.setAttribute("sizes", "180x180");
+        document.head.appendChild(linkEl);
+      }
+      linkEl.href = hrefUrl;
+    }
+  };
+  ensureAppleTouchLinks("/apple-touch-icon.png?v=20261112-v7");
 };
 window.setupHomeScreenAppIcons();
 document.addEventListener("DOMContentLoaded", function(){
