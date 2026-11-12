@@ -9530,7 +9530,7 @@ export const BETBOY_PWA_META_CONFIG = {
   appleMobileWebAppTitle: 'BetBoy AI',
   mobileWebAppCapable: 'yes',
   themeColor: '#0a0f1d',
-  headerSafeAreaPaddingTop: 'calc(12px + env(safe-area-inset-top, 0px)) !important',
+  headerSafeAreaPaddingTop: 'max(12px, env(safe-area-inset-top)) !important',
 } as const;
 
 export const BETBOY_PWA_MANIFEST = {

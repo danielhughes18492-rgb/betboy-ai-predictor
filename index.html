@@ -27,19 +27,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261112-v7">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261112-v7">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261112-v7">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v7">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v7">
-<meta name="betboy-build-version" content="20261112-v7">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261112-v8">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261112-v8">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261112-v8">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v8">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v8">
+<meta name="betboy-build-version" content="20261112-v8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261112-v7';
-    var SW_SCRIPT_URL = '/sw.js?v=20261112-v7';
+    var CURRENT_BUILD_VERSION = '20261112-v8';
+    var SW_SCRIPT_URL = '/sw.js?v=20261112-v8';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -166,14 +166,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     -webkit-overflow-scrolling: touch;
   }
   html, body {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 36px);
+    margin-top: 0 !important;
+    padding-top: 0 !important;
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
   }
   body { background: radial-gradient(circle at 50% -10%, #111e38 0%, #070c18 55%, #03060c 100%) !important; background-attachment: fixed !important; color:#f8fafc; font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif; margin:0; -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 36px); overflow-x: clip; overflow-y: visible; touch-action: pan-y; }
   header.sticky, #topAppHeader {
-    padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: max(12px, env(safe-area-inset-top)) !important;
   }
 
   /* 1. Stop fixture cards from jittering/snapping on load or live score refresh */
@@ -1960,7 +1960,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 
 <!-- Clean Streamlined Top Header -->
-<header id="topAppHeader" style="padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;" class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-3 py-2 flex justify-between items-center gap-2 shadow-lg">
+<header id="topAppHeader" style="padding-top: max(12px, env(safe-area-inset-top)) !important;" class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-3 py-2 flex justify-between items-center gap-2 shadow-lg">
   <div id="headerBrandLogoBtn" onclick="window.handleAdminLogoTap(event)" role="button" tabindex="0" aria-label="BetBoy AI Logo" class="flex items-center gap-2 min-w-0 cursor-pointer select-none active:scale-95 transition-transform">
     <img src="" id="headerLogoImg" class="w-8 h-8 rounded-full shadow-md border border-emerald-500/40 flex-shrink-0 pointer-events-none">
     <script>document.getElementById("headerLogoImg").src = window.getBetBoyLogoUrl();</script>

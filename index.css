@@ -5,10 +5,21 @@ html {
   -webkit-overflow-scrolling: touch;
 }
 
+html,
+body {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 body {
   overflow-x: clip;
   overflow-y: visible;
   touch-action: pan-y;
+}
+
+header.sticky,
+#topAppHeader {
+  padding-top: max(12px, env(safe-area-inset-top)) !important;
 }
 
 #scrollTopFab,
