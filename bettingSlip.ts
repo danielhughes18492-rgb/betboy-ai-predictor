@@ -4701,22 +4701,25 @@ export function generateAutoSavedCardTitle(
   const ids = (selectedIds || []).map(Number).filter((n) => Number.isFinite(n) && n > 0);
   if (!ids.length) return 'Empty X Post Card';
 
-  const fixtureMap: Record<number, { fav: string; opp: string }> = {};
+  const fixtureMap: Record<number, { fav: string; opp: string; venue?: string }> = {};
   (fixtures || []).forEach((f) => {
-    fixtureMap[Number(f.id)] = { fav: f.fav, opp: f.opp };
+    fixtureMap[Number(f.id)] = { fav: f.fav, opp: f.opp, venue: (f as any).venue };
   });
 
   if (ids.length === 1) {
     const match = fixtureMap[ids[0]];
     const overrides = (marketOverrides && marketOverrides[ids[0]]) || [];
     if (match) {
+      const isHomeFav = String(match.venue || 'HOME').toUpperCase() !== 'AWAY';
+      const homeTeam = isHomeFav ? match.fav : match.opp;
+      const awayTeam = isHomeFav ? match.opp : match.fav;
       if (overrides.length > 1) {
-        return `${match.fav} vs ${match.opp} (${overrides.length}-Leg Builder)`;
+        return `${homeTeam} vs ${awayTeam} (${overrides.length}-Leg Builder)`;
       }
       if (overrides.length === 1) {
-        return `${match.fav} vs ${match.opp} (${overrides[0]})`;
+        return `${homeTeam} vs ${awayTeam} (${overrides[0]})`;
       }
-      return `${match.fav} vs ${match.opp} (Spotlight)`;
+      return `${homeTeam} vs ${awayTeam} (Spotlight)`;
     }
     return `Match #${ids[0]} Spotlight`;
   }
@@ -12642,10 +12645,89 @@ export function sortBracketFixturesByMode<T extends SortableBracketFixture>(
   };
 }
 
+// ============================================================================
+// HOME vs AWAY TEAM ORDERING FOR BANKER SLIP, BETTING SLIP & MATCHUP LABELS
+// ============================================================================
 
+export interface ResolvedMatchHomeAway {
+  isHomeFav: boolean;
+  homeTeam: string;
+  awayTeam: string;
+  favTeam: string;
+  oppTeam: string;
+  matchupText: string;
+}
 
+export function resolveMatchHomeAwayTeams(
+  m:
+    | {
+        fav?: string;
+        opp?: string;
+        team?: string;
+        venue?: string;
+        isHomeFav?: boolean;
+        homeTeam?: string;
+        awayTeam?: string;
+      }
+    | null
+    | undefined
+): ResolvedMatchHomeAway {
+  const favTeam = String(m?.fav || m?.team || m?.homeTeam || '').trim();
+  const oppTeam = String(m?.opp || m?.awayTeam || '').trim();
+  const isHomeFav =
+    typeof m?.isHomeFav === 'boolean'
+      ? m.isHomeFav
+      : String(m?.venue || 'HOME').toUpperCase() !== 'AWAY';
 
+  const homeTeam = m?.homeTeam
+    ? String(m.homeTeam).trim()
+    : isHomeFav
+    ? favTeam
+    : oppTeam || favTeam;
+  const awayTeam = m?.awayTeam
+    ? String(m.awayTeam).trim()
+    : isHomeFav
+    ? oppTeam
+    : oppTeam
+    ? favTeam
+    : '';
 
+  const matchupText = awayTeam ? `${homeTeam} vs ${awayTeam}` : homeTeam;
+  return {
+    isHomeFav,
+    homeTeam,
+    awayTeam,
+    favTeam: favTeam || homeTeam,
+    oppTeam: oppTeam || awayTeam,
+    matchupText,
+  };
+}
 
-
-
+export function formatBankerSlipMatchupDisplay(
+  m: {
+    fav?: string;
+    opp?: string;
+    team?: string;
+    venue?: string;
+    isHomeFav?: boolean;
+    homeTeam?: string;
+    awayTeam?: string;
+  }
+): {
+  homeTeam: string;
+  awayTeam: string;
+  isHomeFav: boolean;
+  homeFavoured: boolean;
+  awayFavoured: boolean;
+  matchupText: string;
+} {
+  const resolved = resolveMatchHomeAwayTeams(m);
+  return {
+    homeTeam: resolved.homeTeam,
+    awayTeam: resolved.awayTeam,
+    isHomeFav: resolved.isHomeFav,
+    homeFavoured: resolved.isHomeFav,
+    awayFavoured: !resolved.isHomeFav,
+    matchupText: resolved.matchupText,
+  };
+}
