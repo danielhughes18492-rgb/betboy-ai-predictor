@@ -5872,10 +5872,17 @@ window.updateModelHeaders = function(){
       }
     }
 
-    var liveOddsEntry = (window.lookupOddsApiEntryForMatch ? window.lookupOddsApiEntryForMatch(window.liveOddsApiMap, { id: idNum, homeName: hN, awayName: aN }) : null) || espnOdds;
+    // 100% Model-Driven Favourite & Confidence Calculation (60-Metric + 5-Pillar System; NEVER derived from bookmaker odds)
+    var fivePillarEval = window.evaluateFixtureWith5Pillars
+      ? window.evaluateFixtureWith5Pillars({ id: idNum, homeTeam: hN, awayTeam: aN, league: lgCode })
+      : null;
+    var poissonHomeEdge = (fivePillarEval && fivePillarEval.simulation)
+      ? ((Number(fivePillarEval.simulation.homeWinPct || 45) - Number(fivePillarEval.simulation.awayWinPct || 30)) * 0.22)
+      : 0;
 
-    var hEff = hP + (homeB * 0.45), aEff = aP - (awayP * 0.35);
-    var favH = liveOddsEntry ? (liveOddsEntry.homeOdds <= liveOddsEntry.awayOdds) : (hEff >= aEff);
+    var hEff = hP + (homeB * 0.45) + (hFormScore * 1.1) + poissonHomeEdge;
+    var aEff = aP - (awayP * 0.35) + (aFormScore * 1.1) - poissonHomeEdge;
+    var favH = (hEff >= aEff);
     var venue = favH ? "HOME" : "AWAY", fav = favH ? hN : aN, opp = favH ? aN : hN;
     var formDiff = favH ? (hFormScore - aFormScore) : (aFormScore - hFormScore);
     var seedJitter = ((((idNum * 31) + (idx * 17)) % 19) - 9) * 0.11;
@@ -5889,40 +5896,19 @@ window.updateModelHeaders = function(){
     var tierGap = Math.max(0, oppTier - favTier);
     var absTierGap = Math.abs(oppTier - favTier);
 
+    var adaptiveAdj = (teamRelBonus * 0.30) + (lgCalBonus * 0.30);
+    var ratingGap = Math.abs(hEff - aEff) + (formDiff * 1.6) + ((lgCode === "FAC" || lgCode === "EFLT") ? tierGap * 3.2 : tierGap * 1.4) + adaptiveAdj;
     var conf;
-    if(liveOddsEntry && liveOddsEntry.homeOdds > 1.01 && liveOddsEntry.awayOdds > 1.01){
-      var fOdds = favH ? liveOddsEntry.homeOdds : liveOddsEntry.awayOdds;
-      var venueAdj = favH ? 0.35 : -0.45;
-      var adaptiveAdj = (teamRelBonus * 0.25) + (lgCalBonus * 0.25);
-      // Realistic distribution anchored to true market odds + form/record edge:
-      // - Strong favourites (fOdds <= 1.38): Green Picks (75.2% to 85.4%) (~15%-25% of slate)
-      // - Moderate favourites (1.39 <= fOdds <= 2.16): Amber Picks (60.2% to 74.6%) (~55%-65% of slate)
-      // - Tight toss-ups (fOdds >= 2.17): Red Picks (51.2% to 59.5%) (~15%-25% of slate)
-      if(fOdds <= 1.38){
-        conf = 75.3 + Math.min(9.6, (1.38 - fOdds) * 29.5 + Math.max(-0.5, formDiff * 0.45) + venueAdj + adaptiveAdj + seedJitter * 0.65);
-        conf = Math.min(85.4, Math.max(75.2, conf));
-      } else if(fOdds <= 2.16){
-        var tAmb = (2.16 - fOdds) / (2.16 - 1.39);
-        conf = 60.4 + (tAmb * 13.8) + (formDiff * 0.35) + venueAdj + adaptiveAdj + seedJitter;
-        conf = Math.min(74.6, Math.max(60.2, conf));
-      } else {
-        var tRed = Math.min(1, (fOdds - 2.17) / 0.68);
-        conf = 59.3 - (tRed * 7.4) + (formDiff * 0.28) + venueAdj + adaptiveAdj + seedJitter;
-        conf = Math.min(59.5, Math.max(51.2, conf));
-      }
+    if(ratingGap >= 14.5){
+      conf = 75.3 + Math.min(8.8, (ratingGap - 14.5) * 0.55) + Math.abs(seedJitter) * 0.4;
+      conf = Math.min(84.8, Math.max(75.1, conf));
+    } else if(ratingGap >= 5.2){
+      var tGap = (ratingGap - 5.2) / (14.5 - 5.2);
+      conf = 60.4 + (tGap * 13.8) + (favH ? 0.5 : -0.6) + seedJitter;
+      conf = Math.min(74.6, Math.max(60.2, conf));
     } else {
-      var ratingGap = Math.abs(hEff - aEff) + (formDiff * 1.6) + (lgCode === "FAC" ? tierGap * 3.2 : 0);
-      if(ratingGap >= 14.5){
-        conf = 75.3 + Math.min(8.4, (ratingGap - 14.5) * 0.55) + Math.abs(seedJitter) * 0.4;
-        conf = Math.min(83.8, Math.max(75.1, conf));
-      } else if(ratingGap >= 5.2){
-        var tGap = (ratingGap - 5.2) / (14.5 - 5.2);
-        conf = 60.4 + (tGap * 13.8) + (favH ? 0.5 : -0.6) + seedJitter;
-        conf = Math.min(74.6, Math.max(60.2, conf));
-      } else {
-        conf = 53.5 + (ratingGap * 1.05) + seedJitter;
-        conf = Math.min(59.5, Math.max(51.2, conf));
-      }
+      conf = 53.5 + (ratingGap * 1.05) + seedJitter;
+      conf = Math.min(59.5, Math.max(51.2, conf));
     }
 
     conf = parseFloat(conf.toFixed(1));
@@ -7342,10 +7328,23 @@ window.getDeterministicDrift = function(m, lockCutoffMs){
 // Raw 16 Popular Betting Markets + Outright 1X2 Calculation (Unified 60-Metric + 5-Pillar Engine)
 window.computeRawMarkets = function(m, fs){
   var conf = +fs || +m.base || 65, isH = m.venue === "HOME";
-  var w = (window.DEFAULT_CORE_STATE && window.DEFAULT_CORE_STATE.defaultAdaptiveWeights) || { xgMult: 1.0, bttsMult: 1.0, cornersMult: 1.0, cardsMult: 1.0, fhMult: 1.0, handicapMult: 1.0 };
-  var xgM = Number(w.xgMult || 1.0);
-  var bttsM = Number(w.bttsMult || 1.0);
-  var cornM = Number(w.cornersMult || 1.0);
+  var w = window.adaptiveWeights || (window.DEFAULT_CORE_STATE && window.DEFAULT_CORE_STATE.defaultAdaptiveWeights) || { xgMult: 1.0, bttsMult: 1.0, cornersMult: 1.0, cardsMult: 1.0, fhMult: 1.0, handicapMult: 1.0 };
+  var mw = (w && w.metricWeights) || {};
+  var avgMw = function(codes){
+    var sum = 0, cnt = 0;
+    for(var i = 0; i < codes.length; i++){
+      var val = Number(mw[codes[i]]);
+      if(Number.isFinite(val) && val > 0){ sum += val; cnt++; }
+    }
+    return cnt > 0 ? (sum / cnt) : 1.0;
+  };
+  var xgMetricMult = avgMw(["M01","M02","M03","M04","M32","M33","M34","M35"]);
+  var defMetricMult = avgMw(["M13","M14","M15","M16","M36","M37","M38","M39"]);
+  var setPieceMetricMult = avgMw(["M09","M10","M49","M50","M55"]);
+
+  var xgM = Number(w.xgMult || 1.0) * (0.7 + 0.3 * xgMetricMult);
+  var bttsM = Number(w.bttsMult || 1.0) * (0.75 + 0.25 * defMetricMult);
+  var cornM = Number(w.cornersMult || 1.0) * (0.75 + 0.25 * setPieceMetricMult);
   var cardM = Number(w.cardsMult || 1.0);
   var fhM = Number(w.fhMult || 1.0);
   var hcapM = Number(w.handicapMult || 1.0);
@@ -7374,7 +7373,7 @@ window.computeRawMarkets = function(m, fs){
   var cupO25Boost = isFaCup ? (2.6 + cupGap * 0.85) : (isEflTrophy ? (5.4 + cupGap * 0.95) : 0);
   var cupBttsBoost = isFaCup ? 1.8 : (isEflTrophy ? 4.8 : 0);
 
-  // Realistic baseline curve inputs before anchoring to decimal odds + AI edge
+  // Pure 60-Metric + 5-Pillar Bivariate Poisson statistical probabilities (never anchored to bookmaker odds)
   var bttsYes = parseFloat(cl((22 + minX * 26.5 + tot * 4.2 + cupBttsBoost) * bttsM, 38, 74.5));
   var o25Val = parseFloat(cl(12 + tot * 18.2 + cupO25Boost, 38, 76.5));
 
@@ -7428,9 +7427,31 @@ window.calculateMatchBrierAndLogLoss = function(predictedProbPct, actualWon){
   return { brierScore: brierScore, logLoss: logLoss, probability01: p01, outcome01: y };
 };
 
-window.getSixtyMetricCompositeDelta = function(){
-  // Keep core match confidence 100% deterministic across all devices & Incognito sessions
-  return 0;
+window.getSixtyMetricCompositeDelta = function(m){
+  if(!m || !window.adaptiveWeights) return 0;
+  var w = window.adaptiveWeights;
+  var mw = w.metricWeights || {};
+  var avgCodes = function(codes){
+    var sum = 0, cnt = 0;
+    for(var i = 0; i < codes.length; i++){
+      var v = Number(mw[codes[i]]);
+      if(Number.isFinite(v) && v > 0){ sum += v; cnt++; }
+    }
+    return cnt > 0 ? (sum / cnt) : 1.0;
+  };
+  var p1 = avgCodes(["M01","M02","M03","M04","M05","M06","M32","M33","M34","M35"]);
+  var p2 = avgCodes(["M13","M14","M15","M16","M17","M18","M36","M37","M38","M39"]);
+  var p3 = avgCodes(["M21","M22","M23","M24","M25","M41","M42","M43","M44","M45"]);
+  var p4 = avgCodes(["M26","M27","M28","M29","M30","M31","M47","M48","M49","M50"]);
+  var p5 = avgCodes(["M53","M54","M55","M56","M57","M58","M59","M60"]);
+  var compMult = (p1 * 0.28) + (p2 * 0.22) + (p3 * 0.20) + (p4 * 0.15) + (p5 * 0.15);
+  var xgDiff = (Number(m.xg) || 1.65) - (Number(m.xga) || 1.05);
+  var metricDelta = ((compMult - 1.0) * 12.5) + ((compMult - 1.0) * xgDiff * 4.0);
+  var favKey = window.normTeamKey ? window.normTeamKey(m.fav || "") : String(m.fav || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  var teamRel = (favKey && w.teamReliability && Number.isFinite(Number(w.teamReliability[favKey]))) ? Number(w.teamReliability[favKey]) : 0;
+  var lgCal = (m.league && w.leagueCalibration && Number.isFinite(Number(w.leagueCalibration[m.league]))) ? Number(w.leagueCalibration[m.league]) : 0;
+  var totalDelta = metricDelta + (teamRel * 0.35) + (lgCal * 0.35);
+  return parseFloat(Math.max(-4.5, Math.min(4.5, totalDelta)).toFixed(2));
 };
 
 // T-30m Final Pre-Match Audit & Deterministic Confidence Lock
@@ -8182,43 +8203,47 @@ window.calcExtraMarkets = function(m, fs){
   var secondarySafeCap = parseFloat(Math.max(48.0, matchPeakCap - 0.8).toFixed(1));
   var propCap = parseFloat(Math.max(46.0, matchPeakCap - 1.4).toFixed(1));
 
-  var anchorProb = function(decOdds, edgePct, tierCap){
-    var pVal = window.calculateRealisticAiProbability(decOdds, edgePct);
+  // 100% Model-Driven Market Probability Resolver (derived strictly from 60-Metric + 5-Pillar rawM + modelEdgePct, NEVER from bookmaker decimalOdds)
+  var modelProb = function(rawModelVal, edgePct, minLo, tierCap){
+    var baseP = parseFloat(rawModelVal);
+    if(!Number.isFinite(baseP)) baseP = 55.0;
+    var pVal = baseP + (Number(edgePct) || 0);
+    if(typeof minLo === "number" && pVal < minLo) pVal = minLo;
     if(typeof tierCap === "number" && pVal > tierCap) pVal = tierCap;
-    return pVal.toFixed(1);
+    return Math.min(92.5, Math.max(8.0, pVal)).toFixed(1);
   };
 
-  // Primary match prediction probability (<m.fav> to Win) is strictly matchPeakCap
+  // Primary match prediction probability (<m.fav> to Win) is strictly matchPeakCap from the 60-Metric + 5-Pillar Model
   var favWinNum = matchPeakCap;
   var favWinCalP = favWinNum.toFixed(1);
-  var drawNum = parseFloat(anchorProb(drawOdds, isTightAvoid ? 1.5 : -1.2, 33.0));
+  var drawNum = parseFloat(modelProb(rawM.draw1x2, isTightAvoid ? 1.5 : -1.0, 11.5, 33.0));
   var drawCalP = drawNum.toFixed(1);
-  var oppWinNum = parseFloat(anchorProb(oppOdds, -1.8, 39.5));
+  var oppWinNum = parseFloat(Math.min(39.5, Math.max(6.5, 100.0 - favWinNum - drawNum)).toFixed(1));
   var oppWinCalP = oppWinNum.toFixed(1);
 
-  var o15Odds = mkOdds(rawM.o15, 1, "o15");
-  var o25Odds = mkOdds(rawM.o25, 2, "o25");
-  var o35Odds = mkOdds(rawM.o35, 3, "o35");
-  var u25Odds = mkOdds(rawM.u25, 4, "u25");
-  var u35Odds = mkOdds(rawM.u35, 5, "u35");
-  var bttsOdds = mkOdds(rawM.btts, 6, "btts");
-  var bttsNoOdds = mkOdds(rawM.bttsNo, 7, "bttsNo");
-  var f15Odds = mkOdds(rawM.f15, 13, "f15");
-  var fh05Odds = mkOdds(rawM.fh05, 14, "fh05");
-  var c85Odds = mkOdds(rawM.c85, 15, "c85");
-  var cards35Odds = mkOdds(rawM.cards35, 16, "cards35");
+  var o15CalP = modelProb(rawM.o15, (goalsEdge * 0.70) + (favModelEdge * 0.30), 50.0, Math.min(89.5, matchPeakCap + 2.5));
+  var o25CalP = modelProb(rawM.o25, goalsEdge, 36.0, secondarySafeCap);
+  var o35CalP = modelProb(rawM.o35, goalsEdge * 0.7, 20.0, 52.0);
+  var u25CalP = modelProb(100.0 - parseFloat(o25CalP), -goalsEdge * 0.2, 24.0, 62.0);
+  var u35CalP = modelProb(rawM.u35, -goalsEdge * 0.5, 48.0, 74.0);
+  var bttsCalP = modelProb(rawM.btts, bttsEdge, 36.0, secondarySafeCap);
+  var bttsNoCalP = modelProb(100.0 - parseFloat(bttsCalP), -bttsEdge * 0.2, 26.0, 61.0);
+  var f15CalP = modelProb(rawM.f15, favModelEdge * 0.55, 38.0, propCap);
+  var fh05CalP = modelProb(rawM.fh05, (goalsEdge * 0.70) + (favModelEdge * 0.25), 46.0, propCap);
+  var c85CalP = modelProb(rawM.c85, 0.8, 48.0, propCap);
+  var cards35CalP = modelProb(rawM.cards35, 0.4, 42.0, propCap);
 
-  var o15CalP = anchorProb(o15Odds, (goalsEdge * 0.70) + (favModelEdge * 0.30), Math.min(89.5, matchPeakCap + 2.5));
-  var o25CalP = anchorProb(o25Odds, goalsEdge, secondarySafeCap);
-  var o35CalP = anchorProb(o35Odds, goalsEdge * 0.7, 52.0);
-  var u25CalP = anchorProb(u25Odds, -goalsEdge * 0.7, 62.0);
-  var u35CalP = anchorProb(u35Odds, -goalsEdge * 0.5, 74.0);
-  var bttsCalP = anchorProb(bttsOdds, bttsEdge, secondarySafeCap);
-  var bttsNoCalP = anchorProb(bttsNoOdds, -bttsEdge * 0.7, 61.0);
-  var f15CalP = anchorProb(f15Odds, favModelEdge * 0.55, propCap);
-  var fh05CalP = anchorProb(fh05Odds, (goalsEdge * 0.70) + (favModelEdge * 0.25), propCap);
-  var c85CalP = anchorProb(c85Odds, 0.8, propCap);
-  var cards35CalP = anchorProb(cards35Odds, 0.4, propCap);
+  var o15Odds = mkOdds(o15CalP, 1, "o15");
+  var o25Odds = mkOdds(o25CalP, 2, "o25");
+  var o35Odds = mkOdds(o35CalP, 3, "o35");
+  var u25Odds = mkOdds(u25CalP, 4, "u25");
+  var u35Odds = mkOdds(u35CalP, 5, "u35");
+  var bttsOdds = mkOdds(bttsCalP, 6, "btts");
+  var bttsNoOdds = mkOdds(bttsNoCalP, 7, "bttsNo");
+  var f15Odds = mkOdds(f15CalP, 13, "f15");
+  var fh05Odds = mkOdds(fh05CalP, 14, "fh05");
+  var c85Odds = mkOdds(c85CalP, 15, "c85");
+  var cards35Odds = mkOdds(cards35CalP, 16, "cards35");
 
   // Strict Mathematical Hierarchy in 24-Market Drawer:
   // Double Chance (1X/X2) > Draw No Bet (DNB) > Straight Win (1X2) > Win & Over 1.5 Goals > -1.0 Handicap
@@ -8313,10 +8338,10 @@ window.calcExtraMarkets = function(m, fs){
   var oppAhPlus1PctVal = oppAhPlus1Num.toFixed(1);
   var oppO05RawVal = rawM.oppO05 || "52.5";
   var oppO15RawVal = rawM.oppO15 || "24.5";
-  var oppO05Odds = mkOdds(oppO05RawVal, 25, "oppO05");
-  var oppO15Odds = mkOdds(oppO15RawVal, 26, "oppO15");
-  var oppO05PctVal = anchorProb(oppO05Odds, bttsEdge * 0.5, 67.5);
-  var oppO15PctVal = anchorProb(oppO15Odds, -1.2, 44.0);
+  var oppO05PctVal = modelProb(oppO05RawVal, bttsEdge * 0.5, 32.0, 67.5);
+  var oppO15PctVal = modelProb(oppO15RawVal, -1.2, 14.0, 44.0);
+  var oppO05Odds = mkOdds(oppO05PctVal, 25, "oppO05");
+  var oppO15Odds = mkOdds(oppO15PctVal, 26, "oppO15");
 
   var oppDnbOdds = probToDistinctOdds(oppDnbNum, 0.006, 22);
   if (oppDnbOdds >= oppOdds - 0.05) oppDnbOdds = parseFloat(Math.max(1.20, oppOdds - 0.18).toFixed(2));

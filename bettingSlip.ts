@@ -12177,6 +12177,245 @@ export function resolveT30LockedMatchAndMarkets(
   };
 }
 
+/**
+ * Computes the active 60-metric self-evolving composite adjustment (-4.5% to +4.5%)
+ * from the learned metricWeights (M01..M60), teamReliability, and leagueCalibration.
+ */
+export function calculateSixtyMetricCompositeDelta(
+  match: {
+    fav?: string;
+    opp?: string;
+    venue?: 'HOME' | 'AWAY' | string;
+    league?: string;
+    xg?: number;
+    xga?: number;
+  },
+  adaptiveWeights?: {
+    homeBoost?: number;
+    awayPen?: number;
+    xgMult?: number;
+    teamReliability?: Record<string, number>;
+    leagueCalibration?: Record<string, number>;
+    metricWeights?: Record<string, number>;
+  }
+): number {
+  if (!match || !adaptiveWeights) return 0;
+  const mw = adaptiveWeights.metricWeights || {};
+  const avgCodes = (codes: string[]): number => {
+    let sum = 0;
+    let count = 0;
+    for (const c of codes) {
+      const v = Number(mw[c]);
+      if (Number.isFinite(v) && v > 0) {
+        sum += v;
+        count++;
+      }
+    }
+    return count > 0 ? sum / count : 1.0;
+  };
+
+  // Pillar 1: Attacking & xG/xT metrics
+  const p1Mult = avgCodes(['M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M32', 'M33', 'M34', 'M35']);
+  // Pillar 2: Defensive & Pressing / Field Tilt metrics
+  const p2Mult = avgCodes(['M13', 'M14', 'M15', 'M16', 'M17', 'M18', 'M36', 'M37', 'M38', 'M39']);
+  // Pillar 3: Form, Momentum & Tactical Archetype metrics
+  const p3Mult = avgCodes(['M21', 'M22', 'M23', 'M24', 'M25', 'M41', 'M42', 'M43', 'M44', 'M45']);
+  // Pillar 4: Venue, Rest & Disruption metrics
+  const p4Mult = avgCodes(['M26', 'M27', 'M28', 'M29', 'M30', 'M31', 'M47', 'M48', 'M49', 'M50']);
+  // Pillar 5: Bivariate Poisson & Calibration metrics
+  const p5Mult = avgCodes(['M53', 'M54', 'M55', 'M56', 'M57', 'M58', 'M59', 'M60']);
+
+  const compositeMult = p1Mult * 0.28 + p2Mult * 0.22 + p3Mult * 0.20 + p4Mult * 0.15 + p5Mult * 0.15;
+  const xgDiff = (Number(match.xg) || 1.65) - (Number(match.xga) || 1.05);
+  const metricDelta = (compositeMult - 1.0) * 12.5 + (compositeMult - 1.0) * xgDiff * 4.0;
+
+  const favKey = String(match.fav || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+  const teamRel =
+    favKey && adaptiveWeights.teamReliability && Number.isFinite(Number(adaptiveWeights.teamReliability[favKey]))
+      ? Number(adaptiveWeights.teamReliability[favKey])
+      : 0;
+  const lgCode = String(match.league || 'PL');
+  const lgCal =
+    adaptiveWeights.leagueCalibration && Number.isFinite(Number(adaptiveWeights.leagueCalibration[lgCode]))
+      ? Number(adaptiveWeights.leagueCalibration[lgCode])
+      : 0;
+
+  const totalDelta = metricDelta + teamRel * 0.35 + lgCal * 0.35;
+  return parseFloat(Math.max(-4.5, Math.min(4.5, totalDelta)).toFixed(2));
+}
+
+export interface ModelDrivenMatchPredictionResult {
+  fav: string;
+  opp: string;
+  venue: 'HOME' | 'AWAY';
+  isHomeFav: boolean;
+  conf: number;
+  xg: number;
+  xga: number;
+  homeWinPct: number;
+  drawPct: number;
+  awayWinPct: number;
+  over15Pct: number;
+  over25Pct: number;
+  bttsYesPct: number;
+  usedBookmakerOddsForPercentages: false;
+}
+
+/**
+ * Computes a fixture's favourite, headline AI confidence %, expected goals (xG / xGA),
+ * and core market probabilities 100% from the 60-Metric + 5-Pillar Adaptive Modeling System.
+ * Bookmaker odds are NEVER used to compute or alter the model's confidence percentages.
+ */
+export function calculateModelDrivenMatchPrediction(params: {
+  id?: number | string;
+  homeTeam: string;
+  awayTeam: string;
+  league?: string;
+  homePower?: number;
+  awayPower?: number;
+  homeFormStr?: string;
+  awayFormStr?: string;
+  adaptiveWeights?: {
+    homeBoost?: number;
+    awayPen?: number;
+    xgMult?: number;
+    teamReliability?: Record<string, number>;
+    leagueCalibration?: Record<string, number>;
+    metricWeights?: Record<string, number>;
+  };
+  /** Optional bookmaker odds passed in ONLY to prove they do not affect model percentages */
+  bookmakerOddsIgnored?: {
+    homeOdds?: number;
+    drawOdds?: number;
+    awayOdds?: number;
+  };
+}): ModelDrivenMatchPredictionResult {
+  const lgCode = params.league || 'PL';
+  const hN = params.homeTeam;
+  const aN = params.awayTeam;
+  const idNum = Math.abs(Number(params.id) || 101);
+
+  // 1. Evaluate 5-Pillar + Bivariate Poisson model
+  const fivePillar = evaluateFixtureWith5Pillars({
+    id: idNum,
+    homeTeam: hN,
+    awayTeam: aN,
+    league: lgCode,
+  });
+
+  // 2. Club Power & Form Differential
+  const hP =
+    typeof params.homePower === 'number' && Number.isFinite(params.homePower)
+      ? params.homePower
+      : Math.round(52 + fivePillar.homeMetrics.npxGFor * 12.5 + (fivePillar.homeMetrics.fieldTiltPct - 50) * 0.45);
+  const aP =
+    typeof params.awayPower === 'number' && Number.isFinite(params.awayPower)
+      ? params.awayPower
+      : Math.round(52 + fivePillar.awayMetrics.npxGFor * 12.5 + (fivePillar.awayMetrics.fieldTiltPct - 50) * 0.45);
+
+  const hFormScore = parseEspnFormScore(params.homeFormStr);
+  const aFormScore = parseEspnFormScore(params.awayFormStr);
+
+  const w = params.adaptiveWeights || {
+    homeBoost: 4.2,
+    awayPen: 3.2,
+    xgMult: 1.0,
+    teamReliability: {},
+    leagueCalibration: {},
+    metricWeights: {},
+  };
+  const homeB = Number(w.homeBoost ?? 4.2);
+  const awayP = Number(w.awayPen ?? 3.2);
+  const xgM = Number(w.xgMult ?? 1.0);
+
+  // Combine Club Power + 5-Pillar Bivariate Poisson Edge + Form + Venue Boost (ZERO bookmaker odds usage)
+  const poissonHomeEdge = (fivePillar.simulation.homeWinPct - fivePillar.simulation.awayWinPct) * 0.22;
+  const hEff = hP + homeB * 0.45 + hFormScore * 1.1 + poissonHomeEdge;
+  const aEff = aP - awayP * 0.35 + aFormScore * 1.1 - poissonHomeEdge;
+
+  const favH = hEff >= aEff;
+  const venue: 'HOME' | 'AWAY' = favH ? 'HOME' : 'AWAY';
+  const fav = favH ? hN : aN;
+  const opp = favH ? aN : hN;
+  const formDiff = favH ? hFormScore - aFormScore : aFormScore - hFormScore;
+
+  const favTier = resolveClubDivisionTier(fav);
+  const oppTier = resolveClubDivisionTier(opp);
+  const tierGap = Math.max(0, oppTier - favTier);
+
+  const seedJitter = (((idNum * 31 + 17) % 19) - 9) * 0.11;
+  const ratingGap =
+    Math.abs(hEff - aEff) +
+    formDiff * 1.6 +
+    (lgCode === 'FAC' || lgCode === 'EFLT' ? tierGap * 3.2 : tierGap * 1.4);
+
+  let baseConf: number;
+  if (ratingGap >= 14.5) {
+    baseConf = 75.3 + Math.min(8.8, (ratingGap - 14.5) * 0.55) + Math.abs(seedJitter) * 0.4;
+    baseConf = Math.min(84.8, Math.max(75.1, baseConf));
+  } else if (ratingGap >= 5.2) {
+    const tGap = (ratingGap - 5.2) / (14.5 - 5.2);
+    baseConf = 60.4 + tGap * 13.8 + (favH ? 0.5 : -0.6) + seedJitter;
+    baseConf = Math.min(74.6, Math.max(60.2, baseConf));
+  } else {
+    baseConf = 53.5 + ratingGap * 1.05 + seedJitter;
+    baseConf = Math.min(59.5, Math.max(51.2, baseConf));
+  }
+
+  const cupXgBoost = lgCode === 'FAC' ? 0.08 + tierGap * 0.14 : lgCode === 'EFLT' ? 0.28 : 0;
+  const calcFavXg = (1.14 + (baseConf - 50) * 0.032 + formDiff * 0.04 + cupXgBoost) * xgM;
+  const calcOppXg = Math.max(0.62, (1.36 - (baseConf - 50) * 0.019 - formDiff * 0.02) * (2 - xgM));
+
+  const pillarFavXg = favH ? fivePillar.expectedGoals.lambdaHome : fivePillar.expectedGoals.lambdaAway;
+  const pillarOppXg = favH ? fivePillar.expectedGoals.lambdaAway : fivePillar.expectedGoals.lambdaHome;
+
+  const xg = parseFloat((calcFavXg * 0.65 + pillarFavXg * 0.35).toFixed(2));
+  const xga = parseFloat((calcOppXg * 0.65 + pillarOppXg * 0.35).toFixed(2));
+
+  const sixtyMetricDelta = calculateSixtyMetricCompositeDelta(
+    { fav, opp, venue, league: lgCode, xg, xga },
+    w
+  );
+  const conf = parseFloat(Math.min(86.2, Math.max(51.1, baseConf + sixtyMetricDelta * 0.5)).toFixed(1));
+
+  const drawPct = parseFloat(Math.min(31.0, Math.max(11.5, 30.0 - (conf - 52) * 0.48)).toFixed(1));
+  const oppWinPct = parseFloat(Math.min(39.0, Math.max(6.5, 100 - conf - drawPct)).toFixed(1));
+  const homeWinPct = favH ? conf : oppWinPct;
+  const awayWinPct = favH ? oppWinPct : conf;
+
+  const totXg = xg + xga;
+  const minXg = Math.min(xg, xga);
+  const over15Pct = parseFloat(
+    Math.min(88.5, Math.max(52.0, (36 + totXg * 13.5) * 0.65 + fivePillar.simulation.over15Pct * 0.35)).toFixed(1)
+  );
+  const over25Pct = parseFloat(
+    Math.min(78.5, Math.max(38.0, (12 + totXg * 18.2) * 0.65 + fivePillar.simulation.over25Pct * 0.35)).toFixed(1)
+  );
+  const bttsYesPct = parseFloat(
+    Math.min(76.5, Math.max(38.0, (22 + minXg * 26.5 + totXg * 4.2) * 0.65 + fivePillar.simulation.bttsYesPct * 0.35)).toFixed(1)
+  );
+
+  return {
+    fav,
+    opp,
+    venue,
+    isHomeFav: favH,
+    conf,
+    xg,
+    xga,
+    homeWinPct,
+    drawPct,
+    awayWinPct,
+    over15Pct,
+    over25Pct,
+    bttsYesPct,
+    usedBookmakerOddsForPercentages: false,
+  };
+}
+
+
 
 
 
