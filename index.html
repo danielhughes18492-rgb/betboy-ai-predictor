@@ -32,19 +32,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="twitter:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v23">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v23">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v23">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v23">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v23">
-<meta name="betboy-build-version" content="20261113-v23">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v24">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v24">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v24">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v24">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v24">
+<meta name="betboy-build-version" content="20261113-v24">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v23';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v23';
+    var CURRENT_BUILD_VERSION = '20261113-v24';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v24';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -12388,6 +12388,36 @@ window.formatMatchStartDateIsoUtc = function(dateStr, koTime, isoOverride){
   }
 };
 
+window.LEAGUE_ADDRESS_COUNTRY_MAP = {
+  PL: 'GB', CHA: 'GB', L1: 'GB', L2: 'GB', FAC: 'GB', EFLC: 'GB', EFLT: 'GB', SPL: 'GB',
+  LL: 'ES', BUN: 'DE', FL1: 'FR', SA: 'IT'
+};
+
+window.resolveSportsEventAddressCountry = function(fixture){
+  var rawCountry = String((fixture && (fixture.countryCode || fixture.country)) || '').trim();
+  if(rawCountry){
+    var low = rawCountry.toLowerCase();
+    if(/^(gb|uk|gb-eng|gb-sct|gb-wls|england|scotland|wales|united kingdom)$/.test(low)) return 'GB';
+    if(low === 'spain' || low === 'es') return 'ES';
+    if(low === 'germany' || low === 'de') return 'DE';
+    if(low === 'france' || low === 'fr') return 'FR';
+    if(low === 'italy' || low === 'it') return 'IT';
+    if(/^[a-z]{2}$/i.test(rawCountry)) return rawCountry.toUpperCase();
+  }
+  var leagueCode = String((fixture && fixture.league) || '').trim().toUpperCase();
+  return (window.LEAGUE_ADDRESS_COUNTRY_MAP && window.LEAGUE_ADDRESS_COUNTRY_MAP[leagueCode]) || 'GB';
+};
+
+window.resolveSportsEventLocationName = function(fixture, homeTeamName){
+  var explicitStadium = String((fixture && (fixture.stadium || fixture.stadiumName || fixture.venueName)) || '').trim();
+  if(explicitStadium) return explicitStadium;
+  var rawVenue = String((fixture && fixture.venue) || '').trim();
+  if(rawVenue && !/^(HOME|AWAY)$/i.test(rawVenue)){
+    return rawVenue;
+  }
+  return homeTeamName + ' Stadium';
+};
+
 window.buildSportsEventJsonLd = function(fixtures, options){
   var list = Array.isArray(fixtures) ? fixtures : [];
   var activeDate = (options && options.activeDate) ? String(options.activeDate).trim() : '';
@@ -12438,12 +12468,26 @@ window.buildSportsEventJsonLd = function(fixtures, options){
       : (Number.isFinite(rawMktPct) && rawMktPct > 0 ? rawMktPct : fallbackConf);
     var confText = Number.isFinite(confNum) ? confNum.toFixed(1).replace(/\.0$/, '') : '70';
 
-    var startDate = window.formatMatchStartDateIsoUtc(matchDate || null, m.ko, m.startDateIso);
+    var startDate = window.formatMatchStartDateIsoUtc(matchDate || null, m.ko, m.startDateIso || m.kickoff);
+    var endDate = new Date(new Date(startDate).getTime() + 105 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+    var locationName = window.resolveSportsEventLocationName(m, homeTeamName);
+    var addressCountry = window.resolveSportsEventAddressCountry(m);
 
     events.push({
       '@type': 'SportsEvent',
       name: homeTeamName + ' vs ' + awayTeamName,
       startDate: startDate,
+      endDate: endDate,
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: {
+        '@type': 'Place',
+        name: locationName,
+        address: {
+          '@type': 'PostalAddress',
+          addressCountry: addressCountry
+        }
+      },
       homeTeam: {
         '@type': 'SportsTeam',
         name: homeTeamName
@@ -12452,6 +12496,10 @@ window.buildSportsEventJsonLd = function(fixtures, options){
         '@type': 'SportsTeam',
         name: awayTeamName
       },
+      performer: [
+        { '@type': 'SportsTeam', name: homeTeamName },
+        { '@type': 'SportsTeam', name: awayTeamName }
+      ],
       description: 'AI prediction: ' + confText + '% confidence for ' + cleanSel + '.'
     });
   });
@@ -16476,7 +16524,7 @@ window.downloadSnapshotFile = function(){
     document.body.appendChild(a);
     a.click();
     setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 1500);
-    window.showAppToast("ðŸ’¾ Downloading index.html...");
+    window.showAppToast("í ½í²¾ Downloading index.html...");
   } catch(e){}
 };
 

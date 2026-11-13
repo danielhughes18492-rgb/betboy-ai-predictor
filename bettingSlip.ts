@@ -13388,11 +13388,17 @@ export interface SportsEventFixtureInput {
   id?: number | string;
   date?: string | null;
   ko?: string | null;
+  kickoff?: string | null;
   startDateIso?: string | null;
   fav?: string | null;
   opp?: string | null;
   team?: string | null;
   venue?: string | null;
+  venueName?: string | null;
+  stadium?: string | null;
+  stadiumName?: string | null;
+  country?: string | null;
+  countryCode?: string | null;
   homeTeam?: string | null;
   awayTeam?: string | null;
   league?: string | null;
@@ -13414,18 +13420,75 @@ export interface SportsTeamJsonLd {
   name: string;
 }
 
+export interface SportsEventLocationJsonLd {
+  '@type': 'Place';
+  name: string;
+  address: {
+    '@type': 'PostalAddress';
+    addressCountry: string;
+  };
+}
+
 export interface SportsEventJsonLdItem {
   '@type': 'SportsEvent';
   name: string;
   startDate: string;
+  endDate: string;
+  eventStatus: 'https://schema.org/EventScheduled';
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode';
+  location: SportsEventLocationJsonLd;
   homeTeam: SportsTeamJsonLd;
   awayTeam: SportsTeamJsonLd;
+  performer: SportsTeamJsonLd[];
   description: string;
 }
 
 export interface SportsEventGraphJsonLd {
   '@context': 'https://schema.org';
   '@graph': SportsEventJsonLdItem[];
+}
+
+const LEAGUE_ADDRESS_COUNTRY_MAP: Record<string, string> = {
+  PL: 'GB',
+  CHA: 'GB',
+  L1: 'GB',
+  L2: 'GB',
+  FAC: 'GB',
+  EFLC: 'GB',
+  EFLT: 'GB',
+  SPL: 'GB',
+  LL: 'ES',
+  BUN: 'DE',
+  FL1: 'FR',
+  SA: 'IT',
+};
+
+function resolveSportsEventAddressCountry(fixture: SportsEventFixtureInput): string {
+  const rawCountry = String(fixture.countryCode || fixture.country || '').trim();
+  if (rawCountry) {
+    const low = rawCountry.toLowerCase();
+    if (/^(gb|uk|gb-eng|gb-sct|gb-wls|england|scotland|wales|united kingdom)$/.test(low)) return 'GB';
+    if (low === 'spain' || low === 'es') return 'ES';
+    if (low === 'germany' || low === 'de') return 'DE';
+    if (low === 'france' || low === 'fr') return 'FR';
+    if (low === 'italy' || low === 'it') return 'IT';
+    if (/^[a-z]{2}$/i.test(rawCountry)) return rawCountry.toUpperCase();
+  }
+  const leagueCode = String(fixture.league || '').trim().toUpperCase();
+  return LEAGUE_ADDRESS_COUNTRY_MAP[leagueCode] || 'GB';
+}
+
+function resolveSportsEventLocationName(
+  fixture: SportsEventFixtureInput,
+  homeTeamName: string
+): string {
+  const explicitStadium = String(fixture.stadium || fixture.stadiumName || fixture.venueName || '').trim();
+  if (explicitStadium) return explicitStadium;
+  const rawVenue = String(fixture.venue || '').trim();
+  if (rawVenue && !/^(HOME|AWAY)$/i.test(rawVenue)) {
+    return rawVenue;
+  }
+  return `${homeTeamName} Stadium`;
 }
 
 export function formatMatchStartDateIsoUtc(
@@ -13552,20 +13615,37 @@ export function buildSportsEventJsonLd(
       : (Number.isFinite(rawMktPct) && rawMktPct > 0 ? rawMktPct : fallbackConf);
     const confText = Number.isFinite(confNum) ? confNum.toFixed(1).replace(/\.0$/, '') : '70';
 
-    const startDate = formatMatchStartDateIsoUtc(matchDate || null, m.ko, m.startDateIso);
+    const startDate = formatMatchStartDateIsoUtc(matchDate || null, m.ko, m.startDateIso || m.kickoff);
+    const endDate = new Date(new Date(startDate).getTime() + 105 * 60 * 1000)
+      .toISOString()
+      .replace(/\.\d{3}Z$/, 'Z');
+    const locationName = resolveSportsEventLocationName(m, homeTeamName);
+    const addressCountry = resolveSportsEventAddressCountry(m);
+
+    const homeTeamObj: SportsTeamJsonLd = { '@type': 'SportsTeam', name: homeTeamName };
+    const awayTeamObj: SportsTeamJsonLd = { '@type': 'SportsTeam', name: awayTeamName };
 
     events.push({
       '@type': 'SportsEvent',
       name: `${homeTeamName} vs ${awayTeamName}`,
       startDate,
-      homeTeam: {
-        '@type': 'SportsTeam',
-        name: homeTeamName,
+      endDate,
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: {
+        '@type': 'Place',
+        name: locationName,
+        address: {
+          '@type': 'PostalAddress',
+          addressCountry,
+        },
       },
-      awayTeam: {
-        '@type': 'SportsTeam',
-        name: awayTeamName,
-      },
+      homeTeam: homeTeamObj,
+      awayTeam: awayTeamObj,
+      performer: [
+        { '@type': 'SportsTeam', name: homeTeamName },
+        { '@type': 'SportsTeam', name: awayTeamName },
+      ],
       description: `AI prediction: ${confText}% confidence for ${cleanSelection}.`,
     });
   }
