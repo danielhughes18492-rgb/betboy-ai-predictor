@@ -13321,4 +13321,67 @@ export function computeSportsbookCategoryCounts<T extends SportsbookMarketFilter
   return counts;
 }
 
+export interface XStudioKoTimeSlot {
+  time: string;
+  count: number;
+  minutes: number;
+}
+
+export function normalizeXStudioKoTime(ko?: string | null): string {
+  const raw = String(ko || '').trim();
+  const m = raw.match(/(\d{1,2})\s*:\s*(\d{2})/);
+  if (!m) return '15:00';
+  const hhNum = Number(m[1]);
+  const mmNum = Number(m[2]);
+  if (!Number.isFinite(hhNum) || !Number.isFinite(mmNum) || hhNum < 0 || hhNum > 23 || mmNum < 0 || mmNum > 59) {
+    return '15:00';
+  }
+  return `${String(hhNum).padStart(2, '0')}:${String(mmNum).padStart(2, '0')}`;
+}
+
+export function extractXStudioKoTimeSlots<T extends { id?: number | string; ko?: string | null }>(
+  fixtures: T[]
+): XStudioKoTimeSlot[] {
+  const valid = (Array.isArray(fixtures) ? fixtures : []).filter((f) => {
+    if (!f) return false;
+    const idNum = Number(f.id);
+    return !(Number.isFinite(idNum) && idNum >= 900000 && idNum < 1000000);
+  });
+
+  const countMap = new Map<string, number>();
+  for (const f of valid) {
+    const t = normalizeXStudioKoTime(f.ko);
+    countMap.set(t, (countMap.get(t) || 0) + 1);
+  }
+
+  const slots: XStudioKoTimeSlot[] = [];
+  for (const [time, count] of countMap.entries()) {
+    const [hh, mm] = time.split(':').map(Number);
+    const minutes = (Number.isFinite(hh) ? hh : 15) * 60 + (Number.isFinite(mm) ? mm : 0);
+    slots.push({ time, count, minutes });
+  }
+
+  slots.sort((a, b) => a.minutes - b.minutes || a.time.localeCompare(b.time));
+  return slots;
+}
+
+export function filterFixturesByXStudioKoTime<T extends { id?: number | string; ko?: string | null }>(
+  fixtures: T[],
+  selectedKoTime?: string | null
+): T[] {
+  const valid = (Array.isArray(fixtures) ? fixtures : []).filter((f) => {
+    if (!f) return false;
+    const idNum = Number(f.id);
+    return !(Number.isFinite(idNum) && idNum >= 900000 && idNum < 1000000);
+  });
+
+  const rawFilter = String(selectedKoTime || '').trim();
+  if (!rawFilter || rawFilter.toUpperCase() === 'ALL') {
+    return valid;
+  }
+
+  const targetKo = normalizeXStudioKoTime(rawFilter);
+  return valid.filter((f) => normalizeXStudioKoTime(f.ko) === targetKo);
+}
+
 

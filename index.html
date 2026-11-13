@@ -27,19 +27,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v18">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v18">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v18">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v18">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v18">
-<meta name="betboy-build-version" content="20261113-v18">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v20">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v20">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v20">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v20">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v20">
+<meta name="betboy-build-version" content="20261113-v20">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v18';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v18';
+    var CURRENT_BUILD_VERSION = '20261113-v20';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v20';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -2486,6 +2486,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button type="button" id="xFoldBtn-5" onclick="window.selectXStudioFoldCount(5)" class="py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition bg-emerald-600 text-white border-emerald-400 shadow">Top 5</button>
         </div>
       </div>
+
+      <!-- 1C-KO: Kick-Off Time Filter Bar (View & filter fixtures by kick-off time) -->
+      <div id="xStudioKoFilterBar" class="p-2 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5"></div>
 
       <!-- 1D: Scrollable Ranked Fixture & Market Checklist -->
       <div id="xStudioMatchSelectorList" class="space-y-2 max-h-64 overflow-y-auto pr-1 pt-1"></div>
@@ -13511,6 +13514,7 @@ window.toggleMatchForXPost = function(matchId, fromCard){
   } else {
     window.xPostSelectedIds.splice(idx, 1);
   }
+  window.xStudioHasManualSelection = true;
   window.syncAdminXSelectionUI();
   if(fromCard){
     window.runEngine(false);
@@ -13549,6 +13553,7 @@ window.toggleXMatchMarketByIdx = function(matchId, mktIdx){
       return;
     }
   }
+  window.xStudioHasManualSelection = true;
   window.xPostMarketOverrides[idNum] = currentNames;
   window.refreshXPostStudioUI(false);
 };
@@ -13565,6 +13570,7 @@ window.setXMatchBuilderTopN = function(matchId, topN){
   var mk = window.calcExtraMarkets(m, m.fs || 68);
   var sortedM = mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); });
   var count = Math.max(1, Math.min(sortedM.length, Number(topN) || 1));
+  window.xStudioHasManualSelection = true;
   window.xPostMarketOverrides[idNum] = sortedM.slice(0, count).map(function(x){ return x.n; });
   window.refreshXPostStudioUI(false);
 };
@@ -13585,6 +13591,7 @@ window.setXMatchMarketOverride = function(matchId, marketName){
   } else {
     window.xPostMarketOverrides[idNum] = [marketName];
   }
+  window.xStudioHasManualSelection = true;
   window.refreshXPostStudioUI(false);
 };
 
@@ -13592,6 +13599,8 @@ window.clearXPostSelections = function(){
   window.activeSavedXCardId = null;
   window.xPostSelectedIds = [];
   window.xPostMarketOverrides = {};
+  window.xStudioKoFilter = 'ALL';
+  window.xStudioHasManualSelection = false;
   window.syncAdminXSelectionUI();
   window.runEngine(false);
   var modal = document.getElementById("xPostStudioModal");
@@ -13603,8 +13612,52 @@ window.clearXPostSelections = function(){
 window.xStudioCategory = 'top_slip';
 window.xStudioSubMarket = 'o25';
 window.xStudioFoldCount = 5;
+window.xStudioKoFilter = 'ALL';
+window.xStudioHasManualSelection = false;
 window.LOCKED_X_SELECTION_STORAGE_KEY = 'airp_locked_x_selection_v1';
 window.lockedXSelectionFixturesMap = window.lockedXSelectionFixturesMap || {};
+
+window.normalizeXStudioKoTime = function(ko){
+  var raw = String(ko || '').trim();
+  var m = raw.match(/(\d{1,2})\s*:\s*(\d{2})/);
+  if(!m) return '15:00';
+  var hhNum = Number(m[1]);
+  var mmNum = Number(m[2]);
+  if(!Number.isFinite(hhNum) || !Number.isFinite(mmNum) || hhNum < 0 || hhNum > 23 || mmNum < 0 || mmNum > 59){
+    return '15:00';
+  }
+  return (hhNum < 10 ? '0' : '') + hhNum + ':' + (mmNum < 10 ? '0' : '') + mmNum;
+};
+
+window.extractXStudioKoTimeSlots = function(fixtures){
+  var valid = (Array.isArray(fixtures) ? fixtures : []).filter(function(f){
+    return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
+  });
+  var counts = {};
+  valid.forEach(function(f){
+    var t = window.normalizeXStudioKoTime(f.ko);
+    counts[t] = (counts[t] || 0) + 1;
+  });
+  return Object.keys(counts).map(function(time){
+    var parts = time.split(':');
+    var mins = (Number(parts[0]) || 0) * 60 + (Number(parts[1]) || 0);
+    return { time: time, count: counts[time], minutes: mins };
+  }).sort(function(a, b){
+    return a.minutes - b.minutes || a.time.localeCompare(b.time);
+  });
+};
+
+window.filterFixturesByXStudioKoTime = function(fixtures, selectedKoTime){
+  var valid = (Array.isArray(fixtures) ? fixtures : []).filter(function(f){
+    return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
+  });
+  var rawFilter = String(selectedKoTime || '').trim();
+  if(!rawFilter || rawFilter.toUpperCase() === 'ALL') return valid;
+  var targetKo = window.normalizeXStudioKoTime(rawFilter);
+  return valid.filter(function(f){
+    return window.normalizeXStudioKoTime(f.ko) === targetKo;
+  });
+};
 
 window.resolveXStudioTargetMarketForFixture = function(fixture, markets, category, subMarket){
   var fav = String((fixture && fixture.fav) || '').trim();
@@ -13945,6 +13998,7 @@ window.getXStudioSubMarketOptions = function(category){
 window.selectXStudioCategory = function(cat){
   if(window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   window.xStudioCategory = cat || 'top_slip';
+  window.xStudioHasManualSelection = false;
   if(window.xStudioCategory === 'goals'){
     if(['o05','o15','o25','o35','team_o15'].indexOf(window.xStudioSubMarket) === -1){
       window.xStudioSubMarket = 'o25';
@@ -13966,6 +14020,7 @@ window.selectXStudioCategory = function(cat){
 window.selectXStudioSubMarket = function(sub){
   if(window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   window.xStudioSubMarket = sub;
+  window.xStudioHasManualSelection = false;
   window.applyXStudioCategoryAndFold();
 };
 
@@ -13973,18 +14028,41 @@ window.selectXStudioFoldCount = function(n){
   if(window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
   var minFold = (window.xStudioCategory === 'builder') ? 2 : 1;
   window.xStudioFoldCount = Math.max(minFold, Math.min(5, Number(n) || 5));
+  window.xStudioHasManualSelection = false;
   window.applyXStudioCategoryAndFold();
+};
+
+window.selectXStudioKoFilter = function(koTime){
+  if(window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
+  window.xStudioKoFilter = koTime || 'ALL';
+  if(!window.xStudioHasManualSelection){
+    window.applyXStudioCategoryAndFold();
+  } else {
+    window.refreshXPostStudioUI();
+  }
 };
 
 window.applyXStudioCategoryAndFold = function(){
   var cat = window.xStudioCategory || 'top_slip';
   var sub = window.xStudioSubMarket || 'o25';
   var fold = (cat === 'builder') ? Math.max(2, window.xStudioFoldCount || 3) : (window.xStudioFoldCount || 5);
-  var fixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
+  var allValidFixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
     return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
   });
 
-  if(!fixtures.length) return;
+  if(!allValidFixtures.length) return;
+
+  var koSlots = window.extractXStudioKoTimeSlots ? window.extractXStudioKoTimeSlots(allValidFixtures) : [];
+  if(window.xStudioKoFilter && window.xStudioKoFilter !== 'ALL'){
+    var slotExists = koSlots.some(function(s){ return s.time === window.normalizeXStudioKoTime(window.xStudioKoFilter); });
+    if(!slotExists) window.xStudioKoFilter = 'ALL';
+  }
+
+  var fixtures = window.filterFixturesByXStudioKoTime
+    ? window.filterFixturesByXStudioKoTime(allValidFixtures, window.xStudioKoFilter)
+    : allValidFixtures;
+
+  if(!fixtures.length) fixtures = allValidFixtures;
 
   var getMarketsFn = function(f){
     var mk = window.calcExtraMarkets(f, f.fs || 68);
@@ -13994,6 +14072,7 @@ window.applyXStudioCategoryAndFold = function(){
   var ranked = window.rankFixturesForXStudioCategory(fixtures, cat, sub, fold, getMarketsFn, window.dailyBankerSlipPairs);
   window.xPostSelectedIds = ranked.selectedIds.slice();
   window.xPostMarketOverrides = JSON.parse(JSON.stringify(ranked.marketOverrides || {}));
+  window.xStudioHasManualSelection = false;
 
   window.syncAdminXSelectionUI();
   window.refreshXPostStudioUI();
@@ -14989,17 +15068,78 @@ window.refreshXPostStudioUI = function(){
     }
   });
 
+  var allValidFixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
+    return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
+  });
+
+  var koSlots = window.extractXStudioKoTimeSlots ? window.extractXStudioKoTimeSlots(allValidFixtures) : [];
+  var activeKo = window.xStudioKoFilter || 'ALL';
+  if(activeKo !== 'ALL'){
+    var normKo = window.normalizeXStudioKoTime ? window.normalizeXStudioKoTime(activeKo) : activeKo;
+    var existsKo = koSlots.some(function(s){ return s.time === normKo; });
+    if(!existsKo){
+      activeKo = 'ALL';
+      window.xStudioKoFilter = 'ALL';
+    } else {
+      activeKo = normKo;
+    }
+  }
+
+  var fixtures = window.filterFixturesByXStudioKoTime
+    ? window.filterFixturesByXStudioKoTime(allValidFixtures, activeKo)
+    : allValidFixtures;
+
   var pillEl = document.getElementById('xStudioActiveCategoryPill');
   if(pillEl){
     var cLabel = window.getXStudioCategoryLabel ? window.getXStudioCategoryLabel(cat, sub, fold) : (fold + "-Fold Selection");
-    pillEl.innerText = cLabel;
+    pillEl.innerText = cLabel + (activeKo !== 'ALL' ? (' • ' + activeKo + ' KO') : '');
   }
 
-  // 4. Render Match List Ranked by Active Category Model %
+  // 3B. Render Kick-Off Time Filter Bar (Chronological time slots + match counts)
+  var koBar = document.getElementById('xStudioKoFilterBar');
+  if(koBar){
+    if(allValidFixtures.length > 0){
+      koBar.classList.remove('hidden');
+      var allBtnCls = activeKo === 'ALL'
+        ? "bg-emerald-600 text-white border-emerald-400 shadow font-black"
+        : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500 hover:text-white font-bold";
+      var slotBtnsHtml = koSlots.map(function(slot){
+        var isActSlot = activeKo === slot.time;
+        var slotCls = isActSlot
+          ? "bg-sky-600 text-white border-sky-400 shadow font-black"
+          : "bg-slate-950 text-slate-300 border-slate-700 hover:border-sky-500/50 hover:text-white font-bold";
+        return '<button type="button" data-ko-slot="' + slot.time + '" onclick="window.selectXStudioKoFilter(\'' + slot.time + '\')" class="px-2.5 py-1 rounded-lg border text-[10px] font-mono flex-shrink-0 cursor-pointer transition ' + slotCls + '">' +
+          '🕒 ' + slot.time + ' <span class="opacity-80">(' + slot.count + ')</span>' +
+        '</button>';
+      }).join('');
+      var autoPickKoBtnHtml = (activeKo !== 'ALL' && window.xStudioHasManualSelection)
+        ? '<button type="button" onclick="window.xStudioHasManualSelection=false;window.applyXStudioCategoryAndFold();" class="px-2 py-0.5 rounded-md bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/45 text-[9.5px] font-black cursor-pointer transition whitespace-nowrap">⚡ Auto-Pick @ ' + activeKo + '</button>'
+        : '';
+      var koSummaryText = activeKo === 'ALL'
+        ? ('All KO Times (' + allValidFixtures.length + ')')
+        : ('Showing ' + fixtures.length + ' of ' + allValidFixtures.length + ' @ ' + activeKo + ' KO');
+
+      koBar.innerHTML = '<div class="flex items-center justify-between gap-2 flex-wrap">' +
+          '<span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">🕒 Filter by Kick-Off Time:</span>' +
+          '<div class="flex items-center gap-1.5 ml-auto flex-wrap">' +
+            autoPickKoBtnHtml +
+            '<span class="text-[9.5px] font-mono font-bold text-sky-300">' + koSummaryText + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex items-center gap-1.5 flex-wrap">' +
+          '<button type="button" data-ko-slot="ALL" onclick="window.selectXStudioKoFilter(\'ALL\')" class="px-2.5 py-1 rounded-lg border text-[10px] font-mono flex-shrink-0 cursor-pointer transition ' + allBtnCls + '">' +
+            'All KO (' + allValidFixtures.length + ')' +
+          '</button>' +
+          slotBtnsHtml +
+        '</div>';
+    } else {
+      koBar.classList.add('hidden');
+      koBar.innerHTML = '';
+    }
+  }
+
+  // 4. Render Match List Ranked by Active Category Model % (filtered by active KO time)
   var listEl = document.getElementById("xStudioMatchSelectorList");
-  var fixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
-    return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
-  });
 
   // Calculate target market and percentage for each match in this category
   var evaluatedItems = fixtures.map(function(m){
@@ -15036,9 +15176,9 @@ window.refreshXPostStudioUI = function(){
       var targetM = item.targetM;
       var sortedM = item.sortedM;
       var isSel = window.xPostSelectedIds.indexOf(Number(m.id)) !== -1;
-    var resolved = window.getXMatchSelectedMarketsList(m);
-    sortedM = resolved.sortedM || sortedM;
-    var selectedMarkets = resolved.selectedMarkets;
+      var resolved = window.getXMatchSelectedMarketsList(m);
+      sortedM = resolved.sortedM || sortedM;
+      var selectedMarkets = resolved.selectedMarkets;
       var selectedNames = selectedMarkets.map(function(x){ return x.n; });
       var matchCombOdds = selectedMarkets.reduce(function(acc, x){ return acc * (Number(x.odds) || 1.5); }, 1);
       var rowFixUi = window.resolveXCardRowFixture ? window.resolveXCardRowFixture(m) : {
@@ -15054,6 +15194,8 @@ window.refreshXPostStudioUI = function(){
       var awayTeamUi = rowFixUi.awayTeam;
       var homeCrest = window.getClubCrestHtml ? window.getClubCrestHtml(homeTeamUi) : "";
       var awayCrest = window.getClubCrestHtml ? window.getClubCrestHtml(awayTeamUi) : "";
+      var rowKoTime = window.normalizeXStudioKoTime ? window.normalizeXStudioKoTime(m.ko) : (m.ko || '15:00');
+      var rowLeagueName = window.getLeagueName ? window.getLeagueName(m.league) : (m.league || '');
 
       var actStr = String(m.actual || "");
       var isMatchFT = rowFixUi.isFT;
@@ -15127,21 +15269,28 @@ window.refreshXPostStudioUI = function(){
         ? '<span class="text-[9.5px] font-mono font-black px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">' + selectedMarkets.length + ' Pick' + (selectedMarkets.length === 1 ? '' : 's') + ' • ' + window.formatOdds(matchCombOdds, false) + '</span>'
         : '<button type="button" onclick="window.toggleMatchForXPost(' + m.id + ', false)" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap flex-shrink-0 cursor-pointer">+ Select</button>';
 
-      return '<div class="p-2.5 rounded-xl border transition ' + (isSel ? 'bg-emerald-950/35 border-emerald-500/55 shadow-md' : 'bg-slate-900/70 border-slate-800/80') + '">' +
-        '<div class="flex items-center justify-between gap-1.5 flex-wrap">' +
-          '<label class="flex items-center gap-1.5 min-w-0 cursor-pointer">' +
-            '<input type="checkbox" ' + (isSel ? 'checked' : '') + ' onchange="window.toggleMatchForXPost(' + m.id + ', false)" class="accent-emerald-500 w-3.5 h-3.5 flex-shrink-0">' +
-            '<span class="text-[10px] font-black mono text-emerald-400">#' + (idx+1) + '</span>' +
-            homeCrest +
-            '<span class="text-[11px] font-bold text-white">' + homeTeamUi + ' <span class="text-slate-400 font-normal">v</span></span>' +
-            awayCrest +
-            '<span class="text-[11px] font-semibold text-slate-200">' + awayTeamUi + '</span>' +
+      return '<div data-xstudio-match-id="' + m.id + '" data-xstudio-ko="' + rowKoTime + '" class="p-2.5 rounded-xl border transition ' + (isSel ? 'bg-emerald-950/35 border-emerald-500/55 shadow-md' : 'bg-slate-900/70 border-slate-800/80') + '">' +
+        '<div class="flex items-start justify-between gap-2">' +
+          '<label class="flex items-start gap-2 min-w-0 flex-1 cursor-pointer">' +
+            '<input type="checkbox" ' + (isSel ? 'checked' : '') + ' onchange="window.toggleMatchForXPost(' + m.id + ', false)" class="accent-emerald-500 w-3.5 h-3.5 flex-shrink-0 mt-0.5">' +
+            '<div class="min-w-0 flex-1 flex items-center gap-1.5 flex-wrap leading-snug">' +
+              '<span class="text-[10px] font-black mono text-emerald-400">#' + (idx+1) + '</span>' +
+              homeCrest +
+              '<span class="text-[11px] font-bold text-white">' + homeTeamUi + ' <span class="text-slate-400 font-normal">v</span></span>' +
+              awayCrest +
+              '<span class="text-[11px] font-semibold text-slate-200">' + awayTeamUi + '</span>' +
+            '</div>' +
           '</label>' +
-          '<div class="flex items-center gap-1.5 ml-auto">' +
+          '<div class="flex items-center gap-1.5 ml-auto flex-shrink-0">' +
             '<span class="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ' + pctBadgeClass + '">' + item.pVal.toFixed(1) + '%</span>' +
             ftBadgeHtml +
             rightBadgeHtml +
           '</div>' +
+        '</div>' +
+        '<div class="flex items-center gap-1.5 flex-wrap pl-5 mt-1 text-[9.5px] font-mono">' +
+          '<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/35 font-bold whitespace-nowrap">🕒 KO ' + rowKoTime + '</span>' +
+          (rowLeagueName ? '<span class="text-slate-400 truncate max-w-[140px]">' + rowLeagueName + '</span>' : '') +
+          (targetM && targetM.n ? '<span class="text-emerald-300/90 truncate max-w-[180px]">• ' + targetM.n + '</span>' : '') +
         '</div>' +
         builderPanelHtml +
       '</div>';
@@ -15183,6 +15332,7 @@ window.saveSelectionUnderScreenshot = function(){
       category: window.xStudioCategory || 'top_slip',
       subMarket: window.xStudioSubMarket || 'o25',
       foldCount: window.xStudioFoldCount || 5,
+      koFilter: window.xStudioKoFilter || 'ALL',
       savedAt: Date.now(),
       snapshotFixtures: snapFixtures
     });
@@ -15627,6 +15777,8 @@ window.clearAllSavedXPostsHistory = function(){
   window.lockedXSelectionFixturesMap = {};
   window.xStudioCategory = 'top_slip';
   window.xStudioFoldCount = 5;
+  window.xStudioKoFilter = 'ALL';
+  window.xStudioHasManualSelection = false;
 
   if(window.applyXStudioCategoryAndFold){
     window.applyXStudioCategoryAndFold();
@@ -15936,6 +16088,7 @@ window.openXPostStudio = function(){
       if(lockedObj.category) window.xStudioCategory = lockedObj.category;
       if(lockedObj.subMarket) window.xStudioSubMarket = lockedObj.subMarket;
       if(lockedObj.foldCount) window.xStudioFoldCount = lockedObj.foldCount;
+      window.xStudioKoFilter = lockedObj.koFilter || 'ALL';
       hasLoadedLocked = true;
     }
   } catch(e){}
