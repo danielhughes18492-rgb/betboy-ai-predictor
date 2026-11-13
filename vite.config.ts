@@ -36,8 +36,23 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+          clientsClaim: true,
+          skipWaiting: true,
+          cleanupOutdatedCaches: true,
+          navigateFallback: null,
+          ignoreURLParametersMatching: [/.*/],
+          globPatterns: ['**/*.{js,css,ico,png,svg,json}'],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          runtimeCaching: [
+            {
+              urlPattern: ({ request }) => request.mode === 'navigate',
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'betboy-html-nav-v28',
+                networkTimeoutSeconds: 4,
+              },
+            },
+          ],
         },
         devOptions: {
           enabled: false,

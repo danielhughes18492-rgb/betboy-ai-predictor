@@ -1,5 +1,5 @@
-const SW_BUILD_VERSION = '20261113-v26';
-const CACHE_NAME = 'betboy-v25';
+const SW_BUILD_VERSION = '20261113-v30';
+const CACHE_NAME = 'betboy-v29';
 const CACHE_VERSION = CACHE_NAME;
 
 self.addEventListener('install', (event) => {
@@ -103,7 +103,12 @@ self.addEventListener('fetch', (event) => {
           }
           return networkRes;
         })
-        .catch(() => caches.match(event.request))
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          if (isHtmlOrDoc) return caches.match('/');
+          return undefined;
+        })
     );
     return;
   }

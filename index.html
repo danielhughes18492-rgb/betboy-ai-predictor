@@ -32,19 +32,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="twitter:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v26">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v26">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v26">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v26">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v26">
-<meta name="betboy-build-version" content="20261113-v26">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v30">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v30">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v30">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v30">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v30">
+<meta name="betboy-build-version" content="20261113-v30">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v26';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v26';
+    var CURRENT_BUILD_VERSION = '20261113-v30';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v30';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -129,7 +129,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       var registerAndCheckSw = function() {
         navigator.serviceWorker
-          .register('/sw.js?v=20261111-v1', { updateViaCache: 'none' })
+          .register(SW_SCRIPT_URL, { updateViaCache: 'none' })
           .then(function(registration) {
             window._swRegistration = registration;
 
@@ -2173,16 +2173,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Green, Amber & Red Fixture Tiers -->
     <div id="greenTierSectionWrap">
-      <h2 class="font-bold text-emerald-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> GREEN PICKS (75%+ HIGH-CONFIDENCE)</h2>
-      <div id="greenResults" class="space-y-2.5"></div>
+      <h2 class="font-bold text-emerald-400 text-xs uppercase mb-2 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> GREEN PICKS (75%+ HIGH-CONFIDENCE)</h2>
+      <div id="greenResults" class="space-y-3"></div>
     </div>
     <div id="amberTierSectionWrap">
-      <h2 class="font-bold text-amber-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> AMBER PICKS (60%–74.9% MODERATE / CAUTION)</h2>
-      <div id="amberResults" class="space-y-2.5"></div>
+      <h2 class="font-bold text-amber-400 text-xs uppercase mb-2 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> AMBER PICKS (60%–74.9% MODERATE / CAUTION)</h2>
+      <div id="amberResults" class="space-y-3"></div>
     </div>
     <div id="redTierSectionWrap">
-      <h2 class="font-bold text-rose-400 text-xs uppercase mb-1.5 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> RED PICKS (BELOW 60% • AVOID)</h2>
-      <div id="redResults" class="space-y-2.5"></div>
+      <h2 class="font-bold text-rose-400 text-xs uppercase mb-2 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> RED PICKS (BELOW 60% • AVOID)</h2>
+      <div id="redResults" class="space-y-3"></div>
     </div>
   </div>
 
@@ -2263,22 +2263,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Interactive Betting Slip & Potential Returns Calculator Modal (Personal Guide) -->
 <div id="bookmakerModal" onclick="if(event.target===this)window.closeBookmakerModal()" style="position:fixed;inset:0;background:rgba(2,6,23,0.86);backdrop-filter:blur(6px);z-index:9999;display:none;align-items:flex-end;justify-content:center;padding:8px;">
   <div class="glass w-full max-w-md rounded-t-3xl sm:rounded-3xl p-3.5 sm:p-4 border-t sm:border border-emerald-500/40 shadow-[0_-8px_36px_rgba(16,185,129,0.28)] transform translate-y-full transition-transform duration-300 max-h-[94vh] overflow-y-auto space-y-2.5" id="bookieSheet">
-    <!-- Header: Title + Pinned Top-Right Close Button, with Compact Control Bar Directly Beneath -->
     <div class="border-b border-slate-800/90 pb-2 space-y-1.5">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-white font-black text-sm uppercase tracking-wider flex items-center gap-1.5 truncate">
-          <span>🧾 Betting Slip &amp; Returns</span>
-        </span>
-        <button type="button" id="closeSlipModalTopBtn" onclick="window.closeBookmakerModal()" aria-label="Close Betting Slip" class="ml-auto flex-shrink-0 text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 rounded-lg w-7 h-7 flex items-center justify-center text-sm font-black leading-none cursor-pointer transition">&#10005;</button>
+      <div class="flex justify-between items-center gap-2">
+        <span class="text-white font-black text-sm uppercase tracking-wider">🧾 Betting Slip &amp; Returns</span>
+        <button type="button" id="closeSlipModalTopBtn" onclick="window.closeBookmakerModal()" aria-label="Close Betting Slip" class="text-slate-400 hover:text-white text-2xl font-bold px-1.5 leading-none cursor-pointer flex-shrink-0">&times;</button>
       </div>
-      <div class="flex items-center justify-between gap-2 bg-slate-900/60 border border-slate-800/80 rounded-xl px-2.5 py-1">
-        <span id="bookieSlipCountBadge" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wide">0 SELECTIONS</span>
+      <div class="flex items-center justify-between gap-2">
+        <span id="bookieSlipCountBadge" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold">0 SELECTIONS</span>
         <div class="flex items-center gap-1.5">
-          <select id="slipOddsFormatSelect" aria-label="Betting Slip Odds Format" onchange="window.setOddsFormat(this.value)" class="bg-slate-900 text-amber-300 border border-amber-500/40 rounded-lg px-2 py-0.5 text-[10px] font-extrabold mono outline-none cursor-pointer">
+          <select id="slipOddsFormatSelect" aria-label="Betting Slip Odds Format" onchange="window.setOddsFormat(this.value)" class="bg-slate-900 text-amber-300 border border-amber-500/40 rounded-lg px-2 py-1 text-[10px] font-extrabold mono outline-none cursor-pointer">
             <option value="frac" selected class="bg-slate-900 text-amber-300">Fractional</option>
             <option value="dec" class="bg-slate-900 text-amber-300">Decimal</option>
           </select>
-          <button type="button" onclick="window.clearBetSlip()" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold px-2 py-0.5 rounded-lg border border-rose-500/30 hover:bg-rose-500/10 transition cursor-pointer">🗑️ Clear</button>
+          <button type="button" id="drawerClearSlipBtn" onclick="window.clearBetSlip()" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold px-2 py-1 rounded-lg border border-rose-500/30 hover:bg-rose-500/10 transition cursor-pointer">🗑️ Clear</button>
         </div>
       </div>
     </div>
@@ -4105,6 +4102,7 @@ window.parseBetSelection = function(rawItem) {
   var calcOdds = (foundOdds && foundOdds > 1.01) ? foundOdds : window.calculateLiveOddsFromPct(pct, matchId, market);
   return {
     id: str,
+    matchId: matchId ? String(matchId) : '',
     team: team || 'Selection',
     opp: opp,
     venue: venue,
@@ -4338,18 +4336,18 @@ window.triggerHapticFeedback = function(type, navOverride, options) {
 
 window.renderQuickBetActionPillHtml = function(isSelected, topMktWonState) {
   if (topMktWonState === false) {
-    return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="settled-lost" class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[9.5px] font-black uppercase tracking-wide flex-shrink-0 leading-none">' +
+    return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="settled-lost" class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-black uppercase tracking-wide flex-shrink-0 leading-none">' +
       '<svg class="w-3 h-3 flex-shrink-0 block" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>' +
       '<span>SETTLED</span>' +
     '</span>';
   }
   if (isSelected) {
-    return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="added" class="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 border border-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.45)] text-[9.5px] font-black uppercase tracking-wide flex-shrink-0 leading-none transition">' +
+    return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="added" class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500 text-slate-950 border border-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.45)] text-[10px] font-black uppercase tracking-wide flex-shrink-0 leading-none transition">' +
       '<svg class="w-3 h-3 flex-shrink-0 block" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.25 8.25l3 3 6.5-6.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
       '<span>ADDED</span>' +
     '</span>';
   }
-  return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="add" class="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 text-emerald-300 border border-emerald-400/50 shadow-sm text-[9.5px] font-black uppercase tracking-wide flex-shrink-0 leading-none transition">' +
+  return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="add" class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 text-emerald-300 border border-emerald-400/50 shadow-sm text-[10px] font-black uppercase tracking-wide flex-shrink-0 leading-none transition">' +
     '<svg class="w-3 h-3 flex-shrink-0 block" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3.25v9.5M3.25 8h9.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>' +
     '<span>ADD</span>' +
   '</span>';
@@ -4392,7 +4390,7 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
     window.betSlip.splice(idx, 1);
     delete window.betSlipData[betId];
     if (el) window.syncQuickBetButtonDomState(el, false);
-    document.querySelectorAll("[id^='m-'], [id^='bestm-'], [id^='slip-']").forEach(function(node) {
+    document.querySelectorAll("[id^='m-'], [id^='mr1-'], [id^='mrx-'], [id^='mr2-'], [id^='bestm-'], [id^='slip-']").forEach(function(node) {
       var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[node.id];
       if (reg && (reg.team + " " + reg.market) === betId) {
         window.syncQuickBetButtonDomState(node, false);
@@ -4411,10 +4409,16 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
     var league = (extraMeta && extraMeta.league) || parsed.league || '';
     var pct = (extraMeta && extraMeta.pct) || parsed.pct || '68.0%';
     var ko = (extraMeta && extraMeta.ko) || parsed.ko || '15:00';
+    var resolvedMatchId = (extraMeta && (extraMeta.matchId || extraMeta.seed)) || parsed.matchId || '';
+    if (!resolvedMatchId && elId) {
+      var elIdMatch = String(elId).match(/^(?:mr1|mrx|mr2|m|bestm|slip)-([^-]+)/);
+      if (elIdMatch && elIdMatch[1]) resolvedMatchId = elIdMatch[1];
+    }
     var odds = (extraMeta && extraMeta.odds) ? Number(extraMeta.odds) : (parsed.odds || window.calculateLiveOddsFromPct(pct, extraMeta && extraMeta.seed));
 
     window.betSlipData[betId] = {
       id: betId,
+      matchId: resolvedMatchId ? String(resolvedMatchId) : '',
       team: team,
       opp: opp,
       venue: venue,
@@ -4429,7 +4433,7 @@ window.toggleBetSlip = function(team, market, elId, e, extraMeta) {
       addedAt: Date.now()
     };
     if (el) window.syncQuickBetButtonDomState(el, true);
-    document.querySelectorAll("[id^='m-'], [id^='bestm-'], [id^='slip-']").forEach(function(node) {
+    document.querySelectorAll("[id^='m-'], [id^='mr1-'], [id^='mrx-'], [id^='mr2-'], [id^='bestm-'], [id^='slip-']").forEach(function(node) {
       var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[node.id];
       if (reg && (reg.team + " " + reg.market) === betId) {
         window.syncQuickBetButtonDomState(node, true);
@@ -4547,7 +4551,7 @@ window.removeBetFromSlip = function(betId) {
   }
   delete window.betSlipData[betId];
 
-  document.querySelectorAll("[id^='m-'], [id^='bestm-'], [id^='slip-'], [id^='outright-'], [id^='mr-']").forEach(function(node) {
+  document.querySelectorAll("[id^='m-'], [id^='mr1-'], [id^='mrx-'], [id^='mr2-'], [id^='bestm-'], [id^='slip-'], [id^='outright-'], [id^='mr-']").forEach(function(node) {
     var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[node.id];
     if ((reg && (reg.team + " " + reg.market) === betId) || (node.onclick && node.onclick.toString().indexOf(betId) !== -1)) {
       window.syncQuickBetButtonDomState(node, false);
@@ -4572,7 +4576,7 @@ window.clearBetSlip = function() {
       if (el) window.syncQuickBetButtonDomState(el, false);
     }
   });
-  document.querySelectorAll("[id^='bestm-'], .ring-2.ring-emerald-400").forEach(function(el) {
+  document.querySelectorAll("[id^='bestm-'], [id^='mr1-'], [id^='mrx-'], [id^='mr2-'], [id^='m-'], .ring-2.ring-emerald-400").forEach(function(el) {
     window.syncQuickBetButtonDomState(el, false);
   });
 
@@ -5094,6 +5098,7 @@ window.addDailyAccaToSlip = function(e){
     }
     window.betSlipData[betId] = {
       id: betId,
+      matchId: sel.matchId ? String(sel.matchId) : (sel.seed ? String(sel.seed) : ''),
       team: sel.team,
       opp: sel.opp || '',
       venue: sel.venue || 'HOME',
@@ -5773,7 +5778,7 @@ window.isCardUnlockedInTrial = function(m, idx, type){
   return false;
 };
 
-// Uniform Two-Row Scoreboard Team Layout (Fixed 22x22px Crests + Truncated Team Names)
+// Uniform Two-Row Scoreboard Team Layout (Fixed 22x22px Crests + Responsive Wrapping Team Names)
 window.formatMatchTeams = function(m, isUnlocked, scoreMeta){
   var isFavHome = m.venue === "HOME";
   var homeName = isFavHome ? m.fav : m.opp;
@@ -5783,39 +5788,39 @@ window.formatMatchTeams = function(m, isUnlocked, scoreMeta){
 
   var hasScore = Boolean(scoreMeta && scoreMeta.isLiveOrFT && typeof scoreMeta.homeGoals === "number" && typeof scoreMeta.awayGoals === "number" && !isNaN(scoreMeta.homeGoals) && !isNaN(scoreMeta.awayGoals));
   var homeScoreHtml = hasScore
-    ? '<span data-scoreboard-score="home" class="mono text-[11px] font-black px-1.5 py-0.5 rounded bg-slate-900/90 border border-slate-700/70 ' + (isFavHome ? 'text-emerald-300' : 'text-slate-300') + ' flex-shrink-0 ml-auto">' + scoreMeta.homeGoals + '</span>'
+    ? '<span data-scoreboard-score="home" class="mono text-xs font-black px-2 py-0.5 rounded-md bg-slate-900/90 border border-slate-700/70 ' + (isFavHome ? 'text-emerald-300' : 'text-slate-300') + ' flex-shrink-0 ml-auto">' + scoreMeta.homeGoals + '</span>'
     : '';
   var awayScoreHtml = hasScore
-    ? '<span data-scoreboard-score="away" class="mono text-[11px] font-black px-1.5 py-0.5 rounded bg-slate-900/90 border border-slate-700/70 ' + (!isFavHome ? 'text-emerald-300' : 'text-slate-300') + ' flex-shrink-0 ml-auto">' + scoreMeta.awayGoals + '</span>'
+    ? '<span data-scoreboard-score="away" class="mono text-xs font-black px-2 py-0.5 rounded-md bg-slate-900/90 border border-slate-700/70 ' + (!isFavHome ? 'text-emerald-300' : 'text-slate-300') + ' flex-shrink-0 ml-auto">' + scoreMeta.awayGoals + '</span>'
     : '';
 
   if(window.isTrial && !isUnlocked){
-    return '<div data-match-scoreboard="true" class="flex flex-col justify-center gap-1.5 min-w-0 w-full">' +
-      '<div data-scoreboard-row="home" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+    return '<div data-match-scoreboard="true" class="flex flex-col justify-center gap-2 min-w-0 w-full">' +
+      '<div data-scoreboard-row="home" class="flex items-center gap-2.5 min-w-0 min-h-[26px]">' +
         '<span data-scoreboard-crest="home" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + homeCrest + '</span>' +
-        '<span data-scoreboard-team="home" class="font-bold text-white text-[14px] leading-tight truncate">' + homeName + '</span>' +
-        '<span onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[9px] bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap shadow-sm cursor-pointer ml-auto">🔒 VIP Pick</span>' +
+        '<span data-scoreboard-team="home" class="font-bold text-white text-sm sm:text-base leading-snug break-words line-clamp-2 min-w-0">' + homeName + '</span>' +
+        '<span onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-[9px] bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap shadow-sm cursor-pointer ml-auto">🔒 VIP Pick</span>' +
       '</div>' +
-      '<div data-scoreboard-row="away" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+      '<div data-scoreboard-row="away" class="flex items-center gap-2.5 min-w-0 min-h-[26px]">' +
         '<span data-scoreboard-crest="away" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + awayCrest + '</span>' +
-        '<span data-scoreboard-team="away" class="font-bold text-white text-[14px] leading-tight truncate">' + awayName + '</span>' +
+        '<span data-scoreboard-team="away" class="font-bold text-white text-sm sm:text-base leading-snug break-words line-clamp-2 min-w-0">' + awayName + '</span>' +
         awayScoreHtml +
       '</div>' +
     '</div>';
   }
 
-  var favNameClass = 'font-extrabold text-white underline decoration-emerald-500/70 underline-offset-4 text-[14px] leading-tight truncate';
-  var oppNameClass = 'font-medium text-slate-200 text-[14px] leading-tight truncate';
+  var favNameClass = 'font-extrabold text-white underline decoration-emerald-500/70 underline-offset-4 text-sm sm:text-base leading-snug break-words line-clamp-2 min-w-0';
+  var oppNameClass = 'font-medium text-slate-200 text-sm sm:text-base leading-snug break-words line-clamp-2 min-w-0';
   var homeNameClass = isFavHome ? favNameClass : oppNameClass;
   var awayNameClass = isFavHome ? oppNameClass : favNameClass;
 
-  return '<div data-match-scoreboard="true" class="flex flex-col justify-center gap-1.5 min-w-0 w-full">' +
-    '<div data-scoreboard-row="home" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+  return '<div data-match-scoreboard="true" class="flex flex-col justify-center gap-2 min-w-0 w-full">' +
+    '<div data-scoreboard-row="home" class="flex items-center gap-2.5 min-w-0 min-h-[26px]">' +
       '<span data-scoreboard-crest="home" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + homeCrest + '</span>' +
       '<span data-scoreboard-team="home" data-favoured="' + (isFavHome ? 'true' : 'false') + '" class="' + homeNameClass + '">' + homeName + '</span>' +
       homeScoreHtml +
     '</div>' +
-    '<div data-scoreboard-row="away" class="flex items-center gap-2 min-w-0 h-[24px]">' +
+    '<div data-scoreboard-row="away" class="flex items-center gap-2.5 min-w-0 min-h-[26px]">' +
       '<span data-scoreboard-crest="away" class="scoreboard-crest-slot w-[22px] h-[22px] min-w-[22px] min-h-[22px] flex items-center justify-center flex-shrink-0">' + awayCrest + '</span>' +
       '<span data-scoreboard-team="away" data-favoured="' + (!isFavHome ? 'true' : 'false') + '" class="' + awayNameClass + '">' + awayName + '</span>' +
       awayScoreHtml +
@@ -10830,23 +10835,23 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var d1x2Color = getTrafficProbTextCls(outright.drawPct || 22.0);
   var a1x2Color = getTrafficProbTextCls(outright.awayPct || 18.0);
 
-  var outright1x2StripHtml = '<div class="mb-2 bg-slate-950/85 border border-slate-800/90 rounded-xl p-1.5">' +
-    '<div class="flex items-center justify-between gap-1 text-[8px] font-bold uppercase tracking-wider text-slate-400 mb-1 px-0.5 whitespace-nowrap">' +
-      '<span class="truncate">⚽ FULL-TIME RESULT (1X2)</span>' +
-      '<span class="flex-shrink-0 text-slate-400">TAP TO ADD</span>' +
+  var outright1x2StripHtml = '<div class="mb-2.5 bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5">' +
+    '<div class="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider mb-2 px-0.5 whitespace-nowrap">' +
+      '<span class="truncate text-white">⚽ FULL-TIME RESULT (1X2)</span>' +
+      '<span class="flex-shrink-0 text-emerald-300 font-semibold">TAP TO ADD</span>' +
     '</div>' +
-    '<div class="grid grid-cols-3 gap-1">' +
-      '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="py-1.5 px-1.5 rounded-lg border cursor-pointer transition flex flex-col items-center justify-center text-center gap-0.5 min-w-0 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (homeCrest ? '<span class="w-3.5 h-3.5 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + homeCrest + '</span>' : '') + '<span class="truncate">' + (outright.homeName || m.fav) + '</span>' + (outright.homeWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center justify-center gap-1 leading-none"><span class="text-[8.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[9.5px] ' + h1x2Color + ' mono font-black">' + (outright.homePct || "60.0") + '%</b></div>' +
+    '<div class="grid grid-cols-3 gap-2">' +
+      '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="py-2 px-1.5 sm:px-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (homeCrest ? '<span class="w-4 h-4 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + homeCrest + '</span>' : '') + '<span class="break-words line-clamp-2">' + (outright.homeName || m.fav) + '</span>' + (outright.homeWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+        '<div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-none"><span class="text-[10px] bg-slate-950 text-amber-300 border border-amber-500/35 px-2.5 py-1 rounded-md font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[10.5px] ' + h1x2Color + ' mono font-black">' + (outright.homePct || "60.0") + '%</b></div>' +
       '</div>' +
-      '<div id="' + d1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + d1x2Id + '\', event)" class="py-1.5 px-1.5 rounded-lg border cursor-pointer transition flex flex-col items-center justify-center text-center gap-0.5 min-w-0 ' + (isD1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[9.5px] font-extrabold text-slate-200 inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight"><span class="truncate">🤝 Draw</span>' + (outright.drawWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center justify-center gap-1 leading-none"><span class="text-[8.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[9.5px] ' + d1x2Color + ' mono font-black">' + (outright.drawPct || "22.0") + '%</b></div>' +
+      '<div id="' + d1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + d1x2Id + '\', event)" class="py-2 px-1.5 sm:px-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + (isD1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight"><span class="truncate">🤝 Draw</span>' + (outright.drawWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+        '<div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-none"><span class="text-[10px] bg-slate-950 text-amber-300 border border-amber-500/35 px-2.5 py-1 rounded-md font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[10.5px] ' + d1x2Color + ' mono font-black">' + (outright.drawPct || "22.0") + '%</b></div>' +
       '</div>' +
-      '<div id="' + a1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + a1x2Id + '\', event)" class="py-1.5 px-1.5 rounded-lg border cursor-pointer transition flex flex-col items-center justify-center text-center gap-0.5 min-w-0 ' + (isA1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (awayCrest ? '<span class="w-3.5 h-3.5 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + awayCrest + '</span>' : '') + '<span class="truncate">' + (outright.awayName || m.opp) + '</span>' + (outright.awayWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center justify-center gap-1 leading-none"><span class="text-[8.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[9.5px] ' + a1x2Color + ' mono font-black">' + (outright.awayPct || "18.0") + '%</b></div>' +
+      '<div id="' + a1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + a1x2Id + '\', event)" class="py-2 px-1.5 sm:px-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + (isA1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (awayCrest ? '<span class="w-4 h-4 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + awayCrest + '</span>' : '') + '<span class="break-words line-clamp-2">' + (outright.awayName || m.opp) + '</span>' + (outright.awayWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+        '<div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-none"><span class="text-[10px] bg-slate-950 text-amber-300 border border-amber-500/35 px-2.5 py-1 rounded-md font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[10.5px] ' + a1x2Color + ' mono font-black">' + (outright.awayPct || "18.0") + '%</b></div>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -10868,42 +10873,44 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     { k: "cards", lbl: "Cards", cnt: catCounts.cards }
   ];
 
-  var catTabsHtml = '<div data-market-categories-section="true" class="mb-2 bg-slate-950/60 border border-slate-800/80 rounded-xl p-1.5">' +
-    '<div class="flex items-center justify-between px-0.5 mb-1">' +
-      '<span class="text-[8px] font-black uppercase tracking-wider text-slate-400">MARKET CATEGORIES</span>' +
+  var catTabsHtml = '<div data-market-categories-section="true" class="mb-2.5 bg-slate-950/75 border border-slate-800/85 rounded-xl p-2.5">' +
+    '<div class="flex items-center justify-between px-0.5 mb-2">' +
+      '<span class="text-[10px] font-bold uppercase tracking-wider text-white">MARKET CATEGORIES</span>' +
       (activeCat !== "all"
-        ? '<button type="button" onclick="window.setCardMarketTab(' + m.id + ', \'all\', event)" class="text-[8.5px] font-bold text-emerald-400 hover:text-emerald-300 cursor-pointer">Show All (' + catCounts.all + ')</button>'
-        : '<span class="text-[8px] font-semibold text-slate-500">Tap to filter</span>') +
+        ? '<button type="button" onclick="window.setCardMarketTab(' + m.id + ', \'all\', event)" class="text-[10px] font-bold text-emerald-300 hover:text-emerald-200 cursor-pointer">Show All (' + catCounts.all + ')</button>'
+        : '<span class="text-[9.5px] font-semibold text-slate-300">Tap to filter</span>') +
     '</div>' +
-    '<div class="flex flex-wrap gap-1 mb-1.5">' +
+    '<div class="flex flex-wrap gap-1.5 mb-2">' +
       marketCategoryTabs.map(function(tab){
         var act = activeCat === tab.k;
         var cls = act
           ? "bg-emerald-600 text-white border-emerald-400 font-black shadow-sm"
-          : "bg-slate-900/95 text-slate-300 hover:text-white hover:border-slate-600 border-slate-800 font-bold";
-        return '<button type="button" data-market-cat-btn="' + tab.k + '" aria-pressed="' + (act ? 'true' : 'false') + '" onclick="window.setCardMarketTab(' + m.id + ', \'' + tab.k + '\', event)" class="px-2 py-1.5 rounded-lg border text-[9.5px] leading-none cursor-pointer transition inline-flex items-center gap-1 ' + cls + '">' +
+          : "bg-slate-900/95 text-slate-200 hover:text-white hover:border-slate-500 border-slate-800 font-bold";
+        return '<button type="button" data-market-cat-btn="' + tab.k + '" aria-pressed="' + (act ? 'true' : 'false') + '" onclick="window.setCardMarketTab(' + m.id + ', \'' + tab.k + '\', event)" class="px-2.5 py-1.5 rounded-lg border text-[10px] leading-none cursor-pointer transition inline-flex items-center gap-1.5 ' + cls + '">' +
           '<span>' + tab.lbl + '</span>' +
-          '<span class="text-[8px] opacity-80 font-mono">(' + tab.cnt + ')</span>' +
+          '<span class="text-[9px] opacity-85 font-mono">(' + tab.cnt + ')</span>' +
         '</button>';
       }).join("") +
     '</div>' +
-    '<div class="grid grid-cols-2 gap-1 pt-1 border-t border-slate-800/70">' +
+    '<div class="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-slate-800/70">' +
       [homeTeamTab, awayTeamTab].map(function(tTab){
         var act = activeCat === tTab.k;
         var cls = act
           ? "bg-emerald-600 text-white border-emerald-400 font-black shadow-sm"
-          : "bg-slate-900/90 text-slate-300 hover:text-white hover:border-slate-600 border-slate-800 font-bold";
-        return '<button type="button" data-market-cat-btn="' + tTab.k + '" aria-pressed="' + (act ? 'true' : 'false') + '" onclick="window.setCardMarketTab(' + m.id + ', \'' + tTab.k + '\', event)" class="px-2 py-1 rounded-lg border text-[9px] leading-none cursor-pointer transition flex items-center justify-between gap-1 min-w-0 ' + cls + '">' +
-          '<span class="inline-flex items-center gap-1 min-w-0">' + (tTab.crest ? '<span class="w-3.5 h-3.5 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + tTab.crest + '</span>' : '') + '<span class="truncate">' + tTab.lbl + '</span></span>' +
-          '<span class="text-[8px] opacity-80 font-mono flex-shrink-0">(' + tTab.cnt + ')</span>' +
+          : "bg-slate-900/90 text-slate-200 hover:text-white hover:border-slate-500 border-slate-800 font-bold";
+        return '<button type="button" data-market-cat-btn="' + tTab.k + '" aria-pressed="' + (act ? 'true' : 'false') + '" onclick="window.setCardMarketTab(' + m.id + ', \'' + tTab.k + '\', event)" class="px-2.5 py-1.5 rounded-lg border text-[10px] leading-none cursor-pointer transition flex items-center justify-between gap-1.5 min-w-0 ' + cls + '">' +
+          '<span class="inline-flex items-center gap-1.5 min-w-0">' + (tTab.crest ? '<span class="w-3.5 h-3.5 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + tTab.crest + '</span>' : '') + '<span class="truncate">' + tTab.lbl + '</span></span>' +
+          '<span class="text-[9px] opacity-85 font-mono flex-shrink-0">(' + tTab.cnt + ')</span>' +
         '</button>';
       }).join("") +
     '</div>' +
   '</div>';
 
-  var mktLegendHtml = '<div style="font-size: 10px; text-transform: uppercase; color: #9ca3af; padding: 0 8px;" class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1.5 select-none font-bold tracking-wider">' +
-    '<div class="flex items-center justify-between"><span>MARKET SELECTION</span><span class="grid grid-cols-[58px_56px] gap-1.5 text-right"><span class="text-center">ODDS</span><span class="text-right">AI PROB.</span></span></div>' +
-    '<div class="hidden md:flex items-center justify-between"><span>MARKET SELECTION</span><span class="grid grid-cols-[58px_56px] gap-1.5 text-right"><span class="text-center">ODDS</span><span class="text-right">AI PROB.</span></span></div>' +
+  var mktHeaderRightCols = '<span class="grid grid-cols-[64px_62px] sm:grid-cols-[74px_70px] gap-2 items-center text-right flex-shrink-0"><span class="text-center text-amber-300 font-bold">ODDS</span><span class="text-center text-emerald-300 font-bold">AI PROB.</span></span>';
+  var mktLegendHtml = '<div data-market-table-headers="true" class="grid grid-cols-1 md:grid-cols-2 min-[1360px]:grid-cols-3 gap-2.5 mb-2 rounded-lg bg-slate-900/95 border border-slate-700/80 text-[10.5px] sm:text-[11px] uppercase font-bold tracking-wider select-none overflow-hidden">' +
+    '<div class="flex items-center justify-between gap-2 min-w-0 px-3 py-2"><span class="text-white font-bold">MARKET SELECTION</span>' + mktHeaderRightCols + '</div>' +
+    '<div class="hidden md:flex items-center justify-between gap-2 min-w-0 px-3 py-2 md:border-l md:border-slate-700/70"><span class="text-white font-bold">MARKET SELECTION</span>' + mktHeaderRightCols + '</div>' +
+    '<div class="hidden min-[1360px]:flex items-center justify-between gap-2 min-w-0 px-3 py-2 min-[1360px]:border-l min-[1360px]:border-slate-700/70"><span class="text-white font-bold">MARKET SELECTION</span>' + mktHeaderRightCols + '</div>' +
   '</div>';
 
   var renderLeft28pxSlotHtml = function(mktItem){
@@ -11009,17 +11016,19 @@ window.render31PointPanel = function(m, adm, isUnlocked){
       : (lockThisMarket ? 'cursor-pointer' : 'cursor-pointer hover:border-emerald-400 transition');
 
     var oddsBtnCls = isSettledLost
-      ? "min-w-[58px] text-center justify-center inline-flex items-center text-[9.5px] bg-slate-950/60 text-slate-500 border border-slate-800 px-1.5 py-1 rounded font-mono font-bold line-through"
-      : "min-w-[58px] text-center justify-center inline-flex items-center text-[9.5px] bg-slate-950/95 text-amber-300 border border-amber-500/30 px-1.5 py-1 rounded font-mono font-bold";
+      ? "min-w-[64px] sm:min-w-[74px] text-center justify-center inline-flex items-center text-[10.5px] bg-slate-950/60 text-slate-500 border border-slate-800 px-2.5 sm:px-3 py-1 rounded-lg font-mono font-bold line-through"
+      : "min-w-[64px] sm:min-w-[74px] text-center justify-center inline-flex items-center text-[10.5px] bg-slate-950/95 text-amber-300 border border-amber-500/35 px-2.5 sm:px-3 py-1 rounded-lg font-mono font-bold";
+
+    var probPillCls = "min-w-[62px] sm:min-w-[70px] text-center justify-center inline-flex items-center px-2.5 sm:px-3 py-1 rounded-lg bg-slate-950/80 border border-slate-800/90 text-[11px] font-black mono ";
 
     var rightHtml = lockThisMarket
-      ? '<div class="grid grid-cols-[58px_56px] items-center gap-1.5 flex-shrink-0"><span class="' + oddsBtnCls + ' trial-blur-sm">1.85</span><b onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="min-w-[56px] text-right text-[11px] mono ' + probTextColorCls + ' trial-blur-sm cursor-pointer">88.5%</b></div>'
-      : '<div class="grid grid-cols-[58px_56px] items-center gap-1.5 flex-shrink-0"><span class="' + oddsBtnCls + '">' + window.formatOdds(x.odds, false) + '</span><b class="min-w-[56px] text-right text-[11px] font-black mono ' + probTextColorCls + '">' + x.p + '%</b></div>';
+      ? '<div class="grid grid-cols-[64px_62px] sm:grid-cols-[74px_70px] items-center gap-2 flex-shrink-0"><span class="' + oddsBtnCls + ' trial-blur-sm">1.85</span><b onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="' + probPillCls + probTextColorCls + ' trial-blur-sm cursor-pointer">88.5%</b></div>'
+      : '<div class="grid grid-cols-[64px_62px] sm:grid-cols-[74px_70px] items-center gap-2 flex-shrink-0"><span class="' + oddsBtnCls + '">' + window.formatOdds(x.odds, false) + '</span><b class="' + probPillCls + probTextColorCls + '">' + x.p + '%</b></div>';
 
-    return '<div id="' + elId + '" ' + clickHandler + ' class="standardized-market-row py-2.5 px-2.5 min-h-[54px] rounded-xl border ' + cardThemeCls + ' ' + hoverClass + ' ' + selClass + ' flex justify-between items-center gap-2 shadow-sm">' +
+    return '<div id="' + elId + '" ' + clickHandler + ' class="standardized-market-row p-3 min-h-[58px] rounded-xl border ' + cardThemeCls + ' ' + hoverClass + ' ' + selClass + ' flex justify-between items-center gap-2.5 shadow-sm">' +
       '<div class="flex items-center gap-2.5 min-w-0 flex-1">' +
         leftSlotHtml +
-        '<div data-market-text-container="true" class="flex flex-col justify-center flex-1 min-w-0 pr-2 gap-1">' +
+        '<div data-market-text-container="true" class="flex flex-col justify-center flex-1 min-w-0 pr-1 gap-1">' +
           '<div data-market-selection-title="true" title="' + safeAttrTitle + '" class="text-xs sm:text-sm text-white font-bold leading-snug break-words">' + cleanTitleText + '</div>' +
           '<div class="flex items-center flex-wrap gap-1.5 min-w-0 leading-none mt-0.5">' + trackerPillHtml + settledBadgeHtml + '</div>' +
         '</div>' +
@@ -11033,28 +11042,28 @@ window.render31PointPanel = function(m, adm, isUnlocked){
     : '';
 
   var sortDropdownHtml = '<div class="flex items-center gap-1.5">' +
-    '<label for="mktSort-' + m.id + '" class="text-[9px] font-bold text-slate-400">Sort:</label>' +
-    '<select id="mktSort-' + m.id + '" aria-label="Sort betting markets" onclick="event.stopPropagation()" onchange="window.setCardMarketTabSort ? window.setCardMarketTabSort(' + m.id + ', this.value, event) : window.setCardMarketSort(' + m.id + ', this.value, event)" class="bg-slate-900/95 hover:bg-slate-800 text-slate-200 border border-slate-700/90 rounded-lg px-2 py-1 text-[9.5px] font-extrabold cursor-pointer focus:outline-none focus:border-emerald-400 transition">' +
+    '<label for="mktSort-' + m.id + '" class="text-[10px] font-bold text-slate-200">Sort:</label>' +
+    '<select id="mktSort-' + m.id + '" aria-label="Sort betting markets" onclick="event.stopPropagation()" onchange="window.setCardMarketTabSort ? window.setCardMarketTabSort(' + m.id + ', this.value, event) : window.setCardMarketSort(' + m.id + ', this.value, event)" class="bg-slate-900/95 hover:bg-slate-800 text-white border border-slate-700/90 rounded-lg px-2.5 py-1 text-[10px] font-extrabold cursor-pointer focus:outline-none focus:border-emerald-400 transition">' +
       '<option value="confidence"' + (activeSort === "confidence" ? ' selected' : '') + '>🎯 Highest Confidence</option>' +
       '<option value="odds"' + (activeSort === "odds" ? ' selected' : '') + '>💰 Highest Odds</option>' +
       '<option value="popular"' + (activeSort === "popular" ? ' selected' : '') + '>🔥 Most Popular</option>' +
     '</select>' +
   '</div>';
 
-  var marketsBoxHtml = '<div id="markets-box-' + m.id + '" onclick="event.stopPropagation()" class="rounded-2xl overflow-hidden border border-slate-800 bg-[#07111a]/95 p-2.5 shadow-lg">' +
-    '<div class="flex justify-between items-center gap-1.5">' +
-      '<span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1 min-w-0 truncate">' +
+  var marketsBoxHtml = '<div id="markets-box-' + m.id + '" onclick="event.stopPropagation()" class="rounded-2xl overflow-hidden border border-slate-800 bg-[#07111a]/95 p-3 shadow-lg">' +
+    '<div class="flex justify-between items-center gap-2">' +
+      '<span class="text-[11px] font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5 min-w-0 truncate">' +
         '<span>🎯 Betting Markets (' + sortedMarkets.length + ')</span>' +
       '</span>' +
-      '<div class="flex items-center gap-1.5 flex-shrink-0">' +
+      '<div class="flex items-center gap-2 flex-shrink-0">' +
         sortDropdownHtml +
       '</div>' +
     '</div>' +
-    '<div id="markets-body-' + m.id + '" class="mt-2">' +
+    '<div id="markets-body-' + m.id + '" class="mt-2.5">' +
       outright1x2StripHtml +
       catTabsHtml +
       mktLegendHtml +
-      '<div id="mktGrid-' + m.id + '" class="grid grid-cols-1 md:grid-cols-2 gap-2">' + g + '</div>' +
+      '<div id="mktGrid-' + m.id + '" class="grid grid-cols-1 md:grid-cols-2 gap-2.5">' + g + '</div>' +
       trialCta +
     '</div>' +
   '</div>';
@@ -11450,7 +11459,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     ? 'VIP Pick'
     : (isBestPickMatchWin ? edgeQualityLabel : ((m && m.fav) ? (m.fav + ' to Win') : 'Top AI Pick'));
 
-  var marketSubHtml = '<span data-card-confidence-sublabel="' + m.id + '" class="text-[9px] font-medium text-slate-400 leading-snug block text-right mt-1 truncate max-w-[140px] sm:max-w-[190px]" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
+  var marketSubHtml = '<span data-card-confidence-sublabel="' + m.id + '" class="text-[10px] font-medium text-slate-300 leading-snug block text-right mt-1 break-words max-w-[130px] sm:max-w-[190px]" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
 
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
@@ -11487,30 +11496,30 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
   var quickActionPillHtml = window.renderQuickBetActionPillHtml
     ? window.renderQuickBetActionPillHtml(isBestInSlip, topMktWonState)
-    : '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="add" class="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 text-[9.5px] font-black uppercase tracking-wide flex-shrink-0 leading-none"><svg class="w-3 h-3 flex-shrink-0 block" viewBox="0 0 16 16" fill="none"><path d="M8 3.25v9.5M3.25 8h9.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>ADD</span></span>';
+    : '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="add" class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 text-[10px] font-black uppercase tracking-wide flex-shrink-0 leading-none"><svg class="w-3 h-3 flex-shrink-0 block" viewBox="0 0 16 16" fill="none"><path d="M8 3.25v9.5M3.25 8h9.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>ADD</span></span>';
 
   var quickAddCardBtn = (!isTrLocked && topCardMkt)
-    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[10.5px] font-bold border ' + quickBtnThemeClass + ' transition cursor-pointer min-w-0 ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add ★ AI BEST PICK to Betting Slip">' +
-        '<span class="flex items-center gap-2 min-w-0 flex-1 text-left">' +
-          '<span data-ai-best-pick-badge="true" class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[8.5px] font-black uppercase tracking-wider flex-shrink-0">★ AI BEST PICK</span>' +
-          '<span data-quick-bet-market-name="true" class="truncate text-left leading-snug font-extrabold text-white">' + fullQuickBetMarketLabel + '</span>' +
+    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold border ' + quickBtnThemeClass + ' transition cursor-pointer min-w-0 ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add ★ AI BEST PICK to Betting Slip">' +
+        '<span class="flex flex-col sm:flex-row sm:items-center items-start gap-1.5 sm:gap-2 min-w-0 flex-1 text-left">' +
+          '<span data-ai-best-pick-badge="true" class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/45 text-amber-300 text-[9px] font-black uppercase tracking-wider flex-shrink-0 whitespace-nowrap">★ AI BEST PICK</span>' +
+          '<span data-quick-bet-market-name="true" class="text-xs sm:text-[13px] text-left leading-snug font-extrabold text-white break-words w-full sm:w-auto sm:truncate">' + fullQuickBetMarketLabel + '</span>' +
         '</span>' +
-        '<span class="inline-flex items-center gap-1.5 flex-shrink-0 ml-auto pl-2">' +
-          '<b class="text-amber-300 bg-slate-950/90 border border-amber-500/35 px-2 py-0.5 rounded-lg mono text-[11px] font-black leading-snug">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
+        '<span class="inline-flex items-center gap-2 flex-shrink-0 ml-auto">' +
+          '<b class="text-amber-300 bg-slate-950/90 border border-amber-500/35 px-3 py-1 rounded-lg mono text-[11px] font-black leading-none whitespace-nowrap">' + window.formatOdds(topCardMkt.odds, false) + '</b>' +
           topMktResultIcon +
           quickActionPillHtml +
         '</span>' +
       '</button>'
-    : '<span class="text-[9.5px] font-semibold text-slate-400">🔒 VIP Pick</span>';
+    : '<span class="text-[10px] font-semibold text-slate-300">🔒 VIP Pick</span>';
 
   var totalMktCount = (mkCard.L && mkCard.L.length) ? mkCard.L.length : 24;
   var expandCtaLabel = 'View ' + totalMktCount + ' Betting Markets';
 
-  var expandBar = '<div class="mt-2.5 pt-2 border-t border-slate-800/60 flex flex-col gap-2 text-[9.5px] text-slate-400">' +
+  var expandBar = '<div class="mt-3 pt-2.5 border-t border-slate-800/70 flex flex-col gap-2.5 text-[10px] text-slate-300">' +
     '<div class="w-full min-w-0">' + quickAddCardBtn + '</div>' +
-    '<div class="w-full pt-1 border-t border-slate-800/40 flex items-center justify-center gap-1.5 font-bold tracking-wider uppercase text-emerald-300 hover:text-emerald-200 transition">' +
+    '<div data-accordion-toggle-btn="true" class="w-full px-3 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 hover:border-emerald-400/75 flex items-center justify-center gap-2 text-[10.5px] font-extrabold tracking-wider uppercase text-emerald-200 hover:text-white transition shadow-sm">' +
       '<span>' + expandCtaLabel + '</span>' +
-      '<svg class="chevron-icon w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>' +
+      '<svg class="chevron-icon w-4 h-4 text-emerald-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>' +
     '</div>' +
   '</div>';
 
@@ -11529,8 +11538,8 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     awayGoals: parsedAwayGoals
   };
 
-  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="fixture-card match-card glass border-l-4 ' + bdr + ' p-3 rounded-2xl cursor-pointer' + isExp + '">' +
-    '<div data-card-header-row="true" class="flex items-center justify-between whitespace-nowrap gap-2 min-w-0 pb-1.5 border-b border-slate-800/60">' +
+  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="fixture-card match-card glass border border-slate-800/80 border-l-4 ' + bdr + ' p-3.5 sm:p-4 rounded-2xl cursor-pointer' + isExp + '">' +
+    '<div data-card-header-row="true" class="flex items-center justify-between whitespace-nowrap gap-2 min-w-0 pb-2 border-b border-slate-800/70">' +
       '<div class="flex items-center gap-1.5 min-w-0 overflow-hidden text-[10px]">' +
         '<span class="font-black ' + txt + ' mono flex-shrink-0">#' + (i+1) + '</span>' +
         '<span class="inline-flex items-center gap-1 font-semibold text-slate-200 min-w-0 truncate">' + window.getLeagueLogo(m.league,true) + '<span class="truncate">' + window.getLeagueName(m.league) + '</span></span>' +
@@ -11541,8 +11550,8 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       '</div>' +
       '<div class="flex items-center flex-shrink-0">' + statusBadge + '</div>' +
     '</div>' +
-    '<div data-card-middle-row="true" class="flex items-center justify-between gap-3 mt-2.5 min-h-[56px]">' +
-      '<div class="flex-1 min-w-0 text-[14px]">' + window.formatMatchTeams(m, isUnlocked, scoreMeta) + '</div>' +
+    '<div data-card-middle-row="true" class="flex items-center justify-between gap-3 mt-3 min-h-[60px]">' +
+      '<div class="flex-1 min-w-0">' + window.formatMatchTeams(m, isUnlocked, scoreMeta) + '</div>' +
       '<div class="flex flex-col items-end justify-center flex-shrink-0 text-right gap-0.5">' +
         aiConfidenceMicroLabel +
         pctDisplay +
@@ -12082,12 +12091,12 @@ window.runEngine = function(isForcedSync){
           var trialAwayHtml = !isHomeFav
             ? (awayCrest + '<b class="text-white trial-blur-sm">VIP Banker</b>')
             : (awayCrest + '<span>' + awayTeam + '</span>');
-          return '<div onclick="window.exitTrialToSubscribe()" class="bg-slate-950/85 border border-amber-500/30 px-3 py-2.5 rounded-xl cursor-pointer hover:border-amber-500/60 transition shadow-sm space-y-1.5">' +
+          return '<div onclick="window.exitTrialToSubscribe()" class="bg-slate-950/85 border border-amber-500/30 p-3.5 rounded-2xl cursor-pointer hover:border-amber-500/60 transition shadow-sm space-y-2">' +
             '<div class="flex items-center justify-between gap-2">' +
               '<div class="min-w-0 flex items-center flex-wrap gap-1.5"><span class="text-amber-400 font-black mono">' + (idx+1) + '.</span>' + trialHomeHtml + ' <span class="text-slate-400 text-[10px] inline-flex items-center gap-1">vs ' + trialAwayHtml + '</span></div>' +
               '<span class="text-emerald-400 font-black mono text-sm flex-shrink-0 trial-blur-sm">74.2%</span>' +
             '</div>' +
-            '<div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60">' +
+            '<div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-800/60">' +
               '<div>' + lockStateBadge + '</div>' +
               '<span class="text-[9.5px] text-amber-400 font-bold">🔒 Tap to Unlock</span>' +
             '</div>' +
@@ -12099,13 +12108,13 @@ window.runEngine = function(isForcedSync){
         var selClass = isSel ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '';
         var clickHandler = 'onclick="window.toggleBetSlipByEl(\'' + elId + '\', event)"';
         var homeTeamHtml = isHomeFav
-          ? '<span data-banker-team="home" data-favoured="true" class="inline-flex items-center gap-1.5 font-extrabold text-white text-[13px]">' + homeCrest + '<span>' + homeTeam + '</span></span>'
-          : '<span data-banker-team="home" data-favoured="false" class="inline-flex items-center gap-1 font-semibold text-slate-200 text-[12px]">' + homeCrest + '<span>' + homeTeam + '</span></span>';
+          ? '<span data-banker-team="home" data-favoured="true" class="inline-flex items-center gap-1.5 font-extrabold text-white text-sm sm:text-[13px] break-words">' + homeCrest + '<span>' + homeTeam + '</span></span>'
+          : '<span data-banker-team="home" data-favoured="false" class="inline-flex items-center gap-1.5 font-semibold text-slate-200 text-sm sm:text-xs break-words">' + homeCrest + '<span>' + homeTeam + '</span></span>';
         var awayTeamHtml = !isHomeFav
-          ? '<span data-banker-team="away" data-favoured="true" class="inline-flex items-center gap-1.5 font-extrabold text-white text-[13px]">' + awayCrest + '<span>' + awayTeam + '</span></span>'
-          : '<span data-banker-team="away" data-favoured="false" class="inline-flex items-center gap-1 font-semibold text-slate-200 text-[12px]">' + awayCrest + '<span>' + awayTeam + '</span></span>';
+          ? '<span data-banker-team="away" data-favoured="true" class="inline-flex items-center gap-1.5 font-extrabold text-white text-sm sm:text-[13px] break-words">' + awayCrest + '<span>' + awayTeam + '</span></span>'
+          : '<span data-banker-team="away" data-favoured="false" class="inline-flex items-center gap-1.5 font-semibold text-slate-200 text-sm sm:text-xs break-words">' + awayCrest + '<span>' + awayTeam + '</span></span>';
 
-        return '<div id="' + elId + '" ' + clickHandler + ' class="bg-slate-950/85 border ' + (isFT && isLegSettledWon ? 'border-emerald-500/40' : 'border-slate-800 hover:border-emerald-400/50') + ' px-3 py-2.5 rounded-xl shadow-sm cursor-pointer transition space-y-1.5 ' + selClass + '">' +
+        return '<div id="' + elId + '" ' + clickHandler + ' class="bg-slate-950/85 border ' + (isFT && isLegSettledWon ? 'border-emerald-500/40' : 'border-slate-800 hover:border-emerald-400/50') + ' p-3.5 rounded-2xl shadow-sm cursor-pointer transition space-y-2 ' + selClass + '">' +
           '<div class="flex items-center justify-between gap-2">' +
             '<div class="min-w-0 flex items-center flex-wrap gap-1.5">' +
               '<span class="text-amber-400 font-black mono">' + (idx+1) + '.</span>' +
@@ -12115,9 +12124,9 @@ window.runEngine = function(isForcedSync){
             '</div>' +
             '<span class="text-emerald-400 font-black mono text-sm flex-shrink-0">' + (bestM ? bestM.p : m.fs.toFixed(1)) + '%</span>' +
           '</div>' +
-          '<div class="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-800/60 flex-wrap">' +
-            '<div class="flex items-center gap-1 flex-shrink-0">' + lockStateBadge.replace(/ml-1/g, '') + '</div>' +
-            '<span class="text-[10px] text-slate-200 font-semibold text-right ml-auto">★ ' + (bestM ? cleanMarketName + ' (<b class="text-amber-300 mono">' + window.formatOdds(bestM.odds, false) + '</b>)' : '') + marketTick + '</span>' +
+          '<div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-800/60 flex-wrap">' +
+            '<div class="flex items-center gap-1.5 flex-shrink-0">' + lockStateBadge.replace(/ml-1/g, '') + '</div>' +
+            '<span class="text-[10.5px] text-slate-200 font-semibold text-right ml-auto">★ ' + (bestM ? cleanMarketName + ' (<b class="text-amber-300 bg-slate-900/90 border border-amber-500/30 px-2 py-0.5 rounded-md mono">' + window.formatOdds(bestM.odds, false) + '</b>)' : '') + marketTick + '</span>' +
           '</div>' +
         '</div>';
       });
