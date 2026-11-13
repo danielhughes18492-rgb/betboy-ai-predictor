@@ -1285,8 +1285,8 @@ export function resolveSelectionMarkets(s: XPostSelection): XPostMarketLeg[] {
     });
   }
 
-  let singleWon = s.won !== undefined ? s.won : null;
-  if (singleWon === null || singleWon === undefined) {
+  let singleWon: boolean | null | undefined = s.won !== undefined ? s.won : null;
+  if (scMatch && (ftInfo.isFT || ftInfo.isLive || ftInfo.isHT)) {
     const evalLive = evaluateLiveMarketSettlement(
       s.market,
       hG,
@@ -1298,9 +1298,11 @@ export function resolveSelectionMarkets(s: XPostSelection): XPostMarketLeg[] {
     );
     if (evalLive.won !== null) {
       singleWon = evalLive.won;
-    } else if (ftInfo.isFT) {
+    } else if ((singleWon === null || singleWon === undefined) && ftInfo.isFT && /to\s+win|outright/i.test(String(s.market || ''))) {
       singleWon = ftInfo.matchWon;
     }
+  } else if ((singleWon === null || singleWon === undefined) && ftInfo.isFT && /to\s+win|outright/i.test(String(s.market || ''))) {
+    singleWon = ftInfo.matchWon;
   }
 
   return [
@@ -1538,8 +1540,11 @@ export function generateXPostText(
       lines = legs.map((leg) => {
         const pctNum = Math.round(parseFloat(String(leg.pct).replace('%', '')) || 75);
         const oddsStr = formatOddsDisplay(leg.odds || 1.5, oddsFormat, false);
-        const legWon = leg.won === true || (ft0.isFT && leg.won === null && ft0.matchWon);
-        const prefix = legWon ? '✅' : ft0.isLive ? '⏳' : '🎯';
+        const legWon =
+          leg.won === true ||
+          (ft0.isFT && leg.won === null && ft0.matchWon && /to\s+win|outright/i.test(String(leg.name || '')));
+        const legLost = leg.won === false && ft0.isFT;
+        const prefix = legWon ? '✅' : legLost ? '❌' : ft0.isLive ? '⏳' : '🎯';
         let statusSuffix = '';
         if (legWon) {
           statusSuffix = ft0.isFT
@@ -1564,7 +1569,7 @@ export function generateXPostText(
           return `${prefix} ${shortPick} (${oddsStr} • ${pctNum}%)${statusSuffix}`;
         }
         const shortPick = shortenMarketName(leg.name, s0.fav, false);
-        return `${legWon ? '✅' : '•'} ${shortPick} ${oddsStr}${legWon ? ' WON' : (ft0.isFT ? ' FT' : '')}`;
+        return `${legWon ? '✅' : legLost ? '❌' : '•'} ${shortPick} ${oddsStr}${legWon ? ' WON' : (ft0.isFT ? ' FT' : '')}`;
       });
     } else {
       lines = selections.map((s) => {
@@ -1575,10 +1580,13 @@ export function generateXPostText(
           legs.reduce((acc, l) => acc + (parseFloat(String(l.pct).replace('%', '')) || 75), 0) / legs.length
         );
         const oddsStr = formatOddsDisplay(matchOddsDec, oddsFormat, false);
-        const anyLegWon = legs.some((l) => l.won === true);
-        const allLegsWon = legs.every((l) => l.won === true);
-        const isWon = allLegsWon || anyLegWon || (ftInfo.isFT && ftInfo.matchWon);
-        const prefix = isWon ? '✅' : ftInfo.isLive ? '⏳' : '🎯';
+        const anyLegLost = legs.some((l) => l.won === false);
+        const allLegsWon = legs.length > 0 && legs.every((l) => l.won === true);
+        const allUnsettled = legs.every((l) => l.won === null || l.won === undefined);
+        const isOutrightWin = /to\s+win|outright/i.test(String(legs[0]?.name || ''));
+        const isWon = allLegsWon || (!anyLegLost && allUnsettled && ftInfo.isFT && ftInfo.matchWon && isOutrightWin);
+        const isLost = anyLegLost && ftInfo.isFT;
+        const prefix = isWon ? '✅' : isLost ? '❌' : ftInfo.isLive ? '⏳' : '🎯';
 
         let statusTag = '';
         if (isWon) {
@@ -4869,17 +4877,34 @@ export function evaluateSavedCardDetailedLegStatus(
 
     overrides.forEach((mktName) => {
       let legWon = false;
+      let legLost = false;
+      let evalSettled = false;
       if (scMatch && (isFT || isLive || isHT)) {
         const evalRes = evaluateLiveMarketSettlement(mktName, hGoals, aGoals, isFT, isLive || isHT, isHT);
-        if (evalRes.won === true) legWon = true;
+        if (evalRes.won !== null) {
+          evalSettled = true;
+          legWon = evalRes.won === true;
+          legLost = evalRes.won === false;
+        }
       }
-      if (!legWon && (/\(won\)/i.test(act) || (isFT && /won/i.test(act))) && overrides.length === 1) {
-        legWon = true;
+      if (!evalSettled) {
+        const isOutrightWin = /to\s+win|outright/i.test(mktName) && (!f.opp || !new RegExp(f.opp, 'i').test(mktName));
+        if ((/\(won\)/i.test(act) || (isFT && /won/i.test(act))) && overrides.length === 1 && isOutrightWin) {
+          legWon = true;
+        } else if (isFT && (/\(lost\)|\(draw\)/i.test(act) || (scMatch && hGoals === aGoals)) && isOutrightWin) {
+          legLost = true;
+        }
       }
 
       if (legWon) wonCount++;
-      const statusPrefix = legWon ? '✅' : (isLive || isHT ? '⏳' : '🎯');
-      const scoreSuffix = scoreline ? ` [${isFT ? 'FT' : (isHT ? 'HT' : 'LIVE')} ${scoreline}${legWon ? ' WON' : ''}]` : (legWon ? ' [WON]' : '');
+      const statusPrefix = legWon ? '✅' : legLost && isFT ? '❌' : isLive || isHT ? '⏳' : '🎯';
+      const scoreSuffix = scoreline
+        ? ` [${isFT ? 'FT' : isHT ? 'HT' : 'LIVE'} ${scoreline}${legWon ? ' WON' : legLost && isFT ? ' LOST' : ''}]`
+        : legWon
+        ? ' [WON]'
+        : legLost && isFT
+        ? ' [LOST]'
+        : '';
       legs.push({
         matchId: id,
         matchTitle: `${f.fav} vs ${f.opp}`,
@@ -4903,23 +4928,25 @@ export function evaluateSavedCardDetailedLegStatus(
 }
 
 export function evaluateSavedCardLiveStatus(
-  fixtures: Array<{ id: number | string; actual?: string; isLive?: boolean; liveBadge?: string; fs?: number }>,
-  selectedIds: number[]
+  fixtures: Array<{ id: number | string; fav?: string; opp?: string; actual?: string; isLive?: boolean; liveBadge?: string; fs?: number }>,
+  selectedIds: number[],
+  marketOverrides?: Record<number, string[]>
 ): { statusText: string; isLiveOrHt: boolean; isFt: boolean; wonCount: number; totalCount: number } {
   const ids = (selectedIds || []).map(Number).filter((n) => Number.isFinite(n) && n > 0);
   if (!ids.length) {
     return { statusText: 'No selections', isLiveOrHt: false, isFt: false, wonCount: 0, totalCount: 0 };
   }
 
-  const fixtureMap: Record<number, { actual?: string; isLive?: boolean }> = {};
+  const fixtureMap: Record<number, { fav?: string; opp?: string; actual?: string; isLive?: boolean }> = {};
   (fixtures || []).forEach((f) => {
-    fixtureMap[Number(f.id)] = { actual: f.actual, isLive: f.isLive };
+    fixtureMap[Number(f.id)] = { fav: f.fav, opp: f.opp, actual: f.actual, isLive: f.isLive };
   });
 
   let wonCount = 0;
   let htCount = 0;
   let liveCount = 0;
   let ftCount = 0;
+  let totalLegs = 0;
 
   ids.forEach((id) => {
     const f = fixtureMap[id];
@@ -4928,20 +4955,49 @@ export function evaluateSavedCardLiveStatus(
     const isFT = !f.isLive && (/\((won|draw|lost)\)/i.test(act) || /^FT\b/i.test(act));
     const isHT = /\bHT\b/i.test(act) || (!isFT && (act.indexOf("45'") !== -1 || /half/i.test(act)));
     const isLive = !isFT && (f.isLive || /live/i.test(act) || isHT || /\d+'/.test(act));
+    const scMatch = act.match(/(\d+)\s*-\s*(\d+)/);
+    const hGoals = scMatch ? Number(scMatch[1]) : 0;
+    const aGoals = scMatch ? Number(scMatch[2]) : 0;
 
     if (isFT) ftCount++;
     if (isHT) htCount++;
     if (isLive) liveCount++;
-    if (/\(won\)/i.test(act) || (isFT && /won/i.test(act))) wonCount++;
+
+    const overrides =
+      marketOverrides && marketOverrides[id] && marketOverrides[id].length > 0
+        ? marketOverrides[id]
+        : [`Match Result: ${f.fav || 'Team'} to Win`];
+
+    overrides.forEach((mktName) => {
+      totalLegs++;
+      let legWon = false;
+      let evalSettled = false;
+      if (scMatch && (isFT || isLive || isHT)) {
+        const evalRes = evaluateLiveMarketSettlement(mktName, hGoals, aGoals, isFT, isLive || isHT, isHT);
+        if (evalRes.won !== null) {
+          evalSettled = true;
+          legWon = evalRes.won === true;
+        }
+      }
+      if (!evalSettled) {
+        const isOutrightWin = /to\s+win|outright/i.test(mktName) && (!f.opp || !new RegExp(f.opp, 'i').test(mktName));
+        if ((/\(won\)/i.test(act) || (isFT && /won/i.test(act))) && overrides.length === 1 && isOutrightWin) {
+          legWon = true;
+        }
+      }
+      if (legWon) wonCount++;
+    });
   });
+
+  if (totalLegs === 0) totalLegs = ids.length;
 
   if (ftCount === ids.length) {
     return {
-      statusText: `✓ ${wonCount}/${ids.length} Won (FT All Complete)`,
+      statusText: `✓ ${wonCount}/${totalLegs} Won (FT All Complete)`,
       isLiveOrHt: false,
       isFt: true,
       wonCount,
-      totalCount: ids.length,
+      totalCount: totalLegs,
     };
   }
 
@@ -4951,7 +5007,7 @@ export function evaluateSavedCardLiveStatus(
       isLiveOrHt: true,
       isFt: false,
       wonCount,
-      totalCount: ids.length,
+      totalCount: totalLegs,
     };
   }
 
@@ -4961,7 +5017,7 @@ export function evaluateSavedCardLiveStatus(
       isLiveOrHt: true,
       isFt: false,
       wonCount,
-      totalCount: ids.length,
+      totalCount: totalLegs,
     };
   }
 
@@ -4970,7 +5026,7 @@ export function evaluateSavedCardLiveStatus(
     isLiveOrHt: false,
     isFt: false,
     wonCount,
-    totalCount: ids.length,
+    totalCount: totalLegs,
   };
 }
 
@@ -12731,3 +12787,409 @@ export function formatBankerSlipMatchupDisplay(
     matchupText: resolved.matchupText,
   };
 }
+
+// ============================================================================
+// X POST & SCREENSHOT STUDIO: CATEGORY & FOLD (TOP 1-5) SELECTION ENGINE
+// ============================================================================
+
+export type XStudioCategory =
+  | 'top_slip'
+  | 'outright'
+  | 'goals'
+  | 'corners'
+  | 'btts_combos'
+  | 'builder';
+
+export type XStudioSubMarket =
+  | 'o05'
+  | 'o15'
+  | 'o25'
+  | 'o35'
+  | 'team_o15'
+  | 'c75'
+  | 'c85'
+  | 'c95'
+  | 'btts_yes'
+  | 'dc_1x'
+  | 'dnb'
+  | 'win_o15'
+  | 'cards35';
+
+export interface XStudioMarketItem {
+  n: string;
+  p: number | string;
+  odds: number;
+  w?: boolean | null;
+  statBadge?: string;
+}
+
+export interface XStudioFixtureInput {
+  id: number | string;
+  fav: string;
+  opp: string;
+  venue?: string;
+  league?: string;
+  ko?: string;
+  fs?: number;
+  displayConf?: number;
+  actual?: string;
+  isLive?: boolean;
+}
+
+export interface XStudioRankedPick {
+  fixture: XStudioFixtureInput;
+  marketName: string;
+  pct: number;
+  odds: number;
+  isGreenPick: boolean;
+}
+
+export function resolveXStudioTargetMarketForFixture(
+  fixture: XStudioFixtureInput,
+  markets: XStudioMarketItem[],
+  category: XStudioCategory,
+  subMarket: XStudioSubMarket = 'o25'
+): XStudioMarketItem {
+  const fav = String(fixture.fav || '').trim();
+  const baseConf = Number(fixture.displayConf ?? fixture.fs ?? 75);
+  const list = Array.isArray(markets) ? markets : [];
+
+  const findByPred = (pred: (m: XStudioMarketItem) => boolean): XStudioMarketItem | undefined =>
+    list.find(pred);
+
+  if (category === 'outright') {
+    const found = findByPred((x) => {
+      const n = String(x.n || '').toLowerCase();
+      return (
+        n === `match result: ${fav.toLowerCase()} to win` ||
+        n === `${fav.toLowerCase()} to win` ||
+        (n.includes('to win') && n.includes(fav.toLowerCase()))
+      );
+    });
+    return (
+      found || {
+        n: `Match Result: ${fav} to Win`,
+        p: baseConf.toFixed(1),
+        odds: 1.55,
+      }
+    );
+  }
+
+  if (category === 'goals') {
+    if (subMarket === 'o05') {
+      return (
+        findByPred((x) => /1st\s+half\s+over\s+0\.5|over\s+0\.5\s+goals/i.test(String(x.n || ''))) || {
+          n: '1st Half Over 0.5',
+          p: Math.min(88, baseConf + 2).toFixed(1),
+          odds: 1.33,
+        }
+      );
+    }
+    if (subMarket === 'o15') {
+      return (
+        findByPred((x) => /^over\s+1\.5\s+goals$/i.test(String(x.n || '').trim())) || {
+          n: 'Over 1.5 Goals',
+          p: Math.min(89, baseConf + 4).toFixed(1),
+          odds: 1.25,
+        }
+      );
+    }
+    if (subMarket === 'o25') {
+      return (
+        findByPred((x) => /^over\s+2\.5\s+goals$/i.test(String(x.n || '').trim())) || {
+          n: 'Over 2.5 Goals',
+          p: Math.max(55, baseConf - 2).toFixed(1),
+          odds: 1.55,
+        }
+      );
+    }
+    if (subMarket === 'o35') {
+      return (
+        findByPred((x) => /^over\s+3\.5\s+goals$/i.test(String(x.n || '').trim())) || {
+          n: 'Over 3.5 Goals',
+          p: Math.max(35, baseConf - 22).toFixed(1),
+          odds: 2.25,
+        }
+      );
+    }
+    if (subMarket === 'team_o15') {
+      return (
+        findByPred((x) => /over\s+1\.5\s+team\s+gls/i.test(String(x.n || '')) && String(x.n || '').toLowerCase().includes(fav.toLowerCase())) ||
+        findByPred((x) => /over\s+1\.5\s+team\s+gls/i.test(String(x.n || ''))) || {
+          n: `${fav} Over 1.5 Team Gls`,
+          p: Math.max(52, baseConf - 4).toFixed(1),
+          odds: 1.62,
+        }
+      );
+    }
+  }
+
+  if (category === 'corners') {
+    const baseC85 = findByPred((x) => /over\s+8\.5\s+corners/i.test(String(x.n || ''))) || {
+      n: 'Over 8.5 Corners',
+      p: Math.max(58, baseConf - 3).toFixed(1),
+      odds: 1.58,
+    };
+    const baseC85Pct = parseFloat(String(baseC85.p).replace('%', '')) || 68;
+    const baseC85Odds = Number(baseC85.odds) || 1.58;
+    if (subMarket === 'c75') {
+      return (
+        findByPred((x) => /over\s+7\.5\s+corners/i.test(String(x.n || ''))) || {
+          n: 'Over 7.5 Corners',
+          p: Math.min(91.5, baseC85Pct + 7.5).toFixed(1),
+          odds: parseFloat(Math.max(1.22, baseC85Odds - 0.18).toFixed(2)),
+        }
+      );
+    }
+    if (subMarket === 'c95') {
+      return (
+        findByPred((x) => /over\s+9\.5\s+corners/i.test(String(x.n || ''))) || {
+          n: 'Over 9.5 Corners',
+          p: Math.max(38.0, baseC85Pct - 8.5).toFixed(1),
+          odds: parseFloat((baseC85Odds + 0.28).toFixed(2)),
+        }
+      );
+    }
+    return baseC85;
+  }
+
+  if (category === 'btts_combos') {
+    if (subMarket === 'btts_yes') {
+      return (
+        findByPred((x) => /^btts:\s*yes$/i.test(String(x.n || '').trim())) || {
+          n: 'BTTS: Yes',
+          p: Math.max(55, baseConf - 4).toFixed(1),
+          odds: 1.65,
+        }
+      );
+    }
+    if (subMarket === 'dc_1x') {
+      return (
+        findByPred((x) => String(x.n || '').toLowerCase().startsWith(`${fav.toLowerCase()}/draw`)) || {
+          n: `${fav}/Draw (1X)`,
+          p: Math.min(95, baseConf + 14).toFixed(1),
+          odds: 1.18,
+        }
+      );
+    }
+    if (subMarket === 'dnb') {
+      return (
+        findByPred((x) => String(x.n || '').toLowerCase() === `${fav.toLowerCase()} draw no bet`) || {
+          n: `${fav} Draw No Bet`,
+          p: Math.min(92, baseConf + 8).toFixed(1),
+          odds: 1.28,
+        }
+      );
+    }
+    if (subMarket === 'win_o15') {
+      return (
+        findByPred((x) => String(x.n || '').toLowerCase() === `${fav.toLowerCase()} win & over 1.5 gls`) || {
+          n: `${fav} Win & Over 1.5 Gls`,
+          p: Math.max(50, baseConf - 5).toFixed(1),
+          odds: 1.72,
+        }
+      );
+    }
+    if (subMarket === 'cards35') {
+      return (
+        findByPred((x) => /over\s+3\.5\s+cards/i.test(String(x.n || ''))) || {
+          n: 'Over 3.5 Cards',
+          p: Math.max(54, baseConf - 6).toFixed(1),
+          odds: 1.65,
+        }
+      );
+    }
+  }
+
+  return (
+    list[0] || {
+      n: `Match Result: ${fav} to Win`,
+      p: baseConf.toFixed(1),
+      odds: 1.55,
+    }
+  );
+}
+
+export function getXStudioCategoryLabel(
+  category: XStudioCategory,
+  subMarket: XStudioSubMarket = 'o25',
+  foldCount = 5
+): string {
+  const n = Math.max(1, Math.min(5, Number(foldCount) || 5));
+  const foldPrefix = n === 1 ? 'Single' : `${n}-Fold`;
+  if (category === 'top_slip') return `${foldPrefix} Top Banker Slip`;
+  if (category === 'outright') return n === 1 ? '#1 Outright Winner' : `Top ${n} Outright Winners`;
+  if (category === 'goals') {
+    const goalLabels: Record<string, string> = {
+      o05: 'Over 0.5 (1H) Goals',
+      o15: 'Over 1.5 Goals',
+      o25: 'Over 2.5 Goals',
+      o35: 'Over 3.5 Goals',
+      team_o15: 'Team Over 1.5 Goals',
+    };
+    return `${foldPrefix} ${goalLabels[subMarket] || 'Goals'}`;
+  }
+  if (category === 'corners') {
+    const cornerLabels: Record<string, string> = {
+      c75: 'Over 7.5 Corners',
+      c85: 'Over 8.5 Corners',
+      c95: 'Over 9.5 Corners',
+    };
+    return `${foldPrefix} ${cornerLabels[subMarket] || 'Over 8.5 Corners'}`;
+  }
+  if (category === 'btts_combos') {
+    const comboLabels: Record<string, string> = {
+      btts_yes: 'BTTS: Yes',
+      dc_1x: 'Win or Draw (1X/X2)',
+      dnb: 'Draw No Bet',
+      win_o15: 'Win & Over 1.5 Goals',
+      cards35: 'Over 3.5 Cards',
+    };
+    return `${foldPrefix} ${comboLabels[subMarket] || 'Combo'}`;
+  }
+  if (category === 'builder') return `${Math.max(2, n)}-Leg Match Bet Builder`;
+  return `${foldPrefix} Selection`;
+}
+
+export function rankFixturesForXStudioCategory(
+  fixtures: XStudioFixtureInput[],
+  category: XStudioCategory,
+  subMarket: XStudioSubMarket = 'o25',
+  foldCount = 5,
+  getMarketsForFixture: (f: XStudioFixtureInput) => XStudioMarketItem[],
+  bankerPairs?: Array<{ m: XStudioFixtureInput; bestM: XStudioMarketItem }>
+): {
+  rankedItems: XStudioRankedPick[];
+  selectedIds: number[];
+  marketOverrides: Record<number, string[]>;
+  categoryLabel: string;
+} {
+  const count = Math.max(1, Math.min(5, Number(foldCount) || 5));
+  const validFixtures = (fixtures || []).filter(
+    (f) => f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000)
+  );
+  const categoryLabel = getXStudioCategoryLabel(category, subMarket, count);
+
+  if (!validFixtures.length) {
+    return { rankedItems: [], selectedIds: [], marketOverrides: {}, categoryLabel };
+  }
+
+  if (category === 'top_slip') {
+    const validBankers = (bankerPairs || []).filter(
+      (p) => p && p.m && validFixtures.some((f) => Number(f.id) === Number(p.m.id))
+    );
+    const rankedItems: XStudioRankedPick[] = [];
+    const seenIds = new Set<number>();
+
+    validBankers.forEach((p) => {
+      const idNum = Number(p.m.id);
+      if (seenIds.has(idNum)) return;
+      seenIds.add(idNum);
+      const pctVal = parseFloat(String(p.bestM?.p || p.m.displayConf || p.m.fs || 75).replace('%', '')) || 75;
+      rankedItems.push({
+        fixture: p.m,
+        marketName: p.bestM?.n || `Match Result: ${p.m.fav} to Win`,
+        pct: pctVal,
+        odds: Number(p.bestM?.odds) || 1.5,
+        isGreenPick: pctVal >= 75.0,
+      });
+    });
+
+    // Append remaining fixtures sorted by confidence so the user can see/toggle more if desired
+    const remaining = validFixtures
+      .filter((f) => !seenIds.has(Number(f.id)))
+      .slice()
+      .sort((a, b) => Number(b.displayConf ?? b.fs ?? 0) - Number(a.displayConf ?? a.fs ?? 0));
+
+    remaining.forEach((f) => {
+      const mList = getMarketsForFixture(f) || [];
+      const best = selectBankerSlipMarket(mList as any) || mList[0] || {
+        n: `Match Result: ${f.fav} to Win`,
+        p: f.displayConf ?? f.fs ?? 72,
+        odds: 1.55,
+      };
+      const pctVal = parseFloat(String(best.p).replace('%', '')) || 72;
+      rankedItems.push({
+        fixture: f,
+        marketName: best.n,
+        pct: pctVal,
+        odds: Number(best.odds) || 1.5,
+        isGreenPick: pctVal >= 75.0,
+      });
+    });
+
+    const topChosen = rankedItems.slice(0, count);
+    const selectedIds = topChosen.map((item) => Number(item.fixture.id));
+    const marketOverrides: Record<number, string[]> = {};
+    topChosen.forEach((item) => {
+      marketOverrides[Number(item.fixture.id)] = [item.marketName];
+    });
+
+    return { rankedItems, selectedIds, marketOverrides, categoryLabel };
+  }
+
+  if (category === 'builder') {
+    const sortedByConf = validFixtures
+      .slice()
+      .sort((a, b) => Number(b.displayConf ?? b.fs ?? 0) - Number(a.displayConf ?? a.fs ?? 0));
+    const topMatch = sortedByConf[0];
+    const topMarkets = (getMarketsForFixture(topMatch) || [])
+      .slice()
+      .sort((a, b) => (parseFloat(String(b.p)) || 0) - (parseFloat(String(a.p)) || 0));
+    const builderLegsCount = Math.max(2, count);
+    const chosenLegs = topMarkets.slice(0, builderLegsCount).map((m) => m.n);
+    const selectedIds = [Number(topMatch.id)];
+    const marketOverrides: Record<number, string[]> = {
+      [Number(topMatch.id)]: chosenLegs.length ? chosenLegs : [`Match Result: ${topMatch.fav} to Win`],
+    };
+    const rankedItems: XStudioRankedPick[] = sortedByConf.map((f) => {
+      const pctVal = Number(f.displayConf ?? f.fs ?? 75);
+      return {
+        fixture: f,
+        marketName: Number(f.id) === Number(topMatch.id) ? chosenLegs.join(' + ') : `Match Result: ${f.fav} to Win`,
+        pct: pctVal,
+        odds: 1.55,
+        isGreenPick: pctVal >= 75.0,
+      };
+    });
+    return { rankedItems, selectedIds, marketOverrides, categoryLabel };
+  }
+
+  // For 'outright', 'goals', 'corners', and 'btts_combos':
+  // Evaluate the target market for every fixture and sort strictly by that market's model percentage descending!
+  const rankedItems: XStudioRankedPick[] = validFixtures.map((f) => {
+    const mList = getMarketsForFixture(f) || [];
+    const targetMkt = resolveXStudioTargetMarketForFixture(f, mList, category, subMarket);
+    const marketPct = parseFloat(String(targetMkt.p).replace('%', '')) || Number(f.displayConf ?? f.fs ?? 70);
+    const matchConf = Number(f.displayConf ?? f.fs ?? marketPct);
+    // For 'outright', use the match's green-pick confidence if higher/consistent so Green Picks order matches main feed
+    const effectivePct = category === 'outright' ? Math.max(marketPct, matchConf) : marketPct;
+    return {
+      fixture: f,
+      marketName: targetMkt.n,
+      pct: parseFloat(effectivePct.toFixed(1)),
+      odds: Number(targetMkt.odds) || 1.5,
+      isGreenPick: effectivePct >= 75.0,
+    };
+  });
+
+  rankedItems.sort((a, b) => {
+    if (category === 'outright' && a.isGreenPick !== b.isGreenPick) {
+      return a.isGreenPick ? -1 : 1;
+    }
+    if (Math.abs(b.pct - a.pct) > 0.001) return b.pct - a.pct;
+    const confB = Number(b.fixture.displayConf ?? b.fixture.fs ?? 0);
+    const confA = Number(a.fixture.displayConf ?? a.fixture.fs ?? 0);
+    return confB - confA;
+  });
+
+  const topChosen = rankedItems.slice(0, count);
+  const selectedIds = topChosen.map((item) => Number(item.fixture.id));
+  const marketOverrides: Record<number, string[]> = {};
+  topChosen.forEach((item) => {
+    marketOverrides[Number(item.fixture.id)] = [item.marketName];
+  });
+
+  return { rankedItems, selectedIds, marketOverrides, categoryLabel };
+}
+

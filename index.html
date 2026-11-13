@@ -27,19 +27,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261112-v12">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261112-v12">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261112-v12">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v12">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261112-v12">
-<meta name="betboy-build-version" content="20261112-v12">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v15">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v15">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v15">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v15">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v15">
+<meta name="betboy-build-version" content="20261113-v15">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261112-v12';
-    var SW_SCRIPT_URL = '/sw.js?v=20261112-v12';
+    var CURRENT_BUILD_VERSION = '20261113-v15';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v15';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -2405,127 +2405,114 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
         </span>
         <div>
-          <div class="text-white font-black text-sm tracking-wide flex items-center gap-2">
-            <span>Admin X Post &amp; Screenshot Studio</span>
+          <div class="text-white font-black text-sm tracking-wide flex items-center gap-2 flex-wrap">
+            <span>X Selection Screenshot Studio</span>
             <span id="xStudioSelectedCountBadge" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold">0 Picks</span>
           </div>
-          <div class="text-[10px] text-slate-400">Select matches freely • Downloads PNG when you press Copy X Post &amp; Save Screenshot</div>
+          <div class="text-[10px] text-slate-400">Pick Category &amp; Top 1–5 Fold • Press Save Under Screenshot to Lock</div>
         </div>
       </div>
       <button type="button" onclick="window.closeXPostStudio()" aria-label="Close X Post Studio" class="text-slate-400 hover:text-white text-2xl font-bold px-2 py-0.5 leading-none cursor-pointer">&times;</button>
     </div>
 
-    <!-- Clickable Saved Posts Folder (Stores old posts & updates live with ✅ won ticks at half-time / full-time) -->
+    <!-- Top Saved Selection Box (Kept locked until cleared from the top!) -->
     <div id="xStudioSavedPostsHistoryBox" class="p-3 rounded-2xl border bg-slate-950/90 border-amber-500/40 space-y-2.5 shadow-lg">
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <button type="button" id="xStudioFolderToggleBtn" onclick="window.toggleSavedPostsFolder()" class="flex items-center gap-2 min-w-0 text-left cursor-pointer group">
           <span id="xStudioFolderIcon" class="text-xl flex-shrink-0">📂</span>
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs font-black text-amber-300 group-hover:text-amber-200 underline decoration-amber-500/40">Saved Posts Folder</span>
+              <span class="text-xs font-black text-amber-300 group-hover:text-amber-200 underline decoration-amber-500/40">Saved Selection (Locked)</span>
               <span id="xStudioSavedHistoryCountBadge" class="text-[9.5px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold">0 Saved</span>
-              <span id="xStudioFolderToggleLabel" class="text-[9.5px] text-emerald-300 font-bold bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg">▾ Click to Toggle Folder</span>
+              <span id="xStudioFolderToggleLabel" class="text-[9.5px] text-emerald-300 font-bold bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg">▴ Hide</span>
             </div>
-            <div class="text-[9px] text-slate-400 mt-0.5">Click folder to view your saved posts • Tap any old post to load it with live scores &amp; automatic ✅ won ticks</div>
+            <div class="text-[9px] text-slate-400 mt-0.5">Saved via the Save button under your screenshot • Stays locked until you press Clear Saved here</div>
           </div>
         </button>
         <div class="flex items-center gap-1.5 ml-auto flex-wrap">
-          <button type="button" onclick="window.saveActiveXCardSelections(false, null, false)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-xl text-[9.5px] cursor-pointer transition flex items-center gap-1 shadow" title="Save current selection to folder">
-            <span>💾 Save to Folder</span>
-          </button>
-          <button type="button" onclick="window.saveActiveXCardSelections(false, null, true)" class="bg-amber-600/80 hover:bg-amber-500 text-white font-bold px-2.5 py-1.5 rounded-xl text-[9.5px] cursor-pointer transition flex items-center gap-1 shadow" title="Save current picks as a brand new post in the folder">
-            <span>➕ Save as New Post</span>
-          </button>
-          <button type="button" id="xStudioClearAllHistoryBtn" onclick="window.clearAllSavedXPostsHistory()" class="bg-slate-900 hover:bg-rose-950 text-rose-300 border border-rose-500/40 font-bold px-2.5 py-1.5 rounded-xl text-[9.5px] cursor-pointer transition hidden">
-            <span>🗑️ Empty Folder</span>
+          <button type="button" id="xStudioClearAllHistoryBtn" onclick="window.clearAllSavedXPostsHistory()" class="bg-rose-950/90 hover:bg-rose-900 text-rose-200 border border-rose-500/50 font-black px-3 py-1.5 rounded-xl text-[10px] cursor-pointer transition flex items-center gap-1 shadow">
+            <span>🗑️ Clear Saved</span>
           </button>
         </div>
       </div>
 
-      <!-- Folder Drawer: Scrollable list of saved post cards with live per-leg ✅ won ticks & 1-click re-post -->
+      <!-- Folder Drawer: Shows the saved/locked selection with live per-leg ✅ won / ❌ lost ticks -->
       <div id="xStudioSavedHistoryList" class="space-y-2 max-h-64 overflow-y-auto pr-1 pt-2 border-t border-slate-800/90"></div>
     </div>
 
-    <!-- Step 1: Quick Preset Buttons & Match/Market Multi-Selector (Supports Multi-Market Bet Builder per Team) -->
+    <!-- Step 1: Simple High-Percentage Category & Top 1–5 Fold Selection System -->
     <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2.5">
       <div class="flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">1. Select Teams &amp; Multiple Bet Builder Markets</span>
-        <span class="text-[9.5px] text-amber-300 font-bold">🛠️ Tap multiple markets per team — odds add up live!</span>
+        <span class="text-[10.5px] font-black text-emerald-400 uppercase tracking-wider">1. Choose Bet Category &amp; Top 1–5 Picks</span>
+        <button type="button" onclick="window.clearXPostSelections()" class="bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 font-bold px-2.5 py-0.5 rounded-lg text-[9.5px] cursor-pointer transition">🔄 Reset Picks</button>
       </div>
-      <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-        <button type="button" onclick="window.applyXPresetSelections('top5')" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">⭐ Top 5 Bankers</button>
-        <button type="button" onclick="window.applyXPresetSelections('builder3')" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/50 font-black px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🛠️ #1 Bet Builder (3x)</button>
-        <button type="button" onclick="window.applyXPresetSelections('single')" class="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🎯 #1 Single Spotlight</button>
-        <button type="button" onclick="window.applyXPresetSelections('greens3')" class="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🟢 Top 3 Greens</button>
-        <button type="button" onclick="window.applyXPresetSelections('spl')" class="bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition inline-flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" class="w-3.5 h-2.5 rounded-[2px] inline-block flex-shrink-0" aria-label="Scotland"><rect width="24" height="16" fill="#005eb8"/><path d="M0,0 L24,16 M24,0 L0,16" stroke="#ffffff" stroke-width="3.2"/></svg><span>Scottish Prem</span></button>
-        <button type="button" onclick="window.applyXPresetSelections('slip')" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🧾 From Betting Slip</button>
-        <button type="button" onclick="window.clearXPostSelections()" class="bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 font-bold px-2.5 py-1 rounded-lg text-[10px] flex-shrink-0 cursor-pointer transition">🗑️ Clear</button>
+
+      <!-- 1A: Primary Category Selector Grid (First: Top Slip, Second: Outright Winners, then Goals, Corners, BTTS & Safe Picks, Bet Builder) -->
+      <div id="xStudioCategoryTabs" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+        <button type="button" id="xCatBtn-top_slip" onclick="window.selectXStudioCategory('top_slip')" class="px-2.5 py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-amber-500/20 text-amber-200 border-amber-400 shadow">
+          <span>⭐ Top Slip</span>
+        </button>
+        <button type="button" id="xCatBtn-outright" onclick="window.selectXStudioCategory('outright')" class="px-2.5 py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-slate-900 text-emerald-300 border-slate-700 hover:border-emerald-400">
+          <span>🏆 Outright Winners</span>
+        </button>
+        <button type="button" id="xCatBtn-goals" onclick="window.selectXStudioCategory('goals')" class="px-2.5 py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-slate-900 text-sky-300 border-slate-700 hover:border-sky-400">
+          <span>⚽ Goals (O0.5–O3.5)</span>
+        </button>
+        <button type="button" id="xCatBtn-corners" onclick="window.selectXStudioCategory('corners')" class="px-2.5 py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-slate-900 text-amber-300 border-slate-700 hover:border-amber-400">
+          <span>🚩 Corners</span>
+        </button>
+        <button type="button" id="xCatBtn-btts_combos" onclick="window.selectXStudioCategory('btts_combos')" class="px-2.5 py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-slate-900 text-teal-300 border-slate-700 hover:border-teal-400">
+          <span>🤝 BTTS &amp; Safe Picks</span>
+        </button>
+        <button type="button" id="xCatBtn-builder" onclick="window.selectXStudioCategory('builder')" class="px-2.5 py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-slate-900 text-purple-300 border-slate-700 hover:border-purple-400">
+          <span>🛠️ Bet Builder</span>
+        </button>
       </div>
-      <!-- Scrollable Fixture & Multi-Market Bet Builder Checklist -->
-      <div id="xStudioMatchSelectorList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+
+      <!-- 1B: Dynamic Sub-Market Line Selector (e.g. Over 0.5 / Over 1.5 / Over 2.5 / Over 3.5 for Goals, Over 7.5 / 8.5 / 9.5 for Corners, etc.) -->
+      <div id="xStudioSubMarketBar" class="p-2 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5"></div>
+
+      <!-- 1C: Top 1, Top 2, Top 3, Top 4 & Top 5 Selection Buttons (Ordered by Highest Model Percentage!) -->
+      <div class="space-y-1">
+        <div class="flex items-center justify-between text-[9.5px] text-slate-400 px-0.5">
+          <span id="xStudioFoldBarHeading" class="font-bold text-emerald-300">Select Number of Top Picks (Ordered by Highest Model %):</span>
+          <span id="xStudioActiveCategoryPill" class="font-mono text-[9px] text-amber-300">5-Fold Top Banker Slip</span>
+        </div>
+        <div id="xStudioFoldButtonsBar" class="grid grid-cols-5 gap-1.5">
+          <button type="button" id="xFoldBtn-1" onclick="window.selectXStudioFoldCount(1)" class="py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition bg-slate-900 text-slate-200 border-slate-700">Top 1</button>
+          <button type="button" id="xFoldBtn-2" onclick="window.selectXStudioFoldCount(2)" class="py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition bg-slate-900 text-slate-200 border-slate-700">Top 2</button>
+          <button type="button" id="xFoldBtn-3" onclick="window.selectXStudioFoldCount(3)" class="py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition bg-slate-900 text-slate-200 border-slate-700">Top 3</button>
+          <button type="button" id="xFoldBtn-4" onclick="window.selectXStudioFoldCount(4)" class="py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition bg-slate-900 text-slate-200 border-slate-700">Top 4</button>
+          <button type="button" id="xFoldBtn-5" onclick="window.selectXStudioFoldCount(5)" class="py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition bg-emerald-600 text-white border-emerald-400 shadow">Top 5</button>
+        </div>
+      </div>
+
+      <!-- 1D: Scrollable Ranked Fixture & Market Checklist -->
+      <div id="xStudioMatchSelectorList" class="space-y-2 max-h-64 overflow-y-auto pr-1 pt-1"></div>
     </div>
 
-    <!-- Step 2: Live HD Social Screenshot Card Preview (BetBoy Logo + Both Club Crests) -->
-    <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">
+    <!-- Step 2: Live HD Social Screenshot Card Preview + Dedicated Save Selection Button Underneath -->
+    <div class="bg-slate-950/90 border border-emerald-500/40 rounded-2xl p-3 space-y-2.5 shadow-xl">
       <div class="flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-[10px] font-black text-sky-300 uppercase tracking-wider">2. BetBoy HD Selection Card (With Club Crests)</span>
-        <span id="xScreenshotSaveStatus" class="text-[9.5px] font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">📸 Saves on Copy &amp; Save</span>
+        <span class="text-[10.5px] font-black text-sky-300 uppercase tracking-wider">2. BetBoy HD Selection Screenshot</span>
+        <span id="xScreenshotSaveStatus" class="text-[9.5px] font-mono font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">📸 Ready to Copy / Save</span>
       </div>
       <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner flex justify-center">
         <canvas id="xPostGraphicCanvas" width="1080" height="680" class="w-full h-auto block"></canvas>
       </div>
-      <div class="grid grid-cols-2 gap-2 pt-1">
-        <button type="button" id="saveXImageBtn" onclick="window.saveXCardImage(true, false)" class="bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 font-bold py-2 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition btn-press">
-          <span>📸 Save Screenshot to Camera Roll</span>
+
+      <!-- Primary Save Selection Button Directly Under Screenshot (Saves & Locks Selection Until Cleared at Top) -->
+      <button type="button" id="saveXSelectionUnderCardBtn" onclick="window.saveSelectionUnderScreenshot()" class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400/60 font-black py-3 px-4 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer transition btn-press">
+        <span>💾 Save Selection (Keep Locked Until Cleared at Top)</span>
+      </button>
+
+      <!-- Screenshot Download & Camera Roll Share Buttons -->
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" id="saveXImageBtn" onclick="window.saveXCardImage(true, false)" class="bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 font-bold py-2.5 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition btn-press">
+          <span>📸 Download Screenshot</span>
         </button>
-        <button type="button" onclick="window.shareXCardToCameraRoll()" class="bg-slate-900 hover:bg-slate-800 text-sky-300 border border-sky-500/30 font-bold py-2 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition btn-press">
-          <span>📲 Native Share / Save Photo</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Step 3: Dynamic X Post Text Generator (Strictly ≤ 280 Chars for Free X Account) -->
-    <div class="bg-slate-950/90 border border-emerald-500/35 rounded-2xl p-3 space-y-2.5">
-      <div class="flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">3. Dynamic X Post (Free X 280-Char Limit Guard)</span>
-        <span id="xPostCharCounterBadge" class="text-[10px] font-mono font-black text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-md">0 / 280 chars ✓</span>
-      </div>
-
-      <!-- Post Tone / Style Selector -->
-      <div class="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[10px]">
-        <button type="button" id="xStyleBtn-hype" onclick="window.setXPostStyle('hype')" class="py-1.5 rounded-lg font-black bg-emerald-600 text-white shadow cursor-pointer transition">🔥 Banker Hype</button>
-        <button type="button" id="xStyleBtn-data" onclick="window.setXPostStyle('data')" class="py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition">📊 AI Data</button>
-        <button type="button" id="xStyleBtn-compact" onclick="window.setXPostStyle('compact')" class="py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition">⚡ Short List</button>
-        <button type="button" id="xStyleBtn-results" onclick="window.setXPostStyle('results')" class="py-1.5 rounded-lg font-bold text-slate-400 hover:text-white cursor-pointer transition">✅ Results</button>
-      </div>
-
-      <!-- Editable Post Textarea with Live Character Enforcement -->
-      <textarea id="xPostTextarea" rows="5" oninput="window.onXPostManualEdit(this.value)" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl p-2.5 text-xs text-white font-medium leading-relaxed outline-none resize-none mono" placeholder="Dynamic X post will appear here..."></textarea>
-
-      <!-- Character Tolerance Progress Bar -->
-      <div class="space-y-1">
-        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-          <div id="xPostCharProgressBar" class="h-full bg-emerald-500 transition-all duration-200" style="width: 45%"></div>
-        </div>
-        <div class="flex justify-between items-center text-[9.5px] text-slate-400">
-          <span id="xPostToleranceNote">✓ Within Free X 280-character tolerance</span>
-          <button type="button" onclick="window.regenerateXPostText(false)" class="text-emerald-400 hover:text-emerald-300 font-bold cursor-pointer">🔄 Reset Dynamic Text</button>
-        </div>
-      </div>
-
-      <!-- Primary Action Buttons with Official X Logo -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-        <button type="button" id="postNativeToXBtn" onclick="window.postNativeToX()" class="bg-gradient-to-r from-sky-500 via-emerald-600 to-teal-600 hover:from-sky-400 hover:to-teal-500 text-white font-black py-3 px-4 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer transition btn-press sm:col-span-2">
-          <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-          <span>💾 Post Native to 𝕏 &amp; Save for Half-Time</span>
-        </button>
-        <button type="button" id="copyAndSaveXPostBtn" onclick="window.copyXPostAndSaveScreenshot()" class="bg-black hover:bg-slate-900 text-white border border-white/40 hover:border-emerald-400 font-black py-3 px-4 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer transition btn-press">
-          <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-          <span>Copy X Post &amp; Save Screenshot</span>
-        </button>
-        <button type="button" id="copyXPostOnlyBtn" onclick="window.copyXPostTextOnly()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer transition btn-press">
-          <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-          <span>Copy Post Text Only</span>
+        <button type="button" onclick="window.shareXCardToCameraRoll()" class="bg-slate-900 hover:bg-slate-800 text-sky-300 border border-sky-500/30 font-bold py-2.5 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition btn-press">
+          <span>📲 Share / Save Photo</span>
         </button>
       </div>
     </div>
@@ -11949,8 +11936,9 @@ window.runEngine = function(isForcedSync){
 
         var ftDisplayText = m.actual;
         if(isFT && liveStatsObj && typeof liveStatsObj.homeGoals === "number" && typeof liveStatsObj.awayGoals === "number"){
+          var isBestMOutright = bestM && /to\s+win|outright/i.test(String(bestM.n || ""));
           var ftTagMatch = String(m.actual || "").match(/\((won|draw|lost)\)/i);
-          var ftTagSuffix = ftTagMatch ? (" (" + ftTagMatch[1].charAt(0).toUpperCase() + ftTagMatch[1].slice(1).toLowerCase() + ")") : "";
+          var ftTagSuffix = (ftTagMatch && isBestMOutright) ? (" (" + ftTagMatch[1].charAt(0).toUpperCase() + ftTagMatch[1].slice(1).toLowerCase() + ")") : "";
           ftDisplayText = liveStatsObj.homeGoals + "-" + liveStatsObj.awayGoals + ftTagSuffix;
         }
 
@@ -12255,7 +12243,12 @@ window.initDateTabs = function(targetDate){
 
 window.selectDateTab = function(dateStr){
   if (window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
-  if(window.selectedDate !== dateStr){
+  var hasLockedSel = false;
+  try {
+    var lockedObj = window.safeGet ? window.safeGet("airp_locked_x_selection_v1", null) : null;
+    hasLockedSel = !!(lockedObj && Array.isArray(lockedObj.selectedIds) && lockedObj.selectedIds.length > 0);
+  } catch(e){}
+  if(window.selectedDate !== dateStr && !hasLockedSel && !window.activeSavedXCardId){
     window.xPostSelectedIds = [];
     window.xPostMarketOverrides = {};
     window.activeSavedXCardId = null;
@@ -12680,6 +12673,102 @@ window.shortenMarketForX = function(market, favName, includeTeamPrefix){
   return m;
 };
 
+// Helper to match a market name against calcExtraMarkets pool or evaluate directly from live/FT match stats
+window.findMarketInPool = function(pool, rawName, m){
+  var cleanTarget = String(rawName || "").replace(/^Match Result:\s*/i, "").trim().toLowerCase();
+  if(!cleanTarget) return null;
+  var list = Array.isArray(pool) ? pool : [];
+  var exact = list.find(function(x){
+    var xn = String((x && x.n) || "").trim();
+    return xn.toLowerCase() === String(rawName || "").trim().toLowerCase() ||
+      xn.replace(/^Match Result:\s*/i, "").trim().toLowerCase() === cleanTarget;
+  });
+  if(exact) return exact;
+
+  // Match Double Chance <Team>/Draw even if (1X) vs (X2) label changed
+  if(cleanTarget.indexOf("/draw") !== -1){
+    var dcTeamPrefix = cleanTarget.split("/draw")[0].trim();
+    var dcMatch = list.find(function(x){
+      var xn = String((x && x.n) || "").toLowerCase();
+      return xn.indexOf(dcTeamPrefix + "/draw") === 0;
+    });
+    if(dcMatch) return dcMatch;
+  }
+
+  // Match Over 7.5 / 8.5 / 9.5 Corners derived from pool's Over 8.5 Corners if needed
+  if(/over\s+(7\.5|8\.5|9\.5)\s+corners/i.test(cleanTarget)){
+    var cLineM = cleanTarget.match(/over\s+(7\.5|8\.5|9\.5)\s+corners/i);
+    var cLine = cLineM ? parseFloat(cLineM[1]) : 8.5;
+    var baseC85 = list.find(function(x){ return /over\s+8\.5\s+corners/i.test(String((x && x.n) || "")); });
+    var baseP = baseC85 ? (parseFloat(String(baseC85.p).replace("%","")) || 68) : 68;
+    var baseO = baseC85 ? (Number(baseC85.odds) || 1.58) : 1.58;
+    var stC = (m && window.computeMatchLiveAndFtStats) ? window.computeMatchLiveAndFtStats(m) : null;
+    var reqCorners = Math.floor(cLine) + 1;
+    var cWon = (stC && stC.hasKickedOff)
+      ? (Number(stC.corners || 0) >= reqCorners ? true : (stC.isFT ? false : null))
+      : null;
+    var cBadge = (stC && stC.hasKickedOff)
+      ? (stC.isFT ? ("FT: " + stC.corners + " Corners") : ("🚩 " + stC.corners + "/" + reqCorners + " Corners (" + stC.elapsedMins + "')"))
+      : "";
+    if(Math.abs(cLine - 7.5) < 0.01){
+      return {
+        n: "Over 7.5 Corners",
+        p: Math.min(91.5, baseP + 7.5).toFixed(1),
+        odds: parseFloat(Math.max(1.22, baseO - 0.18).toFixed(2)),
+        w: cWon,
+        statBadge: cBadge
+      };
+    }
+    if(Math.abs(cLine - 9.5) < 0.01){
+      return {
+        n: "Over 9.5 Corners",
+        p: Math.max(38.0, baseP - 8.5).toFixed(1),
+        odds: parseFloat((baseO + 0.28).toFixed(2)),
+        w: cWon,
+        statBadge: cBadge
+      };
+    }
+    if(baseC85) return baseC85;
+  }
+
+  // Fallback evaluation if custom market name is not in pool
+  var st = (m && window.computeMatchLiveAndFtStats) ? window.computeMatchLiveAndFtStats(m) : null;
+  var wVal = null;
+  var statBadge = "";
+  if(st && st.hasKickedOff){
+    var tg = Number(st.totalGoals || 0);
+    var hg = Number(st.homeGoals || 0);
+    var ag = Number(st.awayGoals || 0);
+    var fg = Number(st.favGoals || 0);
+    var og = Number(st.oppGoals || 0);
+    var isFT = !!st.isFT;
+    if(/1st\s+half\s+over\s+0\.5|1h\s+o0\.5/i.test(cleanTarget)){
+      wVal = st.fh05Won;
+      statBadge = st.fh05StatBadge || "";
+    } else if(/over\s+0\.5\s+goals/i.test(cleanTarget)){
+      wVal = tg >= 1 ? true : (isFT ? false : null);
+    } else if(/over\s+1\.5\s+goals/i.test(cleanTarget)){
+      wVal = tg >= 2 ? true : (isFT ? false : null);
+    } else if(/over\s+2\.5\s+goals/i.test(cleanTarget)){
+      wVal = tg >= 3 ? true : (isFT ? false : null);
+    } else if(/over\s+3\.5\s+goals/i.test(cleanTarget)){
+      wVal = tg >= 4 ? true : (isFT ? false : null);
+    } else if(/under\s+2\.5\s+goals/i.test(cleanTarget)){
+      wVal = tg > 2 ? false : (isFT ? true : null);
+    } else if(/under\s+3\.5\s+goals/i.test(cleanTarget)){
+      wVal = tg > 3 ? false : (isFT ? true : null);
+    } else if(/btts:\s*yes|btts\s+yes|^btts$/i.test(cleanTarget)){
+      wVal = (hg >= 1 && ag >= 1) ? true : (isFT ? false : null);
+    } else if(/btts:\s*no|btts\s+no/i.test(cleanTarget)){
+      wVal = (hg >= 1 && ag >= 1) ? false : (isFT ? true : null);
+    } else if(/to\s+win|outright/i.test(cleanTarget)){
+      var isOppWin = m && m.opp && cleanTarget.indexOf(String(m.opp).toLowerCase()) !== -1;
+      wVal = isFT ? (isOppWin ? (og > fg) : (fg > og)) : null;
+    }
+  }
+  return { n: String(rawName || ""), p: (m && m.fs) || 75, odds: 1.5, w: wVal, statBadge: statBadge };
+};
+
 // Resolves the list of selected markets for a given match (supports 1 or multiple Bet Builder markets per team)
 window.getXMatchSelectedMarketsList = function(m){
   var mk = window.calcExtraMarkets(m, m.fs || 68);
@@ -12693,13 +12782,19 @@ window.getXMatchSelectedMarketsList = function(m){
   }
   var chosenList = [];
   overrideNames.forEach(function(nm){
-    var found = sortedM.find(function(x){ return x.n === nm; });
-    if(found && !chosenList.some(function(c){ return c.n === found.n; })){
-      chosenList.push(found);
+    var found = window.findMarketInPool(sortedM, nm, m);
+    if(found){
+      if(!sortedM.some(function(x){ return x.n === found.n; })){
+        sortedM.push(found);
+        sortedM.sort(function(a,b){ return Number(b.p) - Number(a.p); });
+      }
+      if(!chosenList.some(function(c){ return c.n === found.n; })){
+        chosenList.push(found);
+      }
     }
   });
 
-  // If no explicit override, check daily banker slip, active betting slip, or live landed market
+  // If no explicit override, check daily banker slip, active betting slip, or locked featured pick
   if(chosenList.length === 0){
     // 0. Sync from Daily Banker Slip if this fixture is one of the current date's banker slip legs
     var bankerMarket = null;
@@ -12711,9 +12806,7 @@ window.getXMatchSelectedMarketsList = function(m){
       }
     }
     if(bankerMarket){
-      var fBanker = sortedM.find(function(x){
-        return x.n === bankerMarket.n || x.n.toLowerCase() === String(bankerMarket.n).toLowerCase();
-      });
+      var fBanker = window.findMarketInPool(sortedM, bankerMarket.n, m);
       if(fBanker && !chosenList.some(function(c){ return c.n === fBanker.n; })){
         chosenList.push(fBanker);
       } else if(!chosenList.length){
@@ -12731,24 +12824,14 @@ window.getXMatchSelectedMarketsList = function(m){
         }
       });
       betSlipNames.forEach(function(bsName){
-        var f = sortedM.find(function(x){
-          return x.n === bsName || x.n.toLowerCase().indexOf(bsName.toLowerCase()) !== -1 || bsName.toLowerCase().indexOf(x.n.toLowerCase()) !== -1;
-        });
+        var f = window.findMarketInPool(sortedM, bsName, m);
         if(f && !chosenList.some(function(c){ return c.n === f.n; })){
           chosenList.push(f);
         }
       });
     }
 
-    // 2. If match is live / kicked off (e.g. at half time), automatically pick the market that has ALREADY COME IN LIVE (w === true)
-    if(chosenList.length === 0 && mk.liveStats && mk.liveStats.hasKickedOff){
-      var wonMarketsLive = sortedM.filter(function(x){ return x.w === true; });
-      if(wonMarketsLive.length > 0){
-        chosenList.push(wonMarketsLive[0]);
-      }
-    }
-
-    // 3. Fallback to sensible high-confidence featured pick (decimal >= 1.33) rather than raw 1X double chance
+    // 2. Fallback to locked pre-kickoff featured pick (decimal >= 1.33) — never switch markets after kick-off based on live score!
     if(chosenList.length === 0){
       var featuredPick = window.selectCardFeaturedBestBet ? window.selectCardFeaturedBestBet(sortedM, m, mk ? mk.liveStats : null) : null;
       var defM = featuredPick || sortedM[0] || { n: "Match Result: " + m.fav + " to Win", p: m.fs || 75, odds: 1.55 };
@@ -12763,7 +12846,7 @@ window.resolveXCardRowFixture = function(s){
   if(!s) return { isHomeFav: true, homeTeam: "Home", awayTeam: "Away", homeGoals: null, awayGoals: null, hasScore: false, scoreStr: "", isFT: false, isLive: false, isHT: false, elapsedMins: 45 };
   var fixtures = window.currentEvaluatedFixtures || [];
   var m = (s.id !== undefined && s.id !== null)
-    ? fixtures.find(function(f){ return Number(f.id) === Number(s.id); })
+    ? (fixtures.find(function(f){ return Number(f.id) === Number(s.id); }) || (window.lockedXSelectionFixturesMap && window.lockedXSelectionFixturesMap[Number(s.id)]))
     : null;
   var sourceObj = m || s;
   var st = window.computeMatchLiveAndFtStats ? window.computeMatchLiveAndFtStats(sourceObj) : null;
@@ -12859,7 +12942,7 @@ window.getResolvedXSelections = function(){
   var fixtures = window.currentEvaluatedFixtures || [];
   var result = [];
   (window.xPostSelectedIds || []).forEach(function(id){
-    var m = fixtures.find(function(f){ return Number(f.id) === Number(id); });
+    var m = fixtures.find(function(f){ return Number(f.id) === Number(id); }) || (window.lockedXSelectionFixturesMap && window.lockedXSelectionFixturesMap[Number(id)]);
     if(!m) return;
     var resolved = window.getXMatchSelectedMarketsList(m);
     var selectedMarkets = resolved.selectedMarkets;
@@ -12881,9 +12964,11 @@ window.getResolvedXSelections = function(){
     var matchWon = /\(won\)/i.test(actStr);
 
     var allLegsWon = selectedMarkets.length > 0 && selectedMarkets.every(function(l){ return l.w === true; });
-    var anyLegWon = selectedMarkets.some(function(l){ return l.w === true; });
+    var anyLegLost = selectedMarkets.some(function(l){ return l.w === false; });
+    var allLegsUnsettled = selectedMarkets.every(function(l){ return l.w === null || l.w === undefined; });
     var firstMkt = selectedMarkets[0] || {};
-    var selWon = allLegsWon || anyLegWon || (firstMkt.w === true) || (isFT ? matchWon : null);
+    var isOutrightFavWinMkt = /to\s+win|outright/i.test(String(firstMkt.n || "")) && (!m.opp || !new RegExp(String(m.opp), "i").test(String(firstMkt.n || "")));
+    var selWon = allLegsWon ? true : (anyLegLost ? false : (allLegsUnsettled && isFT && isOutrightFavWinMkt ? matchWon : null));
 
     result.push({
       id: m.id,
@@ -13033,7 +13118,8 @@ window.generateXPostData = function(selections, style, oddsFmt){
       totalLegs += 1;
       combDec *= (Number(l.odds) || 1.5);
       totalPctSum += (parseFloat(String(l.p).replace("%","")) || 75);
-      if(l.w === true || (s.won === true && legs.length === 1)){
+      var legWonVal = (l.w !== undefined && l.w !== null) ? (l.w === true) : (s.won === true && legs.length === 1);
+      if(legWonVal){
         wonLegCount += 1;
       }
     });
@@ -13058,8 +13144,9 @@ window.generateXPostData = function(selections, style, oddsFmt){
       lines = legs0.map(function(leg){
         var pctNum = Math.round(parseFloat(String(leg.p).replace("%","")) || 75);
         var oddsStr = window.formatOdds(leg.odds || 1.5, false);
-        var legWon = (leg.w === true) || (leg.w === undefined && isFT0 && s0.won === true);
-        var prefix0 = legWon ? "✅" : (isLive0 ? "⏳" : "🎯");
+        var legWon = (leg.w !== undefined && leg.w !== null) ? (leg.w === true) : (isFT0 && s0.won === true);
+        var legLost = (leg.w === false) || ((leg.w === undefined || leg.w === null) && isFT0 && s0.won === false);
+        var prefix0 = legWon ? "✅" : (legLost && isFT0 ? "❌" : (isLive0 ? "⏳" : "🎯"));
         var statusSuffix = "";
         if(legWon){
           statusSuffix = isFT0
@@ -13083,7 +13170,7 @@ window.generateXPostData = function(selections, style, oddsFmt){
           var shortPick = window.shortenMarketForX(leg.n, s0.fav, false);
           return prefix0 + " " + shortPick + statusSuffix + " (" + oddsStr + " • " + pctNum + "%)";
         }
-        return (legWon ? "✅ " : "• ") + window.shortenMarketForX(leg.n, s0.fav, false) + " " + oddsStr + (legWon ? " WON" : (isFT0 ? " FT" : ""));
+        return (legWon ? "✅ " : (legLost && isFT0 ? "❌ " : "• ")) + window.shortenMarketForX(leg.n, s0.fav, false) + " " + oddsStr + (legWon ? " WON" : (isFT0 ? " FT" : ""));
       });
     } else {
       lines = selections.map(function(s){
@@ -13094,10 +13181,12 @@ window.generateXPostData = function(selections, style, oddsFmt){
         var isHT = !!s.isHT;
         var isLive = !!s.isLive;
         var ftScore = s.ftScore || s.liveScore || "";
-        var anyLegWon = legs.some(function(l){ return l.w === true; });
-        var allLegsWon = legs.every(function(l){ return l.w === true; });
-        var isWon = allLegsWon || anyLegWon || (s.won === true) || (isFT && String(s.actual || "").toLowerCase().indexOf("(won)") !== -1);
-        var prefix = isWon ? "✅" : (isLive ? "⏳" : "🎯");
+        var anyLegLost = legs.some(function(l){ return l.w === false; });
+        var allLegsWon = legs.length > 0 && legs.every(function(l){ return l.w === true; });
+        var allUnsettled = legs.every(function(l){ return l.w === undefined || l.w === null; });
+        var isWon = allLegsWon || (!anyLegLost && allUnsettled && s.won === true);
+        var isLost = anyLegLost || (isFT && !isWon && s.won === false);
+        var prefix = isWon ? "✅" : (isLost && isFT ? "❌" : (isLive ? "⏳" : "🎯"));
 
         var statusTag = "";
         if(isWon){
@@ -13402,77 +13491,427 @@ window.clearXPostSelections = function(){
   }
 };
 
-window.applyXPresetSelections = function(preset){
-  var activeDateStr = window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10));
-  var fixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
-    return f && (!f.date || String(f.date) === String(activeDateStr)) && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
-  }).slice().sort(function(a,b){
-    return Number(b.displayConf || b.fs || 0) - Number(a.displayConf || a.fs || 0);
-  });
-  if(!fixtures.length) return;
-  window.activeSavedXCardId = null;
-  window.xPostSelectedIds = [];
-  window.xPostMarketOverrides = {};
-  if(preset === "single"){
-    window.xPostSelectedIds = [Number(fixtures[0].id)];
-  } else if(preset === "builder3"){
-    var topMatch = fixtures[0];
-    window.xPostSelectedIds = [Number(topMatch.id)];
-    var mk = window.calcExtraMarkets(topMatch, topMatch.fs || 68);
-    var sortedM = mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); });
-    window.xPostMarketOverrides[topMatch.id] = sortedM.slice(0, 3).map(function(x){ return x.n; });
-  } else if(preset === "greens3"){
-    window.xPostSelectedIds = fixtures.slice(0, 3).map(function(m){ return Number(m.id); });
-  } else if(preset === "spl"){
-    var splMatches = fixtures.filter(function(m){ return m.league === "SPL"; });
-    if(splMatches.length > 0){
-      window.xPostSelectedIds = splMatches.slice(0, 4).map(function(m){ return Number(m.id); });
-    } else {
-      window.xPostSelectedIds = fixtures.slice(0, 2).map(function(m){ return Number(m.id); });
+window.xStudioCategory = 'top_slip';
+window.xStudioSubMarket = 'o25';
+window.xStudioFoldCount = 5;
+window.LOCKED_X_SELECTION_STORAGE_KEY = 'airp_locked_x_selection_v1';
+window.lockedXSelectionFixturesMap = window.lockedXSelectionFixturesMap || {};
+
+window.resolveXStudioTargetMarketForFixture = function(fixture, markets, category, subMarket){
+  var fav = String((fixture && fixture.fav) || '').trim();
+  var baseConf = Number((fixture && (fixture.displayConf !== undefined ? fixture.displayConf : fixture.fs)) || 75);
+  var list = Array.isArray(markets) ? markets : [];
+  var sub = subMarket || 'o25';
+  var findByPred = function(pred){
+    for(var i = 0; i < list.length; i++){
+      if(pred(list[i])) return list[i];
     }
-  } else if(preset === "slip"){
-    var slipIds = [];
-    var slipMarketsByMatch = {};
-    (window.betSlip || []).forEach(function(betId){
-      var d = window.betSlipData && window.betSlipData[betId];
-      if(d && d.team){
-        var matchFound = fixtures.find(function(f){ return f.fav === d.team; });
-        if(matchFound){
-          var mId = Number(matchFound.id);
-          if(slipIds.indexOf(mId) === -1) slipIds.push(mId);
-          if(d.market){
-            slipMarketsByMatch[mId] = slipMarketsByMatch[mId] || [];
-            if(slipMarketsByMatch[mId].indexOf(d.market) === -1){
-              slipMarketsByMatch[mId].push(d.market);
-            }
-          }
-        }
-      }
-    });
-    Object.keys(slipMarketsByMatch).forEach(function(k){
-      window.xPostMarketOverrides[k] = slipMarketsByMatch[k];
-    });
-    window.xPostSelectedIds = slipIds.length > 0 ? slipIds : fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
-  } else {
-    // Default / "banker5" / "top5": strictly use activeDateStr's Daily Banker Slip pairs that exist in fixtures
-    var validBankerPairs = (window.dailyBankerSlipPairs || []).filter(function(p){
-      return p && p.m && fixtures.some(function(f){ return Number(f.id) === Number(p.m.id); });
-    });
-    if(validBankerPairs.length > 0){
-      validBankerPairs.slice(0, 5).forEach(function(p){
-        var mId = Number(p.m.id);
-        if(window.xPostSelectedIds.indexOf(mId) === -1) window.xPostSelectedIds.push(mId);
-        if(p.bestM && p.bestM.n){
-          window.xPostMarketOverrides[mId] = [p.bestM.n];
-        }
-      });
-    } else {
-      window.xPostSelectedIds = fixtures.slice(0, 5).map(function(m){ return Number(m.id); });
+    return null;
+  };
+
+  if(category === 'outright'){
+    return findByPred(function(x){
+      var n = String((x && x.n) || '').toLowerCase();
+      var fl = fav.toLowerCase();
+      return n === ('match result: ' + fl + ' to win') ||
+        n === (fl + ' to win') ||
+        (n.indexOf('to win') !== -1 && fl && n.indexOf(fl) !== -1);
+    }) || { n: 'Match Result: ' + fav + ' to Win', p: baseConf.toFixed(1), odds: 1.55 };
+  }
+
+  if(category === 'goals'){
+    if(sub === 'o05'){
+      return findByPred(function(x){ return /1st\s+half\s+over\s+0\.5|over\s+0\.5\s+goals/i.test(String((x && x.n) || '')); }) || {
+        n: '1st Half Over 0.5',
+        p: Math.min(88, baseConf + 2).toFixed(1),
+        odds: 1.33
+      };
+    }
+    if(sub === 'o15'){
+      return findByPred(function(x){ return /^over\s+1\.5\s+goals$/i.test(String((x && x.n) || '').trim()); }) || {
+        n: 'Over 1.5 Goals',
+        p: Math.min(89, baseConf + 4).toFixed(1),
+        odds: 1.25
+      };
+    }
+    if(sub === 'o25'){
+      return findByPred(function(x){ return /^over\s+2\.5\s+goals$/i.test(String((x && x.n) || '').trim()); }) || {
+        n: 'Over 2.5 Goals',
+        p: Math.max(55, baseConf - 2).toFixed(1),
+        odds: 1.55
+      };
+    }
+    if(sub === 'o35'){
+      return findByPred(function(x){ return /^over\s+3\.5\s+goals$/i.test(String((x && x.n) || '').trim()); }) || {
+        n: 'Over 3.5 Goals',
+        p: Math.max(35, baseConf - 22).toFixed(1),
+        odds: 2.25
+      };
+    }
+    if(sub === 'team_o15'){
+      var flTeam = fav.toLowerCase();
+      return findByPred(function(x){
+        var xn = String((x && x.n) || '');
+        return /over\s+1\.5\s+team\s+gls/i.test(xn) && flTeam && xn.toLowerCase().indexOf(flTeam) !== -1;
+      }) || findByPred(function(x){
+        return /over\s+1\.5\s+team\s+gls/i.test(String((x && x.n) || ''));
+      }) || {
+        n: fav + ' Over 1.5 Team Gls',
+        p: Math.max(52, baseConf - 4).toFixed(1),
+        odds: 1.62
+      };
     }
   }
+
+  if(category === 'corners'){
+    var baseC85 = findByPred(function(x){ return /over\s+8\.5\s+corners/i.test(String((x && x.n) || '')); }) || {
+      n: 'Over 8.5 Corners',
+      p: Math.max(58, baseConf - 3).toFixed(1),
+      odds: 1.58
+    };
+    var baseC85Pct = parseFloat(String(baseC85.p).replace('%', '')) || 68;
+    var baseC85Odds = Number(baseC85.odds) || 1.58;
+    if(sub === 'c75'){
+      return findByPred(function(x){ return /over\s+7\.5\s+corners/i.test(String((x && x.n) || '')); }) || {
+        n: 'Over 7.5 Corners',
+        p: Math.min(91.5, baseC85Pct + 7.5).toFixed(1),
+        odds: parseFloat(Math.max(1.22, baseC85Odds - 0.18).toFixed(2)),
+        w: baseC85.w,
+        statBadge: baseC85.statBadge
+      };
+    }
+    if(sub === 'c95'){
+      return findByPred(function(x){ return /over\s+9\.5\s+corners/i.test(String((x && x.n) || '')); }) || {
+        n: 'Over 9.5 Corners',
+        p: Math.max(38.0, baseC85Pct - 8.5).toFixed(1),
+        odds: parseFloat((baseC85Odds + 0.28).toFixed(2)),
+        w: baseC85.w,
+        statBadge: baseC85.statBadge
+      };
+    }
+    return baseC85;
+  }
+
+  if(category === 'btts_combos'){
+    if(sub === 'btts_yes'){
+      return findByPred(function(x){ return /^btts:\s*yes$/i.test(String((x && x.n) || '').trim()); }) || {
+        n: 'BTTS: Yes',
+        p: Math.max(55, baseConf - 4).toFixed(1),
+        odds: 1.65
+      };
+    }
+    if(sub === 'dc_1x'){
+      var flDc = fav.toLowerCase();
+      return findByPred(function(x){ return String((x && x.n) || '').toLowerCase().indexOf(flDc + '/draw') === 0; }) || {
+        n: fav + '/Draw (1X)',
+        p: Math.min(95, baseConf + 14).toFixed(1),
+        odds: 1.18
+      };
+    }
+    if(sub === 'dnb'){
+      var flDnb = fav.toLowerCase();
+      return findByPred(function(x){ return String((x && x.n) || '').toLowerCase() === (flDnb + ' draw no bet'); }) || {
+        n: fav + ' Draw No Bet',
+        p: Math.min(92, baseConf + 8).toFixed(1),
+        odds: 1.28
+      };
+    }
+    if(sub === 'win_o15'){
+      var flWo15 = fav.toLowerCase();
+      return findByPred(function(x){ return String((x && x.n) || '').toLowerCase() === (flWo15 + ' win & over 1.5 gls'); }) || {
+        n: fav + ' Win & Over 1.5 Gls',
+        p: Math.max(50, baseConf - 5).toFixed(1),
+        odds: 1.72
+      };
+    }
+    if(sub === 'cards35'){
+      return findByPred(function(x){ return /over\s+3\.5\s+cards/i.test(String((x && x.n) || '')); }) || {
+        n: 'Over 3.5 Cards',
+        p: Math.max(54, baseConf - 6).toFixed(1),
+        odds: 1.65
+      };
+    }
+  }
+
+  return list[0] || { n: 'Match Result: ' + fav + ' to Win', p: baseConf.toFixed(1), odds: 1.55 };
+};
+
+window.getXStudioCategoryLabel = function(category, subMarket, foldCount){
+  var n = Math.max(1, Math.min(5, Number(foldCount) || 5));
+  var foldPrefix = n === 1 ? 'Single' : (n + '-Fold');
+  if(category === 'top_slip') return foldPrefix + ' Top Banker Slip';
+  if(category === 'outright') return n === 1 ? '#1 Outright Winner' : ('Top ' + n + ' Outright Winners');
+  if(category === 'goals'){
+    var goalLabels = {
+      o05: 'Over 0.5 (1H) Goals',
+      o15: 'Over 1.5 Goals',
+      o25: 'Over 2.5 Goals',
+      o35: 'Over 3.5 Goals',
+      team_o15: 'Team Over 1.5 Goals'
+    };
+    return foldPrefix + ' ' + (goalLabels[subMarket] || 'Goals');
+  }
+  if(category === 'corners'){
+    var cornerLabels = {
+      c75: 'Over 7.5 Corners',
+      c85: 'Over 8.5 Corners',
+      c95: 'Over 9.5 Corners'
+    };
+    return foldPrefix + ' ' + (cornerLabels[subMarket] || 'Over 8.5 Corners');
+  }
+  if(category === 'btts_combos'){
+    var comboLabels = {
+      btts_yes: 'BTTS: Yes',
+      dc_1x: 'Win or Draw (1X/X2)',
+      dnb: 'Draw No Bet',
+      win_o15: 'Win & Over 1.5 Goals',
+      cards35: 'Over 3.5 Cards'
+    };
+    return foldPrefix + ' ' + (comboLabels[subMarket] || 'Combo');
+  }
+  if(category === 'builder') return Math.max(2, n) + '-Leg Match Bet Builder';
+  return foldPrefix + ' Selection';
+};
+
+window.rankFixturesForXStudioCategory = function(fixtures, category, subMarket, foldCount, getMarketsForFixture, bankerPairs){
+  var count = Math.max(1, Math.min(5, Number(foldCount) || 5));
+  var validFixtures = (fixtures || []).filter(function(f){
+    return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
+  });
+  var categoryLabel = window.getXStudioCategoryLabel(category, subMarket, count);
+  if(!validFixtures.length){
+    return { rankedItems: [], selectedIds: [], marketOverrides: {}, categoryLabel: categoryLabel };
+  }
+
+  if(category === 'top_slip'){
+    var validBankers = (bankerPairs || []).filter(function(p){
+      return p && p.m && validFixtures.some(function(f){ return Number(f.id) === Number(p.m.id); });
+    });
+    var rankedTopItems = [];
+    var seenIds = {};
+    validBankers.forEach(function(p){
+      var idNum = Number(p.m.id);
+      if(seenIds[idNum]) return;
+      seenIds[idNum] = true;
+      var pctVal = parseFloat(String((p.bestM && p.bestM.p) || p.m.displayConf || p.m.fs || 75).replace('%', '')) || 75;
+      rankedTopItems.push({
+        fixture: p.m,
+        marketName: (p.bestM && p.bestM.n) || ('Match Result: ' + p.m.fav + ' to Win'),
+        pct: pctVal,
+        odds: Number(p.bestM && p.bestM.odds) || 1.5,
+        isGreenPick: pctVal >= 75.0
+      });
+    });
+
+    var remaining = validFixtures.filter(function(f){ return !seenIds[Number(f.id)]; }).slice().sort(function(a, b){
+      return Number(b.displayConf !== undefined ? b.displayConf : (b.fs || 0)) - Number(a.displayConf !== undefined ? a.displayConf : (a.fs || 0));
+    });
+    remaining.forEach(function(f){
+      var mList = getMarketsForFixture(f) || [];
+      var best = (window.selectBankerSlipMarket && window.selectBankerSlipMarket(mList)) || mList[0] || {
+        n: 'Match Result: ' + f.fav + ' to Win',
+        p: f.displayConf || f.fs || 72,
+        odds: 1.55
+      };
+      var pctVal = parseFloat(String(best.p).replace('%', '')) || 72;
+      rankedTopItems.push({
+        fixture: f,
+        marketName: best.n,
+        pct: pctVal,
+        odds: Number(best.odds) || 1.5,
+        isGreenPick: pctVal >= 75.0
+      });
+    });
+
+    var topChosenSlip = rankedTopItems.slice(0, count);
+    var slipOverrides = {};
+    topChosenSlip.forEach(function(item){
+      slipOverrides[Number(item.fixture.id)] = [item.marketName];
+    });
+    return {
+      rankedItems: rankedTopItems,
+      selectedIds: topChosenSlip.map(function(item){ return Number(item.fixture.id); }),
+      marketOverrides: slipOverrides,
+      categoryLabel: categoryLabel
+    };
+  }
+
+  if(category === 'builder'){
+    var sortedByConf = validFixtures.slice().sort(function(a, b){
+      return Number(b.displayConf !== undefined ? b.displayConf : (b.fs || 0)) - Number(a.displayConf !== undefined ? a.displayConf : (a.fs || 0));
+    });
+    var topMatch = sortedByConf[0];
+    var topMarkets = (getMarketsForFixture(topMatch) || []).slice().sort(function(a, b){
+      return (parseFloat(String(b.p).replace('%', '')) || 0) - (parseFloat(String(a.p).replace('%', '')) || 0);
+    });
+    var builderLegsCount = Math.max(2, count);
+    var chosenLegs = topMarkets.slice(0, builderLegsCount).map(function(m){ return m.n; });
+    var builderOverrides = {};
+    builderOverrides[Number(topMatch.id)] = chosenLegs.length ? chosenLegs : ['Match Result: ' + topMatch.fav + ' to Win'];
+    var rankedBuilderItems = sortedByConf.map(function(f){
+      var pctVal = Number(f.displayConf !== undefined ? f.displayConf : (f.fs || 75));
+      return {
+        fixture: f,
+        marketName: Number(f.id) === Number(topMatch.id) ? chosenLegs.join(' + ') : ('Match Result: ' + f.fav + ' to Win'),
+        pct: pctVal,
+        odds: 1.55,
+        isGreenPick: pctVal >= 75.0
+      };
+    });
+    return {
+      rankedItems: rankedBuilderItems,
+      selectedIds: [Number(topMatch.id)],
+      marketOverrides: builderOverrides,
+      categoryLabel: categoryLabel
+    };
+  }
+
+  var rankedItems = validFixtures.map(function(f){
+    var mList = getMarketsForFixture(f) || [];
+    var targetMkt = window.resolveXStudioTargetMarketForFixture(f, mList, category, subMarket);
+    var marketPct = parseFloat(String(targetMkt.p).replace('%', '')) || Number(f.displayConf || f.fs || 70);
+    var matchConf = Number(f.displayConf !== undefined ? f.displayConf : (f.fs || marketPct));
+    var effectivePct = (category === 'outright') ? Math.max(marketPct, matchConf) : marketPct;
+    return {
+      fixture: f,
+      marketName: targetMkt.n,
+      pct: parseFloat(effectivePct.toFixed(1)),
+      odds: Number(targetMkt.odds) || 1.5,
+      isGreenPick: effectivePct >= 75.0
+    };
+  });
+
+  rankedItems.sort(function(a, b){
+    if(category === 'outright' && a.isGreenPick !== b.isGreenPick){
+      return a.isGreenPick ? -1 : 1;
+    }
+    if(Math.abs(b.pct - a.pct) > 0.001) return b.pct - a.pct;
+    var confB = Number(b.fixture.displayConf !== undefined ? b.fixture.displayConf : (b.fixture.fs || 0));
+    var confA = Number(a.fixture.displayConf !== undefined ? a.fixture.displayConf : (a.fixture.fs || 0));
+    return confB - confA;
+  });
+
+  var topChosen = rankedItems.slice(0, count);
+  var marketOverrides = {};
+  topChosen.forEach(function(item){
+    marketOverrides[Number(item.fixture.id)] = [item.marketName];
+  });
+  return {
+    rankedItems: rankedItems,
+    selectedIds: topChosen.map(function(item){ return Number(item.fixture.id); }),
+    marketOverrides: marketOverrides,
+    categoryLabel: categoryLabel
+  };
+};
+
+window.getXStudioSubMarketOptions = function(category){
+  if(category === 'goals'){
+    return [
+      { id: 'o05', label: 'Over 0.5 (1H)' },
+      { id: 'o15', label: 'Over 1.5 Goals' },
+      { id: 'o25', label: 'Over 2.5 Goals' },
+      { id: 'o35', label: 'Over 3.5 Goals' },
+      { id: 'team_o15', label: 'Team Over 1.5 Gls' }
+    ];
+  }
+  if(category === 'corners'){
+    return [
+      { id: 'c75', label: 'Over 7.5 Corners' },
+      { id: 'c85', label: 'Over 8.5 Corners' },
+      { id: 'c95', label: 'Over 9.5 Corners' }
+    ];
+  }
+  if(category === 'btts_combos'){
+    return [
+      { id: 'btts_yes', label: 'BTTS: Yes' },
+      { id: 'dc_1x', label: 'Win or Draw (1X/X2)' },
+      { id: 'dnb', label: 'Draw No Bet' },
+      { id: 'win_o15', label: 'Win & Over 1.5 Gls' },
+      { id: 'cards35', label: 'Over 3.5 Cards' }
+    ];
+  }
+  return [];
+};
+
+window.selectXStudioCategory = function(cat){
+  if(window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
+  window.xStudioCategory = cat || 'top_slip';
+  if(window.xStudioCategory === 'goals'){
+    if(['o05','o15','o25','o35','team_o15'].indexOf(window.xStudioSubMarket) === -1){
+      window.xStudioSubMarket = 'o25';
+    }
+  } else if(window.xStudioCategory === 'corners'){
+    if(['c75','c85','c95'].indexOf(window.xStudioSubMarket) === -1){
+      window.xStudioSubMarket = 'c85';
+    }
+  } else if(window.xStudioCategory === 'btts_combos'){
+    if(['btts_yes','dc_1x','dnb','win_o15','cards35'].indexOf(window.xStudioSubMarket) === -1){
+      window.xStudioSubMarket = 'btts_yes';
+    }
+  } else if(window.xStudioCategory === 'builder'){
+    window.xStudioFoldCount = Math.max(2, Number(window.xStudioFoldCount) || 3);
+  }
+  window.applyXStudioCategoryAndFold();
+};
+
+window.selectXStudioSubMarket = function(sub){
+  if(window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
+  window.xStudioSubMarket = sub;
+  window.applyXStudioCategoryAndFold();
+};
+
+window.selectXStudioFoldCount = function(n){
+  if(window.triggerHapticFeedback) window.triggerHapticFeedback('ui_tap');
+  var minFold = (window.xStudioCategory === 'builder') ? 2 : 1;
+  window.xStudioFoldCount = Math.max(minFold, Math.min(5, Number(n) || 5));
+  window.applyXStudioCategoryAndFold();
+};
+
+window.applyXStudioCategoryAndFold = function(){
+  var cat = window.xStudioCategory || 'top_slip';
+  var sub = window.xStudioSubMarket || 'o25';
+  var fold = (cat === 'builder') ? Math.max(2, window.xStudioFoldCount || 3) : (window.xStudioFoldCount || 5);
+  var fixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
+    return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
+  });
+
+  if(!fixtures.length) return;
+
+  var getMarketsFn = function(f){
+    var mk = window.calcExtraMarkets(f, f.fs || 68);
+    return (mk && mk.L) ? mk.L : [];
+  };
+
+  var ranked = window.rankFixturesForXStudioCategory(fixtures, cat, sub, fold, getMarketsFn, window.dailyBankerSlipPairs);
+  window.xPostSelectedIds = ranked.selectedIds.slice();
+  window.xPostMarketOverrides = JSON.parse(JSON.stringify(ranked.marketOverrides || {}));
+
   window.syncAdminXSelectionUI();
-  window.runEngine(false);
-  window.refreshXPostStudioUI(false);
+  window.refreshXPostStudioUI();
+};
+
+window.applyXPresetSelections = function(preset){
+  if(preset === 'single'){
+    window.xStudioCategory = 'outright';
+    window.xStudioFoldCount = 1;
+    window.applyXStudioCategoryAndFold();
+    return;
+  }
+  if(preset === 'builder3'){
+    window.xStudioCategory = 'builder';
+    window.xStudioFoldCount = 3;
+    window.applyXStudioCategoryAndFold();
+    return;
+  }
+  if(preset === 'greens3'){
+    window.xStudioCategory = 'outright';
+    window.xStudioFoldCount = 3;
+    window.applyXStudioCategoryAndFold();
+    return;
+  }
+  window.xStudioCategory = 'top_slip';
+  window.xStudioFoldCount = 5;
+  window.applyXStudioCategoryAndFold();
 };
 
 window.toggleXAutoSave = function(checked){
@@ -13898,7 +14337,11 @@ window.renderXPostCanvasCard = function(){
 
   var dateStr = window.selectedDate || window.getRollingDates().today;
   var headerSubtitle = "";
-  if(count === 1 && totalLegs > 1){
+  if(window.xStudioCategory && window.getXStudioCategoryLabel){
+    var labelArgCount = (window.xStudioCategory === 'builder') ? Math.max(2, totalLegs) : count;
+    var catLabel = window.getXStudioCategoryLabel(window.xStudioCategory, window.xStudioSubMarket, labelArgCount);
+    headerSubtitle = "AI " + catLabel.toUpperCase() + " • " + dateStr;
+  } else if(count === 1 && totalLegs > 1){
     headerSubtitle = "AI " + totalLegs + "-LEG BET BUILDER • " + dateStr;
   } else if(count === 1){
     headerSubtitle = "AI SINGLE SPOTLIGHT • " + dateStr;
@@ -13919,8 +14362,8 @@ window.renderXPostCanvasCard = function(){
     if(s.isLive) liveMatchesCount++;
     var legs = (s.markets && s.markets.length) ? s.markets : [{ n: s.market, w: s.won }];
     legs.forEach(function(l){
-      var lw = l.w !== undefined ? l.w : s.won;
-      if(lw === true || (s.won === true && s.isFT)){
+      var lw = (l.w !== undefined && l.w !== null) ? l.w : s.won;
+      if(lw === true){
         wonLegsCount++;
       }
     });
@@ -14006,9 +14449,10 @@ window.renderXPostCanvasCard = function(){
     var hasScore = rowFix.hasScore && (isMatchFT || isMatchLive || isMatchHT);
     var scoreStr = hasScore ? (homeGoals + "-" + awayGoals) : (rowFix.scoreStr || "");
 
-    var hasAnyLegWon = legs.some(function(l){ return l.w === true; });
+    var anyLegLost = legs.some(function(l){ return l.w === false; });
     var areAllLegsWon = legs.length > 0 && legs.every(function(l){ return l.w === true; });
-    var isSelectionWon = (s.won === true) || areAllLegsWon || hasAnyLegWon;
+    var isSelectionWon = areAllLegsWon || (!anyLegLost && legs.every(function(l){ return l.w === undefined || l.w === null; }) && s.won === true);
+    var isSelectionLost = anyLegLost || (isMatchFT && !isSelectionWon && s.won === false);
 
     // Row Card Container
     ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
@@ -14065,16 +14509,17 @@ window.renderXPostCanvasCard = function(){
     var rightAnchorX = W - 222; // 858
     var maxLeftColW = legs.length === 1 ? 335 : 375;
 
-    var fixtureTitle = (isSelectionWon ? "✅ " : (isMatchLive ? "⏳ " : "")) + homeTeam + " vs " + awayTeam;
+    var fixtureTitle = (isSelectionWon ? "✅ " : (isSelectionLost && isMatchFT ? "✗ " : (isMatchLive ? "⏳ " : ""))) + homeTeam + " vs " + awayTeam;
     ctx.fillStyle = "#ffffff";
     var titleFit = window.drawFittedCanvasText(ctx, fixtureTitle, leftStartX, y + 42, maxLeftColW, "left", 22.5, 14, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
     var lgName = window.getLeagueName ? window.getLeagueName(s.league) : (s.league || "");
-    ctx.fillStyle = isSelectionWon ? "#34d399" : (isMatchLive ? "#38bdf8" : "#94a3b8");
+    ctx.fillStyle = isSelectionWon ? "#34d399" : (isSelectionLost && isMatchFT ? "#fda4af" : (isMatchLive ? "#38bdf8" : "#94a3b8"));
 
     var timeOrFtStr = "";
     if (isMatchFT) {
-      timeOrFtStr = "✓ FT " + (scoreStr || s.actual || "") + (isSelectionWon && legs.length === 1 ? " • WON" : "");
+      var cleanScoreOnly = scoreStr || String(s.actual || "").replace(/\s*\((won|draw|lost)\)/i, "").trim();
+      timeOrFtStr = (isSelectionWon ? "✓ FT " : (isSelectionLost ? "✗ FT " : "FT ")) + cleanScoreOnly + (isSelectionWon && legs.length === 1 ? " • WON" : (isSelectionLost && legs.length === 1 ? " • MISSED" : ""));
     } else if (isMatchHT) {
       timeOrFtStr = "⏸️ HT " + scoreStr + (isSelectionWon ? " • ✅ LANDED" : " • ⏳ LIVE");
     } else if (isMatchLive) {
@@ -14105,16 +14550,20 @@ window.renderXPostCanvasCard = function(){
     // Right Summary Label & Odds Box in Match Header
     if(legs.length === 1){
       var singleLeg = legs[0] || {};
-      var legWon = (singleLeg.w === true) || isSelectionWon;
+      var legWon = (singleLeg.w !== undefined && singleLeg.w !== null) ? (singleLeg.w === true) : isSelectionWon;
+      var legLost = (singleLeg.w === false) || (isMatchFT && !legWon && isSelectionLost);
       var mktLabel = window.formatXCardMarketLabel(s.market, legWon, false);
-      ctx.fillStyle = legWon ? "#4ade80" : "#34d399";
+      ctx.fillStyle = legWon ? "#4ade80" : (legLost ? "#fda4af" : "#34d399");
       var mktFit = window.drawFittedCanvasText(ctx, mktLabel, rightAnchorX, y + 42, availRightW, "right", 19.5, 13.5, "800", "'Plus Jakarta Sans', Arial, sans-serif");
 
-      ctx.fillStyle = legWon ? "#86efac" : (isMatchLive ? "#7dd3fc" : "#cbd5e1");
+      ctx.fillStyle = legWon ? "#86efac" : (legLost ? "#fda4af" : (isMatchLive ? "#7dd3fc" : "#cbd5e1"));
       var confOrStatTxt = "";
       if(legWon){
         var statPart = singleLeg.statBadge || (isMatchHT ? ("HT " + scoreStr) : isMatchLive ? ("LIVE " + scoreStr) : "");
         confOrStatTxt = (statPart ? (statPart + " • ") : "") + "✅ WON / LANDED";
+      } else if(legLost && isMatchFT){
+        var statLostPart = singleLeg.statBadge || ("FT " + scoreStr);
+        confOrStatTxt = (statLostPart ? (statLostPart + " • ") : "") + "✗ MISSED";
       } else if(isMatchLive){
         confOrStatTxt = (singleLeg.statBadge ? (singleLeg.statBadge + " • ") : "") + "⏳ IN PLAY";
       } else {
@@ -14362,16 +14811,125 @@ window.regenerateXPostText = function(){
 };
 
 window.refreshXPostStudioUI = function(){
+  var cat = window.xStudioCategory || 'top_slip';
+  var sub = window.xStudioSubMarket || 'o25';
+  var fold = window.xStudioFoldCount || 5;
+
+  // 1. Highlight Category Buttons
+  ['top_slip', 'outright', 'goals', 'corners', 'btts_combos', 'builder'].forEach(function(cId){
+    var btn = document.getElementById('xCatBtn-' + cId);
+    if(btn){
+      if(cId === cat){
+        btn.className = "px-2.5 py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-emerald-600 text-white border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]";
+      } else {
+        btn.className = "px-2.5 py-2 rounded-xl font-bold text-[10.5px] border cursor-pointer transition flex items-center justify-center gap-1.5 bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500 hover:text-white";
+      }
+    }
+  });
+
+  // 2. Render Sub-Market Bar if Active Category Has Options
+  var subBar = document.getElementById('xStudioSubMarketBar');
+  var subOpts = window.getXStudioSubMarketOptions ? window.getXStudioSubMarketOptions(cat) : [];
+  if(subBar){
+    if(subOpts && subOpts.length > 0){
+      subBar.classList.remove('hidden');
+      subBar.innerHTML = '<div class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-1">Choose Market Line:</div>' +
+        '<div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">' +
+        subOpts.map(function(opt){
+          var isAct = opt.id === sub;
+          var optCls = isAct
+            ? "bg-emerald-600 text-white border-emerald-400 shadow font-black"
+            : "bg-slate-950 text-slate-300 border-slate-700 hover:text-white font-bold";
+          return '<button type="button" onclick="window.selectXStudioSubMarket(\'' + opt.id + '\')" class="px-2.5 py-1.5 rounded-lg border text-[10px] flex-shrink-0 cursor-pointer transition ' + optCls + '">' +
+            opt.label +
+          '</button>';
+        }).join('') +
+        '</div>';
+    } else {
+      subBar.classList.add('hidden');
+      subBar.innerHTML = '';
+    }
+  }
+
+  // 3. Highlight Fold Count Buttons (Top 1..5, or 2 Legs..5 Legs for Bet Builder)
+  var foldBar = document.getElementById('xStudioFoldButtonsBar');
+  var foldHeading = document.getElementById('xStudioFoldBarHeading');
+  if(foldBar){
+    foldBar.className = (cat === 'builder') ? "grid grid-cols-4 gap-1.5" : "grid grid-cols-5 gap-1.5";
+  }
+  if(foldHeading){
+    foldHeading.innerText = (cat === 'builder')
+      ? "Select Number of Legs for #1 Bet Builder Match:"
+      : "Select Number of Top Picks (Ordered by Highest Model %):";
+  }
+  [1, 2, 3, 4, 5].forEach(function(n){
+    var fBtn = document.getElementById('xFoldBtn-' + n);
+    if(fBtn){
+      if(cat === 'builder' && n === 1){
+        fBtn.classList.add('hidden');
+      } else {
+        fBtn.classList.remove('hidden');
+      }
+      fBtn.innerText = (cat === 'builder') ? (n + ' Legs') : ('Top ' + n);
+      var activeFoldVal = (cat === 'builder') ? Math.max(2, fold) : fold;
+      if(n === activeFoldVal){
+        fBtn.className = ((cat === 'builder' && n === 1) ? "hidden " : "") + "py-2 rounded-xl font-black text-[10.5px] border cursor-pointer transition bg-emerald-600 text-white border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]";
+      } else {
+        fBtn.className = ((cat === 'builder' && n === 1) ? "hidden " : "") + "py-2 rounded-xl font-bold text-[10.5px] border cursor-pointer transition bg-slate-900 text-slate-300 border-slate-700 hover:text-white";
+      }
+    }
+  });
+
+  var pillEl = document.getElementById('xStudioActiveCategoryPill');
+  if(pillEl){
+    var cLabel = window.getXStudioCategoryLabel ? window.getXStudioCategoryLabel(cat, sub, fold) : (fold + "-Fold Selection");
+    pillEl.innerText = cLabel;
+  }
+
+  // 4. Render Match List Ranked by Active Category Model %
   var listEl = document.getElementById("xStudioMatchSelectorList");
-  var fixtures = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return Number(b.displayConf || b.fs || 0) - Number(a.displayConf || a.fs || 0); });
+  var fixtures = (window.currentEvaluatedFixtures || []).filter(function(f){
+    return f && !(Number(f.id) >= 900000 && Number(f.id) < 1000000);
+  });
+
+  // Calculate target market and percentage for each match in this category
+  var evaluatedItems = fixtures.map(function(m){
+    var mk = window.calcExtraMarkets(m, m.fs || 68);
+    var sortedM = (mk && mk.L) ? mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); }) : [];
+    var targetM = window.resolveXStudioTargetMarketForFixture
+      ? window.resolveXStudioTargetMarketForFixture(m, sortedM, cat, sub)
+      : (sortedM[0] || { n: m.fav + " to Win", p: m.fs || 75, odds: 1.55 });
+    var pVal = parseFloat(String(targetM.p).replace("%","")) || Number(m.displayConf || m.fs || 70);
+    var isGreen = (cat === 'outright') ? (Number(m.displayConf || m.fs || pVal) >= 75.0) : (pVal >= 75.0);
+    return {
+      m: m,
+      targetM: targetM,
+      pVal: pVal,
+      isGreen: isGreen,
+      sortedM: sortedM
+    };
+  });
+
+  // Sort by Green Picks first (for outright), then by descending model percentage
+  evaluatedItems.sort(function(a, b){
+    if(cat === 'outright' && a.isGreen !== b.isGreen){
+      return a.isGreen ? -1 : 1;
+    }
+    if(Math.abs(b.pVal - a.pVal) > 0.001) return b.pVal - a.pVal;
+    return Number(b.m.displayConf || b.m.fs || 0) - Number(a.m.displayConf || a.m.fs || 0);
+  });
+
   window.syncAdminXSelectionUI();
 
   if(listEl){
-    listEl.innerHTML = fixtures.map(function(m, idx){
+    listEl.innerHTML = evaluatedItems.map(function(item, idx){
+      var m = item.m;
+      var targetM = item.targetM;
+      var sortedM = item.sortedM;
       var isSel = window.xPostSelectedIds.indexOf(Number(m.id)) !== -1;
-      var resolved = window.getXMatchSelectedMarketsList(m);
-      var sortedM = resolved.sortedM;
-      var selectedMarkets = resolved.selectedMarkets;
+    var resolved = window.getXMatchSelectedMarketsList(m);
+    sortedM = resolved.sortedM || sortedM;
+    var selectedMarkets = resolved.selectedMarkets;
       var selectedNames = selectedMarkets.map(function(x){ return x.n; });
       var matchCombOdds = selectedMarkets.reduce(function(acc, x){ return acc * (Number(x.odds) || 1.5); }, 1);
       var rowFixUi = window.resolveXCardRowFixture ? window.resolveXCardRowFixture(m) : {
@@ -14394,10 +14952,16 @@ window.refreshXPostStudioUI = function(){
       var isMatchLive = rowFixUi.isLive;
       var scoreUi = rowFixUi.scoreStr;
       var hasAnyWonLeg = selectedMarkets.some(function(x){ return x.w === true; });
+      var allSelectedLegsWon = selectedMarkets.length > 0 && selectedMarkets.every(function(x){ return x.w === true; });
+      var anySelectedLegLost = selectedMarkets.some(function(x){ return x.w === false; });
 
       var ftBadgeHtml = "";
       if (isMatchFT) {
-        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">✓ FT ' + (scoreUi || actStr) + '</span>';
+        var ftColors = allSelectedLegsWon
+          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+          : (anySelectedLegLost ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-slate-800 text-slate-300 border-slate-700");
+        var ftIcon = allSelectedLegsWon ? "✓ FT " : (anySelectedLegLost ? "✗ FT " : "FT ");
+        ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded border whitespace-nowrap flex-shrink-0 ' + ftColors + '">' + ftIcon + (scoreUi || actStr) + '</span>';
       } else if (isMatchHT) {
         ftBadgeHtml = '<span class="text-[9px] font-mono font-black px-1.5 py-0.5 rounded ' + (hasAnyWonLeg ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' : 'bg-sky-500/20 text-sky-300 border-sky-500/40') + ' border whitespace-nowrap flex-shrink-0">⏸️ HT ' + scoreUi + (hasAnyWonLeg ? ' • ✅ LANDED' : ' • LIVE') + '</span>';
       } else if (isMatchLive) {
@@ -14409,14 +14973,17 @@ window.refreshXPostStudioUI = function(){
         var marketChipsHtml = sortedM.map(function(item, mIdx){
           var isMktPicked = selectedNames.indexOf(item.n) !== -1;
           var isMktWon = item.w === true;
+          var isMktLost = item.w === false && isMatchFT;
           var chipCls = isMktPicked
-            ? (isMktWon ? "bg-emerald-600/35 border-emerald-400 text-white ring-2 ring-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.3)]" : "bg-emerald-600/30 border-emerald-400 text-white ring-1 ring-emerald-400/60")
+            ? (isMktWon ? "bg-emerald-600/35 border-emerald-400 text-white ring-2 ring-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.3)]" : (isMktLost ? "bg-rose-950/60 border-rose-400 text-rose-100 ring-1 ring-rose-400/70" : "bg-emerald-600/30 border-emerald-400 text-white ring-1 ring-emerald-400/60"))
             : (isMktWon ? "bg-emerald-950/60 border-emerald-500/50 text-emerald-200 hover:border-emerald-400" : "bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-600 hover:text-white");
           var checkIcon = isMktPicked
-            ? '<span class="text-emerald-300 font-black flex-shrink-0">✓</span>'
+            ? (isMktLost ? '<span class="text-rose-300 font-black flex-shrink-0">✗</span>' : '<span class="text-emerald-300 font-black flex-shrink-0">✓</span>')
             : '<span class="text-slate-500 font-bold flex-shrink-0">+</span>';
-          var wonTick = isMktWon ? ' <span class="text-emerald-300 font-black flex-shrink-0 bg-emerald-950/90 border border-emerald-400/50 px-1 py-0.2 rounded text-[8.5px]">✅ LANDED</span>' : '';
-          var statSub = item.statBadge ? ('<div class="' + (isMktWon ? 'text-emerald-300 font-bold' : 'text-sky-300') + ' font-mono text-[8.5px] leading-tight mt-0.5">' + item.statBadge + (isMktWon ? ' • ✓ WON LIVE' : '') + '</div>') : '';
+          var wonTick = isMktWon
+            ? ' <span class="text-emerald-300 font-black flex-shrink-0 bg-emerald-950/90 border border-emerald-400/50 px-1 py-0.2 rounded text-[8.5px]">✅ LANDED</span>'
+            : (isMktPicked && isMktLost ? ' <span class="text-rose-300 font-black flex-shrink-0 bg-rose-950/90 border border-rose-400/50 px-1 py-0.2 rounded text-[8.5px]">❌ MISSED</span>' : '');
+          var statSub = item.statBadge ? ('<div class="' + (isMktWon ? 'text-emerald-300 font-bold' : (isMktLost ? 'text-rose-300 font-bold' : 'text-sky-300')) + ' font-mono text-[8.5px] leading-tight mt-0.5">' + item.statBadge + (isMktWon ? ' • ✓ WON LIVE' : (isMktLost ? ' • ✗ MISSED' : '')) + '</div>') : '';
           return '<button type="button" onclick="window.toggleXMatchMarketByIdx(' + m.id + ', ' + mIdx + ')" class="px-2 py-1.5 rounded-lg border text-left flex flex-col justify-center text-[9.5px] font-bold cursor-pointer transition ' + chipCls + '">' +
             '<div class="flex items-center justify-between gap-1.5 w-full">' +
               '<span class="min-w-0 flex-1 flex items-center gap-1">' + checkIcon + '<span class="leading-tight break-words">' + item.n + '</span>' + wonTick + '</span>' +
@@ -14443,6 +15010,10 @@ window.refreshXPostStudioUI = function(){
         '</div>';
       }
 
+      var pctBadgeClass = item.isGreen
+        ? "bg-emerald-500/25 text-emerald-300 border-emerald-400 font-black shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+        : "bg-slate-900 text-slate-300 border-slate-700 font-bold";
+
       var rightBadgeHtml = isSel
         ? '<span class="text-[9.5px] font-mono font-black px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0">' + selectedMarkets.length + ' Pick' + (selectedMarkets.length === 1 ? '' : 's') + ' • ' + window.formatOdds(matchCombOdds, false) + '</span>'
         : '<button type="button" onclick="window.toggleMatchForXPost(' + m.id + ', false)" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap flex-shrink-0 cursor-pointer">+ Select</button>';
@@ -14458,6 +15029,7 @@ window.refreshXPostStudioUI = function(){
             '<span class="text-[11px] font-semibold text-slate-200">' + awayTeamUi + '</span>' +
           '</label>' +
           '<div class="flex items-center gap-1.5 ml-auto">' +
+            '<span class="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ' + pctBadgeClass + '">' + item.pVal.toFixed(1) + '%</span>' +
             ftBadgeHtml +
             rightBadgeHtml +
           '</div>' +
@@ -14467,7 +15039,52 @@ window.refreshXPostStudioUI = function(){
     }).join("");
   }
 
-  window.regenerateXPostText();
+  window.renderXPostCanvasCard();
+};
+
+window.saveSelectionUnderScreenshot = function(){
+  var ids = (window.xPostSelectedIds || []).map(Number).filter(function(n){ return Number.isFinite(n) && n > 0; });
+  if(!ids.length){
+    if(window.showAppToast) window.showAppToast("⚠️ Select at least 1 match before saving");
+    return;
+  }
+  var rec = window.saveActiveXCardSelections(false, null, false);
+  if(rec){
+    // Lock into dedicated persistence so date-switching or reloading keeps it locked until Clear Saved is pressed!
+    var fixtures = window.currentEvaluatedFixtures || [];
+    var snapFixtures = fixtures.filter(function(f){ return ids.indexOf(Number(f.id)) !== -1; }).map(function(f){
+      return {
+        id: Number(f.id),
+        fav: f.fav,
+        opp: f.opp,
+        venue: f.venue,
+        league: f.league,
+        ko: f.ko,
+        fs: f.fs,
+        displayConf: f.displayConf,
+        actual: f.actual,
+        isLive: f.isLive,
+        date: f.date
+      };
+    });
+    window.safeSet("airp_locked_x_selection_v1", {
+      id: rec.id,
+      selectedIds: ids,
+      marketOverrides: rec.marketOverrides,
+      category: window.xStudioCategory || 'top_slip',
+      subMarket: window.xStudioSubMarket || 'o25',
+      foldCount: window.xStudioFoldCount || 5,
+      savedAt: Date.now(),
+      snapshotFixtures: snapFixtures
+    });
+    var statusEl = document.getElementById("xScreenshotSaveStatus");
+    if(statusEl){
+      statusEl.innerText = "✓ Saved & Locked (" + ids.length + " Picks)";
+    }
+    if(window.showAppToast){
+      window.showAppToast("💾 Selection Saved & Locked! (Persists until you click Clear Saved)");
+    }
+  }
 };
 
 window.SAVED_X_CARD_STORAGE_KEY = "airp_saved_x_card_v1";
@@ -14563,14 +15180,20 @@ window.evaluateSavedCardLiveStatus = function(fixtures, selectedIds, marketOverr
     var resolved = window.getXMatchSelectedMarketsList ? window.getXMatchSelectedMarketsList(f) : { allMarkets: [], selectedMarkets: [] };
     var pool = (resolved.allMarkets && resolved.allMarkets.length) ? resolved.allMarkets : (resolved.selectedMarkets || []);
     var legs = (overrides && overrides.length)
-      ? pool.filter(function(x){ return overrides.indexOf(x.n) !== -1; })
+      ? overrides.map(function(ovName){ return window.findMarketInPool ? window.findMarketInPool(pool, ovName, f) : (pool.find(function(x){ return x.n === ovName; }) || { n: ovName, w: null }); }).filter(Boolean)
       : (resolved.selectedMarkets || []);
 
-    if(!legs.length) legs = [{ n: "Pick", w: isFT && /won/i.test(act) }];
+    if(!legs.length) legs = [{ n: f.fav + " to Win", w: isFT ? /won/i.test(act) : null }];
 
     legs.forEach(function(l){
       totalLegs++;
-      if(l.w === true || l.won === true || (isFT && /won/i.test(act))){
+      var isOutrightWin = /to\s+win|outright/i.test(String(l.n || "")) && (!f.opp || !new RegExp(String(f.opp), "i").test(String(l.n || "")));
+      var lw = (l.w !== undefined && l.w !== null)
+        ? (l.w === true)
+        : ((l.won !== undefined && l.won !== null)
+            ? (l.won === true)
+            : (isFT && /won/i.test(act) && isOutrightWin));
+      if(lw){
         wonCount++;
       }
     });
@@ -14677,21 +15300,29 @@ window.evaluateSavedCardDetailedLegs = function(fixtures, selectedIds, marketOve
     var pool = (resolved.allMarkets && resolved.allMarkets.length) ? resolved.allMarkets : (resolved.selectedMarkets || []);
     var overrides = (marketOverrides && marketOverrides[id]) || null;
     var legs = (overrides && overrides.length)
-      ? pool.filter(function(x){ return overrides.indexOf(x.n) !== -1; })
+      ? overrides.map(function(ovName){ return window.findMarketInPool ? window.findMarketInPool(pool, ovName, f) : (pool.find(function(x){ return x.n === ovName; }) || { n: ovName, w: null }); }).filter(Boolean)
       : (resolved.selectedMarkets || []);
     if(!legs || !legs.length){
       legs = [{ n: f.fav + " to Win", w: f.primaryMarketWon, liveBadge: "" }];
     }
 
     legs.forEach(function(leg){
-      var isWon = (leg.w === true || leg.won === true || (isFt && lower.includes("(won)") && legs.length === 1));
-      var isLost = ((leg.w === false || leg.won === false) && isFt);
+      var isOutrightWin = /to\s+win|outright/i.test(String(leg.n || "")) && (!f.opp || !new RegExp(String(f.opp), "i").test(String(leg.n || "")));
+      var isWon = (leg.w !== undefined && leg.w !== null)
+        ? (leg.w === true)
+        : ((leg.won !== undefined && leg.won !== null)
+            ? (leg.won === true)
+            : (isFt && lower.includes("(won)") && legs.length === 1 && isOutrightWin));
+      var isLost = (leg.w === false || leg.won === false) || (isFt && !isWon && ((leg.w === undefined || leg.w === null) && (lower.includes("(lost)") || lower.includes("(draw)")) && isOutrightWin));
       var scoreMatch = actual.match(/(\d+)\s*-\s*(\d+)/);
       var scoreText = scoreMatch ? (scoreMatch[1] + "-" + scoreMatch[2]) : "";
       var shortMkt = String(leg.n || "").replace(/^Match Result:\s*/i, "");
       var badge = leg.liveBadge || (scoreText ? ((isFt ? "FT " : (lower.includes("ht") ? "HT " : "LIVE ")) + scoreText) : "");
       var icon = isWon ? "✅" : (isLost ? "❌" : (isLiveOrHt ? "⏳" : "🕒"));
-      var text = icon + " " + f.fav + ": " + shortMkt + (badge ? (" [" + badge + (isWon && !badge.toUpperCase().includes("WON") && !badge.toUpperCase().includes("LANDED") ? " WON" : "") + "]") : "");
+      var stateWord = (isWon && !badge.toUpperCase().includes("WON") && !badge.toUpperCase().includes("LANDED"))
+        ? " WON"
+        : ((isLost && isFt && !badge.toUpperCase().includes("LOST") && !badge.toUpperCase().includes("MISSED")) ? " LOST" : "");
+      var text = icon + " " + f.fav + ": " + shortMkt + (badge ? (" [" + badge + stateWord + "]") : "");
       results.push({
         matchId: id,
         fav: f.fav,
@@ -14717,7 +15348,19 @@ window.saveActiveXCardSelections = function(silent, customTitle, forceNew){
     }
 
     var fixtures = window.currentEvaluatedFixtures || [];
-    var autoTitle = window.generateAutoSavedCardTitle(fixtures, ids, window.xPostMarketOverrides);
+    var snapshotOverrides = JSON.parse(JSON.stringify(window.xPostMarketOverrides || {}));
+    ids.forEach(function(matchId){
+      if(!Array.isArray(snapshotOverrides[matchId]) || snapshotOverrides[matchId].length === 0){
+        var fObj = fixtures.find(function(f){ return Number(f.id) === Number(matchId); });
+        if(fObj && window.getXMatchSelectedMarketsList){
+          var resM = window.getXMatchSelectedMarketsList(fObj);
+          if(resM && Array.isArray(resM.selectedMarkets) && resM.selectedMarkets.length > 0){
+            snapshotOverrides[matchId] = resM.selectedMarkets.map(function(x){ return x.n; });
+          }
+        }
+      }
+    });
+    var autoTitle = window.generateAutoSavedCardTitle(fixtures, ids, snapshotOverrides);
     var title = (customTitle && customTitle.trim()) ? customTitle.trim() : autoTitle;
 
     var history = window.getSavedXPostsHistory();
@@ -14739,7 +15382,7 @@ window.saveActiveXCardSelections = function(silent, customTitle, forceNew){
       title: title,
       date: dateStr,
       selectedIds: ids,
-      marketOverrides: JSON.parse(JSON.stringify(window.xPostMarketOverrides || {})),
+      marketOverrides: snapshotOverrides,
       style: window.xPostStyle || "hype",
       savedAt: Date.now()
     };
@@ -14864,16 +15507,30 @@ window.clearSavedXCard = function(){
 
 window.clearAllSavedXPostsHistory = function(){
   window.safeSet(window.SAVED_X_POSTS_HISTORY_KEY, []);
-  if(window.safeRemove) window.safeRemove(window.SAVED_X_CARD_STORAGE_KEY);
-  else localStorage.removeItem(window.SAVED_X_CARD_STORAGE_KEY);
+  if(window.safeRemove){
+    window.safeRemove(window.SAVED_X_CARD_STORAGE_KEY);
+    window.safeRemove("airp_locked_x_selection_v1");
+  } else {
+    localStorage.removeItem(window.SAVED_X_CARD_STORAGE_KEY);
+    localStorage.removeItem("airp_locked_x_selection_v1");
+  }
   window.activeSavedXCardId = null;
+  window.lockedXSelectionFixturesMap = {};
+  window.xStudioCategory = 'top_slip';
+  window.xStudioFoldCount = 5;
 
-  var topFive = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; }).slice(0, 5);
-  window.xPostSelectedIds = topFive.map(function(m){ return Number(m.id); });
-  window.xPostMarketOverrides = {};
+  if(window.applyXStudioCategoryAndFold){
+    window.applyXStudioCategoryAndFold();
+  } else {
+    var topFive = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return b.fs - a.fs; }).slice(0, 5);
+    window.xPostSelectedIds = topFive.map(function(m){ return Number(m.id); });
+    window.xPostMarketOverrides = {};
+    window.refreshXPostStudioUI();
+  }
   window.updateSavedXCardBadge();
-  window.refreshXPostStudioUI();
-  if(window.showAppToast) window.showAppToast("🗑️ Emptied Saved Posts Folder");
+  var statusEl = document.getElementById("xScreenshotSaveStatus");
+  if(statusEl) statusEl.innerText = "📸 Ready to Copy / Save";
+  if(window.showAppToast) window.showAppToast("🗑️ Saved selection cleared");
 };
 
 window.openSavedHalfTimeXCard = function(specificCardId){
@@ -15019,9 +15676,10 @@ window.updateSavedXCardBadge = function(){
           var f = fMap[id];
           if(!f) return;
           var overrides = (card.marketOverrides && card.marketOverrides[id]) || null;
-          var resolved = window.getXMatchSelectedMarketsList ? window.getXMatchSelectedMarketsList(f) : { selectedMarkets: [] };
+          var resolved = window.getXMatchSelectedMarketsList ? window.getXMatchSelectedMarketsList(f) : { allMarkets: [], selectedMarkets: [] };
+          var pool = (resolved.allMarkets && resolved.allMarkets.length) ? resolved.allMarkets : (resolved.selectedMarkets || []);
           var legs = (overrides && overrides.length)
-            ? resolved.selectedMarkets.filter(function(x){ return overrides.indexOf(x.n) !== -1; })
+            ? overrides.map(function(ovName){ return window.findMarketInPool ? window.findMarketInPool(pool, ovName, f) : (pool.find(function(x){ return x.n === ovName; }) || { odds: 1.5 }); }).filter(Boolean)
             : resolved.selectedMarkets;
           legs.forEach(function(l){ cardCombDec *= (Number(l.odds) || 1.5); });
         });
@@ -15152,17 +15810,40 @@ window.openXPostStudio = function(){
   if((!window.currentEvaluatedFixtures || !window.currentEvaluatedFixtures.length) && typeof window.runEngine === "function"){
     window.runEngine(false);
   }
-  // Try loading saved selections from storage first!
-  var hasLoadedSaved = window.loadSavedXCardSelections(false);
-  if(!hasLoadedSaved && (!window.xPostSelectedIds || window.xPostSelectedIds.length === 0)){
-    if(window.applyXPresetSelections){
-      window.applyXPresetSelections('top5');
-    } else {
-      var topFive = (window.currentEvaluatedFixtures || []).slice().sort(function(a,b){ return (b.displayConf || b.fs) - (a.displayConf || a.fs); }).slice(0, 5);
-      window.xPostSelectedIds = topFive.map(function(m){ return Number(m.id); });
-      window.runEngine(false);
+  // Try loading locked selection from airp_locked_x_selection_v1 first!
+  var hasLoadedLocked = false;
+  try {
+    var lockedObj = window.safeGet ? window.safeGet("airp_locked_x_selection_v1", null) : null;
+    if(lockedObj && Array.isArray(lockedObj.selectedIds) && lockedObj.selectedIds.length > 0){
+      if(Array.isArray(lockedObj.snapshotFixtures)){
+        window.lockedXSelectionFixturesMap = window.lockedXSelectionFixturesMap || {};
+        lockedObj.snapshotFixtures.forEach(function(sf){
+          window.lockedXSelectionFixturesMap[Number(sf.id)] = sf;
+        });
+      }
+      window.activeSavedXCardId = lockedObj.id || null;
+      window.xPostSelectedIds = lockedObj.selectedIds.map(Number);
+      window.xPostMarketOverrides = JSON.parse(JSON.stringify(lockedObj.marketOverrides || {}));
+      if(lockedObj.category) window.xStudioCategory = lockedObj.category;
+      if(lockedObj.subMarket) window.xStudioSubMarket = lockedObj.subMarket;
+      if(lockedObj.foldCount) window.xStudioFoldCount = lockedObj.foldCount;
+      hasLoadedLocked = true;
+    }
+  } catch(e){}
+
+  if(!hasLoadedLocked){
+    var hasLoadedSaved = window.loadSavedXCardSelections(false);
+    if(!hasLoadedSaved && (!window.xPostSelectedIds || window.xPostSelectedIds.length === 0)){
+      if(window.applyXStudioCategoryAndFold){
+        window.xStudioCategory = 'top_slip';
+        window.xStudioFoldCount = 5;
+        window.applyXStudioCategoryAndFold();
+      } else if(window.applyXPresetSelections){
+        window.applyXPresetSelections('top5');
+      }
     }
   }
+
   var modal = document.getElementById("xPostStudioModal");
   if(modal){
     modal.style.display = "flex";

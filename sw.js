@@ -1,5 +1,5 @@
-const SW_BUILD_VERSION = '20261112-v12';
-const CACHE_NAME = 'betboy-v12';
+const SW_BUILD_VERSION = '20261113-v15';
+const CACHE_NAME = 'betboy-v14';
 const CACHE_VERSION = CACHE_NAME;
 
 self.addEventListener('install', (event) => {
