@@ -13443,6 +13443,7 @@ export interface SportsEventOfferJsonLd {
   price: string;
   priceCurrency: string;
   availability: string;
+  validFrom: string;
 }
 
 export interface SportsEventJsonLdItem {
@@ -13627,6 +13628,7 @@ export function buildSportsEventJsonLd(
     activeDate?: string | null;
     siteUrl?: string | null;
     defaultImageUrl?: string | null;
+    validFromIso?: string | null;
   }
 ): SportsEventGraphJsonLd | null {
   const list = Array.isArray(fixtures) ? fixtures : [];
@@ -13634,6 +13636,8 @@ export function buildSportsEventJsonLd(
   const siteUrl = (options?.siteUrl ? String(options.siteUrl).trim() : '') || DEFAULT_BETBOY_SITE_URL;
   const defaultImageUrl =
     (options?.defaultImageUrl ? String(options.defaultImageUrl).trim() : '') || DEFAULT_BETBOY_IMAGE_URL;
+  const offerValidFrom =
+    (options?.validFromIso ? String(options.validFromIso).trim() : '') || new Date().toISOString();
 
   const seenIds = new Set<string>();
   const seenPairs = new Set<string>();
@@ -13723,6 +13727,7 @@ export function buildSportsEventJsonLd(
         price: '0',
         priceCurrency: 'GBP',
         availability: 'https://schema.org/InStock',
+        validFrom: offerValidFrom,
       },
       homeTeam: homeTeamObj,
       awayTeam: awayTeamObj,

@@ -32,19 +32,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="twitter:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v25">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v25">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v25">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v25">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v25">
-<meta name="betboy-build-version" content="20261113-v25">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v26">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v26">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v26">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v26">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v26">
+<meta name="betboy-build-version" content="20261113-v26">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v25';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v25';
+    var CURRENT_BUILD_VERSION = '20261113-v26';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v26';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -12449,6 +12449,7 @@ window.buildSportsEventJsonLd = function(fixtures, options){
   var activeDate = (options && options.activeDate) ? String(options.activeDate).trim() : '';
   var siteUrl = (options && options.siteUrl) ? String(options.siteUrl).trim() : window.DEFAULT_BETBOY_SITE_URL;
   var defaultImageUrl = (options && options.defaultImageUrl) ? String(options.defaultImageUrl).trim() : window.DEFAULT_BETBOY_IMAGE_URL;
+  var offerValidFrom = (options && options.validFromIso) ? String(options.validFromIso).trim() : new Date().toISOString();
   var seenIds = {};
   var seenPairs = {};
   var events = [];
@@ -12529,7 +12530,8 @@ window.buildSportsEventJsonLd = function(fixtures, options){
         url: siteUrl,
         price: '0',
         priceCurrency: 'GBP',
-        availability: 'https://schema.org/InStock'
+        availability: 'https://schema.org/InStock',
+        validFrom: offerValidFrom
       },
       homeTeam: {
         '@type': 'SportsTeam',
