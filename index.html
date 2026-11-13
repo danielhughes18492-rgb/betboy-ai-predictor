@@ -27,19 +27,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v16">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v16">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v16">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v16">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v16">
-<meta name="betboy-build-version" content="20261113-v16">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v18">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v18">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v18">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v18">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v18">
+<meta name="betboy-build-version" content="20261113-v18">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v16';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v16';
+    var CURRENT_BUILD_VERSION = '20261113-v18';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v18';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -197,10 +197,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     padding-bottom: env(safe-area-inset-bottom, 36px);
   }
 
-  /* 3. Reposition the floating Back-to-Top button so it sits safely above the sticky bottom Betting Slip bar */
+  /* 3. Position Back-to-Top button cleanly on bottom-right so it never covers left-aligned crests or market icons */
   .back-to-top-btn, [class*="scroll-top"] {
-    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
-    left: 16px !important;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 14px !important;
+    left: auto !important;
     z-index: 85;
     backdrop-filter: blur(8px);
   }
@@ -266,9 +267,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .scoreboard-crest-slot .crest-box { width:22px !important; height:22px !important; min-width:22px !important; min-height:22px !important; border-radius:6px !important; padding:1.5px !important; }
   .no-scrollbar::-webkit-scrollbar { display:none; }
   .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
-  .border-l-emerald-500 { border-left: 4px solid #10b981 !important; box-shadow: -4px 0 18px -4px rgba(16, 185, 129, 0.38), 0 10px 28px -6px rgba(0, 0, 0, 0.5) !important; }
-  .border-l-amber-400 { border-left: 4px solid #fbbf24 !important; box-shadow: -4px 0 18px -4px rgba(251, 191, 36, 0.32), 0 10px 28px -6px rgba(0, 0, 0, 0.5) !important; }
-  .border-l-rose-500 { border-left: 4px solid #f43f5e !important; box-shadow: -4px 0 18px -4px rgba(244, 63, 94, 0.32), 0 10px 28px -6px rgba(0, 0, 0, 0.5) !important; }
+  .border-l-emerald-500 { border-left: 3px solid rgba(16, 185, 129, 0.85) !important; box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.45) !important; }
+  .border-l-amber-400 { border-left: 3px solid rgba(251, 191, 36, 0.85) !important; box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.45) !important; }
+  .border-l-rose-500 { border-left: 3px solid rgba(244, 63, 94, 0.8) !important; box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.45) !important; }
   #dateTabsContainer, #leagueFilters { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-left: 2px; padding-right: 2px; }
   #dateTabsContainer > button, #leagueFilters > label { scroll-snap-align: center; }
   #leagueFilters label { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 9999px !important; padding: 6px 12px !important; background: rgba(15, 23, 42, 0.65) !important; border: 1px solid rgba(51, 65, 85, 0.5) !important; opacity: 0.5; filter: grayscale(35%); }
@@ -346,8 +347,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .kpi-active-ring { outline: 2px solid #10b981 !important; background: rgba(16,185,129,0.16) !important; }
   .btn-press { transition: transform 0.16s cubic-bezier(0.16,1,0.3,1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
   .btn-press:active { transform: scale(0.96); }
-  #scrollTopFab, .back-to-top-btn, [class*="scroll-top"] { position:fixed; bottom:calc(88px + env(safe-area-inset-bottom, 0px)) !important; left:16px !important; right:auto; width:38px; height:38px; z-index:85; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding:0; font-size:15px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
-  #scrollTopFab.vis, .back-to-top-btn.vis, [class*="scroll-top"].vis { opacity:0.85; pointer-events:auto; transform:translateY(0); }
+  #scrollTopFab, .back-to-top-btn, [class*="scroll-top"] { position:fixed; bottom:calc(18px + env(safe-area-inset-bottom, 0px)) !important; right:14px !important; left:auto !important; width:36px; height:36px; z-index:85; opacity:0; pointer-events:none; transform:translateY(12px); transition:all 0.25s ease; padding:0; font-size:15px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+  #scrollTopFab.slip-open, .back-to-top-btn.slip-open, [class*="scroll-top"].slip-open { bottom:calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+  #scrollTopFab.vis, .back-to-top-btn.vis, [class*="scroll-top"].vis { opacity:0.9; pointer-events:auto; transform:translateY(0); }
   #scrollTopFab:hover, .back-to-top-btn:hover, [class*="scroll-top"]:hover { opacity:1 !important; }
   .trial-blur { filter: blur(6px); -webkit-filter: blur(6px); user-select: none; pointer-events: none; opacity: 0.78; }
   .trial-blur-sm { filter: blur(4.5px); -webkit-filter: blur(4.5px); user-select: none; pointer-events: none; opacity: 0.82; }
@@ -636,26 +638,24 @@ window.renderFeaturedBookmakerOffersHtml = function() {
   var btnTextColor = "#ffffff";
   var brandFont = window.BETFRED_BRAND_FONT_STACK;
   var cardHighlightClass = "betfred-brand-font bg-gradient-to-b from-sky-950/60 via-slate-950/95 to-slate-950/95 ring-1 ring-sky-400/50 border-sky-500/50 shadow-lg";
-  var badgeHtml = '<span class="betfred-brand-cta text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/40 flex-shrink-0" style="font-family:' + brandFont + '; font-weight:900; letter-spacing:0.5px;">★ #1 UK PICK</span>';
+  var badgeHtml = '<span class="betfred-brand-cta text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/40 flex-shrink-0" style="font-family:' + brandFont + '; font-weight:900; letter-spacing:0.5px;">★ #1 UK</span>';
   return (
-    '<div data-bookmaker-card="betfred" class="' + cardHighlightClass + ' rounded-xl p-3 border flex flex-col justify-between gap-2 hover:border-slate-600 transition w-full snap-start" style="border-top: 3px solid ' + accent + '; font-family:' + brandFont + '; -webkit-font-smoothing:antialiased;">' +
-      '<div class="space-y-1.5">' +
-        '<div class="flex items-center justify-between gap-1.5">' +
-          '<div class="flex items-center gap-2 min-w-0">' +
-            '<img src="' + officialWordmarkSvg + '" alt="Betfred Official Logo" width="110" height="26" class="h-[26px] w-auto object-contain flex-shrink-0 drop-shadow-sm" />' +
+    '<div data-bookmaker-card="betfred" class="' + cardHighlightClass + ' rounded-xl px-3 py-2 border flex flex-col gap-1.5 hover:border-slate-600 transition w-full snap-start" style="border-top: 2px solid ' + accent + '; font-family:' + brandFont + '; -webkit-font-smoothing:antialiased;">' +
+      '<div class="flex items-center justify-between gap-2.5">' +
+        '<div class="flex flex-col gap-0.5 min-w-0">' +
+          '<div class="flex items-center gap-1.5">' +
+            '<img src="' + officialWordmarkSvg + '" alt="Betfred Official Logo" width="96" height="22" class="h-[22px] w-auto object-contain flex-shrink-0 drop-shadow-sm" />' +
             '<span data-bookmaker-badge="betfred" class="sr-only">' + p.name + '</span>' +
+            badgeHtml +
           '</div>' +
-          badgeHtml +
+          '<p class="text-[11px] font-extrabold text-emerald-300 leading-tight truncate" style="font-family:' + brandFont + '; font-weight:800; letter-spacing:0.3px; -webkit-font-smoothing:antialiased;">' + p.offerText + '</p>' +
         '</div>' +
-        '<p class="text-[11px] font-extrabold text-emerald-300 leading-snug" style="font-family:' + brandFont + '; font-weight:800; letter-spacing:0.4px; -webkit-font-smoothing:antialiased;">' + p.offerText + '</p>' +
-      '</div>' +
-      '<div class="space-y-1.5 pt-0.5">' +
-        '<a href="' + welcomeBannerUrl + '" target="_blank" rel="noopener noreferrer sponsored" data-twa-external-link="true" data-bookmaker-cta="betfred" class="betfred-brand-cta w-full py-1.5 px-2.5 rounded-lg font-black text-[10.5px] uppercase tracking-wider flex items-center justify-center gap-1 shadow transition hover:opacity-95 cursor-pointer text-center" style="background-color:' + accent + '; color:' + btnTextColor + '; font-family:' + brandFont + '; font-weight:900; letter-spacing:0.5px; -webkit-font-smoothing:antialiased;">' +
+        '<a href="' + welcomeBannerUrl + '" target="_blank" rel="noopener noreferrer sponsored" data-twa-external-link="true" data-bookmaker-cta="betfred" class="betfred-brand-cta flex-shrink-0 py-2 px-3 rounded-lg font-black text-[10px] uppercase tracking-wide inline-flex items-center justify-center gap-1 shadow-md transition hover:opacity-95 cursor-pointer whitespace-nowrap" style="background-color:' + accent + '; color:' + btnTextColor + '; font-family:' + brandFont + '; font-weight:900; letter-spacing:0.4px; -webkit-font-smoothing:antialiased;">' +
           '<span>' + p.ctaText + '</span>' +
           '<span>↗</span>' +
         '</a>' +
-        '<p class="text-[8px] text-slate-400 leading-tight font-normal border-t border-slate-800/80 pt-1">' + p.terms + '</p>' +
       '</div>' +
+      '<p class="text-[7.5px] text-slate-400/90 leading-tight font-normal border-t border-slate-800/70 pt-1">' + p.terms + '</p>' +
     '</div>'
   );
 };
@@ -1986,14 +1986,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </header>
 
-<main id="mainAppContainer" style="padding-bottom: 140px;" class="p-3 lg:p-6 space-y-3 lg:space-y-4 max-w-lg lg:max-w-6xl xl:max-w-7xl mx-auto">
-  <!-- Easy 3-Step User Guide Bar -->
-  <div class="glass px-3 py-2 rounded-xl border border-slate-800/90 flex items-center justify-between gap-1 text-[9.5px] text-slate-300 shadow-sm">
-    <div class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black flex items-center justify-center text-[8px] mono">1</span><span>Tap any fixture</span></div>
-    <span class="text-slate-600">▸</span>
-    <div class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black flex items-center justify-center text-[8px] mono">2</span><span>Tap odds to add to slip</span></div>
-    <span class="text-slate-600">▸</span>
-    <div class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black flex items-center justify-center text-[8px] mono">3</span><span>Enter stake for returns</span></div>
+<main id="mainAppContainer" style="padding-bottom: 140px;" class="p-2.5 sm:p-3 lg:p-6 space-y-2 lg:space-y-3.5 max-w-lg lg:max-w-6xl xl:max-w-7xl mx-auto">
+  <!-- Clean 1-Line Quick Guide (No Heavy Box Bloat) -->
+  <div class="px-1 py-0.5 flex items-center justify-center gap-2 text-[9.5px] text-slate-400 whitespace-nowrap overflow-hidden">
+    <span class="inline-flex items-center gap-1"><span class="text-emerald-400 font-bold mono">1.</span>Tap fixture</span>
+    <span class="text-slate-600" aria-hidden="true">·</span>
+    <span class="inline-flex items-center gap-1"><span class="text-emerald-400 font-bold mono">2.</span>Tap odds</span>
+    <span class="text-slate-600" aria-hidden="true">·</span>
+    <span class="inline-flex items-center gap-1"><span class="text-amber-300 font-bold mono">3.</span>Enter stake</span>
   </div>
 
   <!-- Sleek Compact PWA Install App Banner Strip (Directly Below 1-2-3 Instruction Pill Bar) -->
@@ -2075,23 +2075,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
   <!-- USER MATCH FEED SECTION: Visible to users, hidden by default in Admin Mode -->
-  <div id="userFeedSection" class="space-y-3">
+  <div id="userFeedSection" class="space-y-2">
     <!-- Symmetrical Rolling Date Bar (3 Past, Today, 3 Future) -->
-    <div class="bg-slate-900/95 p-1.5 rounded-xl border border-slate-800 shadow-inner">
-      <div id="dateTabsContainer" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 scroll-smooth relative"></div>
+    <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-800/90 shadow-inner">
+      <div id="dateTabsContainer" class="flex gap-1 overflow-x-auto no-scrollbar scroll-smooth relative"></div>
     </div>
 
     <!-- Filter Competitions Bar (Ordered by Country: England, Spain, Germany, France, Italy, Scotland, then Cup Competitions) -->
-    <div class="glass p-2.5 rounded-xl text-xs space-y-2">
+    <div class="glass px-2.5 py-2 rounded-xl text-xs space-y-1.5">
       <div class="flex justify-between items-center px-0.5 gap-2 flex-nowrap">
-        <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider truncate">Filter Competitions (By Country &amp; Cups)</span>
-        <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[10px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/40 shadow cursor-pointer transition flex-shrink-0 whitespace-nowrap">Clear All (16)</button>
+        <span class="text-[10px] text-slate-300 font-bold tracking-wide truncate">Competitions</span>
+        <button type="button" id="toggleLeaguesBtn" onclick="window.toggleAllLeagues()" class="text-[9.5px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-emerald-400 font-bold px-2 py-0.5 rounded-lg border border-emerald-500/35 cursor-pointer transition flex-shrink-0 whitespace-nowrap">Clear All (16)</button>
       </div>
       <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="leagueFilters">
         <script>
           document.write(window.ALL_LEAGUES.map(function(code){
             var cTag = window.getLeagueCountryFlagHtml ? window.getLeagueCountryFlagHtml(code) : '';
-            return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500"><span class="inline-flex items-center flex-shrink-0">' + cTag + '</span><span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span class="whitespace-nowrap">' + window.getLeagueName(code) + '</span></label>';
+            return '<label class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 flex items-center gap-1.5 text-[10.5px] font-bold cursor-pointer flex-shrink-0"><input type="checkbox" value="' + code + '" checked onchange="window.runEngine(false)" class="accent-emerald-500"><span class="inline-flex items-center flex-shrink-0">' + cTag + '</span><span id="filterLogo' + code + '">' + window.getLeagueLogo(code, false) + '</span><span class="whitespace-nowrap">' + window.getLeagueName(code) + '</span></label>';
           }).join(""));
         </script>
       </div>
@@ -2099,16 +2099,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- 4-Box KPI Summary Grid (Green Picks, Amber Picks, Red Picks, Strike Rate) -->
     <div class="grid gap-1.5 text-center grid-cols-4">
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono mt-0.5 leading-tight">0/0</div><div id="greenCountSub" class="text-[8.5px] text-emerald-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono mt-0.5 leading-tight">0</div><div id="amberCountSub" class="text-[8.5px] text-amber-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono mt-0.5 leading-tight">0</div><div id="redCountSub" class="text-[8.5px] text-rose-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
-      <div class="glass p-2.5 rounded-xl flex flex-col items-center justify-center"><div id="strikeRateBoxTitle" class="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Strike Rate</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono mt-0.5 leading-tight whitespace-nowrap">In-Play</div><div id="sessionHitRateSub" class="text-[8.5px] text-slate-400 font-semibold leading-none mt-0.5 whitespace-nowrap">Settles at FT</div></div>
+      <div class="glass py-1.5 px-1 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('GREEN')" title="Tap to filter Green Picks"><div class="text-[9.5px] text-slate-400 font-semibold whitespace-nowrap">Green Picks</div><div id="greenCount" class="text-sm font-black text-emerald-400 mono leading-tight mt-0.5">0/0</div><div id="greenCountSub" class="text-[8px] text-emerald-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass py-1.5 px-1 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('AMBER')" title="Tap to filter Amber Picks"><div class="text-[9.5px] text-slate-400 font-semibold whitespace-nowrap">Amber Picks</div><div id="amberCount" class="text-sm font-black text-amber-400 mono leading-tight mt-0.5">0</div><div id="amberCountSub" class="text-[8px] text-amber-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass py-1.5 px-1 rounded-xl flex flex-col items-center justify-center kpi-Interactive" onclick="window.toggleTierView('RED')" title="Tap to filter Red Picks"><div class="text-[9.5px] text-slate-400 font-semibold whitespace-nowrap">Red Picks</div><div id="redCount" class="text-sm font-black text-rose-400 mono leading-tight mt-0.5">0</div><div id="redCountSub" class="text-[8px] text-rose-300/90 font-semibold leading-none mt-0.5 hidden">Won</div></div>
+      <div class="glass py-1.5 px-1 rounded-xl flex flex-col items-center justify-center"><div id="strikeRateBoxTitle" class="text-[9.5px] text-slate-400 font-semibold whitespace-nowrap">Strike Rate</div><div id="sessionHitRate" class="text-xs sm:text-sm font-black text-emerald-400 mono leading-tight mt-0.5 whitespace-nowrap">In-Play</div><div id="sessionHitRateSub" class="text-[8px] text-slate-400 font-semibold leading-none mt-0.5 whitespace-nowrap">Settles at FT</div></div>
     </div>
 
     <!-- User Quick-Sort Bar -->
-    <div class="glass px-2.5 py-2 rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
+    <div class="glass px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
       <span id="hourlyAuditStatusText" class="hidden"></span>
-      <span class="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 pl-1">Sort By</span>
+      <span class="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 pl-0.5">Sort By</span>
       <div class="flex items-center gap-1.5 ml-auto">
         <button type="button" id="sortByConfBtn" onclick="window.setMatchSortMode('CONF')" class="px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition cursor-pointer btn-press">🔥 Best %</button>
         <button type="button" id="sortByKoBtn" onclick="window.setMatchSortMode('KO')" class="px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer btn-press">🕒 Kick-Off</button>
@@ -2117,7 +2117,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <!-- Collapsible Daily Top Value Acca / Banker Builder Slip (with Club Crests & 1-Click Add to Slip) -->
-    <div id="topAccaSlipBox" class="glass p-3.5 rounded-2xl border border-amber-500/40 space-y-2.5 hidden shadow-xl">
+    <div id="topAccaSlipBox" class="glass p-3 rounded-2xl border border-amber-500/40 space-y-2.5 hidden shadow-xl">
       <div class="border-b border-slate-800/90 pb-2.5 space-y-2">
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <span class="text-xs font-black text-amber-300 flex items-center gap-1.5">
@@ -2139,28 +2139,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <!-- Instant Team & League Search Bar + Compact Standings / Tables Button Row -->
-    <div id="liveTeamSearchWrap" class="glass p-2 rounded-xl mb-2 flex items-center gap-2">
+    <div id="liveTeamSearchWrap" class="glass p-1.5 rounded-xl flex items-center gap-1.5">
       <div class="relative flex-1 min-w-0 flex items-center">
-        <input type="search" id="instantSearchInput" placeholder="🔍 Instant team / league search..." oninput="window.filterAppCards(this.value)" class="w-full bg-slate-950/90 border border-slate-800 pl-3 pr-8 py-2 rounded-lg text-xs text-white outline-none focus:border-emerald-500 transition">
+        <input type="search" id="instantSearchInput" placeholder="🔍 Search team or league..." oninput="window.filterAppCards(this.value)" class="w-full bg-slate-950/90 border border-slate-800 pl-3 pr-8 py-1.5 rounded-lg text-xs text-white outline-none focus:border-emerald-500 transition">
         <button type="button" id="clearSearchBtn" onclick="var inp=document.getElementById('instantSearchInput');inp.value='';window.filterAppCards('');" style="display:none;" class="absolute right-2 text-slate-400 hover:text-white font-bold text-sm px-1.5 cursor-pointer">×</button>
       </div>
-      <button type="button" id="openStandingsModalBtn" onclick="window.openStandingsModal('PL')" class="bg-slate-950/90 hover:bg-slate-900 active:bg-slate-950 text-emerald-400 border border-emerald-500/40 font-bold px-3 py-2 rounded-lg text-xs shadow cursor-pointer transition inline-flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
+      <button type="button" id="openStandingsModalBtn" onclick="window.openStandingsModal('PL')" class="bg-slate-950/90 hover:bg-slate-900 active:bg-slate-950 text-emerald-400 border border-emerald-500/40 font-bold px-2.5 py-1.5 rounded-lg text-xs shadow cursor-pointer transition inline-flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
         <span>📊 Tables</span>
       </button>
     </div>
 
     <!-- Featured UK Bookmaker Sign-Up Offers Strip (Compact Horizontal Swipeable Carousel + Accordion Toggle) -->
-    <section id="featuredBookmakerOffersSection" aria-label="Featured UK Bookmaker Welcome Offers" class="glass p-2.5 rounded-2xl border border-emerald-500/30 space-y-2 shadow-lg">
-      <div class="flex items-center justify-between gap-2 flex-wrap border-b border-slate-800/80 pb-1.5">
-        <h2 class="text-[10.5px] sm:text-[11px] font-black text-amber-300 tracking-wide flex items-center gap-1.5">
-          <span>🔥 Featured UK Bookmaker Welcome Offers (18+ Ad)</span>
+    <section id="featuredBookmakerOffersSection" aria-label="Featured UK Bookmaker Welcome Offers" class="glass p-2 rounded-2xl border border-emerald-500/25 space-y-1.5 shadow-md">
+      <div class="flex items-center justify-between gap-2 flex-nowrap border-b border-slate-800/70 pb-1">
+        <h2 class="text-[10px] sm:text-[10.5px] font-bold text-amber-300 tracking-wide flex items-center gap-1 truncate">
+          <span>🔥 UK Bookmaker Offer (18+ Ad)</span>
         </h2>
-        <div class="flex items-center gap-2 ml-auto">
+        <div class="flex items-center gap-2 ml-auto flex-shrink-0">
           <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">18+ | Commercial Partner | <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">BeGambleAware.org</a> | <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer" class="underline hover:text-emerald-300">GamCare.org.uk</a></span>
           <button type="button" id="toggleBookmakerStripBtn" onclick="window.toggleFeaturedBookmakerStrip()" class="text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-md font-bold cursor-pointer transition">▾ Compact</button>
         </div>
       </div>
-      <div id="featuredBookmakerOffersGrid" class="flex md:grid md:grid-cols-1 gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-0.5 scroll-smooth"></div>
+      <div id="featuredBookmakerOffersGrid" class="flex md:grid md:grid-cols-1 gap-2 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth"></div>
     </section>
 
     <!-- Dynamic Empty State Container (Displayed when 0 fixtures match selected date/filters) -->
@@ -2758,7 +2758,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Non-Blocking Toast Notification (Positioned at bottom:98px so it never overlaps the sticky Betting Slip Guide bar) -->
 <div id="appToastBanner" style="position:fixed;bottom:98px;left:50%;transform:translateX(-50%);z-index:10050;display:none;pointer-events:none;" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-2xl border border-emerald-300/40 whitespace-nowrap max-w-[92vw] truncate"></div>
 
-<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top" aria-label="Scroll to top" style="bottom: calc(88px + env(safe-area-inset-bottom, 0px)); left: 16px; right: auto; width: 38px; height: 38px; z-index: 85;" class="back-to-top-btn scroll-top-btn bg-slate-900/80 hover:bg-emerald-600/90 active:bg-emerald-700 text-emerald-300 hover:text-white font-black rounded-full shadow-lg border border-emerald-500/40 cursor-pointer flex items-center justify-center backdrop-blur-sm">↑</button>
+<button id="scrollTopFab" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top" aria-label="Scroll to top" style="right: 14px; left: auto; width: 36px; height: 36px; z-index: 85;" class="back-to-top-btn scroll-top-btn bg-slate-900/85 hover:bg-emerald-600/90 active:bg-emerald-700 text-emerald-300 hover:text-white font-black rounded-full shadow-lg border border-slate-700/80 hover:border-emerald-400/60 cursor-pointer flex items-center justify-center backdrop-blur-md">↑</button>
 
 <script>
 window.openAboutContactModal = function() {
@@ -4589,6 +4589,8 @@ window.updateMiniSlip = function(animatePulse) {
   }
 
   var total = window.betSlip.length;
+  var fab = document.getElementById('scrollTopFab');
+  if (fab) fab.classList.toggle('slip-open', total > 0);
   if (total > 0) {
     var calc = window.calculateSlipReturnsSummary();
     cnt.innerText = total;
@@ -10946,8 +10948,19 @@ window.render31PointPanel = function(m, adm, isUnlocked){
           ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-black tracking-wide whitespace-nowrap flex-shrink-0">✗ SETTLED</span>'
           : '');
 
-    var rawTrackerText = (!lockThisMarket && x.statBadge) ? x.statBadge : ("🕒 KO " + (m.ko || "15:00"));
-    var trackerPillHtml = '<span data-market-tracker-pill="true" class="inline-flex items-center px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[8.5px] font-mono font-bold whitespace-nowrap">' + rawTrackerText + '</span>';
+    var marketCategoryNameMap = {
+      match_result: "Match Result",
+      goals_only: "Goals",
+      btts: "BTTS",
+      half_time: "1st Half",
+      corners: "Corners",
+      cards: "Cards"
+    };
+    var rowCategoryKey = window.classifySportsbookMarketCategory ? window.classifySportsbookMarketCategory(x.n, x.cat) : "match_result";
+    var rowCategorySubText = marketCategoryNameMap[rowCategoryKey] || "Market";
+    var trackerPillHtml = (!lockThisMarket && x.statBadge)
+      ? '<span data-market-tracker-pill="true" class="inline-flex items-center px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[8.5px] font-mono font-bold whitespace-nowrap">' + x.statBadge + '</span>'
+      : '<span class="text-[9.5px] text-slate-400 font-medium leading-none">' + rowCategorySubText + '</span>';
 
     var cleanTitleText = lockThisMarket
       ? String(x.n).replace(m.fav, "🔒 VIP Pick").replace(m.opp, "🔒 VIP Pick")
@@ -11405,12 +11418,12 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       statusBadge = '<span data-card-ft-badge="lost" data-card-status-pill="ft" class="text-[10px] bg-rose-500/15 border border-rose-500/40 text-rose-300 px-2 py-0.5 rounded-md font-bold mono">FT</span>';
     }
   } else {
-    statusBadge = '<span data-card-status-pill="ko" class="text-[10px] bg-slate-900/90 border border-slate-700/70 text-slate-300 px-2 py-0.5 rounded-md mono font-semibold">KO ' + (m.ko||"15:00") + '</span>';
+    statusBadge = '<span data-card-status-pill="ko" class="text-[10px] text-slate-300 font-semibold mono whitespace-nowrap">KO ' + (m.ko||"15:00") + '</span>';
   }
 
-  var sampleBadge = isFreeSample ? '<span class="text-[8px] px-2 py-0.5 rounded-full font-black bg-emerald-500 text-slate-900 flex-shrink-0">🎁 FREE SAMPLE</span>' : '';
+  var sampleBadge = isFreeSample ? '<span class="text-[8px] px-1.5 py-0.5 rounded font-black bg-emerald-500 text-slate-900 flex-shrink-0">FREE SAMPLE</span>' : '';
 
-  var aiConfidenceMicroLabel = '<span style="font-size: 9px; letter-spacing: 0.05em;" class="font-bold uppercase ' + (isG ? 'text-emerald-400/90' : (isA ? 'text-amber-400/90' : 'text-rose-400/90')) + ' leading-none">AI CONFIDENCE</span>';
+  var aiConfidenceMicroLabel = '<span style="font-size: 8.5px; letter-spacing: 0.05em;" class="font-bold uppercase ' + (isG ? 'text-emerald-400/90' : (isA ? 'text-amber-400/90' : 'text-rose-400/90')) + ' leading-none">AI CONFIDENCE</span>';
 
   var pctDisplay = isTrLocked
     ? '<div onclick="event.stopPropagation();window.exitTrialToSubscribe()" class="text-lg font-black ' + txt + ' mono leading-none trial-blur cursor-pointer" title="Subscribe to unblur">84.5%</div>'
@@ -11423,11 +11436,13 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
         .trim() || 'Top AI Pick')
     : 'Top AI Pick';
 
+  var isBestPickMatchWin = fullQuickBetMarketLabel.toLowerCase() === (String((m && m.fav) || '') + ' to win').toLowerCase();
+  var edgeQualityLabel = isG ? 'Strong Pick' : (isA ? 'Moderate Edge' : 'Caution Pick');
   var marketSubLabel = isTrLocked
     ? 'VIP Pick'
-    : ((m && m.fav) ? (m.fav + ' to Win') : 'Top AI Pick');
+    : (isBestPickMatchWin ? edgeQualityLabel : ((m && m.fav) ? (m.fav + ' to Win') : 'Top AI Pick'));
 
-  var marketSubHtml = '<span data-card-confidence-sublabel="' + m.id + '" class="text-[9px] font-semibold text-slate-300 leading-snug block text-right mt-1 truncate max-w-[140px] sm:max-w-[190px]" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
+  var marketSubHtml = '<span data-card-confidence-sublabel="' + m.id + '" class="text-[9px] font-medium text-slate-400 leading-snug block text-right mt-1 truncate max-w-[140px] sm:max-w-[190px]" title="' + marketSubLabel + '">' + marketSubLabel + '</span>';
 
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
@@ -11492,9 +11507,10 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   '</div>';
 
   var roundBadgeLabel = window.resolveFixtureRoundBadge ? window.resolveFixtureRoundBadge(m) : 'Regular Season';
-  var showRoundBadge = Boolean(roundBadgeLabel && String(roundBadgeLabel).trim() !== '' && !/^regular\s+season$/i.test(String(roundBadgeLabel).trim()));
+  var compactRoundLabel = String(roundBadgeLabel || '').replace(/League\s+([A-D])\s*-\s*Group\s*(\d+)/i, 'Grp $1$2').trim();
+  var showRoundBadge = Boolean(compactRoundLabel && !/^regular\s+season$/i.test(compactRoundLabel));
   var roundBadgeHtml = showRoundBadge
-    ? '<span data-round-badge="' + roundBadgeLabel + '" class="text-[9px] bg-sky-950/90 text-sky-300 border border-sky-500/30 px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 truncate max-w-[115px]">' + roundBadgeLabel + '</span>'
+    ? '<span class="text-slate-600 flex-shrink-0" aria-hidden="true">·</span><span data-round-badge="' + roundBadgeLabel + '" class="text-[9.5px] text-slate-400 font-medium flex-shrink-0 truncate max-w-[90px]">' + compactRoundLabel + '</span>'
     : '';
 
   var parsedHomeGoals = rawScoreMatch ? parseInt(rawScoreMatch[1], 10) : null;
@@ -11505,13 +11521,14 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     awayGoals: parsedAwayGoals
   };
 
-  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="fixture-card match-card glass border-l-4 ' + bdr + ' p-3.5 rounded-2xl cursor-pointer' + isExp + '">' +
-    '<div data-card-header-row="true" class="flex items-center justify-between whitespace-nowrap gap-1.5 min-w-0">' +
-      '<div class="flex items-center gap-1.5 min-w-0 overflow-hidden">' +
-        '<span class="text-[10px] font-black ' + txt + ' mono flex-shrink-0">#' + (i+1) + '</span>' +
-        '<span class="text-[10px] bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 rounded-md font-semibold inline-flex items-center gap-1.5 min-w-0 truncate">' + window.getLeagueLogo(m.league,true) + ' <span class="truncate">' + window.getLeagueName(m.league) + '</span></span>' +
+  return '<div id="cardWrap-' + m.id + '" onclick="window.toggleCard(' + m.id + ')" class="fixture-card match-card glass border-l-4 ' + bdr + ' p-3 rounded-2xl cursor-pointer' + isExp + '">' +
+    '<div data-card-header-row="true" class="flex items-center justify-between whitespace-nowrap gap-2 min-w-0 pb-1.5 border-b border-slate-800/60">' +
+      '<div class="flex items-center gap-1.5 min-w-0 overflow-hidden text-[10px]">' +
+        '<span class="font-black ' + txt + ' mono flex-shrink-0">#' + (i+1) + '</span>' +
+        '<span class="inline-flex items-center gap-1 font-semibold text-slate-200 min-w-0 truncate">' + window.getLeagueLogo(m.league,true) + '<span class="truncate">' + window.getLeagueName(m.league) + '</span></span>' +
         roundBadgeHtml +
-        '<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 ' + (m.venue==="HOME"?"bg-emerald-950/90 text-emerald-300":"bg-indigo-950/90 text-indigo-300") + '">' + (m.venue==="HOME"?"🏠 HOME":"✈️ AWAY") + '</span>' +
+        '<span class="text-slate-600 flex-shrink-0" aria-hidden="true">·</span>' +
+        '<span class="text-[9.5px] font-bold flex-shrink-0 ' + (m.venue==="HOME"?"text-emerald-400/90":"text-sky-400/90") + '">' + (m.venue==="HOME"?"Home":"Away") + '</span>' +
         sampleBadge +
       '</div>' +
       '<div class="flex items-center flex-shrink-0">' + statusBadge + '</div>' +
@@ -16129,11 +16146,12 @@ window.exportSnapshot = function(){
 window.addEventListener("scroll", function(){
   var fab = document.getElementById("scrollTopFab");
   if(fab){
+    fab.classList.toggle("slip-open", Array.isArray(window.betSlip) && window.betSlip.length > 0);
     var searchWrap = document.getElementById("liveTeamSearchWrap");
     var searchBottom = searchWrap ? searchWrap.getBoundingClientRect().bottom : -100;
     var vh = window.innerHeight || document.documentElement.clientHeight || 800;
     var searchInView = (searchBottom > 24 && searchBottom <= vh + 40);
-    if(window.scrollY > 620 && !searchInView) fab.classList.add("vis");
+    if(window.scrollY > 750 && !searchInView) fab.classList.add("vis");
     else fab.classList.remove("vis");
   }
 }, { passive: true });
