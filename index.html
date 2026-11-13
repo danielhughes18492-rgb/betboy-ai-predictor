@@ -27,19 +27,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v15">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v15">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v15">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v15">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v15">
-<meta name="betboy-build-version" content="20261113-v15">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v16">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v16">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v16">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v16">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v16">
+<meta name="betboy-build-version" content="20261113-v16">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v15';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v15';
+    var CURRENT_BUILD_VERSION = '20261113-v16';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v16';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -9088,11 +9088,70 @@ window.animateOpenDetailsPanelResize = function(matchId, prevHeight){
   }, 350);
 };
 
+window.classifySportsbookMarketCategory = function(marketName, fallbackCat){
+  var low = String(marketName || "").trim().toLowerCase();
+  if(low.indexOf("btts") !== -1) return "btts";
+  if(low.indexOf("corner") !== -1) return "corners";
+  if(low.indexOf("card") !== -1) return "cards";
+  if(/\b(1st\s*half|first\s*half|2nd\s*half|half)\b/i.test(low)) return "half_time";
+  if(
+    low.indexOf("match result:") === 0 ||
+    low.indexOf("/draw") !== -1 ||
+    low.indexOf("draw no bet") !== -1 ||
+    low.indexOf("win & over") !== -1 ||
+    low.indexOf("handicap") !== -1
+  ) {
+    return "match_result";
+  }
+  if(low.indexOf("goal") !== -1 || low.indexOf("gls") !== -1 || low.indexOf("over ") !== -1 || low.indexOf("under ") !== -1) {
+    return "goals_only";
+  }
+  if(fallbackCat === "result") return "match_result";
+  if(fallbackCat === "goals") return "goals_only";
+  return "match_result";
+};
+
+window.filterSportsbookMarketsByCategory = function(markets, filterKey){
+  var list = Array.isArray(markets) ? markets : [];
+  var key = String(filterKey || "all").toLowerCase();
+  if(key === "all" || !key) return list;
+  if(key === "fav") return list.filter(function(item){ return item && item.teamSide === "fav"; });
+  if(key === "opp") return list.filter(function(item){ return item && item.teamSide === "opp"; });
+  if(key === "result") return list.filter(function(item){ return window.classifySportsbookMarketCategory(item && item.n, item && item.cat) === "match_result"; });
+  if(key === "goals") return list.filter(function(item){ var c = window.classifySportsbookMarketCategory(item && item.n, item && item.cat); return c === "goals_only" || c === "btts"; });
+  if(key === "specials") return list.filter(function(item){ var c = window.classifySportsbookMarketCategory(item && item.n, item && item.cat); return c === "half_time" || c === "corners" || c === "cards"; });
+  return list.filter(function(item){ return window.classifySportsbookMarketCategory(item && item.n, item && item.cat) === key; });
+};
+
+window.computeSportsbookCategoryCounts = function(markets){
+  var list = Array.isArray(markets) ? markets : [];
+  var counts = {
+    all: list.length,
+    match_result: 0,
+    goals_only: 0,
+    btts: 0,
+    half_time: 0,
+    corners: 0,
+    cards: 0,
+    fav: 0,
+    opp: 0
+  };
+  list.forEach(function(item){
+    if(!item) return;
+    var cat = window.classifySportsbookMarketCategory(item.n, item.cat);
+    counts[cat] = (counts[cat] || 0) + 1;
+    if(item.teamSide === "fav") counts.fav += 1;
+    if(item.teamSide === "opp") counts.opp += 1;
+  });
+  return counts;
+};
+
 window.setCardMarketTab = function(matchId, cat, e){
   if(e) e.stopPropagation();
+  if(window.triggerHapticFeedback) window.triggerHapticFeedback("ui_tap");
   var oldEl = document.getElementById("d-" + matchId);
   var prevH = (oldEl && window.expandedCards && window.expandedCards[matchId]) ? oldEl.offsetHeight : 0;
-  window.cardMarketFilter[matchId] = cat;
+  window.cardMarketFilter[matchId] = cat || "all";
   window.runEngine(false);
   window.animateOpenDetailsPanelResize(matchId, prevH);
 };
@@ -10715,14 +10774,16 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var activeSort = window.cardMarketSort[m.id] || window.defaultCardMarketSort || "confidence";
   var sortedMarkets = window.sortMatchMarkets ? window.sortMatchMarkets(mk.L, activeSort) : mk.L.slice().sort(function(a,b){ return Number(b.p) - Number(a.p); });
   var isTr = !!window.isTrial && !isUnlocked;
-  var activeCat = window.cardMarketFilter[m.id] || "all";
+  var rawActiveCat = window.cardMarketFilter[m.id] || "all";
+  // Map legacy merged filter keys onto the closest clean unmerged category
+  var activeCat = rawActiveCat === "result" ? "match_result" : (rawActiveCat === "goals" ? "goals_only" : (rawActiveCat === "specials" ? "corners" : rawActiveCat));
 
-  var filteredMarkets = sortedMarkets.filter(function(item){
-    if(activeCat === "all") return true;
-    if(activeCat === "fav") return item.teamSide === "fav";
-    if(activeCat === "opp") return item.teamSide === "opp";
-    return item.cat === activeCat;
-  });
+  var filteredMarkets = window.filterSportsbookMarketsByCategory
+    ? window.filterSportsbookMarketsByCategory(sortedMarkets, activeCat)
+    : sortedMarkets;
+  var catCounts = window.computeSportsbookCategoryCounts
+    ? window.computeSportsbookCategoryCounts(sortedMarkets)
+    : { all: sortedMarkets.length, match_result: 11, goals_only: 8, btts: 2, half_time: 1, corners: 1, cards: 1, fav: 0, opp: 0 };
 
   var isExpandedNow = !!window.expandedCards[m.id];
   var openCls = isExpandedNow ? "details-expanded " : "hidden details-collapsed ";
@@ -10734,7 +10795,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var homeCrest = window.getClubCrestHtml ? window.getClubCrestHtml(homeName) : '';
   var awayCrest = window.getClubCrestHtml ? window.getClubCrestHtml(awayName) : '';
 
-  // 3-Way Match Result (1X2) Both-Teams Comparison Strip (Home vs Draw vs Away)
+  // 3-Way Match Result (1X2) Compact Quick-Pick Strip (Home vs Draw vs Away)
   window.marketSelectionRegistry = window.marketSelectionRegistry || {};
   var h1x2Id = 'mr1-' + m.id;
   var d1x2Id = 'mrx-' + m.id;
@@ -10759,44 +10820,75 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var d1x2Color = getTrafficProbTextCls(outright.drawPct || 22.0);
   var a1x2Color = getTrafficProbTextCls(outright.awayPct || 18.0);
 
-  var outright1x2StripHtml = '<div class="mb-2.5 bg-slate-950/85 border border-slate-800/90 rounded-xl p-2">' +
-    '<div class="flex items-center justify-between gap-1 text-[8.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-0.5 whitespace-nowrap overflow-hidden">' +
+  var outright1x2StripHtml = '<div class="mb-2 bg-slate-950/85 border border-slate-800/90 rounded-xl p-1.5">' +
+    '<div class="flex items-center justify-between gap-1 text-[8px] font-bold uppercase tracking-wider text-slate-400 mb-1 px-0.5 whitespace-nowrap">' +
       '<span class="truncate">⚽ FULL-TIME RESULT (1X2)</span>' +
-      '<span class="flex-shrink-0 text-slate-400">ODDS &amp; AI %</span>' +
+      '<span class="flex-shrink-0 text-slate-400">TAP TO ADD</span>' +
     '</div>' +
-    '<div class="grid grid-cols-3 gap-1.5">' +
-      '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center flex-wrap gap-1 leading-tight">' + homeCrest + '<span>' + (outright.homeName || m.fav) + '</span>' + (outright.homeWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[10px] ' + h1x2Color + ' mono">' + (outright.homePct || "60.0") + '%</b></div>' +
+    '<div class="grid grid-cols-3 gap-1">' +
+      '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="py-1.5 px-1.5 rounded-lg border cursor-pointer transition flex flex-col items-center justify-center text-center gap-0.5 min-w-0 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (homeCrest ? '<span class="w-3.5 h-3.5 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + homeCrest + '</span>' : '') + '<span class="truncate">' + (outright.homeName || m.fav) + '</span>' + (outright.homeWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+        '<div class="flex items-center justify-center gap-1 leading-none"><span class="text-[8.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[9.5px] ' + h1x2Color + ' mono font-black">' + (outright.homePct || "60.0") + '%</b></div>' +
       '</div>' +
-      '<div id="' + d1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + d1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isD1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[9.5px] font-extrabold text-slate-200 inline-flex items-center justify-center gap-1 leading-tight">🤝 Draw' + (outright.drawWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[10px] ' + d1x2Color + ' mono">' + (outright.drawPct || "22.0") + '%</b></div>' +
+      '<div id="' + d1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + d1x2Id + '\', event)" class="py-1.5 px-1.5 rounded-lg border cursor-pointer transition flex flex-col items-center justify-center text-center gap-0.5 min-w-0 ' + (isD1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[9.5px] font-extrabold text-slate-200 inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight"><span class="truncate">🤝 Draw</span>' + (outright.drawWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+        '<div class="flex items-center justify-center gap-1 leading-none"><span class="text-[8.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[9.5px] ' + d1x2Color + ' mono font-black">' + (outright.drawPct || "22.0") + '%</b></div>' +
       '</div>' +
-      '<div id="' + a1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + a1x2Id + '\', event)" class="p-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1 ' + (isA1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center flex-wrap gap-1 leading-tight">' + awayCrest + '<span>' + (outright.awayName || m.opp) + '</span>' + (outright.awayWon === true ? '<span class="text-emerald-300">✓</span>' : '') + '</span>' +
-        '<div class="flex items-center gap-1"><span class="text-[9.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[10px] ' + a1x2Color + ' mono">' + (outright.awayPct || "18.0") + '%</b></div>' +
+      '<div id="' + a1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + a1x2Id + '\', event)" class="py-1.5 px-1.5 rounded-lg border cursor-pointer transition flex flex-col items-center justify-center text-center gap-0.5 min-w-0 ' + (isA1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
+        '<span class="text-[9.5px] font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (awayCrest ? '<span class="w-3.5 h-3.5 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + awayCrest + '</span>' : '') + '<span class="truncate">' + (outright.awayName || m.opp) + '</span>' + (outright.awayWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+        '<div class="flex items-center justify-center gap-1 leading-none"><span class="text-[8.5px] bg-slate-950 text-amber-300 border border-amber-500/30 px-1 py-0.5 rounded font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[9.5px] ' + a1x2Color + ' mono font-black">' + (outright.awayPct || "18.0") + '%</b></div>' +
       '</div>' +
     '</div>' +
   '</div>';
 
-  var homeTabObj = isHomeFav ? {k:"fav", lbl:m.fav + " Picks"} : {k:"opp", lbl:m.opp + " Picks"};
-  var awayTabObj = isHomeFav ? {k:"opp", lbl:m.opp + " Picks"} : {k:"fav", lbl:m.fav + " Picks"};
-  var catTabsHtml = '<div class="flex gap-1 mb-2 overflow-x-auto no-scrollbar">' +
-    [
-      {k:"all", lbl:"All (" + sortedMarkets.length + ")"},
-      homeTabObj,
-      awayTabObj,
-      {k:"result", lbl:"🏆 1X2 & Team"},
-      {k:"goals", lbl:"⚽ Goals & BTTS"},
-      {k:"specials", lbl:"🚩 Corners/Cards"}
-    ].map(function(tab){
-      var act = activeCat === tab.k;
-      var cls = act
-        ? "bg-emerald-600 text-white border-emerald-400 font-black"
-        : "bg-slate-900/90 text-slate-400 hover:text-white border-slate-800 font-bold";
-      return '<button type="button" onclick="window.setCardMarketTab(' + m.id + ', \'' + tab.k + '\', event)" class="px-2 py-1 rounded-lg border text-[9px] flex-shrink-0 cursor-pointer transition ' + cls + '">' + tab.lbl + '</button>';
-    }).join("") +
+  var homeTeamTab = isHomeFav
+    ? { k: "fav", lbl: m.fav, cnt: catCounts.fav, crest: favCrest }
+    : { k: "opp", lbl: m.opp, cnt: catCounts.opp, crest: oppCrest };
+  var awayTeamTab = isHomeFav
+    ? { k: "opp", lbl: m.opp, cnt: catCounts.opp, crest: oppCrest }
+    : { k: "fav", lbl: m.fav, cnt: catCounts.fav, crest: favCrest };
+
+  var marketCategoryTabs = [
+    { k: "all", lbl: "All", cnt: catCounts.all },
+    { k: "match_result", lbl: "Match Result", cnt: catCounts.match_result },
+    { k: "goals_only", lbl: "Goals", cnt: catCounts.goals_only },
+    { k: "btts", lbl: "BTTS", cnt: catCounts.btts },
+    { k: "half_time", lbl: "1st Half", cnt: catCounts.half_time },
+    { k: "corners", lbl: "Corners", cnt: catCounts.corners },
+    { k: "cards", lbl: "Cards", cnt: catCounts.cards }
+  ];
+
+  var catTabsHtml = '<div data-market-categories-section="true" class="mb-2 bg-slate-950/60 border border-slate-800/80 rounded-xl p-1.5">' +
+    '<div class="flex items-center justify-between px-0.5 mb-1">' +
+      '<span class="text-[8px] font-black uppercase tracking-wider text-slate-400">MARKET CATEGORIES</span>' +
+      (activeCat !== "all"
+        ? '<button type="button" onclick="window.setCardMarketTab(' + m.id + ', \'all\', event)" class="text-[8.5px] font-bold text-emerald-400 hover:text-emerald-300 cursor-pointer">Show All (' + catCounts.all + ')</button>'
+        : '<span class="text-[8px] font-semibold text-slate-500">Tap to filter</span>') +
+    '</div>' +
+    '<div class="flex flex-wrap gap-1 mb-1.5">' +
+      marketCategoryTabs.map(function(tab){
+        var act = activeCat === tab.k;
+        var cls = act
+          ? "bg-emerald-600 text-white border-emerald-400 font-black shadow-sm"
+          : "bg-slate-900/95 text-slate-300 hover:text-white hover:border-slate-600 border-slate-800 font-bold";
+        return '<button type="button" data-market-cat-btn="' + tab.k + '" aria-pressed="' + (act ? 'true' : 'false') + '" onclick="window.setCardMarketTab(' + m.id + ', \'' + tab.k + '\', event)" class="px-2 py-1.5 rounded-lg border text-[9.5px] leading-none cursor-pointer transition inline-flex items-center gap-1 ' + cls + '">' +
+          '<span>' + tab.lbl + '</span>' +
+          '<span class="text-[8px] opacity-80 font-mono">(' + tab.cnt + ')</span>' +
+        '</button>';
+      }).join("") +
+    '</div>' +
+    '<div class="grid grid-cols-2 gap-1 pt-1 border-t border-slate-800/70">' +
+      [homeTeamTab, awayTeamTab].map(function(tTab){
+        var act = activeCat === tTab.k;
+        var cls = act
+          ? "bg-emerald-600 text-white border-emerald-400 font-black shadow-sm"
+          : "bg-slate-900/90 text-slate-300 hover:text-white hover:border-slate-600 border-slate-800 font-bold";
+        return '<button type="button" data-market-cat-btn="' + tTab.k + '" aria-pressed="' + (act ? 'true' : 'false') + '" onclick="window.setCardMarketTab(' + m.id + ', \'' + tTab.k + '\', event)" class="px-2 py-1 rounded-lg border text-[9px] leading-none cursor-pointer transition flex items-center justify-between gap-1 min-w-0 ' + cls + '">' +
+          '<span class="inline-flex items-center gap-1 min-w-0">' + (tTab.crest ? '<span class="w-3.5 h-3.5 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + tTab.crest + '</span>' : '') + '<span class="truncate">' + tTab.lbl + '</span></span>' +
+          '<span class="text-[8px] opacity-80 font-mono flex-shrink-0">(' + tTab.cnt + ')</span>' +
+        '</button>';
+      }).join("") +
+    '</div>' +
   '</div>';
 
   var mktLegendHtml = '<div style="font-size: 10px; text-transform: uppercase; color: #9ca3af; padding: 0 8px;" class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1.5 select-none font-bold tracking-wider">' +

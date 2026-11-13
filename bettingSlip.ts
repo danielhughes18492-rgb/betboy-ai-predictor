@@ -13193,3 +13193,132 @@ export function rankFixturesForXStudioCategory(
   return { rankedItems, selectedIds, marketOverrides, categoryLabel };
 }
 
+export type SportsbookMarketFilterCategory =
+  | 'all'
+  | 'match_result'
+  | 'goals_only'
+  | 'btts'
+  | 'half_time'
+  | 'corners'
+  | 'cards'
+  | 'fav'
+  | 'opp'
+  | 'result'
+  | 'goals'
+  | 'specials';
+
+export type SportsbookCategoryKey =
+  | 'match_result'
+  | 'goals_only'
+  | 'btts'
+  | 'half_time'
+  | 'corners'
+  | 'cards';
+
+export interface SportsbookMarketFilterItem {
+  n: string;
+  cat?: string;
+  teamSide?: string;
+  [key: string]: any;
+}
+
+export function classifySportsbookMarketCategory(
+  marketName: string,
+  fallbackCat?: string
+): SportsbookCategoryKey {
+  const low = String(marketName || '').trim().toLowerCase();
+  if (low.includes('btts')) {
+    return 'btts';
+  }
+  if (low.includes('corner')) {
+    return 'corners';
+  }
+  if (low.includes('card')) {
+    return 'cards';
+  }
+  if (/\b(1st\s*half|first\s*half|2nd\s*half|half)\b/i.test(low)) {
+    return 'half_time';
+  }
+  // Match Result markets include 1X2, Double Chance (/Draw), Draw No Bet, Win & Over 1.5 Gls, and Handicaps
+  if (
+    low.startsWith('match result:') ||
+    low.includes('/draw') ||
+    low.includes('draw no bet') ||
+    low.includes('win & over') ||
+    low.includes('handicap')
+  ) {
+    return 'match_result';
+  }
+  // Remaining Goals markets (Over/Under Goals, Team Over Goals)
+  if (low.includes('goal') || low.includes('gls') || low.includes('over ') || low.includes('under ')) {
+    return 'goals_only';
+  }
+  if (fallbackCat === 'result') return 'match_result';
+  if (fallbackCat === 'goals') return 'goals_only';
+  return 'match_result';
+}
+
+export function filterSportsbookMarketsByCategory<T extends SportsbookMarketFilterItem>(
+  markets: T[],
+  filterKey: SportsbookMarketFilterCategory | string
+): T[] {
+  const list = Array.isArray(markets) ? markets : [];
+  const key = String(filterKey || 'all').toLowerCase();
+  if (key === 'all' || !key) return list;
+  if (key === 'fav') return list.filter((m) => m && m.teamSide === 'fav');
+  if (key === 'opp') return list.filter((m) => m && m.teamSide === 'opp');
+
+  // Support legacy merged keys safely while enforcing clean unmerged categories
+  if (key === 'result') {
+    return list.filter((m) => classifySportsbookMarketCategory(m?.n, m?.cat) === 'match_result');
+  }
+  if (key === 'goals') {
+    return list.filter((m) => {
+      const c = classifySportsbookMarketCategory(m?.n, m?.cat);
+      return c === 'goals_only' || c === 'btts';
+    });
+  }
+  if (key === 'specials') {
+    return list.filter((m) => {
+      const c = classifySportsbookMarketCategory(m?.n, m?.cat);
+      return c === 'half_time' || c === 'corners' || c === 'cards';
+    });
+  }
+
+  return list.filter((m) => classifySportsbookMarketCategory(m?.n, m?.cat) === key);
+}
+
+export function computeSportsbookCategoryCounts<T extends SportsbookMarketFilterItem>(markets: T[]): {
+  all: number;
+  match_result: number;
+  goals_only: number;
+  btts: number;
+  half_time: number;
+  corners: number;
+  cards: number;
+  fav: number;
+  opp: number;
+} {
+  const list = Array.isArray(markets) ? markets : [];
+  const counts = {
+    all: list.length,
+    match_result: 0,
+    goals_only: 0,
+    btts: 0,
+    half_time: 0,
+    corners: 0,
+    cards: 0,
+    fav: 0,
+    opp: 0,
+  };
+  for (const item of list) {
+    if (!item) continue;
+    const cat = classifySportsbookMarketCategory(item.n, item.cat);
+    counts[cat] += 1;
+    if (item.teamSide === 'fav') counts.fav += 1;
+    if (item.teamSide === 'opp') counts.opp += 1;
+  }
+  return counts;
+}
+
+
