@@ -13402,6 +13402,8 @@ export interface SportsEventFixtureInput {
   homeTeam?: string | null;
   awayTeam?: string | null;
   league?: string | null;
+  competition?: string | null;
+  image?: string | string[] | null;
   fs?: number | null;
   displayConf?: number | null;
   isFallbackMock?: boolean;
@@ -13429,6 +13431,20 @@ export interface SportsEventLocationJsonLd {
   };
 }
 
+export interface SportsEventOrganizerJsonLd {
+  '@type': 'Organization';
+  name: string;
+  url: string;
+}
+
+export interface SportsEventOfferJsonLd {
+  '@type': 'Offer';
+  url: string;
+  price: string;
+  priceCurrency: string;
+  availability: string;
+}
+
 export interface SportsEventJsonLdItem {
   '@type': 'SportsEvent';
   name: string;
@@ -13437,6 +13453,9 @@ export interface SportsEventJsonLdItem {
   eventStatus: 'https://schema.org/EventScheduled';
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode';
   location: SportsEventLocationJsonLd;
+  organizer: SportsEventOrganizerJsonLd;
+  image: string[];
+  offers: SportsEventOfferJsonLd;
   homeTeam: SportsTeamJsonLd;
   awayTeam: SportsTeamJsonLd;
   performer: SportsTeamJsonLd[];
@@ -13447,6 +13466,28 @@ export interface SportsEventGraphJsonLd {
   '@context': 'https://schema.org';
   '@graph': SportsEventJsonLdItem[];
 }
+
+const DEFAULT_BETBOY_SITE_URL = 'https://betboyai.co.uk';
+const DEFAULT_BETBOY_IMAGE_URL = 'https://betboyai.co.uk/pwa-512x512.png';
+
+const LEAGUE_ORGANIZER_NAME_MAP: Record<string, string> = {
+  PL: 'Premier League',
+  CHA: 'Championship',
+  L1: 'League One',
+  L2: 'League Two',
+  FAC: 'Emirates FA Cup',
+  EFLC: 'EFL Cup',
+  EFLT: 'EFL Trophy',
+  LL: 'La Liga',
+  BUN: 'Bundesliga',
+  FL1: 'Ligue 1',
+  SA: 'Serie A',
+  SPL: 'Scottish Premiership',
+  UCL: 'Champions League',
+  UEL: 'Europa League',
+  UECL: 'Conference League',
+  UNL: 'UEFA Nations League',
+};
 
 const LEAGUE_ADDRESS_COUNTRY_MAP: Record<string, string> = {
   PL: 'GB',
@@ -13489,6 +13530,29 @@ function resolveSportsEventLocationName(
     return rawVenue;
   }
   return `${homeTeamName} Stadium`;
+}
+
+function resolveSportsEventOrganizerName(fixture: SportsEventFixtureInput): string {
+  const explicitCompetition = String(fixture.competition || '').trim();
+  if (explicitCompetition) return explicitCompetition;
+  const rawLeague = String(fixture.league || '').trim();
+  if (rawLeague) {
+    return LEAGUE_ORGANIZER_NAME_MAP[rawLeague.toUpperCase()] || rawLeague;
+  }
+  return 'BetBoy AI';
+}
+
+function resolveSportsEventImages(
+  fixture: SportsEventFixtureInput,
+  defaultImageUrl: string
+): string[] {
+  if (Array.isArray(fixture.image)) {
+    const cleaned = fixture.image.map((item) => String(item || '').trim()).filter(Boolean);
+    if (cleaned.length > 0) return cleaned;
+  } else if (typeof fixture.image === 'string' && fixture.image.trim()) {
+    return [fixture.image.trim()];
+  }
+  return [defaultImageUrl];
 }
 
 export function formatMatchStartDateIsoUtc(
@@ -13561,10 +13625,15 @@ export function buildSportsEventJsonLd(
   fixtures: SportsEventFixtureInput[] | null | undefined,
   options?: {
     activeDate?: string | null;
+    siteUrl?: string | null;
+    defaultImageUrl?: string | null;
   }
 ): SportsEventGraphJsonLd | null {
   const list = Array.isArray(fixtures) ? fixtures : [];
   const activeDate = options?.activeDate ? String(options.activeDate).trim() : '';
+  const siteUrl = (options?.siteUrl ? String(options.siteUrl).trim() : '') || DEFAULT_BETBOY_SITE_URL;
+  const defaultImageUrl =
+    (options?.defaultImageUrl ? String(options.defaultImageUrl).trim() : '') || DEFAULT_BETBOY_IMAGE_URL;
 
   const seenIds = new Set<string>();
   const seenPairs = new Set<string>();
@@ -13621,6 +13690,8 @@ export function buildSportsEventJsonLd(
       .replace(/\.\d{3}Z$/, 'Z');
     const locationName = resolveSportsEventLocationName(m, homeTeamName);
     const addressCountry = resolveSportsEventAddressCountry(m);
+    const organizerName = resolveSportsEventOrganizerName(m);
+    const eventImages = resolveSportsEventImages(m, defaultImageUrl);
 
     const homeTeamObj: SportsTeamJsonLd = { '@type': 'SportsTeam', name: homeTeamName };
     const awayTeamObj: SportsTeamJsonLd = { '@type': 'SportsTeam', name: awayTeamName };
@@ -13639,6 +13710,19 @@ export function buildSportsEventJsonLd(
           '@type': 'PostalAddress',
           addressCountry,
         },
+      },
+      organizer: {
+        '@type': 'Organization',
+        name: organizerName,
+        url: siteUrl,
+      },
+      image: eventImages,
+      offers: {
+        '@type': 'Offer',
+        url: siteUrl,
+        price: '0',
+        priceCurrency: 'GBP',
+        availability: 'https://schema.org/InStock',
       },
       homeTeam: homeTeamObj,
       awayTeam: awayTeamObj,

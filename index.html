@@ -32,19 +32,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="twitter:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v24">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v24">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v24">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v24">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v24">
-<meta name="betboy-build-version" content="20261113-v24">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v25">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v25">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v25">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v25">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v25">
+<meta name="betboy-build-version" content="20261113-v25">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v24';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v24';
+    var CURRENT_BUILD_VERSION = '20261113-v25';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v25';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -12418,9 +12418,37 @@ window.resolveSportsEventLocationName = function(fixture, homeTeamName){
   return homeTeamName + ' Stadium';
 };
 
+window.DEFAULT_BETBOY_SITE_URL = 'https://betboyai.co.uk';
+window.DEFAULT_BETBOY_IMAGE_URL = 'https://betboyai.co.uk/pwa-512x512.png';
+
+window.resolveSportsEventOrganizerName = function(fixture){
+  var explicitCompetition = String((fixture && fixture.competition) || '').trim();
+  if(explicitCompetition) return explicitCompetition;
+  var rawLeague = String((fixture && fixture.league) || '').trim();
+  if(rawLeague){
+    if(window.getLeagueName) return String(window.getLeagueName(rawLeague) || rawLeague).trim();
+    if(window.LEAGUE_NAMES && window.LEAGUE_NAMES[rawLeague.toUpperCase()]) return window.LEAGUE_NAMES[rawLeague.toUpperCase()];
+    return rawLeague;
+  }
+  return 'BetBoy AI';
+};
+
+window.resolveSportsEventImages = function(fixture, defaultImageUrl){
+  var fallbackUrl = defaultImageUrl || window.DEFAULT_BETBOY_IMAGE_URL;
+  if(fixture && Array.isArray(fixture.image)){
+    var cleaned = fixture.image.map(function(item){ return String(item || '').trim(); }).filter(Boolean);
+    if(cleaned.length > 0) return cleaned;
+  } else if(fixture && typeof fixture.image === 'string' && fixture.image.trim()){
+    return [fixture.image.trim()];
+  }
+  return [fallbackUrl];
+};
+
 window.buildSportsEventJsonLd = function(fixtures, options){
   var list = Array.isArray(fixtures) ? fixtures : [];
   var activeDate = (options && options.activeDate) ? String(options.activeDate).trim() : '';
+  var siteUrl = (options && options.siteUrl) ? String(options.siteUrl).trim() : window.DEFAULT_BETBOY_SITE_URL;
+  var defaultImageUrl = (options && options.defaultImageUrl) ? String(options.defaultImageUrl).trim() : window.DEFAULT_BETBOY_IMAGE_URL;
   var seenIds = {};
   var seenPairs = {};
   var events = [];
@@ -12472,6 +12500,8 @@ window.buildSportsEventJsonLd = function(fixtures, options){
     var endDate = new Date(new Date(startDate).getTime() + 105 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
     var locationName = window.resolveSportsEventLocationName(m, homeTeamName);
     var addressCountry = window.resolveSportsEventAddressCountry(m);
+    var organizerName = window.resolveSportsEventOrganizerName(m);
+    var eventImages = window.resolveSportsEventImages(m, defaultImageUrl);
 
     events.push({
       '@type': 'SportsEvent',
@@ -12487,6 +12517,19 @@ window.buildSportsEventJsonLd = function(fixtures, options){
           '@type': 'PostalAddress',
           addressCountry: addressCountry
         }
+      },
+      organizer: {
+        '@type': 'Organization',
+        name: organizerName,
+        url: siteUrl
+      },
+      image: eventImages,
+      offers: {
+        '@type': 'Offer',
+        url: siteUrl,
+        price: '0',
+        priceCurrency: 'GBP',
+        availability: 'https://schema.org/InStock'
       },
       homeTeam: {
         '@type': 'SportsTeam',
@@ -16524,7 +16567,7 @@ window.downloadSnapshotFile = function(){
     document.body.appendChild(a);
     a.click();
     setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 1500);
-    window.showAppToast("í ½í²¾ Downloading index.html...");
+    window.showAppToast("ðŸ’¾ Downloading index.html...");
   } catch(e){}
 };
 
