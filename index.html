@@ -23,23 +23,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="application-name" content="BetBoy AI">
 <meta name="theme-color" content="#0a0f1d">
 <meta name="description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BetBoy AI Predictor">
 <meta property="og:title" content="BetBoy AI Predictor">
 <meta property="og:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BetBoy AI Predictor">
+<meta name="twitter:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v20">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v20">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v20">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v20">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v20">
-<meta name="betboy-build-version" content="20261113-v20">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v23">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v23">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v23">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v23">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v23">
+<meta name="betboy-build-version" content="20261113-v23">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v20';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v20';
+    var CURRENT_BUILD_VERSION = '20261113-v23';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v23';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -12317,6 +12322,203 @@ window.runEngine = function(isForcedSync){
       ufs.classList.remove("hidden");
     }
   }
+
+  window._lastRenderedBrackets = { greens: greens, ambers: ambers, reds: reds };
+  if(typeof window.syncActiveSportsEventJsonLd === "function"){
+    window.syncActiveSportsEventJsonLd();
+  }
+};
+
+window.formatMatchStartDateIsoUtc = function(dateStr, koTime, isoOverride){
+  var directIsoCandidate = String(isoOverride || koTime || '').trim();
+  if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(directIsoCandidate)){
+    var parsedDirect = new Date(directIsoCandidate);
+    if(!isNaN(parsedDirect.getTime())){
+      return parsedDirect.toISOString().replace(/\.\d{3}Z$/, 'Z');
+    }
+  }
+
+  var rawDate = String(dateStr || '').trim();
+  var dateMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  var year, month, day;
+  if(dateMatch){
+    year = Number(dateMatch[1]);
+    month = Number(dateMatch[2]);
+    day = Number(dateMatch[3]);
+  } else {
+    var fallbackDate = window.getRollingDates ? window.getRollingDates().today : new Date().toISOString().slice(0, 10);
+    var dParts = String(fallbackDate).split('-').map(Number);
+    year = dParts[0];
+    month = dParts[1];
+    day = dParts[2];
+  }
+
+  var koNorm = window.normalizeXStudioKoTime ? window.normalizeXStudioKoTime(koTime) : String(koTime || '15:00');
+  var koParts = koNorm.split(':').map(Number);
+  var utcGuess = Date.UTC(year, month - 1, day, koParts[0] || 0, koParts[1] || 0, 0);
+
+  try {
+    var formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    var parts = formatter.formatToParts(new Date(utcGuess));
+    var lookup = {};
+    parts.forEach(function(p){
+      if(p.type !== 'literal') lookup[p.type] = Number(p.value);
+    });
+    var londonHour = lookup.hour === 24 ? 0 : lookup.hour;
+    var londonAsUtc = Date.UTC(
+      lookup.year,
+      (lookup.month || 1) - 1,
+      lookup.day || 1,
+      Number.isFinite(londonHour) ? londonHour : 0,
+      Number.isFinite(lookup.minute) ? lookup.minute : 0,
+      0
+    );
+    var offsetMs = londonAsUtc - utcGuess;
+    return new Date(utcGuess - offsetMs).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  } catch(e){
+    return new Date(utcGuess).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  }
+};
+
+window.buildSportsEventJsonLd = function(fixtures, options){
+  var list = Array.isArray(fixtures) ? fixtures : [];
+  var activeDate = (options && options.activeDate) ? String(options.activeDate).trim() : '';
+  var seenIds = {};
+  var seenPairs = {};
+  var events = [];
+
+  list.forEach(function(m){
+    if(!m) return;
+    var idNum = Number(m.id);
+    if(Number.isFinite(idNum) && idNum >= 900000 && idNum < 1000000) return;
+    if(m.isFallbackMock === true || m.isHardcodedFallback === true) return;
+
+    var matchDate = String(m.date || activeDate || '').trim();
+    if(activeDate && m.date && String(m.date).trim() !== activeDate) return;
+
+    var resolvedTeams = window.resolveMatchHomeAwayTeams ? window.resolveMatchHomeAwayTeams(m) : {
+      homeTeam: String(m.venue || 'HOME').toUpperCase() === 'AWAY' ? (m.opp || '') : (m.fav || ''),
+      awayTeam: String(m.venue || 'HOME').toUpperCase() === 'AWAY' ? (m.fav || '') : (m.opp || ''),
+      favTeam: m.fav || ''
+    };
+    var homeTeamName = String(resolvedTeams.homeTeam || '').trim();
+    var awayTeamName = String(resolvedTeams.awayTeam || '').trim();
+    if(!homeTeamName || !awayTeamName || homeTeamName === awayTeamName) return;
+
+    var idKey = (m.id !== undefined && m.id !== null) ? String(m.id) : '';
+    var hKey = window.normTeamKey ? window.normTeamKey(homeTeamName) : homeTeamName.toLowerCase();
+    var aKey = window.normTeamKey ? window.normTeamKey(awayTeamName) : awayTeamName.toLowerCase();
+    var pairKey = hKey + '_vs_' + aKey;
+    if((idKey && seenIds[idKey]) || seenPairs[pairKey]) return;
+    if(idKey) seenIds[idKey] = true;
+    seenPairs[pairKey] = true;
+
+    var details = (m._cachedDetails && m._cachedDetails.topCardMkt)
+      ? m._cachedDetails
+      : (window.resolveFeaturedCardDetails ? window.resolveFeaturedCardDetails(m) : null);
+    var bestMkt = m.bestMarket || m.topCardMkt || (details && details.topCardMkt) || null;
+    var favFallbackName = (resolvedTeams.favTeam || m.fav || homeTeamName) + ' to Win';
+    var rawSel = String(m.selection || (bestMkt && bestMkt.n) || favFallbackName).trim();
+    var cleanSel = rawSel.replace(/^Match Result:\s*/i, '').trim() || favFallbackName;
+
+    var rawMktPct = (bestMkt && bestMkt.p !== undefined && bestMkt.p !== null)
+      ? parseFloat(String(bestMkt.p).replace('%', ''))
+      : NaN;
+    var fallbackConf = Number((details && details.featuredProbVal) !== undefined ? details.featuredProbVal : (m.displayConf !== undefined ? m.displayConf : (m.fs || 70)));
+    var confNum = (!bestMkt || m.selection)
+      ? (Number.isFinite(fallbackConf) && fallbackConf > 0 ? fallbackConf : 70)
+      : (Number.isFinite(rawMktPct) && rawMktPct > 0 ? rawMktPct : fallbackConf);
+    var confText = Number.isFinite(confNum) ? confNum.toFixed(1).replace(/\.0$/, '') : '70';
+
+    var startDate = window.formatMatchStartDateIsoUtc(matchDate || null, m.ko, m.startDateIso);
+
+    events.push({
+      '@type': 'SportsEvent',
+      name: homeTeamName + ' vs ' + awayTeamName,
+      startDate: startDate,
+      homeTeam: {
+        '@type': 'SportsTeam',
+        name: homeTeamName
+      },
+      awayTeam: {
+        '@type': 'SportsTeam',
+        name: awayTeamName
+      },
+      description: 'AI prediction: ' + confText + '% confidence for ' + cleanSel + '.'
+    });
+  });
+
+  if(events.length === 0) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': events
+  };
+};
+
+window.injectSportsEventJsonLd = function(fixtures, options){
+  if(typeof document === 'undefined' || !document.head) return null;
+  var existingTags = document.head.querySelectorAll('script#betboy-sports-event-jsonld, script[data-betboy-schema="sports-events"]');
+  for(var i = 0; i < existingTags.length; i++){
+    if(existingTags[i] && existingTags[i].parentNode){
+      existingTags[i].parentNode.removeChild(existingTags[i]);
+    }
+  }
+
+  var schemaObj = window.buildSportsEventJsonLd(fixtures, options);
+  if(!schemaObj) return null;
+
+  var scriptEl = document.createElement('script');
+  scriptEl.type = 'application/ld+json';
+  scriptEl.id = 'betboy-sports-event-jsonld';
+  scriptEl.setAttribute('data-betboy-schema', 'sports-events');
+  scriptEl.textContent = JSON.stringify(schemaObj).replace(/</g, '\\u003c');
+  document.head.appendChild(scriptEl);
+  return schemaObj;
+};
+
+window.syncActiveSportsEventJsonLd = function(fixturesOverride, optionsOverride){
+  var activePool = [];
+  if(Array.isArray(fixturesOverride)){
+    activePool = fixturesOverride.slice();
+  } else if(window._lastRenderedBrackets){
+    var brackets = window._lastRenderedBrackets;
+    var tier = window.activeTierFilter || 'ALL';
+    if(tier === 'ALL' || tier === 'GREEN') activePool = activePool.concat(brackets.greens || []);
+    if(tier === 'ALL' || tier === 'AMBER') activePool = activePool.concat(brackets.ambers || []);
+    if(tier === 'ALL' || tier === 'RED') activePool = activePool.concat(brackets.reds || []);
+  } else if(Array.isArray(window.currentEvaluatedFixtures)){
+    activePool = window.currentEvaluatedFixtures.slice();
+  }
+
+  if(!Array.isArray(fixturesOverride)){
+    var searchEl = document.getElementById('instantSearchInput');
+    var searchQuery = (typeof window._activeSearchFilterQuery === 'string')
+      ? window._activeSearchFilterQuery.trim()
+      : (searchEl ? String(searchEl.value || '').trim() : '');
+    if(searchQuery){
+      activePool = activePool.filter(function(m){
+        var el = document.getElementById('cardWrap-' + m.id);
+        return !!(el && el.style.display !== 'none');
+      });
+    }
+  }
+
+  var resolvedDate = (optionsOverride && optionsOverride.activeDate !== undefined)
+    ? optionsOverride.activeDate
+    : (window.selectedDate || (window.getRollingDates ? window.getRollingDates().today : ''));
+
+  return window.injectSportsEventJsonLd(activePool, {
+    activeDate: resolvedDate
+  });
 };
 
 window.centerActiveDateTab = function(smooth){
@@ -12466,9 +12668,13 @@ window.toggleTierView = function(tier){
       else box.classList.remove('kpi-active-ring');
     }
   });
+  if(typeof window.syncActiveSportsEventJsonLd === "function"){
+    window.syncActiveSportsEventJsonLd();
+  }
 };
 
 window._filterDomNow = function(clean){
+  window._activeSearchFilterQuery = String(clean || '').trim();
   var found = false;
   var totalCards = 0;
   ["greenResults","amberResults","redResults"].forEach(function(cid){
@@ -12503,6 +12709,9 @@ window._filterDomNow = function(clean){
         });
       }
     }
+  }
+  if(typeof window.syncActiveSportsEventJsonLd === "function"){
+    window.syncActiveSportsEventJsonLd();
   }
   return found;
 };

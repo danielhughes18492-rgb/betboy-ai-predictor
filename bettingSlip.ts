@@ -13384,4 +13384,253 @@ export function filterFixturesByXStudioKoTime<T extends { id?: number | string; 
   return valid.filter((f) => normalizeXStudioKoTime(f.ko) === targetKo);
 }
 
+export interface SportsEventFixtureInput {
+  id?: number | string;
+  date?: string | null;
+  ko?: string | null;
+  startDateIso?: string | null;
+  fav?: string | null;
+  opp?: string | null;
+  team?: string | null;
+  venue?: string | null;
+  homeTeam?: string | null;
+  awayTeam?: string | null;
+  league?: string | null;
+  fs?: number | null;
+  displayConf?: number | null;
+  isFallbackMock?: boolean;
+  isHardcodedFallback?: boolean;
+  selection?: string | null;
+  topCardMkt?: { n?: string | null; p?: string | number | null } | null;
+  bestMarket?: { n?: string | null; p?: string | number | null } | null;
+  _cachedDetails?: {
+    featuredProbVal?: number | null;
+    topCardMkt?: { n?: string | null; p?: string | number | null } | null;
+  } | null;
+}
+
+export interface SportsTeamJsonLd {
+  '@type': 'SportsTeam';
+  name: string;
+}
+
+export interface SportsEventJsonLdItem {
+  '@type': 'SportsEvent';
+  name: string;
+  startDate: string;
+  homeTeam: SportsTeamJsonLd;
+  awayTeam: SportsTeamJsonLd;
+  description: string;
+}
+
+export interface SportsEventGraphJsonLd {
+  '@context': 'https://schema.org';
+  '@graph': SportsEventJsonLdItem[];
+}
+
+export function formatMatchStartDateIsoUtc(
+  dateStr?: string | null,
+  koTime?: string | null,
+  isoOverride?: string | null
+): string {
+  const directIsoCandidate = String(isoOverride || koTime || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(directIsoCandidate)) {
+    const parsedDirect = new Date(directIsoCandidate);
+    if (!Number.isNaN(parsedDirect.getTime())) {
+      return parsedDirect.toISOString().replace(/\.\d{3}Z$/, 'Z');
+    }
+  }
+
+  const rawDate = String(dateStr || '').trim();
+  const dateMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  let year: number;
+  let month: number;
+  let day: number;
+  if (dateMatch) {
+    year = Number(dateMatch[1]);
+    month = Number(dateMatch[2]);
+    day = Number(dateMatch[3]);
+  } else {
+    const fallbackDate = getCanonicalLondonDate();
+    const parts = fallbackDate.split('-').map(Number);
+    year = parts[0];
+    month = parts[1];
+    day = parts[2];
+  }
+
+  const normalizedKo = normalizeXStudioKoTime(koTime);
+  const [hh, mm] = normalizedKo.split(':').map(Number);
+  const utcGuess = Date.UTC(year, month - 1, day, hh || 0, mm || 0, 0);
+
+  // Convert Europe/London wall-clock kick-off time (handles GMT vs BST automatically) into exact UTC ISO 8601
+  try {
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(new Date(utcGuess));
+    const lookup: Record<string, number> = {};
+    for (const p of parts) {
+      if (p.type !== 'literal') lookup[p.type] = Number(p.value);
+    }
+    const londonHour = lookup.hour === 24 ? 0 : lookup.hour;
+    const londonAsUtc = Date.UTC(
+      lookup.year,
+      (lookup.month || 1) - 1,
+      lookup.day || 1,
+      Number.isFinite(londonHour) ? londonHour : 0,
+      Number.isFinite(lookup.minute) ? lookup.minute : 0,
+      0
+    );
+    const offsetMs = londonAsUtc - utcGuess;
+    return new Date(utcGuess - offsetMs).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  } catch {
+    return new Date(utcGuess).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  }
+}
+
+export function buildSportsEventJsonLd(
+  fixtures: SportsEventFixtureInput[] | null | undefined,
+  options?: {
+    activeDate?: string | null;
+  }
+): SportsEventGraphJsonLd | null {
+  const list = Array.isArray(fixtures) ? fixtures : [];
+  const activeDate = options?.activeDate ? String(options.activeDate).trim() : '';
+
+  const seenIds = new Set<string>();
+  const seenPairs = new Set<string>();
+  const events: SportsEventJsonLdItem[] = [];
+
+  for (const m of list) {
+    if (!m) continue;
+    const idNum = Number(m.id);
+    if (Number.isFinite(idNum) && idNum >= 900000 && idNum < 1000000) continue;
+    if (m.isFallbackMock === true || m.isHardcodedFallback === true) continue;
+
+    const matchDate = String(m.date || activeDate || '').trim();
+    if (activeDate && m.date && String(m.date).trim() !== activeDate) continue;
+
+    const resolvedTeams = resolveMatchHomeAwayTeams({
+      fav: m.fav || undefined,
+      opp: m.opp || undefined,
+      team: m.team || undefined,
+      venue: m.venue || undefined,
+      homeTeam: m.homeTeam || undefined,
+      awayTeam: m.awayTeam || undefined,
+    });
+
+    const homeTeamName = resolvedTeams.homeTeam;
+    const awayTeamName = resolvedTeams.awayTeam;
+    if (!homeTeamName || !awayTeamName || homeTeamName === awayTeamName) continue;
+
+    const idKey = m.id !== undefined && m.id !== null ? String(m.id) : '';
+    const pairKey = `${normalizeOddsTeamKey(homeTeamName)}_vs_${normalizeOddsTeamKey(awayTeamName)}`;
+    if ((idKey && seenIds.has(idKey)) || seenPairs.has(pairKey)) continue;
+    if (idKey) seenIds.add(idKey);
+    seenPairs.add(pairKey);
+
+    const bestMkt = m.bestMarket || m.topCardMkt || m._cachedDetails?.topCardMkt || null;
+    const rawSelection = String(
+      m.selection || (bestMkt && bestMkt.n) || `${resolvedTeams.favTeam} to Win`
+    ).trim();
+    const cleanSelection = rawSelection.replace(/^Match Result:\s*/i, '').trim() || `${resolvedTeams.favTeam} to Win`;
+
+    const rawMktPct = bestMkt && bestMkt.p !== undefined && bestMkt.p !== null
+      ? parseFloat(String(bestMkt.p).replace('%', ''))
+      : NaN;
+    const fallbackConf = Number(
+      m._cachedDetails?.featuredProbVal ?? m.displayConf ?? m.fs ?? 70
+    );
+    const confNum = !bestMkt || m.selection
+      ? (Number.isFinite(fallbackConf) && fallbackConf > 0 ? fallbackConf : 70)
+      : (Number.isFinite(rawMktPct) && rawMktPct > 0 ? rawMktPct : fallbackConf);
+    const confText = Number.isFinite(confNum) ? confNum.toFixed(1).replace(/\.0$/, '') : '70';
+
+    const startDate = formatMatchStartDateIsoUtc(matchDate || null, m.ko, m.startDateIso);
+
+    events.push({
+      '@type': 'SportsEvent',
+      name: `${homeTeamName} vs ${awayTeamName}`,
+      startDate,
+      homeTeam: {
+        '@type': 'SportsTeam',
+        name: homeTeamName,
+      },
+      awayTeam: {
+        '@type': 'SportsTeam',
+        name: awayTeamName,
+      },
+      description: `AI prediction: ${confText}% confidence for ${cleanSelection}.`,
+    });
+  }
+
+  if (events.length === 0) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': events,
+  };
+}
+
+export interface JsonLdScriptNodeLike {
+  type?: string;
+  id?: string;
+  textContent: string | null;
+  parentNode?: { removeChild: (node: any) => void } | null;
+  setAttribute: (name: string, value: string) => void;
+}
+
+export interface JsonLdDocumentLike {
+  head: {
+    querySelectorAll: (selector: string) => ArrayLike<JsonLdScriptNodeLike>;
+    appendChild: (node: JsonLdScriptNodeLike) => void;
+  } | null;
+  createElement: (tag: string) => JsonLdScriptNodeLike;
+}
+
+export function syncActiveSportsEventJsonLd(
+  fixtures: SportsEventFixtureInput[] | null | undefined,
+  options?: {
+    activeDate?: string | null;
+    doc?: JsonLdDocumentLike | null;
+  }
+): SportsEventGraphJsonLd | null {
+  const schemaObj = buildSportsEventJsonLd(fixtures, { activeDate: options?.activeDate });
+  const doc: JsonLdDocumentLike | null =
+    options?.doc !== undefined
+      ? options.doc
+      : typeof document !== 'undefined'
+      ? (document as unknown as JsonLdDocumentLike)
+      : null;
+
+  if (!doc || !doc.head) return schemaObj;
+
+  const existingTags = doc.head.querySelectorAll(
+    'script#betboy-sports-event-jsonld, script[data-betboy-schema="sports-events"]'
+  );
+  for (let i = 0; i < existingTags.length; i++) {
+    const tag = existingTags[i];
+    if (tag && tag.parentNode) {
+      tag.parentNode.removeChild(tag);
+    }
+  }
+
+  if (!schemaObj) return null;
+
+  const scriptEl = doc.createElement('script');
+  scriptEl.type = 'application/ld+json';
+  scriptEl.id = 'betboy-sports-event-jsonld';
+  scriptEl.setAttribute('data-betboy-schema', 'sports-events');
+  scriptEl.textContent = JSON.stringify(schemaObj).replace(/</g, '\\u003c');
+  doc.head.appendChild(scriptEl);
+  return schemaObj;
+}
+
+
 
