@@ -3231,14 +3231,100 @@ export interface LockedMatchOddsRecord {
   oddsLocked: true;
 }
 
+const POSTPONED_CANCELLED_PATTERN = /\b(?:pp|pst|postponed?|canc(?:el(?:ed|led)?)?|abd|abandoned|susp(?:ended)?)\b/i;
+
+export function isPostponedOrCancelledApiStatus(
+  api?: {
+    state?: string | null;
+    detail?: string | null;
+    shortDetail?: string | null;
+    description?: string | null;
+    statusName?: string | null;
+    name?: string | null;
+    completed?: boolean | null;
+    isPostponed?: boolean | null;
+    h?: number | null;
+    a?: number | null;
+  } | null
+): boolean {
+  if (!api) return false;
+  if (api.isPostponed === true) return true;
+  const rawState = String(api.state || '').toLowerCase();
+  const statusText = [api.statusName, api.name, api.detail, api.shortDetail, api.description]
+    .filter(Boolean)
+    .join(' ');
+  if (POSTPONED_CANCELLED_PATTERN.test(statusText)) {
+    return true;
+  }
+  if (rawState === 'post' && api.completed === false) {
+    return true;
+  }
+  return false;
+}
+
+export function isPostponedOrCancelledMatch(
+  match?: {
+    isPostponed?: boolean | null;
+    statusCode?: string | null;
+    actual?: string | null;
+    rawActual?: string | null;
+    statusShort?: string | null;
+    status?: string | null;
+    api?: {
+      state?: string | null;
+      detail?: string | null;
+      shortDetail?: string | null;
+      description?: string | null;
+      statusName?: string | null;
+      name?: string | null;
+      completed?: boolean | null;
+      isPostponed?: boolean | null;
+    } | null;
+  } | null
+): boolean {
+  if (!match) return false;
+  if (match.isPostponed === true) return true;
+  const combined = [
+    match.statusCode,
+    match.actual,
+    match.rawActual,
+    match.statusShort,
+    match.status,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  if (POSTPONED_CANCELLED_PATTERN.test(combined)) {
+    return true;
+  }
+  return isPostponedOrCancelledApiStatus(match.api || null);
+}
+
 /**
  * Determines whether a match has kicked off (or entered its pre-kickoff lock / live / completed state).
+ * Postponed/cancelled fixtures are never treated as kicked off or locked for an unplayed slot.
  */
 export function isMatchKickedOffOrLocked(
-  match: { date: string; ko?: string; isLive?: boolean; actual?: string; isLocked?: boolean },
+  match: {
+    date: string;
+    ko?: string;
+    isLive?: boolean;
+    actual?: string;
+    rawActual?: string;
+    isLocked?: boolean;
+    isPostponed?: boolean;
+    statusCode?: string;
+    api?: {
+      state?: string | null;
+      detail?: string | null;
+      statusName?: string | null;
+      completed?: boolean | null;
+      isPostponed?: boolean | null;
+    } | null;
+  },
   nowMs = Date.now(),
   lockBeforeKoMs = 0
 ): boolean {
+  if (isPostponedOrCancelledMatch(match)) return false;
   if (match.isLocked || match.isLive) return true;
   const actualLow = String(match.actual || '').toLowerCase();
   if (
@@ -3376,6 +3462,7 @@ export interface MatchLiveAndFtStats {
   hasKickedOff: boolean;
   isFT: boolean;
   isLive: boolean;
+  isPostponed?: boolean;
   elapsedMins: number;
   homeGoals: number;
   awayGoals: number;
@@ -3397,8 +3484,8 @@ export interface MatchLiveAndFtStats {
 /**
  * Computes real-time and full-time match statistics (corners, cards, 1st-half goals, goals)
  * ONLY when a game has actually kicked off (`isLive`, settled `FT`, or `nowMs >= kickOffMs`).
- * Before kick-off (even during the T-30m pre-match lock window), `hasKickedOff` is `false`
- * and no counts or settlement statuses are shown.
+ * Before kick-off (even during the T-30m pre-match lock window) or when postponed/cancelled,
+ * `hasKickedOff` is `false` and no counts or settlement statuses are shown.
  */
 export function computeMatchLiveAndFtStats(
   match: {
@@ -3411,7 +3498,10 @@ export function computeMatchLiveAndFtStats(
     homeTeam?: string;
     awayTeam?: string;
     isLive?: boolean;
+    isPostponed?: boolean;
+    statusCode?: string;
     actual?: string;
+    rawActual?: string;
     c85Pct?: number | string;
     cards35Pct?: number | string;
   },
@@ -3428,12 +3518,44 @@ export function computeMatchLiveAndFtStats(
     awayKey?: string;
     state?: string;
     detail?: string;
+    shortDetail?: string;
+    description?: string;
+    statusName?: string;
+    completed?: boolean;
+    isPostponed?: boolean;
   }
 ): MatchLiveAndFtStats {
   const actualStr = String(match.actual || '');
   const normKey = (s: string) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const favKey = normKey(match.fav);
   const oppKey = normKey(match.opp);
+
+  const isPostponed =
+    isPostponedOrCancelledMatch(match) || isPostponedOrCancelledApiStatus(liveFeedOverride || null);
+  if (isPostponed) {
+    return {
+      hasKickedOff: false,
+      isFT: false,
+      isLive: false,
+      isPostponed: true,
+      elapsedMins: 0,
+      homeGoals: 0,
+      awayGoals: 0,
+      totalGoals: 0,
+      favGoals: 0,
+      oppGoals: 0,
+      fhGoals: 0,
+      corners: 0,
+      cards: 0,
+      scoreStr: '',
+      cornersWon: null,
+      cornersStatBadge: '',
+      cardsWon: null,
+      cardsStatBadge: '',
+      fh05Won: null,
+      fh05StatBadge: '',
+    };
+  }
 
   const parenSc = actualStr.match(/\(\s*(?:LIVE|HT|FT)?\s*(\d+)\s*-\s*(\d+)\s*\)/i);
   const cleanActualForScore = actualStr
@@ -3442,7 +3564,9 @@ export function computeMatchLiveAndFtStats(
     .replace(/\b\d+(?:\+\d+)?\s*'/g, ' ');
   const scMatch = parenSc || cleanActualForScore.match(/(\d+)\s*-\s*(\d+)/);
 
-  const apiIsFT = Boolean(liveFeedOverride && liveFeedOverride.state === 'post');
+  const apiIsFT = Boolean(
+    liveFeedOverride && liveFeedOverride.state === 'post' && !isPostponedOrCancelledApiStatus(liveFeedOverride)
+  );
   const apiIsLive = Boolean(liveFeedOverride && liveFeedOverride.state === 'in');
   const isExplicitHT =
     /\b(ht|half[\s-]*time)\b/i.test(actualStr) ||
@@ -7764,6 +7888,7 @@ export interface MatchCardQuickBetSyncState {
   confidenceSubLabel: string;
   aiBestPickBadge: string;
   isSettledFT: boolean;
+  isPostponed?: boolean;
   mainPredictionWon: boolean | null;
   marketWon: boolean | null;
   topStatusBadgeText: string;
@@ -7779,6 +7904,7 @@ export function evaluateMatchCardQuickBetSync(input: {
   topCardMkt?: { n?: string; p?: number | string; odds?: number | string; w?: boolean | null } | null;
   isFT?: boolean;
   isLive?: boolean;
+  isPostponed?: boolean;
   scoreStr?: string;
   actual?: string;
   ko?: string;
@@ -7798,21 +7924,28 @@ export function evaluateMatchCardQuickBetSync(input: {
       : 'Top AI Pick';
 
   const rawActual = String(input.actual || '').trim();
+  const isPostponed = Boolean(
+    input.isPostponed || POSTPONED_CANCELLED_PATTERN.test(rawActual)
+  );
   const isSettledFT = Boolean(
-    !input.isLive &&
+    !isPostponed &&
+      !input.isLive &&
       (input.isFT || /\((?:won|draw|lost)\)/i.test(rawActual) || /\bFT\b/i.test(rawActual))
   );
 
   const scoreMatch = (String(input.scoreStr || '') + ' ' + rawActual).match(/(\d+)\s*-\s*(\d+)/);
   const resolvedScore = scoreMatch ? `${scoreMatch[1]}-${scoreMatch[2]}` : '0-0';
 
-  let marketWon: boolean | null = mkt && typeof mkt.w === 'boolean' ? mkt.w : null;
+  let marketWon: boolean | null = isPostponed ? null : mkt && typeof mkt.w === 'boolean' ? mkt.w : null;
   if (isSettledFT && mkt && marketWon === null) {
     marketWon = false;
   }
 
-  let mainPredictionWon: boolean | null =
-    typeof input.mainPredictionWon === 'boolean' ? input.mainPredictionWon : null;
+  let mainPredictionWon: boolean | null = isPostponed
+    ? null
+    : typeof input.mainPredictionWon === 'boolean'
+    ? input.mainPredictionWon
+    : null;
   if (isSettledFT && mainPredictionWon === null) {
     if (/\(won\)/i.test(rawActual)) mainPredictionWon = true;
     else if (/\((?:draw|lost)\)/i.test(rawActual)) mainPredictionWon = false;
@@ -7820,7 +7953,9 @@ export function evaluateMatchCardQuickBetSync(input: {
   }
 
   let topStatusBadgeText = `🕒 KO ${input.ko || '15:00'}`;
-  if (input.isLive) {
+  if (isPostponed) {
+    topStatusBadgeText = 'PP · Postponed';
+  } else if (input.isLive) {
     topStatusBadgeText = rawActual || `LIVE ${resolvedScore}`;
   } else if (isSettledFT) {
     if (mainPredictionWon === true) {
@@ -7838,6 +7973,7 @@ export function evaluateMatchCardQuickBetSync(input: {
     confidenceSubLabel,
     aiBestPickBadge: AI_BEST_PICK_BADGE_LABEL,
     isSettledFT,
+    isPostponed,
     mainPredictionWon,
     marketWon,
     topStatusBadgeText,
@@ -11067,7 +11203,7 @@ export interface StandardizedMatchCardLayout {
   homeScoreBadge: string | null;
   awayScoreBadge: string | null;
   quickPlusBadgeClass: string;
-  statusPillType: 'live' | 'ht' | 'ft' | 'ko';
+  statusPillType: 'live' | 'ht' | 'ft' | 'ko' | 'pp';
   statusPillText: string;
   hasPulsingDot: boolean;
   duplicatesScoreInHeader: false;
@@ -11085,6 +11221,7 @@ export function resolveStandardizedMatchCardLayout(match: {
   isLive?: boolean;
   isHT?: boolean;
   isSettledFT?: boolean;
+  isPostponed?: boolean;
   homeGoals?: number | null;
   awayGoals?: number | null;
   topMktWonState?: boolean | null;
@@ -11107,8 +11244,13 @@ export function resolveStandardizedMatchCardLayout(match: {
   const favNameClass =
     'font-extrabold text-white underline decoration-emerald-500/70 underline-offset-4 text-[14px] leading-tight truncate';
   const oppNameClass = 'font-medium text-slate-200 text-[14px] leading-tight truncate';
+  const rawAct = String(match.actual || '').trim();
+  const isPostponed = Boolean(
+    match.isPostponed || POSTPONED_CANCELLED_PATTERN.test(rawAct)
+  );
   const hasScore = Boolean(
-    (match.isLive || match.isSettledFT) &&
+    !isPostponed &&
+      (match.isLive || match.isSettledFT) &&
       typeof match.homeGoals === 'number' &&
       typeof match.awayGoals === 'number' &&
       Number.isFinite(match.homeGoals) &&
@@ -11120,13 +11262,15 @@ export function resolveStandardizedMatchCardLayout(match: {
       ? 'w-5 h-5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-xs font-bold flex-shrink-0 leading-none'
       : 'w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-xs font-bold flex-shrink-0 leading-none';
 
-  const rawAct = String(match.actual || '').trim();
   const isHtState = Boolean(match.isHT || /\bht\b|half[\s-]*time/i.test(rawAct));
-  let statusPillType: 'live' | 'ht' | 'ft' | 'ko' = 'ko';
+  let statusPillType: 'live' | 'ht' | 'ft' | 'ko' | 'pp' = 'ko';
   let statusPillText = `KO ${match.ko || '15:00'}`;
   let hasPulsingDot = false;
 
-  if (match.isLive) {
+  if (isPostponed) {
+    statusPillType = 'pp';
+    statusPillText = 'PP · Postponed';
+  } else if (match.isLive) {
     hasPulsingDot = true;
     if (isHtState) {
       statusPillType = 'ht';
@@ -11524,8 +11668,9 @@ export function filterValidFixturesForDate<
 }
 
 export interface ValidatedMatchKickoffStatus {
-  state: 'pre' | 'in' | 'ht' | 'post';
+  state: 'pre' | 'in' | 'ht' | 'post' | 'pp';
   isLive: boolean;
+  isPostponed?: boolean;
   displayStatus: string;
   clockLabel: string;
   homeGoals: number;
@@ -11565,6 +11710,12 @@ export function resolveValidatedMatchKickoffStatus(params: {
   apiState?: {
     state?: string;
     detail?: string;
+    shortDetail?: string;
+    description?: string;
+    statusName?: string;
+    name?: string;
+    completed?: boolean;
+    isPostponed?: boolean;
     h?: number;
     a?: number;
     ko?: string;
@@ -11578,6 +11729,19 @@ export function resolveValidatedMatchKickoffStatus(params: {
   let as = Number(api?.a ?? 0);
   const rawState = String(api?.state || '').toLowerCase();
   const rawDetail = String(api?.detail || '').trim();
+
+  // 0. Postponed / Cancelled / Abandoned / Suspended fixtures must NEVER settle as FT or enter live play
+  if (isPostponedOrCancelledApiStatus(api)) {
+    return {
+      state: 'pp',
+      isLive: false,
+      isPostponed: true,
+      displayStatus: 'PP (Postponed)',
+      clockLabel: 'PP',
+      homeGoals: 0,
+      awayGoals: 0,
+    };
+  }
 
   // 1. Completed / Full-Time state
   if (
@@ -11598,6 +11762,7 @@ export function resolveValidatedMatchKickoffStatus(params: {
     return {
       state: 'post',
       isLive: false,
+      isPostponed: false,
       displayStatus: `${hs}-${as} (${outcomeLabel})`,
       clockLabel: 'FT',
       homeGoals: hs,
@@ -13408,6 +13573,9 @@ export interface SportsEventFixtureInput {
   displayConf?: number | null;
   isFallbackMock?: boolean;
   isHardcodedFallback?: boolean;
+  isPostponed?: boolean | null;
+  statusCode?: string | null;
+  actual?: string | null;
   selection?: string | null;
   topCardMkt?: { n?: string | null; p?: string | number | null } | null;
   bestMarket?: { n?: string | null; p?: string | number | null } | null;
@@ -13451,7 +13619,7 @@ export interface SportsEventJsonLdItem {
   name: string;
   startDate: string;
   endDate: string;
-  eventStatus: 'https://schema.org/EventScheduled';
+  eventStatus: 'https://schema.org/EventScheduled' | 'https://schema.org/EventPostponed';
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode';
   location: SportsEventLocationJsonLd;
   organizer: SportsEventOrganizerJsonLd;
@@ -13700,12 +13868,15 @@ export function buildSportsEventJsonLd(
     const homeTeamObj: SportsTeamJsonLd = { '@type': 'SportsTeam', name: homeTeamName };
     const awayTeamObj: SportsTeamJsonLd = { '@type': 'SportsTeam', name: awayTeamName };
 
+    const isPostponed = isPostponedOrCancelledMatch(m);
     events.push({
       '@type': 'SportsEvent',
       name: `${homeTeamName} vs ${awayTeamName}`,
       startDate,
       endDate,
-      eventStatus: 'https://schema.org/EventScheduled',
+      eventStatus: isPostponed
+        ? 'https://schema.org/EventPostponed'
+        : 'https://schema.org/EventScheduled',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: {
         '@type': 'Place',

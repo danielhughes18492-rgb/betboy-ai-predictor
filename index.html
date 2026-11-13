@@ -32,19 +32,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="twitter:description" content="BetBoy AI Football Results, Multi-Market Acca Engine & Live Betting Slip Predictor">
 <title>BetBoy AI Predictor</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v30">
-<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v30">
-<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v30">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v30">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v30">
-<meta name="betboy-build-version" content="20261113-v30">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261113-v31">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png?v=20261113-v31">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png?v=20261113-v31">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v31">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon.png?v=20261113-v31">
+<meta name="betboy-build-version" content="20261113-v31">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <script>
   (function() {
-    var CURRENT_BUILD_VERSION = '20261113-v30';
-    var SW_SCRIPT_URL = '/sw.js?v=20261113-v30';
+    var CURRENT_BUILD_VERSION = '20261113-v31';
+    var SW_SCRIPT_URL = '/sw.js?v=20261113-v31';
     var SW_BYTE_HASH_STORAGE_KEY = 'betboy_sw_byte_hash_v1';
     window.BETBOY_BUILD_VERSION = CURRENT_BUILD_VERSION;
     window.BETBOY_SW_SCRIPT_URL = SW_SCRIPT_URL;
@@ -4334,7 +4334,12 @@ window.triggerHapticFeedback = function(type, navOverride, options) {
   return res;
 };
 
-window.renderQuickBetActionPillHtml = function(isSelected, topMktWonState) {
+window.renderQuickBetActionPillHtml = function(isSelected, topMktWonState, isPostponed) {
+  if (isPostponed) {
+    return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="postponed" class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase tracking-wide flex-shrink-0 leading-none">' +
+      '<span>POSTPONED</span>' +
+    '</span>';
+  }
   if (topMktWonState === false) {
     return '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="settled-lost" class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-black uppercase tracking-wide flex-shrink-0 leading-none">' +
       '<svg class="w-3 h-3 flex-shrink-0 block" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>' +
@@ -4363,9 +4368,10 @@ window.syncQuickBetButtonDomState = function(node, isSelected) {
   if (node.id && node.id.indexOf('bestm-') === 0) {
     var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[node.id];
     var wonState = reg ? reg.won : null;
+    var isPpState = !!(reg && reg.isPostponed);
     var badgeEl = node.querySelector('[data-quick-bet-plus-badge="true"]');
     if (badgeEl && window.renderQuickBetActionPillHtml) {
-      badgeEl.outerHTML = window.renderQuickBetActionPillHtml(isSelected, wonState);
+      badgeEl.outerHTML = window.renderQuickBetActionPillHtml(isSelected, wonState, isPpState);
     }
   }
 };
@@ -4376,6 +4382,10 @@ window.toggleBetSlipByEl = function(elId, e) {
   if (e) e.stopPropagation();
   var reg = window.marketSelectionRegistry && window.marketSelectionRegistry[elId];
   if (!reg) return;
+  if (reg.isPostponed) {
+    if (window.showAppToast) window.showAppToast("⏸️ Match is postponed and not taking place.");
+    return;
+  }
   if (reg.won === false) return; // Disable adding settled LOST markets to slip
   window.toggleBetSlip(reg.team, reg.market, elId, e, reg);
 };
@@ -4668,13 +4678,18 @@ window.renderSlipSelections = function() {
     var liveWon = d.won;
     var liveStatBadge = d.statBadge || '';
     var foundM = null;
+    var foundMPostponed = false;
     if (window.currentEvaluatedFixtures && window.currentEvaluatedFixtures.length) {
       foundM = window.currentEvaluatedFixtures.find(function(f){
         return (f.fav === d.team && f.opp === d.opp) ||
                (f.opp === d.team && f.fav === d.opp) ||
                f.fav === d.team || f.opp === d.team || f.fav === d.opp || f.opp === d.opp;
       });
-      if (liveWon === undefined && foundM && window.calcExtraMarkets) {
+      foundMPostponed = Boolean(foundM && (foundM.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(foundM))));
+      if (foundMPostponed) {
+        liveWon = undefined;
+        liveStatBadge = 'PP · Postponed';
+      } else if (liveWon === undefined && foundM && window.calcExtraMarkets) {
         var mk = window.calcExtraMarkets(foundM, foundM.fs || 68);
         var fMkt = mk.L.find(function(x){
           return x.n === d.market || x.n.toLowerCase().indexOf(String(d.market || '').toLowerCase()) !== -1;
@@ -6049,9 +6064,21 @@ window.updateModelHeaders = function(){
     var idNum = parseInt(ev.id, 10);
     if(!Number.isFinite(idNum) || idNum <= 0) return null;
 
-    var evState = String((comp.status && comp.status.type && comp.status.type.state) || (ev.status && ev.status.type && ev.status.type.state) || "pre").toLowerCase();
+    var compStatusObj = (comp.status && comp.status.type) || {};
+    var evStatusObj = (ev.status && ev.status.type) || {};
+    var statusTypeObj = compStatusObj.state ? compStatusObj : evStatusObj;
+    var evState = String(statusTypeObj.state || "pre").toLowerCase();
+    var isPostponedEv = window.isPostponedOrCancelledApiStatus
+      ? window.isPostponedOrCancelledApiStatus({
+          state: evState,
+          statusName: statusTypeObj.name,
+          detail: statusTypeObj.shortDetail || statusTypeObj.detail,
+          description: statusTypeObj.description,
+          completed: statusTypeObj.completed
+        })
+      : /\b(?:pp|pst|postponed?|canc|abandoned|suspended)\b/i.test([statusTypeObj.name, statusTypeObj.shortDetail, statusTypeObj.description].join(" "));
     var evKoMs = ev.date ? Date.parse(ev.date) : NaN;
-    var isPastT30 = (evState !== "pre" && evState !== "scheduled") || (Number.isFinite(evKoMs) && Date.now() >= (evKoMs - (window.LOCK_BEFORE_KO_MS || 1800000)));
+    var isPastT30 = !isPostponedEv && ((evState !== "pre" && evState !== "scheduled") || (Number.isFinite(evKoMs) && Date.now() >= (evKoMs - (window.LOCK_BEFORE_KO_MS || 1800000))));
 
     // If match is at or past T-30m (or in-play / FT) and we already have a pre-match row in DAILY_FIXTURES, preserve it so in-play updates NEVER alter pre-match predictions!
     var existingDayRows = (window.DAILY_FIXTURES && Array.isArray(window.DAILY_FIXTURES[dateStr])) ? window.DAILY_FIXTURES[dateStr] : [];
@@ -6187,7 +6214,8 @@ window.updateModelHeaders = function(){
       : ((lgCode === "FAC" && tierGap >= 1)
         ? "FA Cup Divisional Mismatch & xG Edge"
         : (favH ? "Home Fortress & xG Edge" : "Elite Away Mismatch"));
-    return [id, dateStr, lgCode, venue, fav, opp, favShots, 10, 8, 16, conf, "Pending", vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), statTag, Math.round(conf)+"%", ko];
+    var rowStatusStr = (typeof isPostponedEv !== "undefined" && isPostponedEv) ? "PP" : "Pending";
+    return [id, dateStr, lgCode, venue, fav, opp, favShots, 10, 8, 16, conf, rowStatusStr, vr, dateStr+" 00:00", xg, xga, Math.round(conf+6), Math.round(48+(conf-55)*0.55), statTag, Math.round(conf)+"%", ko];
   };
 })();
 
@@ -7221,8 +7249,23 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
               if(Number.isFinite(h1) && Number.isFinite(a1)) fhGoalsVal = h1 + a1;
             }
 
-            var st = (ev.status&&ev.status.type&&ev.status.type.state)||"";
-            var dt = (ev.status&&ev.status.type&&ev.status.type.shortDetail)||"";
+            var evStatusType = (ev.status && ev.status.type) || {};
+            var compStatusType = (comp.status && comp.status.type) || {};
+            var sType = evStatusType.state ? evStatusType : compStatusType;
+            var st = sType.state || "";
+            var dt = sType.shortDetail || sType.detail || sType.description || "";
+            var stName = sType.name || "";
+            var stDesc = sType.description || "";
+            var stCompleted = (typeof sType.completed === "boolean") ? sType.completed : undefined;
+            var isPostponedRec = window.isPostponedOrCancelledApiStatus
+              ? window.isPostponedOrCancelledApiStatus({
+                  state: st,
+                  statusName: stName,
+                  detail: dt,
+                  description: stDesc,
+                  completed: stCompleted
+                })
+              : /\b(?:pp|pst|postponed?|canc|abandoned|suspended)\b/i.test([stName, dt, stDesc].join(" "));
             var rawHScore = (hC && hC.score && typeof hC.score === "object") ? (hC.score.displayValue || hC.score.value || "0") : (hC && hC.score !== undefined ? hC.score : "0");
             var rawAScore = (aC && aC.score && typeof aC.score === "object") ? (aC.score.displayValue || aC.score.value || "0") : (aC && aC.score !== undefined ? aC.score : "0");
             var rec = {
@@ -7230,8 +7273,12 @@ window.buildVerifiedEflTrophyRowsForDate = function(dateStr) {
               date:dateStr,
               state:st,
               detail:dt,
-              h:parseInt(rawHScore,10) || 0,
-              a:parseInt(rawAScore,10) || 0,
+              statusName:stName,
+              description:stDesc,
+              completed:stCompleted,
+              isPostponed:isPostponedRec,
+              h: isPostponedRec ? 0 : (parseInt(rawHScore,10) || 0),
+              a: isPostponedRec ? 0 : (parseInt(rawAScore,10) || 0),
               homeTeam:hN,
               awayTeam:aN,
               homeKey:hK,
@@ -7396,6 +7443,36 @@ window.buildInPlayStatusPillHtml = function(rawClockOrStatus) {
   return '<span data-card-status-pill="live" class="text-[10px] bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-2 py-0.5 rounded-md font-mono font-black inline-flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.38)]"><span class="text-emerald-400 animate-pulse drop-shadow-[0_0_6px_rgba(52,211,153,0.95)] leading-none">●</span><span>' + liveLabel + '</span></span>';
 };
 
+window.POSTPONED_CANCELLED_STATUS_RE = /\b(?:pp|pst|postponed?|canc(?:el(?:ed|led)?)?|abd|abandoned|susp(?:ended)?)\b/i;
+
+window.isPostponedOrCancelledApiStatus = function(api){
+  if(!api) return false;
+  if(api.isPostponed === true) return true;
+  var rawState = String(api.state || "").toLowerCase();
+  var statusText = [api.statusName, api.name, api.detail, api.shortDetail, api.description].filter(Boolean).join(" ");
+  if(window.POSTPONED_CANCELLED_STATUS_RE.test(statusText)) return true;
+  if(rawState === "post" && api.completed === false) return true;
+  return false;
+};
+
+window.isPostponedOrCancelledMatch = function(m){
+  if(!m) return false;
+  if(m.isPostponed === true) return true;
+  var combined = [m.statusCode, m.actual, m.rawActual, m.statusShort, m.status].filter(Boolean).join(" ");
+  if(window.POSTPONED_CANCELLED_STATUS_RE.test(combined)) return true;
+  var v = window.apiLiveScores || {};
+  var hName = m.venue === "AWAY" ? (m.opp || m.awayTeam) : (m.fav || m.homeTeam);
+  var aName = m.venue === "AWAY" ? (m.fav || m.homeTeam) : (m.opp || m.awayTeam);
+  var hKey = window.normTeamKey ? window.normTeamKey(hName) : String(hName || "").toLowerCase();
+  var aKey = window.normTeamKey ? window.normTeamKey(aName) : String(aName || "").toLowerCase();
+  var api = m.api ||
+            v["id_" + m.id] ||
+            (hKey && aKey && m.date && v[hKey + "_vs_" + aKey + "_" + m.date]) ||
+            (hKey && m.date && v[hKey + "_" + m.date]) ||
+            (aKey && m.date && v[aKey + "_" + m.date]);
+  return window.isPostponedOrCancelledApiStatus(api);
+};
+
 window.getLiveMatchState = function(m){
   var hName = m.venue === "HOME" ? m.fav : m.opp;
   var aName = m.venue === "HOME" ? m.opp : m.fav;
@@ -7412,11 +7489,21 @@ window.getLiveMatchState = function(m){
 
   var customVal = window.customResults && window.customResults[m.id];
   if(customVal && customVal !== "Pending"){
+    if(window.POSTPONED_CANCELLED_STATUS_RE.test(customVal)){
+      return {
+        isLive: false,
+        isPostponed: true,
+        statusCode: "PP",
+        displayStatus: "PP (Postponed)",
+        badgeHtml: '<span data-card-status-pill="pp" class="text-[10px] bg-amber-500/15 border border-amber-500/45 text-amber-300 px-2 py-0.5 rounded-md font-mono font-bold whitespace-nowrap" title="Postponed — Match Not Taking Place">PP · Postponed</span>'
+      };
+    }
     if(customVal.indexOf("LIVE:") === 0){
       var liveSc = customVal.replace("LIVE:", "").trim();
       var clk = (api && api.detail && api.state === "in") ? api.detail : "64'";
       return {
         isLive: true,
+        isPostponed: false,
         displayStatus: "LIVE " + clk + " (" + liveSc + ")",
         badgeHtml: window.buildInPlayStatusPillHtml(clk)
       };
@@ -7425,9 +7512,20 @@ window.getLiveMatchState = function(m){
       var regObj = window.resolveEflTrophyRegulationScore(customVal, 1, 1);
       var fgReg = m.venue === "HOME" ? regObj.regulationHomeGoals : regObj.regulationAwayGoals;
       var ogReg = m.venue === "HOME" ? regObj.regulationAwayGoals : regObj.regulationHomeGoals;
-      return { isLive: false, displayStatus: regObj.regulationScoreline + " (" + (fgReg > ogReg ? "Won" : (fgReg === ogReg ? "Draw" : "Lost")) + ")", badgeHtml: "" };
+      return { isLive: false, isPostponed: false, displayStatus: regObj.regulationScoreline + " (" + (fgReg > ogReg ? "Won" : (fgReg === ogReg ? "Draw" : "Lost")) + ")", badgeHtml: "" };
     }
-    return { isLive: false, displayStatus: customVal, badgeHtml: "" };
+    return { isLive: false, isPostponed: false, displayStatus: customVal, badgeHtml: "" };
+  }
+
+  // Strictly check Postponed / Cancelled / Abandoned / Suspended BEFORE rawState === "post" or elapsed-KO fallback
+  if(window.isPostponedOrCancelledApiStatus(api) || window.POSTPONED_CANCELLED_STATUS_RE.test(String((m && m.rawActual) || ""))){
+    return {
+      isLive: false,
+      isPostponed: true,
+      statusCode: "PP",
+      displayStatus: "PP (Postponed)",
+      badgeHtml: '<span data-card-status-pill="pp" class="text-[10px] bg-amber-500/15 border border-amber-500/45 text-amber-300 px-2 py-0.5 rounded-md font-mono font-bold whitespace-nowrap" title="Postponed — Match Not Taking Place">PP · Postponed</span>'
+    };
   }
 
   var hs = Number((api && api.h !== undefined) ? api.h : 0);
@@ -7442,7 +7540,7 @@ window.getLiveMatchState = function(m){
       as = regApi.regulationAwayGoals;
     }
     var fg = m.venue === "HOME" ? hs : as, og = m.venue === "HOME" ? as : hs;
-    return { isLive: false, displayStatus: hs + "-" + as + " (" + (fg > og ? "Won" : (fg === og ? "Draw" : "Lost")) + ")", badgeHtml: "" };
+    return { isLive: false, isPostponed: false, displayStatus: hs + "-" + as + " (" + (fg > og ? "Won" : (fg === og ? "Draw" : "Lost")) + ")", badgeHtml: "" };
   }
 
   if(api && rawState === "in"){
@@ -7450,6 +7548,7 @@ window.getLiveMatchState = function(m){
     var clkIn = /\bht\b|half[\s-]*time/i.test(rawDetail) ? "HT" : (rawDetail || "LIVE");
     return {
       isLive: true,
+      isPostponed: false,
       displayStatus: "LIVE " + clkIn + " (" + sc + ")",
       badgeHtml: window.buildInPlayStatusPillHtml(clkIn)
     };
@@ -7465,6 +7564,7 @@ window.getLiveMatchState = function(m){
       var fhClk = Math.max(1, elapsedMin) + "'";
       return {
         isLive: true,
+        isPostponed: false,
         displayStatus: "LIVE " + fhClk + " (" + scFallback + ")",
         badgeHtml: window.buildInPlayStatusPillHtml(fhClk)
       };
@@ -7472,6 +7572,7 @@ window.getLiveMatchState = function(m){
     if(elapsedMin >= 45 && elapsedMin < 60){
       return {
         isLive: true,
+        isPostponed: false,
         displayStatus: "LIVE HT (" + scFallback + ")",
         badgeHtml: window.buildInPlayStatusPillHtml("HT")
       };
@@ -7480,18 +7581,20 @@ window.getLiveMatchState = function(m){
       var shClk = Math.min(90, Math.max(46, elapsedMin - 15)) + "'";
       return {
         isLive: true,
+        isPostponed: false,
         displayStatus: "LIVE " + shClk + " (" + scFallback + ")",
         badgeHtml: window.buildInPlayStatusPillHtml(shClk)
       };
     }
     if(elapsedMin > 120 && api && (api.h !== undefined || api.a !== undefined)){
       var fgFt = m.venue === "HOME" ? hs : as, ogFt = m.venue === "HOME" ? as : hs;
-      return { isLive: false, displayStatus: hs + "-" + as + " (" + (fgFt > ogFt ? "Won" : (fgFt === ogFt ? "Draw" : "Lost")) + ")", badgeHtml: "" };
+      return { isLive: false, isPostponed: false, displayStatus: hs + "-" + as + " (" + (fgFt > ogFt ? "Won" : (fgFt === ogFt ? "Draw" : "Lost")) + ")", badgeHtml: "" };
     }
   }
 
   return {
     isLive: false,
+    isPostponed: false,
     displayStatus: "KO " + koStr,
     badgeHtml: '<span data-card-status-pill="ko" class="text-[10px] bg-slate-900/90 border border-slate-700/70 text-slate-300 px-2 py-0.5 rounded-md mono font-semibold">KO ' + koStr + '</span>'
   };
@@ -7505,6 +7608,8 @@ window.mapRawMatch = function(x){
   var liveObj = window.getLiveMatchState(m);
   m.actual = liveObj.displayStatus;
   m.isLive = liveObj.isLive;
+  m.isPostponed = Boolean(liveObj.isPostponed);
+  m.statusCode = liveObj.statusCode || (m.isPostponed ? "PP" : undefined);
   m.liveBadge = liveObj.badgeHtml;
   return m;
 };
@@ -7794,8 +7899,15 @@ window.autoSettleAndEvolveCompletedDays = function(forceReaudit){
     if(!raw.length) return;
     var matches = raw.map(window.mapRawMatch);
     var settled = matches.filter(function(m){
+      if(!m || m.isLive || m.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m))){
+        if(m && window.settledMatchAuditLog && window.settledMatchAuditLog[m.id]){
+          delete window.settledMatchAuditLog[m.id];
+          evolvedAny = true;
+        }
+        return false;
+      }
       var s = (m.actual || "").toLowerCase();
-      return !m.isLive && (s.indexOf("(won)")!==-1 || s.indexOf("(draw)")!==-1 || s.indexOf("(lost)")!==-1);
+      return (s.indexOf("(won)")!==-1 || s.indexOf("(draw)")!==-1 || s.indexOf("(lost)")!==-1);
     });
     if(settled.length === 0) return;
 
@@ -8014,6 +8126,7 @@ window.syncOvernightLogs = function(){
 
 window.isMatchKickedOffOrLocked = function(m){
   if(!m) return false;
+  if(window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m)) return false;
   if(m.isLocked || m.isLive) return true;
   var actLow = String(m.actual || "").toLowerCase();
   if(actLow.indexOf("live") !== -1 || /\bht\b/.test(actLow) || /\bft\b/.test(actLow) || actLow.indexOf("(won)") !== -1 || actLow.indexOf("(draw)") !== -1 || actLow.indexOf("(lost)") !== -1){
@@ -8042,6 +8155,12 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
   var apiByOpp = (oppKey && m && m.date) ? vMap[oppKey + "_" + m.date] : null;
   var api = (m && m.api) || apiById || apiByFav || apiByOpp || null;
 
+  var isPostponed = Boolean(
+    (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m)) ||
+    (window.isPostponedOrCancelledApiStatus && window.isPostponedOrCancelledApiStatus(api)) ||
+    (window.POSTPONED_CANCELLED_STATUS_RE && window.POSTPONED_CANCELLED_STATUS_RE.test(actualStr))
+  );
+
   var parenSc = actualStr.match(/\(\s*(?:LIVE|HT|FT)?\s*(\d+)\s*-\s*(\d+)\s*\)/i);
   var cleanActualForScore = actualStr
     .replace(/\b\d{4}-\d{2}-\d{2}\b/g, " ")
@@ -8049,16 +8168,18 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
     .replace(/\b\d+(?:\+\d+)?\s*'/g, " ");
   var scMatch = parenSc || cleanActualForScore.match(/(\d+)\s*-\s*(\d+)/);
 
-  var apiIsFT = Boolean(api && api.state === "post");
-  var apiIsLive = Boolean(api && api.state === "in");
-  var isExplicitHT = /\b(ht|half[\s-]*time)\b/i.test(actualStr) || Boolean(api && /\b(ht|half)\b/i.test(String(api.detail || "")));
-  var isFT = (!m.isLive && !isExplicitHT && (/\((won|draw|lost)\)/i.test(actualStr) || /\bFT\b/i.test(actualStr) || apiIsFT)) ||
-    (!m.isLive && !isExplicitHT && !apiIsLive && Boolean(scMatch) && !/\b(live|ko|pending)\b/i.test(actualStr) && !/\d+\s*'/.test(actualStr));
-  var isExplicitLive = !isFT && (Boolean(m.isLive) || isExplicitHT || apiIsLive || /\b(live|ht|half|in[\s-]*play)\b/i.test(actualStr) || /\d+\s*'/.test(actualStr) || Boolean(scMatch));
+  var apiIsFT = Boolean(!isPostponed && api && api.state === "post" && !(window.isPostponedOrCancelledApiStatus && window.isPostponedOrCancelledApiStatus(api)));
+  var apiIsLive = Boolean(!isPostponed && api && api.state === "in");
+  var isExplicitHT = !isPostponed && (/\b(ht|half[\s-]*time)\b/i.test(actualStr) || Boolean(api && /\b(ht|half)\b/i.test(String(api.detail || ""))));
+  var isFT = !isPostponed && (
+    (!m.isLive && !isExplicitHT && (/\((won|draw|lost)\)/i.test(actualStr) || /\bFT\b/i.test(actualStr) || apiIsFT)) ||
+    (!m.isLive && !isExplicitHT && !apiIsLive && Boolean(scMatch) && !/\b(live|ko|pending)\b/i.test(actualStr) && !/\d+\s*'/.test(actualStr))
+  );
+  var isExplicitLive = !isPostponed && !isFT && (Boolean(m.isLive) || isExplicitHT || apiIsLive || /\b(live|ht|half|in[\s-]*play)\b/i.test(actualStr) || /\d+\s*'/.test(actualStr) || Boolean(scMatch));
 
   var koStr = (m && m.ko) || "19:45";
   var kickMs = (m && m.date) ? new Date(m.date + "T" + koStr + ":00").getTime() : NaN;
-  var koTimeReached = Number.isFinite(kickMs) && Date.now() >= kickMs;
+  var koTimeReached = !isPostponed && Number.isFinite(kickMs) && Date.now() >= kickMs;
 
   // Determine whether m.fav is the Home Team or Away Team from API truth, scoreboard text, or venue
   var isHomeFav = (m && typeof m.isHomeFav === "boolean")
@@ -8077,13 +8198,14 @@ window.computeMatchLiveAndFtStats = function(m, rawM){
     else if(explicitHomeKey === oppKey) isHomeFav = false;
   }
 
-  // Strictly only update/display stats once the game has ACTUALLY kicked off (never during T-30m pre-kickoff window)
-  var hasKickedOff = isFT || isExplicitLive || koTimeReached;
+  // Strictly only update/display stats once the game has ACTUALLY kicked off (never during T-30m pre-kickoff window or postponed matches)
+  var hasKickedOff = !isPostponed && (isFT || isExplicitLive || koTimeReached);
   if(!hasKickedOff){
     return {
       hasKickedOff: false,
       isFT: false,
       isLive: false,
+      isPostponed: isPostponed,
       isHomeFav: isHomeFav,
       homeTeam: isHomeFav ? favName : oppName,
       awayTeam: isHomeFav ? oppName : favName,
@@ -8762,6 +8884,7 @@ window.isExpiredFirstHalfMarket = function(marketName){
 
 window.isMatchInSecondHalfOrPast45 = function(m, liveStats){
   if(!m) return false;
+  if(m.isPostponed || (liveStats && liveStats.isPostponed) || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m))) return false;
 
   // Finished matches (Full Time) are not live in the second half
   if(liveStats && liveStats.isFT) return false;
@@ -9244,9 +9367,9 @@ window.getClubStarScorer = function(teamName, seedIdx){
 };
 
 window.isCompletedMatch = function(m){
-  if(!m || m.isLive) return false;
+  if(!m || m.isLive || m.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m))) return false;
   var st = String(m.actual || "").toLowerCase();
-  if(!st || st.indexOf("pending") !== -1 || st.indexOf("ko ") === 0 || st.indexOf("live") === 0) return false;
+  if(!st || st.indexOf("pending") !== -1 || st.indexOf("ko ") === 0 || st.indexOf("live") === 0 || (window.POSTPONED_CANCELLED_STATUS_RE && window.POSTPONED_CANCELLED_STATUS_RE.test(st))) return false;
   return st.indexOf("(won)") !== -1 || st.indexOf("(draw)") !== -1 || st.indexOf("(lost)") !== -1 || /\d+\s*-\s*\d+/.test(st);
 };
 
@@ -10811,6 +10934,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var awayCrest = window.getClubCrestHtml ? window.getClubCrestHtml(awayName) : '';
 
   // 3-Way Match Result (1X2) Compact Quick-Pick Strip (Home vs Draw vs Away)
+  var isPanelPostponed = Boolean(m.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m)));
   window.marketSelectionRegistry = window.marketSelectionRegistry || {};
   var h1x2Id = 'mr1-' + m.id;
   var d1x2Id = 'mrx-' + m.id;
@@ -10819,13 +10943,13 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var dMktName = "Match Result: Draw";
   var aMktName = "Match Result: " + (outright.awayName || m.opp) + " to Win";
 
-  window.marketSelectionRegistry[h1x2Id] = { team: m.fav, opp: m.opp, venue: m.venue || 'HOME', homeTeam: homeName, awayTeam: awayName, market: hMktName, pct: (outright.homePct || "60.0") + "%", odds: outright.homeOdds || 1.75, won: outright.homeWon, league: m.league, ko: m.ko || "15:00", elId: h1x2Id, seed: m.id };
-  window.marketSelectionRegistry[d1x2Id] = { team: m.fav, opp: m.opp, venue: m.venue || 'HOME', homeTeam: homeName, awayTeam: awayName, market: dMktName, pct: (outright.drawPct || "22.0") + "%", odds: outright.drawOdds || 3.40, won: outright.drawWon, league: m.league, ko: m.ko || "15:00", elId: d1x2Id, seed: m.id };
-  window.marketSelectionRegistry[a1x2Id] = { team: m.fav, opp: m.opp, venue: m.venue || 'HOME', homeTeam: homeName, awayTeam: awayName, market: aMktName, pct: (outright.awayPct || "18.0") + "%", odds: outright.awayOdds || 4.20, won: outright.awayWon, league: m.league, ko: m.ko || "15:00", elId: a1x2Id, seed: m.id };
+  window.marketSelectionRegistry[h1x2Id] = { team: m.fav, opp: m.opp, venue: m.venue || 'HOME', homeTeam: homeName, awayTeam: awayName, market: hMktName, pct: (outright.homePct || "60.0") + "%", odds: outright.homeOdds || 1.75, won: isPanelPostponed ? null : outright.homeWon, isPostponed: isPanelPostponed, league: m.league, ko: m.ko || "15:00", elId: h1x2Id, seed: m.id };
+  window.marketSelectionRegistry[d1x2Id] = { team: m.fav, opp: m.opp, venue: m.venue || 'HOME', homeTeam: homeName, awayTeam: awayName, market: dMktName, pct: (outright.drawPct || "22.0") + "%", odds: outright.drawOdds || 3.40, won: isPanelPostponed ? null : outright.drawWon, isPostponed: isPanelPostponed, league: m.league, ko: m.ko || "15:00", elId: d1x2Id, seed: m.id };
+  window.marketSelectionRegistry[a1x2Id] = { team: m.fav, opp: m.opp, venue: m.venue || 'HOME', homeTeam: homeName, awayTeam: awayName, market: aMktName, pct: (outright.awayPct || "18.0") + "%", odds: outright.awayOdds || 4.20, won: isPanelPostponed ? null : outright.awayWon, isPostponed: isPanelPostponed, league: m.league, ko: m.ko || "15:00", elId: a1x2Id, seed: m.id };
 
-  var isH1x2Sel = window.betSlip.indexOf(m.fav + " " + hMktName) !== -1;
-  var isD1x2Sel = window.betSlip.indexOf(m.fav + " " + dMktName) !== -1;
-  var isA1x2Sel = window.betSlip.indexOf(m.fav + " " + aMktName) !== -1;
+  var isH1x2Sel = !isPanelPostponed && window.betSlip.indexOf(m.fav + " " + hMktName) !== -1;
+  var isD1x2Sel = !isPanelPostponed && window.betSlip.indexOf(m.fav + " " + dMktName) !== -1;
+  var isA1x2Sel = !isPanelPostponed && window.betSlip.indexOf(m.fav + " " + aMktName) !== -1;
 
   var getTrafficProbTextCls = function(pctVal){
     var num = parseFloat(String(pctVal || "0").replace("%", "")) || 0;
@@ -10834,23 +10958,35 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var h1x2Color = getTrafficProbTextCls(outright.homePct || 60.0);
   var d1x2Color = getTrafficProbTextCls(outright.drawPct || 22.0);
   var a1x2Color = getTrafficProbTextCls(outright.awayPct || 18.0);
+  var stripTapLabelHtml = isPanelPostponed
+    ? '<span class="flex-shrink-0 text-amber-300 font-semibold">POSTPONED</span>'
+    : '<span class="flex-shrink-0 text-emerald-300 font-semibold">TAP TO ADD</span>';
+  var stripCardClickAttr = function(elId){
+    return isPanelPostponed
+      ? 'onclick="event.stopPropagation();if(window.showAppToast)window.showAppToast(\'⏸️ Match is postponed and not taking place.\')" aria-disabled="true"'
+      : 'onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + elId + '\', event)"';
+  };
+  var stripCardStateCls = function(isSelFlag){
+    if (isPanelPostponed) return 'cursor-not-allowed opacity-70 bg-slate-900/75 border-slate-800';
+    return isSelFlag ? 'cursor-pointer ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'cursor-pointer bg-slate-900/90 border-slate-800 hover:border-emerald-400/60';
+  };
 
   var outright1x2StripHtml = '<div class="mb-2.5 bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5">' +
     '<div class="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider mb-2 px-0.5 whitespace-nowrap">' +
       '<span class="truncate text-white">⚽ FULL-TIME RESULT (1X2)</span>' +
-      '<span class="flex-shrink-0 text-emerald-300 font-semibold">TAP TO ADD</span>' +
+      stripTapLabelHtml +
     '</div>' +
     '<div class="grid grid-cols-3 gap-2">' +
-      '<div id="' + h1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + h1x2Id + '\', event)" class="py-2 px-1.5 sm:px-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + (isH1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (homeCrest ? '<span class="w-4 h-4 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + homeCrest + '</span>' : '') + '<span class="break-words line-clamp-2">' + (outright.homeName || m.fav) + '</span>' + (outright.homeWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+      '<div id="' + h1x2Id + '" ' + stripCardClickAttr(h1x2Id) + ' class="py-2 px-1.5 sm:px-2 rounded-lg border transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + stripCardStateCls(isH1x2Sel) + '">' +
+        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (homeCrest ? '<span class="w-4 h-4 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + homeCrest + '</span>' : '') + '<span class="break-words line-clamp-2">' + (outright.homeName || m.fav) + '</span>' + (!isPanelPostponed && outright.homeWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
         '<div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-none"><span class="text-[10px] bg-slate-950 text-amber-300 border border-amber-500/35 px-2.5 py-1 rounded-md font-mono font-bold">' + window.formatOdds(outright.homeOdds || 1.75, false) + '</span><b class="text-[10.5px] ' + h1x2Color + ' mono font-black">' + (outright.homePct || "60.0") + '%</b></div>' +
       '</div>' +
-      '<div id="' + d1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + d1x2Id + '\', event)" class="py-2 px-1.5 sm:px-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + (isD1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight"><span class="truncate">🤝 Draw</span>' + (outright.drawWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+      '<div id="' + d1x2Id + '" ' + stripCardClickAttr(d1x2Id) + ' class="py-2 px-1.5 sm:px-2 rounded-lg border transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + stripCardStateCls(isD1x2Sel) + '">' +
+        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight"><span class="truncate">🤝 Draw</span>' + (!isPanelPostponed && outright.drawWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
         '<div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-none"><span class="text-[10px] bg-slate-950 text-amber-300 border border-amber-500/35 px-2.5 py-1 rounded-md font-mono font-bold">' + window.formatOdds(outright.drawOdds || 3.40, false) + '</span><b class="text-[10.5px] ' + d1x2Color + ' mono font-black">' + (outright.drawPct || "22.0") + '%</b></div>' +
       '</div>' +
-      '<div id="' + a1x2Id + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + a1x2Id + '\', event)" class="py-2 px-1.5 sm:px-2 rounded-lg border cursor-pointer transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + (isA1x2Sel ? 'ring-2 ring-emerald-400 bg-emerald-900/40 border-emerald-400' : 'bg-slate-900/90 border-slate-800 hover:border-emerald-400/60') + '">' +
-        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (awayCrest ? '<span class="w-4 h-4 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + awayCrest + '</span>' : '') + '<span class="break-words line-clamp-2">' + (outright.awayName || m.opp) + '</span>' + (outright.awayWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
+      '<div id="' + a1x2Id + '" ' + stripCardClickAttr(a1x2Id) + ' class="py-2 px-1.5 sm:px-2 rounded-lg border transition flex flex-col items-center justify-between text-center gap-1.5 min-w-0 ' + stripCardStateCls(isA1x2Sel) + '">' +
+        '<span class="text-[10.5px] sm:text-xs font-extrabold text-white inline-flex items-center justify-center gap-1 w-full min-w-0 leading-tight">' + (awayCrest ? '<span class="w-4 h-4 flex-shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full">' + awayCrest + '</span>' : '') + '<span class="break-words line-clamp-2">' + (outright.awayName || m.opp) + '</span>' + (!isPanelPostponed && outright.awayWon === true ? '<span class="text-emerald-300 flex-shrink-0">✓</span>' : '') + '</span>' +
         '<div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-none"><span class="text-[10px] bg-slate-950 text-amber-300 border border-amber-500/35 px-2.5 py-1 rounded-md font-mono font-bold">' + window.formatOdds(outright.awayOdds || 4.20, false) + '</span><b class="text-[10.5px] ' + a1x2Color + ' mono font-black">' + (outright.awayPct || "18.0") + '%</b></div>' +
       '</div>' +
     '</div>' +
@@ -10940,8 +11076,9 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   var g = filteredMarkets.map(function(x, mIdx){
     var p = +x.p;
     var lockThisMarket = isTr && x.vip;
-    var isSettledWon = !lockThisMarket && x.w === true;
-    var isSettledLost = !lockThisMarket && x.w === false;
+    var isMktPostponed = isPanelPostponed || Boolean(m.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m)));
+    var isSettledWon = !lockThisMarket && !isMktPostponed && x.w === true;
+    var isSettledLost = !lockThisMarket && !isMktPostponed && x.w === false;
 
     // 5. Sync Traffic-Light Probability Colors (Green 75%+, Amber 60-74.9%, Red/Coral <60%)
     var probTextColorCls = p >= 75 ? "text-emerald-400" : (p >= 60 ? "text-amber-400" : "text-rose-400");
@@ -10961,7 +11098,9 @@ window.render31PointPanel = function(m, adm, isUnlocked){
       ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/25 text-emerald-300 border border-emerald-400/60 text-[8.5px] font-black tracking-wide whitespace-nowrap flex-shrink-0">✓ LANDED</span>'
       : (isSettledLost
           ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-black tracking-wide whitespace-nowrap flex-shrink-0">✗ SETTLED</span>'
-          : '');
+          : (isMktPostponed
+              ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/40 text-[8.5px] font-black tracking-wide whitespace-nowrap flex-shrink-0">⏸ PP</span>'
+              : ''));
 
     var marketCategoryNameMap = {
       match_result: "Match Result",
@@ -10986,7 +11125,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
 
     var elId = 'm-' + m.id + '-' + activeCat + '-' + mIdx;
     var betId = m.fav + " " + x.n;
-    var isSel = window.betSlip.indexOf(betId) !== -1;
+    var isSel = !isMktPostponed && window.betSlip.indexOf(betId) !== -1;
     var selClass = isSel ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '';
     window.marketSelectionRegistry[elId] = {
       team: m.fav,
@@ -10997,8 +11136,9 @@ window.render31PointPanel = function(m, adm, isUnlocked){
       market: x.n,
       pct: x.p + '%',
       odds: x.odds,
-      statBadge: x.statBadge || '',
-      won: x.w,
+      statBadge: isMktPostponed ? 'PP · Postponed' : (x.statBadge || ''),
+      won: isMktPostponed ? null : x.w,
+      isPostponed: isMktPostponed,
       league: m.league,
       ko: m.ko || '15:00',
       elId: elId,
@@ -11007,11 +11147,13 @@ window.render31PointPanel = function(m, adm, isUnlocked){
 
     var clickHandler = lockThisMarket
       ? 'onclick="event.stopPropagation();window.exitTrialToSubscribe()"'
-      : (isSettledLost
-          ? 'onclick="event.stopPropagation()" aria-disabled="true"'
-          : 'onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + elId + '\', event)"');
+      : (isMktPostponed
+          ? 'onclick="event.stopPropagation();if(window.showAppToast)window.showAppToast(\'⏸️ Match is postponed and not taking place.\')" aria-disabled="true"'
+          : (isSettledLost
+              ? 'onclick="event.stopPropagation()" aria-disabled="true"'
+              : 'onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + elId + '\', event)"'));
 
-    var hoverClass = isSettledLost
+    var hoverClass = (isSettledLost || isMktPostponed)
       ? 'cursor-not-allowed'
       : (lockThisMarket ? 'cursor-pointer' : 'cursor-pointer hover:border-emerald-400 transition');
 
@@ -11043,7 +11185,7 @@ window.render31PointPanel = function(m, adm, isUnlocked){
 
   var sortDropdownHtml = '<div class="flex items-center gap-1.5">' +
     '<label for="mktSort-' + m.id + '" class="text-[10px] font-bold text-slate-200">Sort:</label>' +
-    '<select id="mktSort-' + m.id + '" aria-label="Sort betting markets" onclick="event.stopPropagation()" onchange="window.setCardMarketTabSort ? window.setCardMarketTabSort(' + m.id + ', this.value, event) : window.setCardMarketSort(' + m.id + ', this.value, event)" class="bg-slate-900/95 hover:bg-slate-800 text-white border border-slate-700/90 rounded-lg px-2.5 py-1 text-[10px] font-extrabold cursor-pointer focus:outline-none focus:border-emerald-400 transition">' +
+    '<select id="mktSort-' + m.id + '" aria-label="Sort betting markets" onclick="event.stopPropagation()" onchange="window.setCardMarketTabSort ? window.setCardMarketTabSort(' + m.id + ', this.value, event) : window.setCardMarketSort(' + m.id + ', this.value, event)" class="bg-slate-900/95 hover:bg-slate-800 text-white border border-slate-700/90 rounded-lg px-2 py-1 text-[10px] font-extrabold cursor-pointer focus:outline-none focus:border-emerald-400 transition">' +
       '<option value="confidence"' + (activeSort === "confidence" ? ' selected' : '') + '>🎯 Highest Confidence</option>' +
       '<option value="odds"' + (activeSort === "odds" ? ' selected' : '') + '>💰 Highest Odds</option>' +
       '<option value="popular"' + (activeSort === "popular" ? ' selected' : '') + '>🔥 Most Popular</option>' +
@@ -11051,8 +11193,8 @@ window.render31PointPanel = function(m, adm, isUnlocked){
   '</div>';
 
   var marketsBoxHtml = '<div id="markets-box-' + m.id + '" onclick="event.stopPropagation()" class="rounded-2xl overflow-hidden border border-slate-800 bg-[#07111a]/95 p-3 shadow-lg">' +
-    '<div class="flex justify-between items-center gap-2">' +
-      '<span class="text-[11px] font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5 min-w-0 truncate">' +
+    '<div class="flex flex-wrap justify-between items-center gap-2">' +
+      '<span class="text-[10.5px] sm:text-[11px] font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">' +
         '<span>🎯 Betting Markets (' + sortedMarkets.length + ')</span>' +
       '</span>' +
       '<div class="flex items-center gap-2 flex-shrink-0">' +
@@ -11384,7 +11526,14 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   var isExp = window.expandedCards[m.id] ? " card-expanded" : "";
 
   var stLow = (m.actual || "").toLowerCase();
+  var isPostponed = Boolean(
+    m.isPostponed ||
+    (liveStats && liveStats.isPostponed) ||
+    (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m)) ||
+    (window.POSTPONED_CANCELLED_STATUS_RE && window.POSTPONED_CANCELLED_STATUS_RE.test(stLow))
+  );
   var isSettledFT = Boolean(
+    !isPostponed &&
     !m.isLive &&
     ((liveStats && liveStats.isFT) ||
       stLow.indexOf("(won)") !== -1 ||
@@ -11392,7 +11541,9 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       stLow.indexOf("(lost)") !== -1 ||
       /\bft\b/i.test(stLow))
   );
-  var rawScoreMatch = (String((liveStats && liveStats.scoreStr) || "") + " " + String(m.actual || "")).match(/(\d+)\s*-\s*(\d+)/);
+  var rawScoreMatch = isPostponed
+    ? null
+    : (String((liveStats && liveStats.scoreStr) || "") + " " + String(m.actual || "")).match(/(\d+)\s*-\s*(\d+)/);
   var ftScoreDisplay = rawScoreMatch
     ? (rawScoreMatch[1] + "-" + rawScoreMatch[2])
     : (String(m.actual || "").replace(/\s*\((?:won|draw|lost)\)/ig, "").replace(/^.*?FT\s*/i, "").trim() || "0-0");
@@ -11400,7 +11551,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
   // TWO INDEPENDENT SETTLEMENT CHECKS:
   // 1) Top Card Badge (✓ FT 1-0 (Won) / ✗ FT 1-3 (Lost)): Strictly evaluates the card's primary match prediction (<m.fav> to Win)
   // 2) Bottom ★ AI BEST PICK Button: Evaluates topCardMkt (e.g. Win & Over 1.5 Goals) independently
-  var mainPredWonState = (mkCard && mkCard.outright && typeof mkCard.outright.favWon === "boolean")
+  var mainPredWonState = (!isPostponed && mkCard && mkCard.outright && typeof mkCard.outright.favWon === "boolean")
     ? mkCard.outright.favWon
     : null;
   if (isSettledFT && mainPredWonState === null) {
@@ -11417,13 +11568,15 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     }
   }
 
-  var topMktWonState = (topCardMkt && typeof topCardMkt.w === "boolean") ? topCardMkt.w : null;
+  var topMktWonState = (!isPostponed && topCardMkt && typeof topCardMkt.w === "boolean") ? topCardMkt.w : null;
   if (isSettledFT && topCardMkt && topMktWonState === null) {
     topMktWonState = mainPredWonState;
   }
 
   var statusBadge = "";
-  if(m.isLive){
+  if(isPostponed){
+    statusBadge = '<span data-card-status-pill="pp" class="text-[10px] bg-amber-500/15 border border-amber-500/45 text-amber-300 px-2 py-0.5 rounded-md font-mono font-bold whitespace-nowrap" title="Postponed — Match Not Taking Place">PP · Postponed</span>';
+  } else if(m.isLive){
     var isHtNow = Boolean((liveStats && liveStats.isHT) || /\bht\b|half[\s-]*time/i.test(String(m.actual || "") + " " + String(m.liveBadge || "")));
     statusBadge = window.buildInPlayStatusPillHtml
       ? window.buildInPlayStatusPillHtml(isHtNow ? "HT" : (m.actual || m.liveBadge || "LIVE"))
@@ -11463,7 +11616,7 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
 
   var bestElId = 'bestm-' + m.id;
   var bestBetId = m.fav + " " + (topCardMkt ? topCardMkt.n : '');
-  var isBestInSlip = window.betSlip.indexOf(bestBetId) !== -1;
+  var isBestInSlip = !isPostponed && window.betSlip.indexOf(bestBetId) !== -1;
   if(topCardMkt){
     window.marketSelectionRegistry = window.marketSelectionRegistry || {};
     window.marketSelectionRegistry[bestElId] = {
@@ -11475,8 +11628,9 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
       market: topCardMkt.n,
       pct: topCardMkt.p + '%',
       odds: topCardMkt.odds,
-      statBadge: topCardMkt.statBadge || '',
+      statBadge: isPostponed ? 'PP · Postponed' : (topCardMkt.statBadge || ''),
       won: topMktWonState,
+      isPostponed: isPostponed,
       league: m.league,
       ko: m.ko || '15:00',
       elId: bestElId,
@@ -11488,18 +11642,20 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     : ((topMktWonState === false)
         ? ' <span data-quick-bet-result="lost" class="text-rose-400 font-black text-xs leading-none">✗</span>'
         : '');
-  var quickBtnThemeClass = (topMktWonState === false)
-    ? 'border-rose-500/60 bg-rose-950/35 hover:bg-rose-950/55 text-rose-200'
-    : ((topMktWonState === true)
-        ? 'border-emerald-500/55 bg-emerald-950/35 hover:bg-emerald-950/55 text-emerald-200'
-        : 'border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300');
+  var quickBtnThemeClass = isPostponed
+    ? 'border-amber-500/35 bg-slate-900/70 text-slate-300 opacity-80'
+    : ((topMktWonState === false)
+        ? 'border-rose-500/60 bg-rose-950/35 hover:bg-rose-950/55 text-rose-200'
+        : ((topMktWonState === true)
+            ? 'border-emerald-500/55 bg-emerald-950/35 hover:bg-emerald-950/55 text-emerald-200'
+            : 'border-emerald-500/40 bg-slate-900/90 hover:bg-emerald-950/60 text-emerald-300'));
 
   var quickActionPillHtml = window.renderQuickBetActionPillHtml
-    ? window.renderQuickBetActionPillHtml(isBestInSlip, topMktWonState)
+    ? window.renderQuickBetActionPillHtml(isBestInSlip, topMktWonState, isPostponed)
     : '<span data-quick-bet-plus-badge="true" data-quick-bet-action-pill="add" class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 text-[10px] font-black uppercase tracking-wide flex-shrink-0 leading-none"><svg class="w-3 h-3 flex-shrink-0 block" viewBox="0 0 16 16" fill="none"><path d="M8 3.25v9.5M3.25 8h9.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>ADD</span></span>';
 
   var quickAddCardBtn = (!isTrLocked && topCardMkt)
-    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold border ' + quickBtnThemeClass + ' transition cursor-pointer min-w-0 ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="Tap to add ★ AI BEST PICK to Betting Slip">' +
+    ? '<button type="button" id="' + bestElId + '" onclick="event.stopPropagation();window.toggleBetSlipByEl(\'' + bestElId + '\', event)" class="w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold border ' + quickBtnThemeClass + ' transition ' + (isPostponed ? 'cursor-not-allowed' : 'cursor-pointer') + ' min-w-0 ' + (isBestInSlip ? 'ring-2 ring-emerald-400 bg-emerald-900/40' : '') + '" title="' + (isPostponed ? 'Match Postponed — Not Taking Place' : 'Tap to add ★ AI BEST PICK to Betting Slip') + '">' +
         '<span class="flex flex-col sm:flex-row sm:items-center items-start gap-1.5 sm:gap-2 min-w-0 flex-1 text-left">' +
           '<span data-ai-best-pick-badge="true" class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/45 text-amber-300 text-[9px] font-black uppercase tracking-wider flex-shrink-0 whitespace-nowrap">★ AI BEST PICK</span>' +
           '<span data-quick-bet-market-name="true" class="text-xs sm:text-[13px] text-left leading-snug font-extrabold text-white break-words w-full sm:w-auto sm:truncate">' + fullQuickBetMarketLabel + '</span>' +
@@ -11530,10 +11686,10 @@ window.renderBasicCleanCard = function(m, i, type, adminCtrlHtml){
     ? '<span class="text-slate-600 flex-shrink-0" aria-hidden="true">·</span><span data-round-badge="' + roundBadgeLabel + '" class="text-[9.5px] text-slate-400 font-medium flex-shrink-0 truncate max-w-[90px]">' + compactRoundLabel + '</span>'
     : '';
 
-  var parsedHomeGoals = rawScoreMatch ? parseInt(rawScoreMatch[1], 10) : null;
-  var parsedAwayGoals = rawScoreMatch ? parseInt(rawScoreMatch[2], 10) : null;
+  var parsedHomeGoals = (!isPostponed && rawScoreMatch) ? parseInt(rawScoreMatch[1], 10) : null;
+  var parsedAwayGoals = (!isPostponed && rawScoreMatch) ? parseInt(rawScoreMatch[2], 10) : null;
   var scoreMeta = {
-    isLiveOrFT: Boolean(m.isLive || isSettledFT),
+    isLiveOrFT: Boolean(!isPostponed && (m.isLive || isSettledFT)),
     homeGoals: parsedHomeGoals,
     awayGoals: parsedAwayGoals
   };
@@ -11575,6 +11731,7 @@ window.syncAllResultColorsAndCounters = function(){
     var cards = Array.from(box.querySelectorAll("div[id^='cardWrap-']"));
     var w = 0, d = 0;
     cards.forEach(function(c){
+      if(c.querySelector('[data-card-status-pill="pp"]')) return;
       var wonBadge = c.querySelector('[data-card-ft-badge="won"]');
       var lostBadge = c.querySelector('[data-card-ft-badge="lost"]');
       if(wonBadge){
@@ -11891,6 +12048,7 @@ window.runEngine = function(isForcedSync){
     var seenBankerKeys = {};
     var addDateFixtureToPool = function(m, isAlreadyEvaluated){
       if(!m || !m.fav || !m.opp) return;
+      if(m.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m))) return;
       if(m.isFallbackMock === true || m.isHardcodedFallback === true) return;
       if(window.isLegacyFallbackFixtureRow && window.isLegacyFallbackFixtureRow([m.id, m.date, m.league, m.venue, m.fav, m.opp])) return;
       if(!m.date || String(m.date) !== String(activeDateStr)) return;
@@ -12002,9 +12160,10 @@ window.runEngine = function(isForcedSync){
         var m = pair.m;
         var bestM = pair.bestM;
         var stLow = (m.actual || "").toLowerCase();
-        var isFT = !m.isLive && (stLow.indexOf("(won)")!==-1 || stLow.indexOf("(draw)")!==-1 || stLow.indexOf("(lost)")!==-1);
-        var isMatchWon = stLow.indexOf("(won)") !== -1;
-        var isLegSettledWon = (isFT && bestM && bestM.w !== null && bestM.w !== undefined) ? (bestM.w === true) : isMatchWon;
+        var isPpMatch = Boolean(m.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m)));
+        var isFT = !isPpMatch && !m.isLive && (stLow.indexOf("(won)")!==-1 || stLow.indexOf("(draw)")!==-1 || stLow.indexOf("(lost)")!==-1);
+        var isMatchWon = !isPpMatch && stLow.indexOf("(won)") !== -1;
+        var isLegSettledWon = !isPpMatch && ((isFT && bestM && bestM.w !== null && bestM.w !== undefined) ? (bestM.w === true) : isMatchWon);
         var elId = 'slip-' + m.id;
         var resolvedHA = window.resolveMatchHomeAwayTeams ? window.resolveMatchHomeAwayTeams(m) : {
           isHomeFav: String(m.venue || "HOME").toUpperCase() !== "AWAY",
@@ -12513,12 +12672,13 @@ window.buildSportsEventJsonLd = function(fixtures, options){
     var organizerName = window.resolveSportsEventOrganizerName(m);
     var eventImages = window.resolveSportsEventImages(m, defaultImageUrl);
 
+    var isEventPostponed = Boolean(m.isPostponed || (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(m)));
     events.push({
       '@type': 'SportsEvent',
       name: homeTeamName + ' vs ' + awayTeamName,
       startDate: startDate,
       endDate: endDate,
-      eventStatus: 'https://schema.org/EventScheduled',
+      eventStatus: isEventPostponed ? 'https://schema.org/EventPostponed' : 'https://schema.org/EventScheduled',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: {
         '@type': 'Place',
@@ -13293,16 +13453,26 @@ window.resolveXCardRowFixture = function(s){
   var awayTeam = String(s.awayTeam || s.away || (m && (m.awayTeam || m.away)) || (isHomeFav ? oppName : favName) || "Away");
 
   var actStr = String(s.actual !== undefined ? s.actual : ((m && m.actual) || ""));
-  var isFT = (typeof s.isFT === "boolean") ? s.isFT : Boolean(st ? st.isFT : (!s.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr))));
-  var isHT = (typeof s.isHT === "boolean") ? s.isHT : (/\bHT\b/i.test(actStr) || (!isFT && (actStr.indexOf("45'") !== -1 || /half/i.test(actStr))));
+  var isPostponedX = Boolean(
+    s.isPostponed ||
+    (m && m.isPostponed) ||
+    (st && st.isPostponed) ||
+    (window.isPostponedOrCancelledMatch && window.isPostponedOrCancelledMatch(sourceObj)) ||
+    (window.POSTPONED_CANCELLED_STATUS_RE && window.POSTPONED_CANCELLED_STATUS_RE.test(actStr))
+  );
+  var isFT = isPostponedX ? false : ((typeof s.isFT === "boolean") ? s.isFT : Boolean(st ? st.isFT : (!s.isLive && (/\((won|draw|lost)\)/i.test(actStr) || /^FT\b/i.test(actStr)))));
+  var isHT = isPostponedX ? false : ((typeof s.isHT === "boolean") ? s.isHT : (/\bHT\b/i.test(actStr) || (!isFT && (actStr.indexOf("45'") !== -1 || /half/i.test(actStr)))));
   var minMatch = actStr.match(/(\d+)\s*'/);
-  var isLive = (typeof s.isLive === "boolean") ? s.isLive : Boolean(!isFT && ((m && m.isLive) || /live/i.test(actStr) || isHT || !!minMatch || (st && st.isLive)));
-  var elapsedMins = Number(s.elapsedMins || (minMatch ? minMatch[1] : (st && st.elapsedMins)) || 45);
+  var isLive = isPostponedX ? false : ((typeof s.isLive === "boolean") ? s.isLive : Boolean(!isFT && ((m && m.isLive) || /live/i.test(actStr) || isHT || !!minMatch || (st && st.isLive))));
+  var elapsedMins = isPostponedX ? 0 : Number(s.elapsedMins || (minMatch ? minMatch[1] : (st && st.elapsedMins)) || 45);
 
   var homeGoals = null;
   var awayGoals = null;
 
-  if(s.homeGoals !== undefined && s.homeGoals !== null && s.awayGoals !== undefined && s.awayGoals !== null && Number.isFinite(Number(s.homeGoals)) && Number.isFinite(Number(s.awayGoals))){
+  if(isPostponedX){
+    homeGoals = null;
+    awayGoals = null;
+  } else if(s.homeGoals !== undefined && s.homeGoals !== null && s.awayGoals !== undefined && s.awayGoals !== null && Number.isFinite(Number(s.homeGoals)) && Number.isFinite(Number(s.awayGoals))){
     homeGoals = Number(s.homeGoals);
     awayGoals = Number(s.awayGoals);
   } else {
